@@ -554,7 +554,7 @@ class SeqeraClient(Client):
         self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
     ) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
-            f"{config.seqera_api_url}/internal-ai/query",
+            f"{config.seqera_api_url}/internal-ai/report-summary",
             headers={"Authorization": f"Bearer {self.api_key}"},
             body={
                 "message": self.wrap_details(prompt + "\n\n" + report_content),

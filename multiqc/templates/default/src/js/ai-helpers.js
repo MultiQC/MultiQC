@@ -195,7 +195,7 @@ window.runStreamGeneration = function ({
       title: title,
     });
 
-    fetch(`${seqeraApiUrl}/internal-ai/query`, fetchOptions)
+    fetch(`${seqeraApiUrl}/internal-ai/report-summary`, fetchOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {

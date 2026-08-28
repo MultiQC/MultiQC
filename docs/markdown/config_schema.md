@@ -3272,13 +3272,13 @@ Authentication scheme used by the custom endpoint. 'bearer' sends an Authorizati
 
 #### `seqera_website`
 
-**Type**: <code>str</code> (default: `"https://seqera.io"`)
+**Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
 
 Base URL used for Seqera Platform links in the report.
 
 #### `seqera_api_url`
 
-**Type**: <code>str</code> (default: `"https://intern.seqera.io"`)
+**Type**: <code>str</code> (default: `"https://ai.seqera.io/v1/web"`)
 
 Base URL for the Seqera Platform API. Defaults to the public instance.
 
@@ -3499,6 +3499,26 @@ Properties:
 - **module** (<code>Union[str, List[str]]</code>): Module(s) to apply this pattern to
 - **pattern** (<code>str</code>): Pattern to match
 - **type** (<code>Literal["truncate", "remove", "regex", "regex_keep"]</code>): Type of pattern matching to use
+
+### GeneralStatsModuleConfig
+
+Per-module wrapper for General Stats column overrides.
+
+The `GeneralStatsModuleConfig` type is the value of each module entry in the `general_stats_columns` configuration option. It has a single `columns` key mapping column IDs to `GeneralStatsColumnConfig` settings.
+
+Example:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        title: "% Dups"
+```
+
+Properties:
+
+- **columns** (<code>Dict[str, <a href="#generalstatscolumnconfig">GeneralStatsColumnConfig</a>]</code>): Columns to show in general stats table. Keys are column IDs.
 
 ### GeneralStatsColumnConfig
 
