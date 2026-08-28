@@ -1274,7 +1274,12 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.plot_data[self.anchor] = self.model_dump(warnings=False)
+        dump = self.model_dump(warnings=False)
+        if config.plotting_engine == "echarts":
+            from multiqc.plots import echarts  # lazy: avoids a circular import, see multiqc/plots/echarts/__init__.py
+
+            dump["echarts"] = echarts.serialize(self)
+        report.plot_data[self.anchor] = dump
         return html
 
     def flat_plot(
