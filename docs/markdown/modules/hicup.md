@@ -1,8 +1,7 @@
 ---
 title: HiCUP
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Mapping and quality control on Hi-C data.</p>
+description: "Mapping and quality control on Hi-C data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/hicup/hicup.py
 -->
 
 :::note
-<p>Mapping and quality control on Hi-C data.</p>
+Mapping and quality control on Hi-C data.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/hicup/](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
 :::
@@ -25,5 +24,7 @@ File path for the source of this content: multiqc/modules/hicup/hicup.py
 ```yaml
 hicup:
   fn: HiCUP_summary_report*
+hicup/html:
+  fn: '*HiCUP_summary_report*.html'
 ```
     

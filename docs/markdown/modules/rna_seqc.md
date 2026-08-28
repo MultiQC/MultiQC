@@ -1,8 +1,7 @@
 ---
 title: RNA-SeQC
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>RNA-Seq metrics for quality control and process optimization.</p>
+description: "RNA-Seq metrics for quality control and process optimization."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/rna_seqc/rna_seqc.py
 -->
 
 :::note
-<p>RNA-Seq metrics for quality control and process optimization.</p>
+RNA-Seq metrics for quality control and process optimization.
 
 [https://github.com/getzlab/rnaseqc](https://github.com/getzlab/rnaseqc)
 :::
@@ -39,6 +38,10 @@ rna_seqc/correlation:
   fn_re: corrMatrix(Pearson|Spearman)\.txt
 rna_seqc/coverage:
   fn_re: meanCoverageNorm_(high|medium|low)\.txt
+rna_seqc/html:
+  contents: RNA-SeQC</a> v
+  fn: index.html
+  num_lines: 200
 rna_seqc/metrics_v1:
   contents: "Sample\tNote\t"
   fn: '*metrics.tsv'

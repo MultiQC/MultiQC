@@ -51,7 +51,6 @@ def add_to_humid_section(self):
         "xlab": "Number of neighbours",
         "logswitch": True,
         "logswitch_active": True,
-        "hide_zero_cats": False,
     }
     self.add_section(
         name="Neighbour statistics",

@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Long Ranger",
             anchor="longranger",
             href="https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger",

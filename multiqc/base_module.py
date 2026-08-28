@@ -49,9 +49,20 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
+from multiqc.types import (
+    Anchor,
+    FileDict,
+    LoadedFileDict,
+    ModuleId,
+    SampleNameMeta,
+    Section,
+    SectionAlert,
+    SectionId,
+    SectionKey,
+)
 
 logger = logging.getLogger(__name__)
+SectionAlertInput = Union[str, Mapping[str, Any], SectionAlert]
 
 
 class ModuleNoSamplesFound(Exception):
@@ -70,6 +81,10 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    # Module-supplied groups, mapping group display name -> sample names.
+    # When set, takes precedence over `config.table_sample_merge` name patterns
+    # (lets modules with authoritative pair / replicate info skip name-guessing).
+    explicit_groups: Optional[Dict[str, List[str]]] = None
 
 
 class BaseMultiqcModule:
@@ -347,12 +362,12 @@ class BaseMultiqcModule:
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
-                        with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
                             yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
-                        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
                                 yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
@@ -364,7 +379,7 @@ class BaseMultiqcModule:
                                         f"characters\n{e}"
                                     )
                                     try:
-                                        with io.open(
+                                        with open(
                                             os.path.join(f["root"], f["fn"]),
                                             "r",
                                             encoding="utf-8",
@@ -398,6 +413,7 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
     ):
         """Add a section to the module report output
 
@@ -416,6 +432,8 @@ class BaseMultiqcModule:
             statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
                       When provided, displays a status progress bar showing sample pass/warn/fail counts.
                       Can be disabled globally or per-section via `section_status_checks` config.
+            alerts: Optional section alert, or list of alerts. Alert messages are autoformatted like descriptions
+                    and rendered with Bootstrap contextual classes such as "info", "warning", or "danger".
         """
         if id is None and anchor is not None:
             id = str(anchor)
@@ -478,6 +496,8 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     helptext = markdown.markdown(helptext)
 
+        section_alerts = self._format_section_alerts(alerts, autoformat, autoformat_type)
+
         # Strip excess whitespace
         description = description.strip()
         comment = comment.strip()
@@ -500,8 +520,9 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content, section_alerts]),
             status_bar_html=status_bar_html,
+            alerts=section_alerts,
         )
 
         if plot is not None:
@@ -514,6 +535,41 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _format_section_alerts(
+        self,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
+        autoformat: bool,
+        autoformat_type: str,
+    ) -> List[SectionAlert]:
+        if alerts is None:
+            return []
+
+        if isinstance(alerts, (str, SectionAlert)) or isinstance(alerts, Mapping):
+            alert_items: Sequence[SectionAlertInput] = [alerts]
+        else:
+            alert_items = alerts
+
+        formatted_alerts: List[SectionAlert] = []
+        for alert in alert_items:
+            if isinstance(alert, str):
+                section_alert = SectionAlert(message=alert)
+            elif isinstance(alert, SectionAlert):
+                section_alert = alert.model_copy()
+            else:
+                section_alert = SectionAlert(**alert)
+
+            if autoformat:
+                section_alert.message = textwrap.dedent(section_alert.message)
+                if autoformat_type == "markdown":
+                    section_alert.message = markdown.markdown(section_alert.message)
+            section_alert.message = section_alert.message.strip()
+
+            if not section_alert.message:
+                continue
+            formatted_alerts.append(section_alert)
+
+        return formatted_alerts
 
     def _should_add_status_bar(self, section_id: str) -> bool:
         """
@@ -719,7 +775,26 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
+
+        # 1-member entries fall through to the singleton path below: rendering
+        # them as a renamed singleton row is rarely what callers want.
+        groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
+        if grouping_config.explicit_groups:
+            groups_iter = {}
+            grouped_originals: Set[str] = set()
+            for gname, members in grouping_config.explicit_groups.items():
+                if len(members) <= 1:
+                    continue
+                groups_iter[SampleGroup(gname)] = [(None, SampleName(s), SampleName(s)) for s in members]
+                grouped_originals.update(members)
+            for s_name in data_by_sample:
+                if str(s_name) in grouped_originals:
+                    continue
+                groups_iter[SampleGroup(str(s_name))] = [(None, SampleName(str(s_name)), SampleName(str(s_name)))]
+        else:
+            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample.keys()])
+
+        for g_name, labels_s_names in groups_iter.items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -1107,7 +1182,7 @@ class BaseMultiqcModule:
             return
 
         rows_by_group: Dict[SampleGroup, List[InputRow]]
-        if config.table_sample_merge:
+        if config.table_sample_merge or group_samples_config.explicit_groups:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
@@ -1143,8 +1218,8 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
-            # Add grouping information to description if table_sample_merge is enabled
-            if config.table_sample_merge:
+            # Add grouping information to description when grouping is active
+            if config.table_sample_merge or group_samples_config.explicit_groups:
                 desc = _headers[col_id].get("description", "")
                 if group_samples_config.cols_to_weighted_average and any(
                     col_id == c for c, _ in group_samples_config.cols_to_weighted_average

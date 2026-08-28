@@ -1,6 +1,21 @@
 # Scoring Criteria for Module Request Triage
 
-This document provides the detailed rubric for calculating priority scores (0-100) for MultiQC module requests.
+Detailed rubric for calculating priority scores (0-100) for MultiQC module
+requests.
+
+## Contents
+
+- Score Categories — the five weighted categories and how each is calculated
+  1. Tool Popularity (25)
+  2. Package Downloads (15)
+  3. Community Engagement (35)
+  4. Request Quality (20)
+  5. Technical Feasibility (15)
+- Score Calculation Process — step-by-step
+- Edge Cases — missing URL, deleted repo, no package, etc.
+- Scoring Examples — worked examples at each priority band
+- Improving Scores — quick wins to suggest in feedback
+- Validation — sanity-check questions
 
 ## Score Categories
 

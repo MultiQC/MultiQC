@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="goleft indexcov",
             anchor="goleft_indexcov",
             href="https://github.com/brentp/goleft/tree/master/indexcov",

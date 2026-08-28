@@ -25,6 +25,7 @@ def reset_config():
     original_export_plots = config.export_plots
     original_export_plot_formats = getattr(config, "export_plot_formats", None)
     original_strict = config.strict
+    original_custom_plot_config = config.custom_plot_config.copy() if hasattr(config, "custom_plot_config") else {}
     yield
     config.boxplot_boxpoints = original_boxplot_boxpoints
     config.box_min_threshold_no_points = original_box_min_threshold_no_points
@@ -36,6 +37,7 @@ def reset_config():
     elif hasattr(config, "export_plot_formats"):
         delattr(config, "export_plot_formats")
     config.strict = original_strict
+    config.custom_plot_config = original_custom_plot_config
 
 
 def _verify_rendered(plot) -> Plot:
@@ -114,6 +116,164 @@ def test_heatmap():
             pconfig=heatmap.HeatmapConfig(id="heatmap", title="Heatmap"),
         )
     )
+
+
+def test_heatmap_clustering_produces_reordered_data():
+    """
+    Test that clustering reorders rows, xcats, and ycats consistently:
+    the clustered category labels must match the clustered data order.
+    """
+    # Design data so that row 0 (A) is most similar to row 2 (C),
+    # and col 0 is most similar to col 2, forcing a reorder.
+    data = [
+        [10, 0, 11],  # A - similar to C
+        [0, 10, 0],  # B - different
+        [11, 0, 10],  # C - similar to A
+    ]
+    xcats = ["X1", "X2", "X3"]
+    ycats = ["A", "B", "C"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster",
+                title="Heatmap Cluster",
+                cluster_rows=True,
+                cluster_cols=True,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+
+    # Original data should be unchanged
+    assert ds["xcats"] == ["X1", "X2", "X3"]
+    assert ds["ycats"] == ["A", "B", "C"]
+    assert ds["rows"] == data
+
+    # Clustered versions should exist
+    assert ds["rows_clustered"] is not None
+    assert ds["xcats_clustered"] is not None
+    assert ds["ycats_clustered"] is not None
+
+    # Verify that clustered categories are a permutation of originals
+    assert sorted(ds["xcats_clustered"]) == sorted(xcats)
+    assert sorted(ds["ycats_clustered"]) == sorted(ycats)
+
+    # The key invariant: looking up a value by its clustered row/col label
+    # must return the same value as looking it up in the original data.
+    for ci, ycat in enumerate(ds["ycats_clustered"]):
+        orig_row_idx = ycats.index(ycat)
+        for cj, xcat in enumerate(ds["xcats_clustered"]):
+            orig_col_idx = xcats.index(xcat)
+            assert ds["rows_clustered"][ci][cj] == data[orig_row_idx][orig_col_idx], (
+                f"Mismatch at clustered[{ci}][{cj}] ({ycat}, {xcat}): "
+                f"expected {data[orig_row_idx][orig_col_idx]}, got {ds['rows_clustered'][ci][cj]}"
+            )
+
+
+def test_heatmap_clustering_disabled():
+    """
+    When clustering is disabled, no clustered data should be produced.
+    """
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=[[1, 2], [3, 4]],
+            xcats=["Cat1", "Cat2"],
+            ycats=["Sample1", "Sample2"],
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_no_cluster",
+                title="Heatmap No Cluster",
+                cluster_rows=False,
+                cluster_cols=False,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is None
+    assert ds["xcats_clustered"] is None
+    assert ds["ycats_clustered"] is None
+
+
+def test_heatmap_clustering_rows_only():
+    """
+    When only row clustering is enabled, xcats should stay in original order.
+    """
+    data = [
+        [10, 0],
+        [0, 10],
+        [11, 0],
+    ]
+    xcats = ["X1", "X2"]
+    ycats = ["A", "B", "C"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster_rows",
+                title="Heatmap Cluster Rows",
+                cluster_rows=True,
+                cluster_cols=False,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is not None
+    assert ds["ycats_clustered"] is not None
+    # xcats should be the same as original when column clustering is disabled
+    assert ds["xcats_clustered"] == xcats
+
+    # Verify row label - data consistency
+    for ci, ycat in enumerate(ds["ycats_clustered"]):
+        orig_row_idx = ycats.index(ycat)
+        for cj in range(len(xcats)):
+            assert ds["rows_clustered"][ci][cj] == data[orig_row_idx][cj]
+
+
+def test_heatmap_clustering_cols_only():
+    """
+    When only column clustering is enabled, ycats should stay in original order.
+    """
+    data = [
+        [10, 0, 11],
+        [0, 10, 0],
+    ]
+    xcats = ["X1", "X2", "X3"]
+    ycats = ["A", "B"]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=xcats,
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id="heatmap_cluster_cols",
+                title="Heatmap Cluster Cols",
+                cluster_rows=False,
+                cluster_cols=True,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["rows_clustered"] is not None
+    assert ds["xcats_clustered"] is not None
+    # ycats should be the same as original when row clustering is disabled
+    assert ds["ycats_clustered"] == ycats
+
+    # Verify column label - data consistency
+    for ci in range(len(ycats)):
+        for cj, xcat in enumerate(ds["xcats_clustered"]):
+            orig_col_idx = xcats.index(xcat)
+            assert ds["rows_clustered"][ci][cj] == data[ci][orig_col_idx]
 
 
 def test_scatter():
@@ -255,6 +415,20 @@ def test_bar_plot_no_matching_cats():
     assert plot is None
 
 
+def test_bar_plot_all_zero_cats():
+    """
+    All categories are zero for all samples. With hide_zero_cats=True (default),
+    all categories get filtered, so the plot should return None gracefully
+    instead of raising ValueError. Regression test for #3481.
+    """
+    plot = bargraph.plot(
+        {"Sample1": {"Cat1": 0, "Cat2": 0}, "Sample2": {"Cat1": 0, "Cat2": 0}},
+        ["Cat1", "Cat2"],
+        {"id": "test_bar_plot_all_zero_cats", "title": "Test: Bar Graph"},
+    )
+    assert plot is None
+
+
 def test_bar_plot_cats_dicts():
     """
     Advanced cats spec - dict with cat properties instead of a simple list
@@ -330,6 +504,249 @@ def test_bar_plot_no_cats():
     )
 
     assert len(report.plot_data[plot.anchor]["datasets"][0]["cats"]) == 3
+
+
+def test_bar_plot_sample_groups():
+    """
+    Test sample_groups configuration for visual grouping
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10, "Cat2": 20},
+                "Sample2": {"Cat1": 15, "Cat2": 25},
+                "Sample3": {"Cat1": 12, "Cat2": 22},
+                "Sample4": {"Cat1": 18, "Cat2": 28},
+            },
+            ["Cat1", "Cat2"],
+            {
+                "id": "test_bar_plot_sample_groups",
+                "title": "Test: Bar Graph with Sample Groups",
+                "sample_groups": {
+                    "Group 1": [["Sample1", "Sample1"], ["Sample2", "Sample2"]],
+                    "Group 2": [["Sample3", "Sample3"], ["Sample4", "Sample4"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Samples should be reordered according to groups
+    assert ds["samples"] == ["Sample4", "Sample3", "Sample2", "Sample1"]  # reversed for display
+    # Group labels should be present
+    assert ds["group_labels"] == ["Group 2", "Group 2", "Group 1", "Group 1"]  # reversed
+
+
+def test_bar_plot_sample_groups_with_names():
+    """
+    Test sample_groups with custom group names (now directly in dict keys)
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_with_names",
+                "title": "Test: Bar Graph with Named Groups",
+                "sample_groups": {
+                    "Condition A": [["Sample1", "Sample1"]],
+                    "Condition B": [["Sample2", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Custom group names should be used
+    assert ds["group_labels"] == ["Condition B", "Condition A"]  # reversed
+
+
+def test_bar_plot_sample_groups_ungrouped():
+    """
+    Test that samples not in any group get added to 'Other'
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+                "Sample3": {"Cat1": 20},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_ungrouped",
+                "title": "Test: Bar Graph with Ungrouped Samples",
+                "sample_groups": {"Group 1": [["Sample1", "Sample1"]]},  # Sample2 and Sample3 not in any group
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Sample1 should be in Group 1, others in Other
+    # Order: grouped samples first (Sample1), then ungrouped (Sample2, Sample3)
+    assert "Other" in ds["group_labels"]
+    assert "Group 1" in ds["group_labels"]
+
+
+def test_bar_plot_sample_groups_disables_sort():
+    """
+    Test that sample_groups disables sort_samples
+    """
+    inputs = bargraph.BarPlotInputData.create(
+        {"Sample1": {"Cat1": 10}, "Sample2": {"Cat1": 15}},
+        ["Cat1"],
+        {
+            "id": "test_bar_plot_sample_groups_disables_sort",
+            "title": "Test",
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
+            "sort_samples": True,  # Should be overridden
+        },
+    )
+
+    assert inputs.pconfig.sort_samples is False
+
+
+def test_bar_plot_sample_groups_disables_clustering():
+    """
+    Test that sample_groups disables cluster_samples
+    """
+    inputs = bargraph.BarPlotInputData.create(
+        {"Sample1": {"Cat1": 10}, "Sample2": {"Cat1": 15}},
+        ["Cat1"],
+        {
+            "id": "test_bar_plot_sample_groups_disables_clustering",
+            "title": "Test",
+            "sample_groups": {"Group 1": [["Sample1", "Sample1"]], "Group 2": [["Sample2", "Sample2"]]},
+            "cluster_samples": True,  # Should be overridden
+        },
+    )
+
+    assert inputs.pconfig.cluster_samples is False
+
+
+def test_bar_plot_sample_groups_empty_group():
+    """
+    Test that empty groups (groups with no matching samples) are handled gracefully
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1": {"Cat1": 10},
+                "Sample2": {"Cat1": 15},
+            },
+            ["Cat1"],
+            {
+                "id": "test_bar_plot_sample_groups_empty_group",
+                "title": "Test: Bar Graph with Empty Group",
+                "sample_groups": {
+                    "Group A": [["Sample1", "Sample1"]],
+                    "Empty Group": [["NonExistentSample", "NonExistent"]],  # This group has no matching samples
+                    "Group B": [["Sample2", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # Only samples that exist should be in the output
+    # Empty group should not contribute any samples or labels
+    assert len(ds["samples"]) == 2
+    assert len(ds["group_labels"]) == 2
+    # Group labels should be "Group A" and "Group B" (no "Empty Group")
+    assert "Empty Group" not in ds["group_labels"]
+
+
+def test_bar_plot_sample_groups_multiple_entries():
+    """
+    Test same sample appearing in multiple groups with lists for offset alignment
+    """
+    plot = _verify_rendered(
+        bargraph.plot(
+            {
+                "Sample1_25nt": {"Frame0": 50, "Frame1": 30, "Frame2": 20},
+                "Sample1_26nt": {"Frame0": 60, "Frame1": 25, "Frame2": 15},
+                "Sample2_25nt": {"Frame0": 55, "Frame1": 28, "Frame2": 17},
+                "Sample2_26nt": {"Frame0": 65, "Frame1": 22, "Frame2": 13},
+            },
+            ["Frame0", "Frame1", "Frame2"],
+            {
+                "id": "test_bar_plot_sample_groups_multiple_entries",
+                "title": "Test: Bar Graph with Multiple Entries Per Sample",
+                "sample_groups": {
+                    "25nt": [["Sample1_25nt", "Sample1"], ["Sample2_25nt", "Sample2"]],
+                    "26nt": [["Sample1_26nt", "Sample1"], ["Sample2_26nt", "Sample2"]],
+                },
+            },
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    # All 4 samples should be present
+    assert len(ds["samples"]) == 4
+    # Group labels should have 2 of each type
+    assert ds["group_labels"].count("25nt") == 2
+    assert ds["group_labels"].count("26nt") == 2
+    # Offset groups should map sample keys to their base sample names
+    assert ds["offset_groups"]["Sample1_25nt"] == "Sample1"
+    assert ds["offset_groups"]["Sample1_26nt"] == "Sample1"
+    assert ds["offset_groups"]["Sample2_25nt"] == "Sample2"
+    assert ds["offset_groups"]["Sample2_26nt"] == "Sample2"
+
+
+def test_linegraph_axis_controlled_by_switches_valid():
+    """Test that valid axis_controlled_by_switches values are accepted."""
+    # Test with yaxis only (default behavior)
+    config1 = LinePlotConfig(id="test1", title="Test", axis_controlled_by_switches=["yaxis"])
+    assert config1.axis_controlled_by_switches == ["yaxis"]
+
+    # Test with xaxis only
+    config2 = LinePlotConfig(id="test2", title="Test", axis_controlled_by_switches=["xaxis"])
+    assert config2.axis_controlled_by_switches == ["xaxis"]
+
+    # Test with both axes
+    config3 = LinePlotConfig(id="test3", title="Test", axis_controlled_by_switches=["xaxis", "yaxis"])
+    assert config3.axis_controlled_by_switches == ["xaxis", "yaxis"]
+
+    # Test with None (default)
+    config4 = LinePlotConfig(id="test4", title="Test")
+    assert config4.axis_controlled_by_switches is None
+
+
+def test_linegraph_axis_controlled_by_switches_invalid():
+    """Test that invalid axis_controlled_by_switches values are rejected with a useful error."""
+    with patch("logging.Logger.error") as err:
+        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches=["invalid"])
+        assert config.axis_controlled_by_switches is None
+        errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+        assert "'axis_controlled_by_switches'" in errs
+        assert "Literal['xaxis', 'yaxis']" in errs
+
+
+def test_linegraph_axis_controlled_by_switches_string_instead_of_list():
+    """Test that a flat string instead of a list is rejected with a useful error."""
+    with patch("logging.Logger.error") as err:
+        config = LinePlotConfig(id="test", title="Test", axis_controlled_by_switches="yaxis")  # type: ignore
+        assert config.axis_controlled_by_switches is None
+        errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
+        assert "'axis_controlled_by_switches'" in errs
+        assert "List" in errs
+
+
+def test_linegraph_axis_controlled_by_switches_in_plot():
+    """Test that axis_controlled_by_switches works in actual plot creation."""
+    dataset = {"Sample1": {0: 1, 1: 2}}
+
+    # Test with xaxis
+    plot = _verify_rendered(
+        linegraph.plot(
+            dataset,
+            LinePlotConfig(id="test_axis_xaxis", title="Test", axis_controlled_by_switches=["xaxis"]),
+        )
+    )
+    assert isinstance(plot, linegraph.LinePlot)
 
 
 def test_linegraph_smooth():
@@ -799,3 +1216,309 @@ def test_table_custom_plot_config_invalid_field(reset):
     for section in dt.section_by_id.values():
         for col_key, col_meta in section.column_by_key.items():
             assert col_meta.hidden is True, f"Column {col_key} should be hidden"
+
+
+def test_linegraph_custom_plot_config_y_bands(reset):
+    """
+    Test that custom_plot_config can set y_bands as dictionaries that get properly
+    converted to LineBand objects.
+
+    This is a regression test for https://github.com/MultiQC/MultiQC/issues/3457
+    where y_bands specified via custom_plot_config were not being parsed into
+    LineBand objects because setattr bypassed the validation.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_y_bands"
+
+    # Set custom_plot_config with y_bands as raw dictionaries
+    config.custom_plot_config = {
+        plot_id: {
+            "y_bands": [
+                {"from": 0, "to": 40, "color": "#e6c3c3"},
+                {"from": 40, "to": 80, "color": "#e6dcc3"},
+                {"from": 80, "to": 100, "color": "#c3e6c3"},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 50, 1: 60, 2: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: Line Graph with Y Bands"),
+        )
+    )
+
+    # Verify that y_bands are properly converted to LineBand objects
+    assert plot.pconfig.y_bands is not None
+    assert len(plot.pconfig.y_bands) == 3
+    for band in plot.pconfig.y_bands:
+        assert isinstance(band, LineBand), f"Expected LineBand, got {type(band)}"
+
+    # Verify specific band values
+    assert plot.pconfig.y_bands[0].from_ == 0
+    assert plot.pconfig.y_bands[0].to == 40
+    assert plot.pconfig.y_bands[0].color == "#e6c3c3"
+
+    # Shapes are per-dataset (see Plot._set_y_bands_and_range). For a single-dataset
+    # plot, that's just datasets[0].
+    shapes = plot.datasets[0].layout.get("shapes", [])
+    y_band_shapes = [s for s in shapes if s["type"] == "rect" and s["xref"] == "paper"]
+    assert len(y_band_shapes) == 3
+    band_y_values = sorted(set((s["y0"], s["y1"]) for s in y_band_shapes))
+    assert (0, 40) in band_y_values
+    assert (40, 80) in band_y_values
+    assert (80, 100) in band_y_values
+
+
+def test_linegraph_custom_plot_config_x_lines(reset):
+    """
+    Test that custom_plot_config can set x_lines as dictionaries that get properly
+    converted to FlatLine objects.
+    """
+    from multiqc.plots.plot import FlatLine
+
+    plot_id = "test_linegraph_x_lines"
+
+    # Set custom_plot_config with x_lines as raw dictionaries
+    config.custom_plot_config = {
+        plot_id: {
+            "x_lines": [
+                {"value": 50, "color": "#ff0000", "width": 2},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 10, 50: 60, 100: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: Line Graph with X Lines"),
+        )
+    )
+
+    # Verify that x_lines are properly converted to FlatLine objects
+    assert plot.pconfig.x_lines is not None
+    assert len(plot.pconfig.x_lines) == 1
+    assert isinstance(plot.pconfig.x_lines[0], FlatLine)
+    assert plot.pconfig.x_lines[0].value == 50
+    assert plot.pconfig.x_lines[0].color == "#ff0000"
+
+
+def test_linegraph_custom_plot_config_deprecated_y_plot_bands(reset):
+    """
+    Test that the deprecated camelCase alias yPlotBands is still parsed correctly
+    when set via custom_plot_config — the docs example used to use this form, so
+    users on existing configs should not see pydantic serializer warnings.
+
+    Regression test for the deprecated-alias path in the fix for
+    https://github.com/MultiQC/MultiQC/issues/3457.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_y_plot_bands_deprecated"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "yPlotBands": [
+                {"from": 0, "to": 40, "color": "#e6c3c3"},
+                {"from": 40, "to": 80, "color": "#e6dcc3"},
+            ]
+        }
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            {"Sample1": {0: 50, 1: 60, 2: 70}},
+            linegraph.LinePlotConfig(id=plot_id, title="Test: deprecated yPlotBands"),
+        )
+    )
+
+    # Deprecated alias should be redirected to the modern y_bands field and parsed
+    # into LineBand objects (not raw dicts).
+    assert plot.pconfig.y_bands is not None
+    assert len(plot.pconfig.y_bands) == 2
+    for band in plot.pconfig.y_bands:
+        assert isinstance(band, LineBand), f"Expected LineBand, got {type(band)}"
+    assert plot.pconfig.y_bands[0].from_ == 0
+    assert plot.pconfig.y_bands[0].to == 40
+    assert plot.pconfig.y_bands[0].color == "#e6c3c3"
+
+
+def test_linegraph_custom_plot_config_per_tab_y_bands(reset):
+    """
+    Test that custom_plot_config can target a single tab in a multi-data_labels
+    plot via the nested `data_labels:` dict form, keyed by tab name.
+
+    Regression test for the OP of https://github.com/MultiQC/MultiQC/issues/3457:
+    user wants y_bands on just one of multiple subplots (e.g. only the "MQ" tab
+    in samtools-coverage), not all of them.
+    """
+    from multiqc.plots.plot import LineBand
+
+    plot_id = "test_linegraph_per_tab_y_bands"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                "Second": {
+                    "y_bands": [
+                        {"from": 50, "to": 60, "color": "#c3e6c3"},
+                    ],
+                },
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab y_bands",
+                "data_labels": [{"name": "First"}, {"name": "Second"}],
+            },
+        )
+    )
+
+    # The override is parsed into LineBand objects and stored on the matching tab.
+    second_dl = plot.pconfig.data_labels[1]
+    assert isinstance(second_dl, dict)
+    assert second_dl["name"] == "Second"
+    bands = second_dl.get("y_bands")
+    assert bands is not None and len(bands) == 1
+    assert isinstance(bands[0], LineBand)
+    assert bands[0].from_ == 50
+    assert bands[0].to == 60
+
+    # The "First" tab should have no y_bands.
+    first_dl = plot.pconfig.data_labels[0]
+    assert isinstance(first_dl, dict)
+    assert "y_bands" not in first_dl
+
+    # Shapes are emitted onto dataset[1] only, not dataset[0].
+    first_rects = [
+        s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "rect" and s.get("xref") == "paper"
+    ]
+    second_rects = [
+        s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "rect" and s.get("xref") == "paper"
+    ]
+    assert first_rects == []
+    assert len(second_rects) == 1
+    assert (second_rects[0]["y0"], second_rects[0]["y1"]) == (50, 60)
+
+
+def test_linegraph_custom_plot_config_per_tab_positional_index(reset):
+    """
+    Test that integer keys in the per-tab override dict are treated as positional
+    indices into data_labels.
+    """
+    from multiqc.plots.plot import FlatLine
+
+    plot_id = "test_linegraph_per_tab_positional"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                0: {"y_lines": [{"value": 5, "color": "#ff0000"}]},
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab positional",
+                "data_labels": [{"name": "A"}, {"name": "B"}],
+            },
+        )
+    )
+
+    first_dl = plot.pconfig.data_labels[0]
+    assert isinstance(first_dl, dict)
+    lines = first_dl.get("y_lines")
+    assert lines is not None and len(lines) == 1
+    assert isinstance(lines[0], FlatLine)
+    assert lines[0].value == 5
+
+    first_lines = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "line"]
+    second_lines = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "line"]
+    assert len(first_lines) == 1
+    assert second_lines == []
+
+
+def test_linegraph_custom_plot_config_per_tab_unmatched_name(reset, caplog):
+    """
+    Test that an unmatched tab name in the per-tab override is logged as a warning
+    and does not affect the plot.
+    """
+    plot_id = "test_linegraph_per_tab_unmatched"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "data_labels": {
+                "Nonexistent": {"y_bands": [{"from": 0, "to": 10, "color": "#c3e6c3"}]},
+            },
+        },
+    }
+
+    with caplog.at_level("WARNING"):
+        plot = _verify_rendered(
+            linegraph.plot(
+                [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+                {
+                    "id": plot_id,
+                    "title": "Test: per-tab unmatched",
+                    "data_labels": [{"name": "A"}, {"name": "B"}],
+                },
+            )
+        )
+
+    assert any("Nonexistent" in rec.message for rec in caplog.records)
+    for dl in plot.pconfig.data_labels:
+        assert isinstance(dl, dict)
+        assert "y_bands" not in dl
+    for dataset in plot.datasets:
+        rects = [s for s in dataset.layout.get("shapes", []) if s["type"] == "rect"]
+        assert rects == []
+
+
+def test_linegraph_custom_plot_config_per_tab_with_plot_level_bands(reset):
+    """
+    Plot-level y_bands still apply to every tab; per-tab y_lines layer on top
+    of just one tab.
+    """
+    plot_id = "test_linegraph_per_tab_layered"
+
+    config.custom_plot_config = {
+        plot_id: {
+            "y_bands": [{"from": 0, "to": 5, "color": "#e6c3c3"}],
+            "data_labels": {
+                "B": {"y_lines": [{"value": 15, "color": "#0000ff"}]},
+            },
+        },
+    }
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            [{"Sample1": {0: 1, 1: 2}}, {"Sample1": {0: 10, 1: 20}}],
+            {
+                "id": plot_id,
+                "title": "Test: per-tab layered",
+                "data_labels": [{"name": "A"}, {"name": "B"}],
+            },
+        )
+    )
+
+    rect0 = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "rect"]
+    rect1 = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "rect"]
+    assert len(rect0) == 1
+    assert len(rect1) == 1
+    assert (rect0[0]["y0"], rect0[0]["y1"]) == (0, 5)
+
+    line0 = [s for s in plot.datasets[0].layout.get("shapes", []) if s["type"] == "line"]
+    line1 = [s for s in plot.datasets[1].layout.get("shapes", []) if s["type"] == "line"]
+    assert line0 == []
+    assert len(line1) == 1
+    assert line1[0]["y0"] == 15

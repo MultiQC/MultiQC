@@ -1,8 +1,7 @@
 ---
 title: Sourmash
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quickly searches, compares, and analyzes genomic and metagenomic data sets.</p>
+description: "Quickly searches, compares, and analyzes genomic and metagenomic data sets."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/sourmash/sourmash.py
 -->
 
 :::note
-<p>Quickly searches, compares, and analyzes genomic and metagenomic data sets.</p>
+Quickly searches, compares, and analyzes genomic and metagenomic data sets.
 
 [https://github.com/sourmash-bio/sourmash](https://github.com/sourmash-bio/sourmash)
 :::
