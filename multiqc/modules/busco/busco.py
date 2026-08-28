@@ -12,8 +12,7 @@ VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
 class MultiqcModule(BaseMultiqcModule):
     """
     The module parses the `short_summary_[samplename].txt` files and
-    plots the proportion of BUSCO types found. MultiQC has been tested with
-    output from BUSCO v1.22 - v2.
+    plots the proportion of BUSCO types found.
     """
 
     def __init__(self):
@@ -23,10 +22,10 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://busco.ezlab.org/",
             info="Assesses genome assembly and annotation completeness",
             extra="""
-            BUSCO v2 provides quantitative measures for the assessment of genome
+            BUSCO provides quantitative measures for the assessment of genome
             assembly, gene set, and transcriptome completeness, based on
             evolutionarily-informed expectations of gene content from near-universal
-            single-copy orthologs selected from OrthoDB v9.""",
+            single-copy orthologs selected from OrthoDB.""",
             doi="10.1093/bioinformatics/btv351",
         )
 
