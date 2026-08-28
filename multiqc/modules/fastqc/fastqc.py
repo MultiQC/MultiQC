@@ -251,7 +251,7 @@ class MultiqcModule(BaseMultiqcModule):
                     s_name = self.parse_fastqc_report(r_data, s_name=s_name, f=f)
                     self.add_data_source(f, str(s_name))
             except KeyError:
-                log.warning(f"Error - can't find fastqc_raw_data.txt in {f}")
+                log.warning(f"Error - can't find fastqc_data.txt in {f}")
 
         # Filter to strip out ignored sample names
         self.fastqc_data = self.ignore_samples(self.fastqc_data)
