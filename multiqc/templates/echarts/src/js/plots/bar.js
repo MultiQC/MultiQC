@@ -1,3 +1,17 @@
+// Build an rgba() color string at the given alpha from a category color.
+// cat.color (multiqc/utils/mqc_colour.py::color_to_rgb_string) is always already a
+// full "rgb(r,g,b)" or "rgba(r,g,b,a)" CSS string, never bare "r,g,b" digits (verified
+// against a live report: FastQC's default-palette cats serialize as e.g.
+// "rgba(124,181,236,1)"). Naively concatenating "rgba(" + cat.color + "," + alpha + ")"
+// (the pattern default template's Plotly bar.js uses) therefore nests the color inside
+// a second rgba() wrapper, which is invalid CSS; extract the r,g,b components instead
+// and always emit a fresh, valid rgba().
+function colorWithAlpha(color, alpha) {
+  let match = color.match(/rgba?\(([^)]+)\)/);
+  let [r, g, b] = (match ? match[1] : color).split(",").map((s) => s.trim());
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 // ECharts bar plot: extends the default template's BarPlot (imported just before this
 // file in main-js.js) purely for its prepData()/exportData()/formatDatasetForAiPrompt()/
 // activeDatasetSize(), which are engine-neutral (they only read/filter raw dataset
@@ -19,6 +33,16 @@ class EchartsBarPlot extends window.BarPlot {
 
     let [cats] = this.prepData();
 
+    // "N samples hidden" banner + hiding the whole plot group when every sample is
+    // hidden: plotting-shared.js's applyToolboxSettings() has this exact logic
+    // (keyed off a `plotAnchor` argument), but no BarPlot caller (default template's
+    // included) ever passes that argument, so it's dead code in both templates today.
+    // Rather than thread plotAnchor through shared/default code (out of scope: "Do NOT
+    // edit the default template"), recompute the same signal here from data already on
+    // this instance. This runs on every render, so it is naturally correct and reverses
+    // itself when the toolbox hide filters are cleared.
+    this._updateHiddenSamplesWarning(dataset["samples"].length, this.filteredSettings.length);
+
     if (cats.length === 0 || this.filteredSettings.length === 0) {
       this._axisData = [];
       return [];
@@ -32,6 +56,12 @@ class EchartsBarPlot extends window.BarPlot {
     let barmode = this.echarts.datasets[this.activeDatasetIdx].layout["_mqc"]?.barmode;
     let isGroup = barmode === "group";
 
+    // parity gap (Phase 3): the Plotly bar plot also colors the sample-name axis TICK
+    // LABELS for highlighted samples (recalculateTicks() writing tickvals/ticktext HTML
+    // spans, templates/default/src/js/plots/bar.js). ECharts ignores tickvals/ticktext;
+    // an equivalent would need yAxis.axisLabel.formatter + a `rich` style map keyed per
+    // sample. Bar dimming below is the primary highlight signal and matches Plotly;
+    // tick-label coloring is deferred.
     return cats.map((cat) => {
       let series = {
         type: "bar",
@@ -43,13 +73,35 @@ class EchartsBarPlot extends window.BarPlot {
           let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
           return {
             value: cat.data[sampleIdx],
-            itemStyle: { color: "rgba(" + cat.color + "," + alpha + ")" },
+            itemStyle: { color: colorWithAlpha(cat.color, alpha) },
           };
         }),
       };
       if (!isGroup) series.stack = "total";
       return series;
     });
+  }
+
+  // See the comment at the buildSeries() call site above.
+  _updateHiddenSamplesWarning(total, visible) {
+    let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
+    groupDiv.parent().find(".samples-hidden-warning").remove();
+
+    if (visible === 0 && total > 0) {
+      groupDiv.hide();
+      return;
+    }
+    groupDiv.show();
+
+    let nHidden = total - visible;
+    if (nHidden > 0) {
+      const alert = `
+      <div class="samples-hidden-warning alert alert-warning">
+        ⚠ <strong>Warning:</strong> ${nHidden} samples hidden.
+        <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
+      </div>`;
+      groupDiv.before(alert);
+    }
   }
 }
 
