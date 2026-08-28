@@ -103,6 +103,14 @@ sample name anonymisation.
   Driven into `docs/markdown/config_schema.md`,
   `multiqc/utils/config_schema.json`, and the wizard HTML by scripts in
   `scripts/`. `tests/test_config_wizard.py` catches drift.
+- `scripts/wizard_template.html` — config wizard source. Loads
+  js-yaml, highlight.js, ajv, and monaco-editor from cdnjs with SRI
+  `integrity` hashes. When updating these, bump the version in both the
+  `src`/`paths` URLs and the matching `integrity` hash (get the hash from
+  `https://api.cdnjs.com/libraries/<lib>/<ver>?fields=sri` and verify it
+  against the served file), then regenerate with
+  `python scripts/generate_config_wizard.py`. See
+  `scripts/CONFIG_WIZARD_README.md`.
 - `multiqc/search_patterns.yaml` — file-pattern matching for every module
 - `multiqc/base_module.py` — `BaseMultiqcModule` parent class
 - `pyproject.toml` — package config and module entry points
