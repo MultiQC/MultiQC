@@ -24,13 +24,15 @@ jobs:
       - name: Require maintainer access
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.event.comment.user.login }}
         run: |
-          PERM=$(gh api "repos/${{ github.repository }}/collaborators/${{ github.event.comment.user.login }}/permission" -q '.permission')
-          echo "${{ github.event.comment.user.login }} has permission: $PERM"
+          PERM=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" -q '.permission')
+          echo "${ACTOR} has permission: $PERM"
           [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
