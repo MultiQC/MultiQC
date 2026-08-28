@@ -8,7 +8,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 import math
 
 from multiqc import config, report
-from multiqc.plots import bargraph, echarts
+from multiqc.plots import bargraph, echarts, linegraph
 from multiqc.types import Anchor
 
 
@@ -25,6 +25,16 @@ def _make_bar_plot():
     )
 
 
+def _make_line_plot():
+    return linegraph.plot(
+        {
+            "Sample1": {0: 1, 1: 1},
+            "Sample2": {0: 1, 1: 1, 2: 1},
+        },
+        linegraph.LinePlotConfig(id="linegraph", title="Test: Line Graph"),
+    )
+
+
 def test_interactive_plot_adds_echarts_key_when_engine_is_echarts():
     config.plotting_engine = "echarts"
     plot = _make_bar_plot()
@@ -38,6 +48,15 @@ def test_interactive_plot_adds_echarts_key_when_engine_is_echarts():
     assert skeleton["animation"] is False
     assert skeleton["yAxis"]["type"] == "category"
     assert "series" not in skeleton
+
+
+def test_interactive_plot_unsupported_plot_type_does_not_raise():
+    config.plotting_engine = "echarts"
+    plot = _make_line_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert dumped["echarts"] == {"unsupported": "x/y line"}
 
 
 def test_interactive_plot_omits_echarts_key_by_default():

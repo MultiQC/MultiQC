@@ -41,8 +41,17 @@ def serialize(plot: "Plot[Any, Any]") -> Dict[str, Any]:
     `{"renderer": "svg"|"canvas", "datasets": [{"layout": <option skeleton>}, ...]}`,
     parallel to `plot.model_dump()["datasets"]`. The skeleton has no `series`, no axis
     `data` arrays, and no formatter functions, so it must always be plain-JSON-safe.
+
+    Plot types not yet ported to ECharts return `{"unsupported": <plot type>}` instead
+    of raising, so a single unported plot doesn't crash the whole report render; the JS
+    side (initPlot/renderPlot in echarts-plotting.js) renders a visible placeholder for
+    these instead of a chart.
     """
-    builder = _builder(plot.plot_type)
+    plot_type = PlotType(plot.plot_type)
+    if plot_type not in _BUILDERS:
+        return {"unsupported": plot_type.value}
+
+    builder = _BUILDERS[plot_type]
 
     datasets = []
     max_marks = 0
