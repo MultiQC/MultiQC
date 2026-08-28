@@ -1,8 +1,7 @@
 ---
 title: SeqyClean
 displayed_sidebar: multiqcSidebar
-description: >
-  Filters adapters, vectors, and contaminants while quality trimming.
+description: "Filters adapters, vectors, and contaminants while quality trimming."
 ---
 
 <!--
@@ -29,5 +28,6 @@ The module parses the `*SummaryStatistics.tsv` files that results from a SeqyCle
 
 ```yaml
 seqyclean:
-  fn: "*_SummaryStatistics.tsv"
+  fn: '*_SummaryStatistics.tsv'
 ```
+    

@@ -1,8 +1,7 @@
 ---
 title: Truvari
 displayed_sidebar: multiqcSidebar
-description: >
-  Benchmarking, merging, and annotating structural variants
+description: "Benchmarking, merging, and annotating structural variants."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/truvari/truvari.py
 -->
 
 :::note
-Benchmarking, merging, and annotating structural variants
+Benchmarking, merging, and annotating structural variants.
 
 [https://github.com/ACEnglish/truvari](https://github.com/ACEnglish/truvari)
 :::
@@ -30,5 +29,6 @@ Supported commands:
 truvari/bench:
   contents_re: .*truvari.* bench.*
   fn: log.txt
-  num_lines: 2
+  num_lines: 10
 ```
+    

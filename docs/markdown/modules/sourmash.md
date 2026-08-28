@@ -1,8 +1,7 @@
 ---
 title: Sourmash
 displayed_sidebar: multiqcSidebar
-description: >
-  Quickly searches, compares, and analyzes genomic and metagenomic data sets.
+description: "Quickly searches, compares, and analyzes genomic and metagenomic data sets."
 ---
 
 <!--
@@ -45,8 +44,9 @@ sourmash:
 
 ```yaml
 sourmash/compare:
-  fn: "*.labels.txt"
+  fn: '*.labels.txt'
 sourmash/gather:
   contents: intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,
   num_lines: 1
 ```
+    

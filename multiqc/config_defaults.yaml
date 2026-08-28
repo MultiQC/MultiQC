@@ -18,11 +18,16 @@ report_header_info: null
 show_analysis_paths: True
 show_analysis_time: True
 custom_logo: null
+custom_logo_dark: null
 custom_logo_url: null
 custom_logo_title: null
+custom_logo_width: null
+custom_favicon: null # Path to custom favicon (SVG recommended for all sizes)
 custom_css_files: []
 simple_output: false
 template: "default"
+template_dark_mode: true
+plot_font_family: null # Custom font family for plots (defaults to system font stack)
 profile_runtime: false
 profile_memory: false
 pandoc_template: null
@@ -59,7 +64,7 @@ megaqc_url: null
 megaqc_access_token: null
 megaqc_timeout: 30
 export_plots: false
-export_plots_timeout: 30
+export_plots_timeout: 60
 make_report: true
 make_pdf: false
 
@@ -83,15 +88,14 @@ ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 mo
 ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 
 # Development settings:
-seqera_api_url: "https://intern.seqera.io"
-seqera_website: "https://seqera.io"
+seqera_api_url: "https://ai.seqera.io/v1/web"
+seqera_website: "https://ai.seqera.io"
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false
 plots_flat_numseries: 2000
 plots_defer_loading_numseries: 100 # plot will require user to press button to render plot
-plot_theme: null # Plotly theme template - any registered Plotly theme name (e.g. "plotly", "plotly_white", "plotly_dark", "ggplot2", "seaborn", "simple_white", "none")
 num_datasets_plot_limit: 100 # DEPRECATED in favour of plots_defer_loading_numseries
 lineplot_number_of_points_to_hide_markers: 50 # sum of data points in all samples
 barplot_legend_on_bottom: false # place legend at the bottom of the bar plot (not recommended)
@@ -106,6 +110,7 @@ collapse_tables: true
 max_table_rows: 500
 max_configurable_table_columns: 200
 general_stats_columns: {}
+general_stats_helptext: null
 table_columns_visible: {}
 table_columns_placement: {}
 table_columns_name: {}
@@ -142,10 +147,11 @@ table_cond_formatting_rules:
   QCStatus:
     fail:
       - s_contains: "fail"
-decimalPoint_format: null
-thousandsSep_format: null
+decimalPoint_format: "."
+thousandsSep_format: " "
 remove_sections: []
 section_comments: {}
+section_status_checks: {}
 lint: False # Deprecated since v1.17
 strict: False
 development: False
@@ -367,6 +373,22 @@ fn_clean_exts:
   - ".error.spl"
   - ".error.grp"
   - ".vgstats"
+  - "_mapq_table"
+  - "_strand_table"
+  - "_isize_table"
+  - "_dup_report"
+  - "_cv_table"
+  - "_covdist_all"
+  - "_covdist_q40"
+  - "_CpGRetention"
+  - "_CpHRetentionByReadPos"
+  - "_totalBaseConversionRate"
+  - "_totalReadConversionRate"
+  - ".sylphmpa"
+  - "_qual"
+  - "_hifi_trimmer"
+  - ".hifi_trimmer"
+  - "_trimmer"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -408,6 +430,7 @@ fn_clean_trim:
   - ".phased"
   - ".tar"
   - "runs_"
+  - ".qc"
 
 # Files to ignore when checking content with "content" and "content_re" search patterns.
 fn_ignore_files:
@@ -530,6 +553,7 @@ module_order:
   - umitools
   - truvari
   - megahit
+  - sincei
   - ganon
   - gtdbtk
   # Alignment tool stats
@@ -550,6 +574,7 @@ module_order:
   - bowtie1
   - hostile
   - cellranger
+  - checkatlas
   - snpsplit
   - odgi
   - vg
@@ -566,6 +591,7 @@ module_order:
   - bbduk
   - clipandmerge
   - cutadapt
+  - trim_galore
   - flexbar
   - sourmash
   - kaiju
@@ -576,9 +602,11 @@ module_order:
   - sickle
   - skewer
   - sortmerna
+  - ribodetector
   - biobloomtools
   - seqfu
   - fastq_screen
+  - fastqe
   - afterqc
   - fastp
   - fastqc
@@ -605,6 +633,7 @@ module_order:
   - xenome
   - xengsort
   - metaphlan
+  - sylphtax
   - seqwho
   - telseq
   - ataqv

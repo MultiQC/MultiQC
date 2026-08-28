@@ -1,8 +1,7 @@
 ---
 title: VEP
 displayed_sidebar: multiqcSidebar
-description: >
-  Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.
+description: "Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions."
 ---
 
 <!--
@@ -38,11 +37,12 @@ documentation for more information.
 ```yaml
 vep/vep_html:
   contents: VEP summary
-  fn: "*.html"
+  fn: '*.html'
   max_filesize: 1000000
   num_lines: 10
 vep/vep_txt:
-  contents: "[VEP run statistics]"
+  contents: '[VEP run statistics]'
   max_filesize: 100000
   num_lines: 1
 ```
+    

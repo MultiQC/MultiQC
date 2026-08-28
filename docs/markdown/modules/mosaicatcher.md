@@ -1,8 +1,7 @@
 ---
 title: MosaiCatcher
 displayed_sidebar: multiqcSidebar
-description: >
-  Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model.
+description: "Counts strand-seq reads and classifies strand states of each chromosome in each cell using a Hidden Markov Model."
 ---
 
 <!--
@@ -24,5 +23,6 @@ Counts strand-seq reads and classifies strand states of each chromosome in each 
 
 ```yaml
 mosaicatcher:
-  fn: "*.mosaicatcher_info_raw.txt"
+  fn: '*.mosaicatcher_info_raw.txt'
 ```
+    

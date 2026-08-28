@@ -272,7 +272,7 @@ def test_full_run_with_config(data_dir, capsys):
     )
 
     out = capsys.readouterr().out
-    assert '<h2 class="mqc-module-title" id="concordance">Concordance Rates</h2>' in out
+    assert '<h2 class="mb-0" id="concordance">Concordance Rates</h2>' in out
     assert '<div class="mqc-section mqc-section-concordance"' in out
 
     assert len(report.plot_by_id) == 1
@@ -316,7 +316,7 @@ target___test2	2
         custom_data:
           last_o2o:
             plot_type: "table"
-        
+
         sp:
           last_o2o:
             fn: "target__*tsv"
@@ -885,6 +885,30 @@ sample2,20
 
     assert section1.description == "<p>This is the description for section 1</p>"
     assert section2.description == "<p>This is the description for section 2</p>"
+
+
+def test_data_type_conflict_does_not_crash(tmp_path):
+    """
+    Regression test for https://github.com/MultiQC/MultiQC/issues/3484
+
+    When two custom content files resolve to the same section ID but produce
+    different data types (e.g. heatmap list vs bar dict), the module should
+    warn and overwrite rather than crash with an AssertionError.
+    """
+    # Square CSV: auto-detected as heatmap (data stored as list)
+    dir1 = tmp_path / "dir1"
+    dir1.mkdir()
+    (dir1 / "test_mqc.csv").write_text(",A,B,C\nX,1,2,3\nY,4,5,6\nZ,7,8,9\n")
+
+    # Non-square CSV: auto-detected as bar graph (data stored as dict)
+    dir2 = tmp_path / "dir2"
+    dir2.mkdir()
+    (dir2 / "test_mqc.csv").write_text(",A,B,C\nX,1,2,3\nY,4,5,6\nZ,7,8,9\nW,10,11,12\nQ,13,14,15\n")
+
+    report.analysis_files = [str(dir1), str(dir2)]
+    report.search_files(["custom_content"])
+    modules = custom_module_classes()
+    assert len(modules) >= 1
 
 
 def test_parent_name_without_parent_description(tmp_path):

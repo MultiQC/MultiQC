@@ -32,8 +32,11 @@ REASONING_MODELS = {
     "o4-mini",
     # Anthropic Claude 4 series (extended thinking models)
     "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-5",
     "claude-sonnet-4-0",
+    "claude-haiku-4-5",
     "claude-haiku-4-0",
+    "claude-opus-4-5",
     "claude-opus-4-0",
 }
 
@@ -109,7 +112,7 @@ summary: |
 """
 
 _EXAMPLE_DETAILED_SUMMARY = """\
-**Analysis**
+##### Analysis
 
 - :sample[A1002]{.text-yellow} and :sample[A1003]{.text-yellow} groups (:span[11/13 samples]{.text-green}) show good quality metrics, with consistent GC content (38-39%), read lengths (125 bp), and acceptable levels of duplicates and valid pairs.
 - :sample[A1001.2003]{.text-red} and :sample[A1001.2004]{.text-red} show severe quality issues:
@@ -126,7 +129,7 @@ _EXAMPLE_DETAILED_SUMMARY = """\
 - Overrepresented sequences analysis reveals adapter contamination in several samples, particularly in :sample[A1001.2003]{.text-yellow} (up to :span[35.82%]{.text-yellow} in Read 1).
 - HiCUP analysis shows that most samples have acceptable levels of valid pairs, with :sample[A1003]{.text-green} group generally performing better than :sample[A1002]{.text-yellow} group.
 
-**Recommendations**
+##### Recommendations
 
 - Remove :sample[A1001.2003]{.text-red} and :sample[A1200.2004]{.text-red} from further analysis due to severe quality issues.
 - Investigate the cause of low valid pairs and passed Di-Tags in :sample[A1002-1007]{.text-yellow}. Consider removing it if the issue cannot be resolved.
@@ -179,18 +182,10 @@ class InterpretationOutput(BaseModel):
         # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
         html = re.sub(
             r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
+            r"<sample data-bs-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
             html,
         )
         return html
-
-    # def format_text(self) -> str:
-    #     """
-    #     Format to markdown to display in Seqera AI
-    #     """
-    #     summary = deanonymize_sample_names(self.summary)
-    #     detailed = deanonymize_sample_names(self.detailed_analysis) if self.detailed_analysis else None
-    #     return f"## Analysis\n{summary}" + (f"\n\n{detailed}" if detailed else "")
 
 
 class InterpretationResponse(BaseModel):
@@ -450,7 +445,7 @@ class AnthropicClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
         self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-0"
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-5"
         )
         self.name = "anthropic"
         self.title = "Anthropic"
@@ -489,16 +484,6 @@ class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
 
-        # Check Bedrock availability with detailed error reporting
-        is_available, error_msg = _check_bedrock_availability()
-        if not is_available:
-            if "boto3 not installed" in str(error_msg):
-                raise ImportError(
-                    'AI summary through AWS bedrock requires "boto3" to be installed. Install it with `pip install boto3`'
-                )
-            else:
-                raise RuntimeError(f"AWS Bedrock is not available: {error_msg}")
-
         self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
@@ -532,6 +517,13 @@ class AWSBedrockClient(Client):
         )
 
         response_body = json.loads(response["body"].read())
+        if (
+            "content" not in response_body
+            or len(response_body["content"]) != 1
+            or "text" not in response_body["content"][0]
+        ):
+            logger.error(f"bedrock response content: {response_body}")
+            raise ValueError("Unexpected bedrock response body")
         content = response_body["content"][0]["text"]  # Extract the assistant's response
         return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
@@ -544,7 +536,8 @@ class SeqeraClient(Client):
         creation_date = report.creation_date.strftime("%d %b %Y, %H:%M %Z")
         self.chat_title = f"{(config.title + ': ' if config.title else '')}MultiQC report, created on {creation_date}"
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
-        self.model = config.ai_model or "claude-sonnet-4-0"
+        # Model is determined by Seqera endpoint, not specified in request
+        self.model = "seqera"
 
     def max_tokens(self) -> int:
         return 200000
@@ -561,7 +554,7 @@ class SeqeraClient(Client):
         self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
     ) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
-            f"{config.seqera_api_url}/internal-ai/query",
+            f"{config.seqera_api_url}/internal-ai/report-summary",
             headers={"Authorization": f"Bearer {self.api_key}"},
             body={
                 "message": self.wrap_details(prompt + "\n\n" + report_content),
@@ -1078,7 +1071,13 @@ def add_ai_summary_to_report():
         return
 
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
-    client = get_llm_client()
+    try:
+        client = get_llm_client()
+    except RuntimeError as e:
+        logger.error(f"Failed to initialize AI client: {e}")
+        if config.strict:
+            raise
+        return
     assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
     report.ai_provider_id = client.name

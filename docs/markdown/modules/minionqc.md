@@ -1,8 +1,7 @@
 ---
 title: MinIONQC
 displayed_sidebar: multiqcSidebar
-description: >
-  Quality control for ONT (Oxford Nanopore) long reads
+description: "Quality control for ONT (Oxford Nanopore) long reads."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/minionqc/minionqc.py
 -->
 
 :::note
-Quality control for ONT (Oxford Nanopore) long reads
+Quality control for ONT (Oxford Nanopore) long reads.
 
 [https://github.com/roblanf/minion_qc](https://github.com/roblanf/minion_qc)
 :::
@@ -33,3 +32,4 @@ minionqc:
   contents: total.gigabases
   fn: summary.yaml
 ```
+    

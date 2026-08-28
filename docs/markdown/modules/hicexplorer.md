@@ -1,8 +1,7 @@
 ---
 title: HiCExplorer
 displayed_sidebar: multiqcSidebar
-description: >
-  Hi-C analysis from processing to visualization.
+description: "Hi-C analysis from processing to visualization."
 ---
 
 <!--
@@ -31,3 +30,4 @@ hicexplorer:
   max_filesize: 4096
   num_lines: 26
 ```
+    

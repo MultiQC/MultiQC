@@ -1,8 +1,7 @@
 ---
 title: AfterQC
 displayed_sidebar: multiqcSidebar
-description: >
-  Automatic filtering, trimming, error removing, and quality control for FastQ data.
+description: "Automatic filtering, trimming, error removing, and quality control for FastQ data."
 ---
 
 <!--
@@ -28,6 +27,7 @@ which contains good reads, bad reads and the QC results of each fastq file/pair.
 ```yaml
 afterqc:
   contents: allow_mismatch_in_poly
-  fn: "*.json"
+  fn: '*.json'
   num_lines: 10000
 ```
+    

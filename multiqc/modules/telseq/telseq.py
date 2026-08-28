@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="telseq",
             anchor="telseq",
             href="https://github.com/zd1/telseq",

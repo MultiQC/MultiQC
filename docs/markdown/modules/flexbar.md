@@ -1,8 +1,7 @@
 ---
 title: Flexbar
 displayed_sidebar: multiqcSidebar
-description: >
-  Barcode and adapter removal tool.
+description: "Barcode and adapter removal tool."
 ---
 
 <!--
@@ -30,3 +29,4 @@ Flexbar increases read mapping rates and improves genome as well as transcriptom
 flexbar:
   contents: Flexbar - flexible barcode and adapter removal
 ```
+    

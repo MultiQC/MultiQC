@@ -1,8 +1,7 @@
 ---
 title: RSEM
 displayed_sidebar: multiqcSidebar
-description: >
-  Estimates gene and isoform expression levels from RNA-Seq data.
+description: "Estimates gene and isoform expression levels from RNA-Seq data."
 ---
 
 <!--
@@ -30,5 +29,6 @@ This module search for the file `.cnt` created by RSEM into directory named `PRE
 
 ```yaml
 rsem:
-  fn: "*.cnt"
+  fn: '*.cnt'
 ```
+    

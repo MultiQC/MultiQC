@@ -14,7 +14,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bakta",
             anchor="bakta",
             href="https://github.com/oschwengers/bakta",

@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GoPeaks",
             anchor="gopeaks",
             href="https://github.com/maxsonBraunLab/gopeaks",

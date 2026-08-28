@@ -14,7 +14,7 @@ import os
 
 from multiqc import config
 
-template_parent = "default"
+template_parent = "original"
 
 config.plots_force_flat = True
 config.simple_output = True

@@ -1,8 +1,7 @@
 ---
 title: Sargasso
 displayed_sidebar: multiqcSidebar
-description: >
-  Separates mixed-species RNA-seq reads according to their species of origin.
+description: "Separates mixed-species RNA-seq reads according to their species of origin."
 ---
 
 <!--
@@ -26,3 +25,4 @@ Separates mixed-species RNA-seq reads according to their species of origin.
 sargasso:
   fn: overall_filtering_summary.txt
 ```
+    

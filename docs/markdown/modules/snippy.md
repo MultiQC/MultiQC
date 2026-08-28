@@ -1,8 +1,7 @@
 ---
 title: Snippy
 displayed_sidebar: multiqcSidebar
-description: >
-  Rapid haploid variant calling and core genome alignment.
+description: "Rapid haploid variant calling and core genome alignment."
 ---
 
 <!--
@@ -39,3 +38,4 @@ snippy/snippy-core:
   contents_re: ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV
   num_lines: 1
 ```
+    

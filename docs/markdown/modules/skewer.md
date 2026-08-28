@@ -1,8 +1,7 @@
 ---
 title: Skewer
 displayed_sidebar: multiqcSidebar
-description: >
-  Adapter trimming tool for NGS paired-end sequences.
+description: "Adapter trimming tool for NGS paired-end sequences."
 ---
 
 <!--
@@ -24,5 +23,6 @@ Adapter trimming tool for NGS paired-end sequences.
 
 ```yaml
 skewer:
-  contents: "maximum error ratio allowed (-r):"
+  contents: 'maximum error ratio allowed (-r):'
 ```
+    

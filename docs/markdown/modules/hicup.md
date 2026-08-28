@@ -1,8 +1,7 @@
 ---
 title: HiCUP
 displayed_sidebar: multiqcSidebar
-description: >
-  Mapping and quality control on Hi-C data.
+description: "Mapping and quality control on Hi-C data."
 ---
 
 <!--
@@ -25,4 +24,7 @@ Mapping and quality control on Hi-C data.
 ```yaml
 hicup:
   fn: HiCUP_summary_report*
+hicup/html:
+  fn: '*HiCUP_summary_report*.html'
 ```
+    

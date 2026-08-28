@@ -1,8 +1,7 @@
 ---
 title: MACS2
 displayed_sidebar: multiqcSidebar
-description: >
-  Identifies transcription factor binding sites in ChIP-seq data.
+description: "Identifies transcription factor binding sites in ChIP-seq data."
 ---
 
 <!--
@@ -32,5 +31,6 @@ found in the General Statistics table. Numerous additional values are parsed and
 
 ```yaml
 macs2:
-  fn: "*_peaks.xls"
+  fn: '*_peaks.xls'
 ```
+    

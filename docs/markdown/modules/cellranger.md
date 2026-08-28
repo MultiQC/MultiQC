@@ -1,8 +1,7 @@
 ---
 title: Cell Ranger
 displayed_sidebar: multiqcSidebar
-description: >
-  Analyzes single cell expression or VDJ data produced by 10X Genomics.
+description: "Analyzes single cell expression or VDJ data produced by 10X Genomics."
 ---
 
 <!--
@@ -41,17 +40,18 @@ If present in the original report, any warning is reported as well.
 
 ```yaml
 cellranger/count_html:
-  - contents: '"command":"Cell Ranger","subcommand":"count"'
-    fn: "*.html"
-    num_lines: 20
-  - contents: '"command": "Cell Ranger", "subcommand": "count"'
-    fn: "*.html"
-    num_lines: 20
+- contents: '"command":"Cell Ranger","subcommand":"count"'
+  fn: '*.html'
+  num_lines: 20
+- contents: '"command": "Cell Ranger", "subcommand": "count"'
+  fn: '*.html'
+  num_lines: 20
 cellranger/vdj_html:
-  - contents: '"command":"Cell Ranger","subcommand":"vdj"'
-    fn: "*.html"
-    num_lines: 20
-  - contents: '"command": "Cell Ranger", "subcommand": "vdj"'
-    fn: "*.html"
-    num_lines: 20
+- contents: '"command":"Cell Ranger","subcommand":"vdj"'
+  fn: '*.html'
+  num_lines: 20
+- contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+  fn: '*.html'
+  num_lines: 20
 ```
+    

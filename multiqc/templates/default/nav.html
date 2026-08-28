@@ -6,55 +6,123 @@ The side navigation for the report.
 
 #}
 
-<div class="side-nav-wrapper">
+<div class="side-nav-wrapper sticky-top">
   <div class="side-nav">
-    <h1>
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".mqc-nav, .mqc-toolbox">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a href="#">
-        <img src="data:image/png;base64,{{ include_file('assets/img/MultiQC_logo.png', b64=True) }}" title="MultiQC">
-        <br class="hidden-xs">
-        <small class="hidden-xs">v{{ config.version }}</small>
-      </a>
-    </h1>
-    {% if config.title is not none %}
-      <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
-    {% endif %}
-    <p class="mqc_loading_warning">Loading report..</p>
-    <ul class="mqc-nav collapse navbar-collapse">
-      {% if not config.skip_generalstats %}
-      <li>
-        <a href="#general_stats" class="nav-l1">General Stats</a>
-      </li>
-      {% endif -%}
-      {% for m in report.modules %}
-        {% if not m.hidden %}
-          {% if m.sections | length > 0 %}
-          <li>
-            <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
-            <ul>
-            {% if m.sections | length > 1 -%}
-              {% for s in m.sections -%}
-                {% if s['print_section'] %}
-                  {% if s['name'] is not none and s['name'] | length > 0 %}
-                  <li>
-                    <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
-                  </li>
-                  {% endif %}
-                {% endif %}
-                {%- endfor %}
-            {% endif %}
-            </ul>
-          </li>
-          {% endif %}
+    <!-- Logo -->
+    <h1 class="side-nav-logo"><a href="#">{{ include_file('assets/img/MultiQC_logo.svg') }}</a></h1>
+    <!-- Burger menu toggle -->
+    <button
+      type="button"
+      class="navbar-toggler d-md-none"
+      data-bs-toggle="collapse"
+      data-bs-target="#mqc-nav-collapse"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      {{ material_icon('mdi:menu', 24) }}
+    </button>
+
+    <p class="mqc_loading_warning text-center text-danger">Loading report..</p>
+
+    <div class="collapse navbar-collapse d-md-block" id="mqc-nav-collapse">
+      <!-- Version number and color mode toggle - repositions based on screen size -->
+      <div id="mqc-nav-header" class="d-flex align-items-center justify-content-center gap-2 pb-2">
+        <a
+          href="https://github.com/MultiQC/MultiQC/releases/tag/v{{ config.version }}"
+          target="_blank"
+          class="btn btn-xs btn-outline-secondary border-0"
+        >
+          v{{ config.version }}
+        </a>
+
+        {% if config.template_dark_mode %}
+          {% include 'theme_toggle.html' %}
         {% endif %}
-      {% endfor %}
-    </ul>
+      </div>
+
+      {% if config.title is not none %}
+        <h1 class="side-nav-title"><a href="#">{{ config.title }}</a></h1>
+      {% endif %}
+
+      <!-- Toolbox items for mobile navigation -->
+      <p class="mobile-nav-toolbox-btns d-md-none text-center my-1 mx-2">
+        <a href="#mqc_cols" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:pin', 18) }} Highlight
+        </a>
+        <a href="#mqc_renamesamples" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:format-text', 18) }} Rename
+        </a>
+        <a href="#mqc_hidesamples" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:eye-off', 18) }} Show / Hide
+        </a>
+        {% if not config.no_ai %}
+          <a href="#mqc_ai" class="btn btn-sm btn-outline-secondary mb-2">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M6.4375 7L7.9375 1.5L9.4375 7L14.9375 8.5L9.4375 10.5L7.9375 15.5L6.4375 10.5L0.9375 8.5L6.4375 7Z"
+                fill="currentColor"
+                stroke="currentColor"
+                stroke-width="0.75"
+                stroke-linejoin="round"
+              ></path>
+              <path
+                d="M13.1786 2.82143L13.5 4L13.8214 2.82143L15 2.5L13.8214 2.07143L13.5 1L13.1786 2.07143L12 2.5L13.1786 2.82143Z"
+                fill="currentColor"
+                stroke="currentColor"
+                stroke-width="0.5"
+                stroke-linejoin="round"
+              ></path>
+            </svg>
+            AI Analysis
+          </a>
+        {% endif %}
+        <a href="#mqc_exportplots" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:download', 18) }} Export
+        </a>
+        <a href="#mqc_saveconfig" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:content-save', 18) }} Settings
+        </a>
+        <a href="#mqc_citations" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:school', 18) }} Citations
+        </a>
+        <a href="#mqc_about" class="btn btn-sm btn-outline-secondary mb-2">
+          {{ material_icon('mdi:help-circle', 18) }} About
+        </a>
+      </p>
+
+      <ul class="mqc-nav">
+        {% if not config.skip_generalstats %}
+          <li>
+            <a href="#general_stats" class="nav-l1">General Stats</a>
+          </li>
+        {% endif -%}
+        {% for m in report.modules %}
+          {% if not m.hidden %}
+            {% if m.sections | length > 0 %}
+              <li>
+                <a href="#{{ m.anchor }}" class="nav-l1">{{ m.name }}</a>
+                <ul>
+                  {% if m.sections | length > 1 -%}
+                    {% for s in m.sections -%}
+                      {% if s['print_section'] %}
+                        {% if s['name'] is not none and s['name'] | length > 0 %}
+                          <li>
+                            <a href="#{{ s['anchor'] }}" class="nav-l2">{{ s['name']|striptags }}</a>
+                          </li>
+                        {% endif %}
+                      {% endif %}
+                    {%- endfor %}
+                  {% endif %}
+                </ul>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
   </div>
   <!-- Nav Width Toggle Button -->
-  <div id="side-nav-handle"><span class="glyphicon glyphicon-triangle-left" aria-hidden="true"></span></div>
+  <div id="side-nav-handle" class="rounded-end border border-start-0 d-none d-sm-block">
+    {{ material_icon('mdi:chevron-left', 16) }}
+  </div>
 </div>

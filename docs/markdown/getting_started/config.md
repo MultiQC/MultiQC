@@ -25,6 +25,10 @@ it collects the configuration settings from the following places in this order
 1. Command line config (`--cl-config`)
 1. Specific command line options (_e.g._ `--force`)
 
+## Config Wizard
+
+You can build a config file visually in your browser with the [MultiQC Configuration Wizard](https://seqera.io/multiqc_config_wizard). It has every option as a form field, with live YAML editor and schema validation as you type. See the [Config Wizard docs](config_wizard.md) for more information.
+
 ## Sample name cleaning
 
 MultiQC typically generates sample names by taking the input or log file name,
@@ -270,7 +274,7 @@ You can pre-configure which samples to show or hide:
 
 ```yaml
 show_hide_buttons: ["Hide controls"]
-show_hide_patterns: ["control_"]]
+show_hide_patterns: ["control_"]
 show_hide_regex: [false]
 show_hide_mode: ["hide"] # can be "show" or "hide"
 ```
@@ -288,6 +292,14 @@ sample_names_rename:
 ```
 
 Each entry is a pair of [from, to] values that will be applied to sample names.
+
+### Advanced sample name replacement
+
+For more powerful sample name replacement options, including regex support and different replacement modes, see the [Sample name replacement](../reports/customisation.md#sample-name-replacement) section in the report customisation documentation. These advanced features include:
+
+- `sample_names_replace` - Direct pattern-to-replacement mapping in config files
+- `sample_names_replace_regex` - Regular expression support for complex patterns
+- `sample_names_replace_exact` and `sample_names_replace_complete` - Fine-tuned matching behavior
 
 ## Module search patterns
 

@@ -1,8 +1,7 @@
 ---
 title: STAR
 displayed_sidebar: multiqcSidebar
-description: >
-  Universal RNA-seq aligner.
+description: "Universal RNA-seq aligner."
 ---
 
 <!--
@@ -32,7 +31,8 @@ files generated with `--quantMode GeneCounts`, if found.
 
 ```yaml
 star:
-  fn: "*Log.final.out"
+  fn: '*Log.final.out'
 star/genecounts:
-  fn: "*ReadsPerGene.out.tab"
+  fn: '*ReadsPerGene.out.tab'
 ```
+    

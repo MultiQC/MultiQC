@@ -1,8 +1,7 @@
 ---
 title: Nextclade
 displayed_sidebar: multiqcSidebar
-description: >
-  Viral genome alignment, clade assignment, mutation calling, and quality checks
+description: "Viral genome alignment, clade assignment, mutation calling, and quality checks."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/nextclade/nextclade.py
 -->
 
 :::note
-Viral genome alignment, clade assignment, mutation calling, and quality checks
+Viral genome alignment, clade assignment, mutation calling, and quality checks.
 
 [https://github.com/nextstrain/nextclade](https://github.com/nextstrain/nextclade)
 :::
@@ -31,3 +30,4 @@ nextclade:
   contents: seqName;clade;
   num_lines: 1
 ```
+    

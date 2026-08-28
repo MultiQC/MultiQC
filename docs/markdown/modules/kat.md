@@ -1,8 +1,7 @@
 ---
 title: K-mer Analysis Toolkit
 displayed_sidebar: multiqcSidebar
-description: >
-  Analyses sequencing data via its k-mer spectra.
+description: "Analyses sequencing data via its k-mer spectra."
 ---
 
 <!--
@@ -27,5 +26,6 @@ contain information such as estimated genome size and heterozygosity rates from 
 
 ```yaml
 kat:
-  fn: "*.dist_analysis.json"
+  fn: '*.dist_analysis.json'
 ```
+    

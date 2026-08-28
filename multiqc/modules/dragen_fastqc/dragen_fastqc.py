@@ -51,7 +51,7 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DRAGEN-FastQC",
             anchor="dragen-fastqc",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
@@ -69,7 +69,6 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
                 os.path.dirname(__file__), "assets", "js", "multiqc_dragen_fastqc.js"
             )
         }
-        self.intro += '<script type="application/json" class="fastqc_passfails">["dragen_fastqc", {"per_base_sequence_content": {"TEST": "pass"}}]</script>'
 
         data_by_sample = {}
         for f in self.find_log_files("dragen_fastqc"):

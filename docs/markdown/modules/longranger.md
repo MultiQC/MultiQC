@@ -1,8 +1,7 @@
 ---
 title: Long Ranger
 displayed_sidebar: multiqcSidebar
-description: >
-  Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
+description: "Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling."
 ---
 
 <!--
@@ -44,6 +43,7 @@ longranger/invocation:
   max_filesize: 2048
 longranger/summary:
   contents: longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule
-  fn: "*summary.csv"
+  fn: '*summary.csv'
   num_lines: 2
 ```
+    

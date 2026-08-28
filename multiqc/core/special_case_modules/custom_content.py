@@ -274,14 +274,30 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                         ccdict_by_id[c_id] = CcDict()
                     # heatmap - special data type
                     if isinstance(parsed_item, list):
+                        existing = ccdict_by_id[c_id].data
+                        if isinstance(existing, dict) and existing:
+                            log.warning(
+                                f"Conflicting data types for custom content section '{c_id}' "
+                                f"in '{f['fn']}': overwriting existing dict data with list data "
+                                f"(heatmap). To avoid this, add distinct '# id: ...' comment "
+                                f"headers to your custom content files."
+                            )
                         ccdict_by_id[c_id].data = parsed_item
                     elif plot_type == PlotType.HTML:
                         ccdict_by_id[c_id].data = parsed_item
                     else:
                         assert isinstance(parsed_item, dict)
                         d = ccdict_by_id[c_id].data
-                        assert isinstance(d, dict), (c_id, f["fn"], f["root"])
-                        d.update(parsed_item)
+                        if not isinstance(d, dict):
+                            log.warning(
+                                f"Conflicting data types for custom content section '{c_id}' "
+                                f"in '{f['fn']}': overwriting existing {type(d).__name__} data "
+                                f"with dict data. To avoid this, add distinct '# id: ...' "
+                                f"comment headers to your custom content files."
+                            )
+                            ccdict_by_id[c_id].data = parsed_item
+                        else:
+                            d.update(parsed_item)
                     assert isinstance(ccdict_by_id[c_id].config, dict)
                     ccdict_by_id[c_id].config.update(m_config)
 
@@ -434,7 +450,7 @@ class MultiqcModule(BaseMultiqcModule):
             assert isinstance(cc_dict.config["section_name"], str)
             modname = cc_dict.config["section_name"]
 
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=modname,
             anchor=anchor,
             href=cc_dict.config.get("section_href"),
@@ -573,7 +589,10 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Box plot
             elif plot_type == PlotType.BOX:
-                plot = box.plot(plot_datasets, pconfig=box.BoxPlotConfig(**pconfig))
+                from multiqc.plots.box import BoxT
+
+                box_data = cast(Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]], plot_datasets)
+                plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
@@ -616,6 +635,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description=section_description,
                 plot=plot,
                 content=content or "",
+                helptext=ccdict.config.get("helptext", ""),
             )
 
 
@@ -782,7 +802,7 @@ def _parse_txt(
     row_str: List[str]
     for line in non_header_lines:
         if line.rstrip():
-            row_str = line.rstrip("\n").split(sep)
+            row_str = [cell.strip() for cell in line.rstrip("\n").split(sep)]
             matrix_str.append(row_str)
             if ncols is None:
                 ncols = len(row_str)

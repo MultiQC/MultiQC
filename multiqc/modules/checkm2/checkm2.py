@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CheckM2",
             anchor="checkm2",
             href="https://github.com/chklovski/CheckM2",
@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the quality_report.tsv output."""
         reader = csv.DictReader(StringIO(f["f"]), delimiter="\t")
         for row in reader:
-            sname = row.pop("Name")  # Remove and get the Name column
+            sname = self.clean_s_name(row.pop("Name"), f)  # Remove and get the Name column
             if sname in data_by_sample:
                 log.debug(f"Duplicate sample name found! Overwriting: {sname}")
             data_by_sample[sname] = {k: v for k, v in row.items() if v != "None"}

@@ -371,7 +371,7 @@ click.rich_click.OPTION_GROUPS = {
     "development",
     is_flag=True,
     default=None,
-    help="Development mode. Do not compress and minimise JS, export uncompressed plot data",
+    help="Development mode. Do not inline JS and CSS, export uncompressed plot data",
 )
 @click.option(
     "--pdf",
@@ -612,6 +612,13 @@ def run(
             "give warnings if anything is not optimally configured in a module or a template."
         )
 
+    # Load template early to apply config overrides before modules run
+    template_mod = config.avail_templates[config.template].load()
+    if hasattr(template_mod, "template_dark_mode"):
+        config.template_dark_mode = template_mod.template_dark_mode
+    if hasattr(template_mod, "plot_font_family"):
+        config.plot_font_family = template_mod.plot_font_family
+
     report.multiqc_command = " ".join(sys.argv)
     logger.debug(f"Command used: {report.multiqc_command}")
 
@@ -669,7 +676,7 @@ def run(
                 log_and_rich.rich_console_print(
                     "[blue]|           multiqc[/] | "
                     "Flat-image plots used. Disable with '--interactive'. "
-                    "See [link=https://docs.seqera.io/multiqc/#flat--interactive-plots]docs[/link]."
+                    "See [link=https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots]docs[/link]."
                 )
 
         sys_exit_code = 0
@@ -691,16 +698,16 @@ def run(
 def _check_pdf_export_possible():
     if subprocess.call(["which", "pandoc"]) != 0:
         logger.error(
-            "`pandoc` and `pdflatex` tools are required to create a PDF report. Please install those and try "
+            "`pandoc` and `lualatex` tools are required to create a PDF report. Please install those and try "
             "again. See http://pandoc.org/installing.html for the `pandoc` installation instructions "
-            "(e.g. `brew install pandoc` on macOS), and install LaTeX for `pdflatex` (e.g. `brew install basictex`"
+            "(e.g. `brew install pandoc` on macOS), and install LaTeX for `lualatex` (e.g. `brew install basictex`"
             "on macOS). Alternatively, omit the `--pdf` option or unset `make_pdf: true` in the MultiQC config."
         )
         return RunResult(message="Pandoc is required to create PDF reports", sys_exit_code=1)
 
-    if subprocess.call(["which", "pdflatex"]) != 0:
+    if subprocess.call(["which", "lualatex"]) != 0:
         logger.error(
-            "The `pdflatex` tool is required to create a PDF report. Please install LaTeX and try again, "
+            "The `lualatex` tool is required to create a PDF report. Please install LaTeX and try again, "
             "e.g. `brew install basictex` on macOS. Alternatively, omit the `--pdf` option"
             "or unset `make_pdf: true` in the MultiQC config."
         )

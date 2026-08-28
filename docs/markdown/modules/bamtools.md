@@ -1,8 +1,7 @@
 ---
 title: Bamtools
 displayed_sidebar: multiqcSidebar
-description: >
-  Provides both a programmer's API and an end-user's toolkit for handling BAM files.
+description: "Provides both a programmer's API and an end-user's toolkit for handling BAM files."
 ---
 
 <!--
@@ -28,6 +27,7 @@ Supported commands: `stats`
 
 ```yaml
 bamtools/stats:
-  contents: "Stats for BAM file(s):"
+  contents: 'Stats for BAM file(s):'
   num_lines: 10
 ```
+    

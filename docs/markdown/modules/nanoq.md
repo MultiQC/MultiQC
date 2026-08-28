@@ -1,8 +1,7 @@
 ---
 title: nanoq
 displayed_sidebar: multiqcSidebar
-description: >
-  Reports read quality and length from nanopore sequencing data
+description: "Reports read quality and length from nanopore sequencing data."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/nanoq/nanoq.py
 -->
 
 :::note
-Reports read quality and length from nanopore sequencing data
+Reports read quality and length from nanopore sequencing data.
 
 [https://github.com/nerdna/nanoq/](https://github.com/nerdna/nanoq/)
 :::
@@ -27,3 +26,4 @@ nanoq:
   contents: Nanoq Read Summary
   num_lines: 3
 ```
+    

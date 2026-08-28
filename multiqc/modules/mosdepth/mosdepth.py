@@ -1,13 +1,14 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, cast
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.qualimap.QM_BamQC import genome_fraction_helptext
 from multiqc.plots import bargraph, linegraph
 from multiqc.plots.linegraph import smooth_array
+from multiqc.plots.table_object import ValueT
 from multiqc.utils.util_functions import update_dict
 
 log = logging.getLogger(__name__)
@@ -57,8 +58,13 @@ def read_config():
 
 def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List[int]) -> Dict[str, float]:
     genstats: Dict[str, float] = {}
+    sorted_cum_fraction_by_cov = sorted(cum_fraction_by_cov.items())
     for t in threshs:
-        genstats[f"{t}_x_pc"] = cum_fraction_by_cov.get(t, 0.0) * 100.0
+        # take next known value
+        # e.g. if only 50x is known but the threshold is 40x, take the 50x value
+        # if there is no next threshold, just take 0.0
+        cov_val = next((proportion for cov, proportion in sorted_cum_fraction_by_cov if cov >= t), 0.0)
+        genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
 
@@ -170,7 +176,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Mosdepth",
             anchor="mosdepth",
             href="https://github.com/brentp/mosdepth",
@@ -202,10 +208,10 @@ class MultiqcModule(BaseMultiqcModule):
         genstats_by_sample = defaultdict(dict, self.ignore_samples(genstats_by_sample))
         samples_in_summary = set(genstats_by_sample.keys())
 
-        data_dicts_global = self.parse_cov_dist("global")
-        data_dicts_region = self.parse_cov_dist("region")
-        data_dicts_global = [self.ignore_samples(d) for d in data_dicts_global]
-        data_dicts_region = [self.ignore_samples(d) for d in data_dicts_region]
+        raw_cov_dist_global = self.parse_cov_dist("global")
+        raw_cov_dist_region = self.parse_cov_dist("region")
+        data_dicts_global = [self.ignore_samples(d) for d in raw_cov_dist_global]
+        data_dicts_region = [self.ignore_samples(d) for d in raw_cov_dist_region]
 
         samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
         samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
@@ -300,7 +306,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.write_data_file(perchrom_avg_by_sample, "mosdepth_perchrom")
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_by_sample.values()])
-                perchrom_plot: Union[Plot, str]
+                perchrom_plot: Optional[Union[Plot, str]]
                 if num_contigs > 1:
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_by_sample,
@@ -313,7 +319,6 @@ class MultiqcModule(BaseMultiqcModule):
                             "tt_suffix": "x",
                             "smooth_points": 500,
                             "logswitch": True,
-                            "hide_zero_cats": False,
                             "categories": True,
                         },
                     )
@@ -426,7 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             },
         )
-        self.general_stats_addcols(genstats_by_sample, genstats_headers)
+        self.general_stats_addcols(cast(Dict[str, Dict[str, ValueT]], genstats_by_sample), genstats_headers)
 
     def parse_cov_dist(
         self, scope: str

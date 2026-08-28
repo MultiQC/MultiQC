@@ -1,8 +1,7 @@
 ---
 title: Samblaster
 displayed_sidebar: multiqcSidebar
-description: >
-  Marks duplicates and extracts discordant and split reads from sam files.
+description: "Marks duplicates and extracts discordant and split reads from sam files."
 ---
 
 <!--
@@ -24,5 +23,6 @@ Marks duplicates and extracts discordant and split reads from sam files.
 
 ```yaml
 samblaster:
-  contents: "samblaster: Version"
+  contents: 'samblaster: Version'
 ```
+    

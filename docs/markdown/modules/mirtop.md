@@ -1,8 +1,7 @@
 ---
 title: mirtop
 displayed_sidebar: multiqcSidebar
-description: >
-  Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.
+description: "Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format."
 ---
 
 <!--
@@ -30,5 +29,6 @@ isomiR-SEA, sRNAbench, Prost! as well as BAM files.
 
 ```yaml
 mirtop:
-  fn: "*_mirtop_stats.log"
+  fn: '*_mirtop_stats.log'
 ```
+    

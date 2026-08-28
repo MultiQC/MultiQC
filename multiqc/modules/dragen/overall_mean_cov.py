@@ -52,7 +52,7 @@ class DragenOverallMeanCovMetrics(BaseMultiqcModule):
         # No need to write the data.
         self.write_data_file(self.overall_mean_cov_data, "dragen_overall_mean_cov_data")
 
-        # Just to pass the pre-commit
+        # Just to pass the linting
         # doi=
 
         return self.overall_mean_cov_data.keys()

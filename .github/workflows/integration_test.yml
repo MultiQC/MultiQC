@@ -11,20 +11,27 @@ on:
       - "multiqc/modules/**"
       - "pyproject.toml"
 
+permissions:
+  contents: read
+
 jobs:
   integration_test_linux:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
-        python-version: ["3.8", "3.13"] # Oldest and newest supported Python versions
+        python-version: ["3.9", "3.14"] # Oldest and newest supported Python versions (NB: 3.14.1 has upstream bug)
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
@@ -33,10 +40,11 @@ jobs:
         run: pip install .
 
       - name: "Download test data"
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: MultiQC/test-data
           path: test-data
+          persist-credentials: false
 
       - name: "Run multiqc on all modules"
         run: multiqc -fv --strict test-data/data/modules

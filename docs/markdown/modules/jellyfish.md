@@ -1,8 +1,7 @@
 ---
 title: Jellyfish
 displayed_sidebar: multiqcSidebar
-description: >
-  Counting k-mers in DNA.
+description: "Counting k-mers in DNA."
 ---
 
 <!--
@@ -41,5 +40,6 @@ multiqc . --cl-config "sp: { jellyfish: { fn: '*.hist' } }"
 
 ```yaml
 jellyfish:
-  fn: "*_jf.hist"
+  fn: '*_jf.hist'
 ```
+    

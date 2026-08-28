@@ -1,8 +1,7 @@
 ---
 title: methylQA
 displayed_sidebar: multiqcSidebar
-description: >
-  Methylation sequencing data quality assessment tool.
+description: "Methylation sequencing data quality assessment tool."
 ---
 
 <!--
@@ -24,6 +23,7 @@ Methylation sequencing data quality assessment tool.
 
 ```yaml
 methylqa:
-  fn: "*.report"
+  fn: '*.report'
   shared: true
 ```
+    

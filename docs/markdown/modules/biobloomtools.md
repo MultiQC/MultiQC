@@ -1,8 +1,7 @@
 ---
 title: BioBloom Tools
 displayed_sidebar: multiqcSidebar
-description: >
-  Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection.
+description: "Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection."
 ---
 
 <!--
@@ -32,3 +31,4 @@ biobloomtools:
   contents: "filter_id\thits\tmisses\tshared\trate_hit\trate_miss\trate_shared"
   num_lines: 2
 ```
+    

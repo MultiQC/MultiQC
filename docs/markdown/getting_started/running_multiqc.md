@@ -24,6 +24,8 @@ For a description of all command line parameters, run `multiqc --help`.
 :::info
 Every command-line flag mentioned on this page has a corresponding configuration variable that can be set in a MultiQC config YAML file.
 This may be preferable if using a lot of options, or running in a pipeline.
+
+See [Configuration](config.md) for the search paths, or use the [Config Wizard](config_wizard.md) to build a config file in your browser.
 :::
 
 ## Choosing where to scan
@@ -102,7 +104,7 @@ You can do this by using `-m`/`--modules` to explicitly define which modules you
 
 If an explicitly requested module couldn't find any expected input files, MultiQC will
 just continue with other modules. You can change this behaviour and make MultiQC
-strict about missing input by setting the `--require-log` flag.
+strict about missing input by setting the `--require-logs` flag.
 If set, MultiQC will exit with an error and exit code `1` if any of the modules specified with `-m` did not produce a section in the report.
 
 ## Directory prefixes in sample names
@@ -199,6 +201,16 @@ missing.
 You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports#exporting-plots) in the side bar.
 :::
 
+### Export timeout
+
+Static plot generation uses [Kaleido](https://github.com/plotly/Kaleido) under the hood,
+which can occasionally hang. To prevent this from blocking report generation indefinitely,
+MultiQC applies a timeout to each plot export. If the timeout is exceeded, the plot export
+is skipped and report generation continues.
+
+The default timeout is 60 seconds per plot. You can adjust this with the `export_plots_timeout`
+config option.
+
 ## PDF Reports
 
 Whilst HTML is definitely the format of choice for MultiQC reports due to
@@ -225,17 +237,21 @@ Error creating PDF - pandoc not found. Is it installed? http://pandoc.org/
 ```
 
 Please note that Pandoc is a complex tool and has a number of its own dependencies
-for PDF generation. Notably, it uses LaTeX / XeLaTeX which you must also have installed.
+for PDF generation. Notably, it uses LaTeX / LuaLaTeX which you must also have installed.
 Please make sure that you have the latest version of Pandoc and
 that it can successfully convert basic HTML files to PDF before reporting
 and errors.
 
 Error messages from Pandoc are piped through to the MultiQC log,
-for example if the xelatex dependency is not installed you will see the following:
+for example if the lualatex dependency is not installed you will see the following:
 
 ```
-xelatex not found. Please select a different --pdf-engine or install xelatex
+lualatex not found. Please select a different --pdf-engine or install lualatex
 ```
+
+:::tip{title="Using Docker for PDF generation"}
+If you're using Docker, a PDF-enabled image is available that includes all required dependencies (Pandoc and LaTeX). See the [Docker installation documentation](installation.md#docker-image-variants) for details on using `multiqc/multiqc:pdf-latest`.
+:::
 
 Note that not all plots have flat image equivalents, so
 some will be missing (at time of writing: FastQC sequence content plot,

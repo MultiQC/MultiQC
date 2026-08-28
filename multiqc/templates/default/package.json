@@ -1,0 +1,19 @@
+{
+  "name": "multiqc-default-template",
+  "version": "1.30.0",
+  "description": "Default template for MultiQC reports",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build --emptyOutDir",
+    "watch": "vite build --emptyOutDir --watch",
+    "dev": "vite build --emptyOutDir --watch"
+  },
+  "devDependencies": {
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "sass": "^1.103.1",
+    "terser": "^5.51.2",
+    "vite": "^8.2.2"
+  }
+}
