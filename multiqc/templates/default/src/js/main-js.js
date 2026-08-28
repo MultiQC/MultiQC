@@ -10,6 +10,7 @@ window.bootstrap = bootstrap;
 import "./decompress.js";
 import "./multiqc.js";
 import "./flat.js";
+import "./plotting-shared.js";
 import "./plotting.js";
 import "./tables.js";
 import "./doi.js";
