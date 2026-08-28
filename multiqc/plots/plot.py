@@ -1308,59 +1308,64 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.simple_output:
             html += self.__control_panel(flat=True, module_anchor=module_anchor, section_anchor=section_anchor)
 
-        # Collect all figures that need to be exported
-        figures_to_export = []
-        for ds_idx, dataset in enumerate(self.datasets):
-            figures_to_export.append(
-                (
-                    self.get_figure(ds_idx, flat=True),
-                    ds_idx == 0 and not self.p_active and not self.l_active,
-                    dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
-                    embed_in_html,
-                    plots_dir_name,
-                )
-            )
-            if self.add_pct_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_pct=True, flat=True),
-                        ds_idx == 0 and self.p_active,
-                        f"{dataset.uid}-pct",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
-            if self.add_log_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_log=True, flat=True),
-                        ds_idx == 0 and self.l_active,
-                        f"{dataset.uid}-log",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
-            if self.add_pct_tab and self.add_log_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
-                        ds_idx == 0 and self.p_active and self.l_active,
-                        f"{dataset.uid}-pct-log",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
+        if config.plotting_engine == "echarts":
+            from multiqc.plots.echarts import static_export  # lazy: avoids a circular import
 
-        # Add all figures to HTML
-        for fig, active, file_name, embed_in_html, plots_dir_name in figures_to_export:
-            html += fig_to_static_html(
-                fig,
-                active=active,
-                file_name=file_name,
-                plots_dir_name=plots_dir_name,
-                embed_in_html=embed_in_html,
-                batch_processing=True,
-            )
+            html += static_export.flat_plot_html(self, embed_in_html, plots_dir_name)
+        else:
+            # Collect all figures that need to be exported
+            figures_to_export = []
+            for ds_idx, dataset in enumerate(self.datasets):
+                figures_to_export.append(
+                    (
+                        self.get_figure(ds_idx, flat=True),
+                        ds_idx == 0 and not self.p_active and not self.l_active,
+                        dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
+                        embed_in_html,
+                        plots_dir_name,
+                    )
+                )
+                if self.add_pct_tab:
+                    figures_to_export.append(
+                        (
+                            self.get_figure(ds_idx, is_pct=True, flat=True),
+                            ds_idx == 0 and self.p_active,
+                            f"{dataset.uid}-pct",
+                            embed_in_html,
+                            plots_dir_name,
+                        )
+                    )
+                if self.add_log_tab:
+                    figures_to_export.append(
+                        (
+                            self.get_figure(ds_idx, is_log=True, flat=True),
+                            ds_idx == 0 and self.l_active,
+                            f"{dataset.uid}-log",
+                            embed_in_html,
+                            plots_dir_name,
+                        )
+                    )
+                if self.add_pct_tab and self.add_log_tab:
+                    figures_to_export.append(
+                        (
+                            self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
+                            ds_idx == 0 and self.p_active and self.l_active,
+                            f"{dataset.uid}-pct-log",
+                            embed_in_html,
+                            plots_dir_name,
+                        )
+                    )
+
+            # Add all figures to HTML
+            for fig, active, file_name, embed_in_html, plots_dir_name in figures_to_export:
+                html += fig_to_static_html(
+                    fig,
+                    active=active,
+                    file_name=file_name,
+                    plots_dir_name=plots_dir_name,
+                    embed_in_html=embed_in_html,
+                    batch_processing=True,
+                )
 
         html += "</div>"
         return html
