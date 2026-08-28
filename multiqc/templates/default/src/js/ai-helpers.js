@@ -18,8 +18,11 @@ function isReasoningModel(model) {
     "o4-mini",
     // Anthropic Claude 4 series (extended thinking models)
     "claude-3-7-sonnet-latest",
+    "claude-sonnet-4-5",
     "claude-sonnet-4-0",
+    "claude-haiku-4-5",
     "claude-haiku-4-0",
+    "claude-opus-4-5",
     "claude-opus-4-0",
   ];
   return reasoningModels.some((prefix) => model.toLowerCase().startsWith(prefix));
@@ -192,7 +195,7 @@ window.runStreamGeneration = function ({
       title: title,
     });
 
-    fetch(`${seqeraApiUrl}/internal-ai/query`, fetchOptions)
+    fetch(`${seqeraApiUrl}/internal-ai/report-summary`, fetchOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {

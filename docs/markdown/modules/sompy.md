@@ -1,8 +1,7 @@
 ---
 title: som.py
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Benchmarks somatic variant calls against gold standard truth datasets.</p>
+description: "Benchmarks somatic variant calls against gold standard truth datasets."
 ---
 
 <!--
@@ -15,7 +14,7 @@ File path for the source of this content: multiqc/modules/sompy/sompy.py
 -->
 
 :::note
-<p>Benchmarks somatic variant calls against gold standard truth datasets.</p>
+Benchmarks somatic variant calls against gold standard truth datasets.
 
 [https://github.com/Illumina/hap.py/blob/master/doc/sompy.md](https://github.com/Illumina/hap.py/blob/master/doc/sompy.md)
 :::

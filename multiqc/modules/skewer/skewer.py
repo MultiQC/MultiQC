@@ -11,7 +11,7 @@ VERSION_REGEX = r"skewer v([\d\.]+) \[.+\]"
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Skewer",
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",

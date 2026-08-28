@@ -25,6 +25,10 @@ it collects the configuration settings from the following places in this order
 1. Command line config (`--cl-config`)
 1. Specific command line options (_e.g._ `--force`)
 
+## Config Wizard
+
+You can build a config file visually in your browser with the [MultiQC Configuration Wizard](https://seqera.io/multiqc_config_wizard). It has every option as a form field, with live YAML editor and schema validation as you type. See the [Config Wizard docs](config_wizard.md) for more information.
+
 ## Sample name cleaning
 
 MultiQC typically generates sample names by taking the input or log file name,

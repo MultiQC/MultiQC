@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Adapter Removal",
             anchor="adapterremoval",
             href="https://github.com/mikkelschubert/adapterremoval",

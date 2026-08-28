@@ -24,6 +24,8 @@ Even group versions by the step in the pipeline? You can! 🎉
 See the [Listing software versions](../reports/customisation.md#listing-software-versions) documentation.
 :::
 
+Ship a `multiqc_config.yaml` alongside your pipeline to lock down report titles, module ordering, sample-name cleaning, and so on. The [Config Wizard](../getting_started/config_wizard.md) is a quick way to write one without memorising every option.
+
 If you know exactly which modules will be used by MultiQC, you can use the
 `-m`/`--modules` flag to specify just these. This will speed up MultiQC a little.
 This will probably only make a noticeable impact if your pipeline has thousands

@@ -26,6 +26,8 @@ from multiqc.plots.table_object import (
     ColumnMeta,
     DataTable,
     ExtValueT,
+    GroupT,
+    InputRow,
     SectionT,
     TableConfig,
     ValueT,
@@ -80,6 +82,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                             "section_key": str(section_key),
                             "section_order": section_order,  # Store original index for ordering
                             "sample": str(sample_name),
+                            "row_sample": str(row.sample),
                             "metric": str(metric_name),
                             "val_raw": float(cell.raw) if isinstance(cell.raw, (int, float)) else float("nan"),
                             "val_raw_type": type(cell.raw).__name__,  # Store type name
@@ -212,13 +215,14 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         show_table_by_default = df.select("show_table_by_default").row(0)[0]
 
-        # Prepare data structure for DataTable creation
-        data_dict: Dict[SectionKey, Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]]] = {}
+        data_dict: Dict[SectionKey, Dict[str, GroupT]] = {}
         headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
 
         # Extract all columns as lists for efficient access (avoiding repeated iter_rows)
         all_section_keys = df.get_column("section_key").to_list()
         all_samples = df.get_column("sample").to_list()
+        has_row_sample = "row_sample" in df.columns
+        all_row_samples = df.get_column("row_sample").to_list() if has_row_sample else all_samples
         all_metrics = df.get_column("metric").to_list()
         all_val_raw = df.get_column("val_raw").to_list()
         all_val_raw_type = df.get_column("val_raw_type").to_list()
@@ -229,66 +233,63 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         has_section_order = "section_order" in df.columns
         all_section_order = df.get_column("section_order").to_list() if has_section_order else None
 
-        # Build index for grouping: section_key -> sample -> list of row indices
-        section_sample_indices: Dict[str, Dict[str, List[int]]] = {}
-        for i, (section_key, sample) in enumerate(zip(all_section_keys, all_samples)):
-            if section_key not in section_sample_indices:
-                section_sample_indices[section_key] = {}
-            if sample not in section_sample_indices[section_key]:
-                section_sample_indices[section_key][sample] = []
-            section_sample_indices[section_key][sample].append(i)
+        # Build index: section_key -> group_sample -> row_sample -> [indices]
+        section_group_row_indices: Dict[str, Dict[str, Dict[str, List[int]]]] = {}
+        for i, (section_key, group_sample, row_sample) in enumerate(
+            zip(all_section_keys, all_samples, all_row_samples)
+        ):
+            section_group_row_indices.setdefault(section_key, {}).setdefault(group_sample, {}).setdefault(
+                row_sample, []
+            ).append(i)
 
-        # Process each section
-        for section_key, sample_indices in section_sample_indices.items():
-            val_by_sample_by_metric: Dict[SampleName, Dict[ColumnKeyT, Optional[ExtValueT]]] = {}
+        def _parse_cell(idx: int) -> Cell:
+            val_raw: Any = all_val_raw[idx]
+            if not math.isnan(val_raw):
+                if all_val_raw_type[idx] == "int":
+                    val_raw = int(val_raw)
+                elif all_val_raw_type[idx] == "bool":
+                    val_raw = bool(val_raw)
+            val_mod: Any = all_val_mod[idx]
+            if not math.isnan(val_mod):
+                if all_val_mod_type[idx] == "int":
+                    val_mod = int(val_mod)
+                elif all_val_mod_type[idx] == "bool":
+                    val_mod = bool(val_mod)
+            return Cell(raw=val_raw, mod=val_mod, fmt=all_val_fmt[idx])
+
+        for section_key, group_map in section_group_row_indices.items():
             section_headers: Dict[ColumnKey, ColumnDict] = {}
+            section_data: Dict[str, GroupT] = {}
 
-            for sample_name, row_indices in sample_indices.items():
-                # Sort indices by section_order if available
-                if has_section_order and all_section_order is not None:
-                    row_indices = sorted(row_indices, key=lambda idx: all_section_order[idx])
+            for group_sample, row_sample_map in group_map.items():
+                input_rows: List[InputRow] = []
+                for row_sample, indices in row_sample_map.items():
+                    if has_section_order and all_section_order is not None:
+                        indices = sorted(indices, key=lambda idx: all_section_order[idx])
 
-                val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
+                    val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
+                    for idx in indices:
+                        metric_name = all_metrics[idx]
+                        val_by_metric[ColumnKey(str(metric_name))] = _parse_cell(idx)
+                        if metric_name not in section_headers:
+                            section_headers[metric_name] = json.loads(all_column_meta[idx])
 
-                for idx in row_indices:
-                    metric_name = all_metrics[idx]
+                    if val_by_metric:
+                        input_rows.append(InputRow(sample=SampleName(str(row_sample)), data=val_by_metric))
 
-                    # Convert string values back to their original types
-                    val_raw: Any = all_val_raw[idx]
-                    if not math.isnan(val_raw):
-                        if all_val_raw_type[idx] == "int":
-                            val_raw = int(val_raw)
-                        elif all_val_raw_type[idx] == "bool":
-                            val_raw = bool(val_raw)
-                    val_mod: Any = all_val_mod[idx]
-                    if not math.isnan(val_mod):
-                        if all_val_mod_type[idx] == "int":
-                            val_mod = int(val_mod)
-                        elif all_val_mod_type[idx] == "bool":
-                            val_mod = bool(val_mod)
-                    val_by_metric[ColumnKey(str(metric_name))] = Cell(
-                        raw=val_raw,
-                        mod=val_mod,
-                        fmt=all_val_fmt[idx],
-                    )
+                if input_rows:
+                    if len(input_rows) == 1:
+                        section_data[group_sample] = input_rows[0]
+                    else:
+                        section_data[group_sample] = input_rows
 
-                    # Create header if it doesn't exist
-                    if metric_name not in section_headers:
-                        # Parse column metadata from JSON
-                        section_headers[metric_name] = json.loads(all_column_meta[idx])
-
-                # Add sample data to section
-                if val_by_metric:
-                    val_by_sample_by_metric[SampleName(str(sample_name))] = val_by_metric
-
-            # Add section data and headers to dictionary
-            if val_by_sample_by_metric:
-                data_dict[SectionKey(str(section_key))] = val_by_sample_by_metric
+            if section_data:
+                data_dict[SectionKey(str(section_key))] = section_data
                 headers_dict[SectionKey(str(section_key))] = section_headers
 
         # Create DataTable if we have data
         dt = table_object.DataTable.create(
-            data=cast(Dict[SectionKey, SectionT], data_dict),
+            data=data_dict,  # type: ignore[arg-type]
             table_id=pconf.id,
             table_anchor=table_anchor,
             pconfig=pconf.model_copy(),
@@ -399,9 +400,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             metric_order_map = pl.Series("__metric_order", [metric_order.get(m, 99999) for m in metric_list])
             merged_df = merged_df.with_columns(metric_order_map)
 
-            # Sort by creation_date (newest last), then use unique with keep="last" to deduplicate
-            # This is O(n log n) instead of O(n²) from the previous implementation
-            key_columns = ["dt_anchor", "section_key", "sample", "metric"]
+            # Sort by creation_date (newest last), then use unique with keep="last" to deduplicate.
+            # Include row_sample so that aggregate and member rows within a group are not collapsed.
+            key_columns = ["dt_anchor", "section_key", "sample", "row_sample", "metric"]
             merged_df = merged_df.sort("creation_date").unique(
                 subset=key_columns,
                 keep="last",

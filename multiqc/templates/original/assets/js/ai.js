@@ -9,8 +9,8 @@ window.continueInSeqeraChatHandler = function (event) {
   // Either report uuid, or encoded system and chat messages
   let threadId = el.data("thread-id");
 
-  let url = seqeraWebsite + "/ask-ai/";
-  if (threadId) url += "?messages=" + threadId;
+  let url = seqeraWebsite;
+  if (threadId) url += "/chat/" + threadId;
 
   window.open(url, "_blank");
 };
@@ -330,7 +330,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`).show();
         }
         // Save response to localStorage
         const elementId = button.data("plot-anchor") || "global";
@@ -464,7 +464,7 @@ $(function () {
 
         const threadId = cachedSummary.threadId;
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`);
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`);
           continueInChatButton.show();
         }
       }

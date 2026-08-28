@@ -86,7 +86,7 @@ class MultiqcModule(
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DRAGEN",
             anchor="DRAGEN",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
