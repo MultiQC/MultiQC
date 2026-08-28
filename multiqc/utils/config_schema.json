@@ -2225,6 +2225,37 @@
       "section": "File Discovery",
       "title": "Sp"
     },
+    "plotting_engine": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Plotting library used to render report plots. The echarts report template sets this to echarts; plotly is the default engine.",
+      "group": "Rendering mode",
+      "section": "Plot Settings",
+      "title": "Plotting Engine"
+    },
+    "echarts_canvas_threshold": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Number of individual marks (points, bars, heatmap cells) above which an ECharts plot uses the canvas renderer instead of SVG.",
+      "group": "Rendering mode",
+      "section": "Plot Settings",
+      "title": "Echarts Canvas Threshold"
+    },
     "plots_force_flat": {
       "anyOf": [
         {

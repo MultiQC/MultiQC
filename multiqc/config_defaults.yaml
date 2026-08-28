@@ -91,6 +91,8 @@ ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
 seqera_api_url: "https://ai.seqera.io/v1/web"
 seqera_website: "https://ai.seqera.io"
 
+plotting_engine: "plotly" # "plotly" or "echarts"; set by the echarts report template
+echarts_canvas_threshold: 3000 # ECharts plots with more marks than this use the canvas renderer instead of SVG
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts
 plots_force_interactive: false

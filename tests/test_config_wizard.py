@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from multiqc import config
 from multiqc.utils.config_schema import MultiQCConfig
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -240,3 +241,24 @@ def test_config_defaults_keys_are_in_schema():
         f"Config defaults present in config_defaults.yaml but missing from MultiQCConfig: {missing}. "
         f"Add a Field for each to multiqc/utils/config_schema.py."
     )
+
+
+def test_update_config_plotting_engine_stays_plotly_for_existing_templates():
+    """`update_config` loads the resolved template module and, if it defines a
+    `plotting_engine` attribute, applies it to `config.plotting_engine` (this is
+    the wiring the upcoming `echarts` template relies on: its `__init__.py` sets
+    `plotting_engine = "echarts"`). None of the templates that exist today
+    (`default`, `disco`, `simple`, ...) define that attribute, so `hasattr` is
+    False for all of them and `config.plotting_engine` must stay at its default
+    of `"plotly"`. This is the direct regression test for the top Phase 0 risk:
+    that the attribute is applied before plot serialization, in
+    `update_config.py`, not in `write_results.py`.
+    """
+    from multiqc.core.update_config import ClConfig, update_config
+
+    for template in ("default", "disco", "simple"):
+        update_config(cfg=ClConfig(template=template))
+        assert config.plotting_engine == "plotly", (
+            f"config.plotting_engine became {config.plotting_engine!r} for template {template!r}, "
+            "but no template that exists yet defines a plotting_engine attribute"
+        )

@@ -2531,6 +2531,18 @@ sp:
 
 ### Rendering mode
 
+#### `plotting_engine`
+
+**Type**: <code>str</code> (default: `"plotly"`)
+
+Plotting library used to render report plots. The echarts report template sets this to echarts; plotly is the default engine.
+
+#### `echarts_canvas_threshold`
+
+**Type**: <code>int</code> (default: `3000`)
+
+Number of individual marks (points, bars, heatmap cells) above which an ECharts plot uses the canvas renderer instead of SVG.
+
 #### `plots_force_flat`
 
 **Type**: <code>bool</code> (default: `false`)

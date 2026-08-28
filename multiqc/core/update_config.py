@@ -133,7 +133,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         # `cfg.template` is a `str` from click; click.Choice already
         # validated it against the available template names.
         config.template = cast(
-            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco", "echarts"],
             cfg.template,
         )
     if cfg.title is not None:
@@ -180,6 +180,18 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.make_pdf:
         config.make_pdf = cfg.make_pdf
         config.template = "simple"
+    # Allow the report template to select the plotting engine (eg. the `echarts`
+    # template sets `plotting_engine = "echarts"` in its `__init__.py`). This must
+    # happen here, before `render_and_export_plots` serializes plots, and not in
+    # `write_results.py` (where `template_dark_mode` is applied), because that runs
+    # after plot serialization.
+    template_mod = config.avail_templates[config.template].load()
+    if hasattr(template_mod, "plotting_engine"):
+        config.plotting_engine = template_mod.plotting_engine
+    if config.plotting_engine not in ("plotly", "echarts"):
+        raise ValueError(
+            f"Invalid config.plotting_engine value {config.plotting_engine!r}, expected 'plotly' or 'echarts'"
+        )
     if config.template == "simple":
         config.plots_force_flat = True
         config.simple_output = True
