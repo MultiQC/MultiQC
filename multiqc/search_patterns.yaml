@@ -982,6 +982,9 @@ rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
   max_filesize: 500000
+ribodetector:
+  contents: "Writing output non-rRNA sequences into file"
+  num_lines: 20
 rsem:
   fn: "*.cnt"
 rseqc/bam_stat:

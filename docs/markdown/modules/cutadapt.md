@@ -42,6 +42,7 @@ The module also understands logs saved by Trim Galore, which contain cutadapt lo
 ```yaml
 cutadapt:
 - contents: This is cutadapt
+  exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.'
   num_lines: 100
 - contents: Cutadapt report
   fn: '*.json'

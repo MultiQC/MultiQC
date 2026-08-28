@@ -11,19 +11,26 @@ on:
       - "docs/**"
       - "*.md"
 
+permissions:
+  contents: read
+
 jobs:
   mypy:
     name: "Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         python-version: ["3.9", "3.14"] # NB: 3.14.1 has upstream bug
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: "Set up Python ${{ matrix.python-version }}"
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true

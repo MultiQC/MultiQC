@@ -1,5 +1,87 @@
 # MultiQC Version History
 
+## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
+
+This release has a very nice shiny new feature for you: the _MultiQC Configuration Wizard_! 👨🏻‍🎨 🎨
+
+This has an interactive form where you can browse all MultiQC config attributes (there are quite a lot).
+See them organised with help text and examples. Enter values into the form and have them validated in real time. 📋 ✅
+
+Then see your generated YAML config in a code editor (where you can paste existing configs if you wish).
+See the config file explained, validated and suggestions for fixes. 📚
+
+The config wizard is a static HTML file that is bundled with the MultiQC repo, but it's easiest to try out online:
+[https://seqera.io/multiqc_config_wizard](https://seqera.io/multiqc_config_wizard) ✨
+
+### New modules
+
+- [CheckAtlas](https://github.com/becavin-lab/checkatlas) ([#3545](https://github.com/MultiQC/MultiQC/pull/3545))
+  - A one-liner tool for quality control of single-cell atlases.
+- [Deacon](https://github.com/bede/deacon) ([#3564](https://github.com/MultiQC/MultiQC/pull/3564))
+  - Search and depletion of FASTA/FASTQ files and streams using accelerated minimizer matching.
+- [FastQE](https://github.com/fastqe/fastqe) ([#3490](https://github.com/MultiQC/MultiQC/pull/3490))
+  - Uses emoji to represent FASTQ sequence quality scores.
+- [hicstuff](https://github.com/koszullab/hicstuff) ([#3541](https://github.com/MultiQC/MultiQC/pull/3541))
+  - Hi-C pipeline that generates contact maps from sequencing reads.
+- [HiFi-Trimmer](https://github.com/sanger-tol/hifi-trimmer) ([#3513](https://github.com/MultiQC/MultiQC/pull/3513))
+  - Filters and trims adapter sequences from HiFi reads using BLAST.
+- [Riker](https://github.com/fulcrumgenomics/riker) ([#3540](https://github.com/MultiQC/MultiQC/pull/3540))
+  - Fast Rust toolkit that ports key sequencing QC tools from Picard.
+- [sincei](https://sincei.readthedocs.io) ([#1946](https://github.com/MultiQC/MultiQC/pull/1946))
+  - Toolkit for processing and analysing single-cell (epi)genomics data.
+- [Trim Galore](https://github.com/FelixKrueger/TrimGalore) ([#3538](https://github.com/MultiQC/MultiQC/pull/3538))
+  - Native v2.x support: quality and adapter trimming for next-generation sequencing data, with special handling for RRBS libraries.
+
+### Module updates
+
+- Bases2Fastq: Major upgrade to the module, now shows a lot more information ([#3460](https://github.com/MultiQC/MultiQC/pull/3460))
+- Falco: Add native recognition for Falco output ([#3497](https://github.com/MultiQC/MultiQC/pull/3497))
+- Fastp: Add % surviving bases ([#3472](https://github.com/MultiQC/MultiQC/pull/3472))
+- Sequali: Expand general statistics, add normalised plots ([#3530](https://github.com/MultiQC/MultiQC/pull/3530))
+
+### Module fixes
+
+- Bcftools: Fix stats zero-depth plot crash ([#3556](https://github.com/MultiQC/MultiQC/pull/3556))
+- Cell Ranger ARC: Fix key collisions between ATAC and GEX metrics ([#3480](https://github.com/MultiQC/MultiQC/pull/3480))
+- Dragen: Fix incorrect average GC% in FastQC for all samples except the first in batch ([#3505](https://github.com/MultiQC/MultiQC/pull/3505))
+- Haplocheck: Don't overwrite prior results, allow multiple samples ([#3512](https://github.com/MultiQC/MultiQC/pull/3512))
+
+### Feature updates and improvements
+
+- Config: Major new automations using config schema ([#3183](https://github.com/MultiQC/MultiQC/pull/3183), [#3558](https://github.com/MultiQC/MultiQC/pull/3558), [#3561](https://github.com/MultiQC/MultiQC/pull/3561))
+  - Automated markdown reference documentation of all config attributes for the docs
+  - New interactive tool for building, editing and validating MultiQC config files: [https://seqera.io/multiqc_config_wizard](https://seqera.io/multiqc_config_wizard)
+- AI: Catch unexpected AWS Bedrock response shapes ([#3440](https://github.com/MultiQC/MultiQC/pull/3440))
+- custom_plot_config: Fix deprecated camelCase aliases (e.g. yPlotBands) ([#3547](https://github.com/MultiQC/MultiQC/pull/3547))
+- custom_plot_config: Per-tab targeting for multi-data_labels plots ([#3548](https://github.com/MultiQC/MultiQC/pull/3548))
+- Custom content: Fix crash on data type conflict between files ([#3560](https://github.com/MultiQC/MultiQC/pull/3560))
+- Custom images: Support more MIME types, add custom favicon ([#3469](https://github.com/MultiQC/MultiQC/pull/3469))
+- Plots: Add section alerts for filtered samples ([#3549](https://github.com/MultiQC/MultiQC/pull/3549))
+- Plots: Fix barplot ValueError when all categories are zero ([#3563](https://github.com/MultiQC/MultiQC/pull/3563))
+- Report: Add spacing between AI summary and general stats ([#3470](https://github.com/MultiQC/MultiQC/pull/3470))
+- Run merging: Fix grouped sample totals and hierarchy being lost during parquet merging ([#3559](https://github.com/MultiQC/MultiQC/pull/3559))
+- Tables: Allow defaultsort to include the first column header ([#3519](https://github.com/MultiQC/MultiQC/pull/3519))
+- Tests: Fix pytest warning sources ([#3551](https://github.com/MultiQC/MultiQC/pull/3551))
+
+### Fixes
+
+- Config: Fix env var overwrite where booleans/ints/floats were stored as strings ([#3557](https://github.com/MultiQC/MultiQC/pull/3557))
+- Core: Fix `rich.panel` import in module-failure exception handler ([#3537](https://github.com/MultiQC/MultiQC/pull/3537))
+- custom_plot_config: Fix parsing of y_bands/x_bands/x_lines/y_lines ([#3459](https://github.com/MultiQC/MultiQC/pull/3459))
+- Report: Fix race causing empty zip files when exporting plots ([#3555](https://github.com/MultiQC/MultiQC/pull/3555))
+
+### Infrastructure and packaging
+
+- Claude Code: Update agent instructions ([#3552](https://github.com/MultiQC/MultiQC/pull/3552))
+- Frontend: Update npm packages ([#3562](https://github.com/MultiQC/MultiQC/pull/3562))
+- Packaging: Bump minimum Python to 3.9 ([#3542](https://github.com/MultiQC/MultiQC/pull/3542))
+- Polars: Replace deprecated `polars-lts-cpu` dependency ([#3553](https://github.com/MultiQC/MultiQC/pull/3553))
+- Polars: Use Pyodide-compatible dependency on Emscripten ([#3554](https://github.com/MultiQC/MultiQC/pull/3554))
+
+### Optimization, refactoring and typing
+
+- Linting: Drop Python 2-era idioms ([#3546](https://github.com/MultiQC/MultiQC/pull/3546))
+
 ## [MultiQC v1.34](https://github.com/MultiQC/MultiQC/releases/tag/v1.34) - 2026-04-21
 
 ### New modules

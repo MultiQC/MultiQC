@@ -20,7 +20,7 @@ from typing import Any, get_args
 # Allow the script to be either run directly or imported via importlib (eg. from tests).
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults, load_sections, load_uncommon  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups  # noqa: E402
 
 import multiqc  # noqa: E402
 from multiqc.utils.config_schema import AiProviderLiteral  # noqa: E402
@@ -40,10 +40,6 @@ MULTIQC_LOGO_SVG = """\
 <path d="M885.03 71.47V45.81H865.56L848.45 62.92H840.26V0H808.83V173.98C808.83 183.13 811.52 190.46 816.92 195.95C822.31 201.44 829.67 204.19 839.04 204.19H885.02V177.95H849.1C843.2 177.95 840.25 174.9 840.25 168.8V71.48H885.01L885.03 71.47Z" fill="#333" class="mqc-logo-text"/>
 </svg>"""
 
-# Schema properties that are intentionally omitted from the wizard.
-# `sp` is the module search-patterns dict, too structured for a flat form.
-SKIP_PROPERTIES = {"sp"}
-
 
 def _inject_json(obj: Any, *, indent: int) -> str:
     """``json.dumps`` then escape ``</`` so the payload is safe inside a
@@ -61,54 +57,81 @@ def generate_config_wizard():
     back to a dropdown.
     """
     properties, config_defaults, _schema = load_schema_and_defaults()
-    sections = load_sections(properties, skip=SKIP_PROPERTIES)
-    uncommon = load_uncommon(properties)
+    sections_with_groups = load_sections_with_groups(properties)
 
+    # 3-level nested: {section: {group_name_or_empty: {prop_name: prop_data}}}.
+    # The empty-string key holds ungrouped fields (kept ordered first); using
+    # "" rather than None keeps JSON object keys uniformly string-typed.
     config_data: dict = {}
-    for section_name, section_props in sections.items():
-        config_data[section_name] = {}
-        for prop_name in section_props:
-            if prop_name not in properties:
-                continue
-            prop = properties[prop_name]
+    for section_name, groups in sections_with_groups.items():
+        section_data: dict = {}
+        for group_name, group_props in groups.items():
+            group_key = "" if group_name is None else group_name
+            group_data: dict = {}
+            for prop_name in group_props:
+                if prop_name not in properties:
+                    continue
+                prop = properties[prop_name]
 
-            # Pydantic wraps Optional fields in anyOf. Pull out the non-null branch
-            # so we can read the inner type / items metadata.
-            inner = prop
-            if "anyOf" in prop:
-                non_null = [t for t in prop["anyOf"] if t.get("type") != "null"]
-                if non_null:
-                    inner = non_null[0]
+                # Pydantic wraps Optional fields in anyOf. Pull out the non-null branch
+                # so we can read the inner type / items metadata. Fields whose schema
+                # admits multiple non-null types (eg. `Union[bool, List[str]]`) get a
+                # `union_types` payload so the form can render a type-picker.
+                inner = prop
+                union_types: list = []
+                if "anyOf" in prop:
+                    non_null = [t for t in prop["anyOf"] if t.get("type") != "null"]
+                    if non_null:
+                        inner = non_null[0]
+                    if len(non_null) > 1:
+                        for branch in non_null:
+                            branch_entry: dict = {"type": branch.get("type")}
+                            if branch.get("type") == "array":
+                                branch_items = branch.get("items")
+                                if isinstance(branch_items, dict) and isinstance(branch_items.get("enum"), list):
+                                    branch_entry["items_enum"] = branch_items["enum"]
+                            union_types.append(branch_entry)
 
-            prop_type = inner.get("type", prop.get("type", "string"))
+                prop_type = inner.get("type", prop.get("type", "string"))
 
-            enum_values = None
-            if "enum" in inner:
-                enum_values = inner["enum"]
-            elif "enum" in prop:
-                enum_values = prop["enum"]
-            elif prop_name == "ai_provider":
-                enum_values = list(get_args(AiProviderLiteral))
+                enum_values = None
+                if "enum" in inner:
+                    enum_values = inner["enum"]
+                elif "enum" in prop:
+                    enum_values = prop["enum"]
+                elif prop_name == "ai_provider":
+                    enum_values = list(get_args(AiProviderLiteral))
 
-            items_enum = None
-            if prop_type == "array":
-                items = inner.get("items")
-                if isinstance(items, dict) and isinstance(items.get("enum"), list):
-                    items_enum = items["enum"]
+                items_enum = None
+                if prop_type == "array":
+                    items = inner.get("items")
+                    if isinstance(items, dict) and isinstance(items.get("enum"), list):
+                        items_enum = items["enum"]
 
-            default_val = config_defaults.get(prop_name)
+                default_val = config_defaults.get(prop_name)
 
-            config_data[section_name][prop_name] = {
-                "uncommon": prop_name in uncommon,
-                "deprecated": bool(prop.get("deprecated", False)),
-                "multiline": bool(prop.get("multiline", False)),
-                "type": prop_type,
-                "description": prop.get("description", ""),
-                "default": default_val,
-                "enum": enum_values,
-                "items_enum": items_enum,
-                "examples": prop.get("examples", []),
-            }
+                # Pydantic stores Field(deprecated="...") as the string reason
+                # when present, or true/false. Pass it through verbatim so the
+                # form can show the explanation as a tooltip.
+                deprecated_value = prop.get("deprecated")
+                if not deprecated_value:
+                    deprecated_value = False
+
+                entry: dict = {
+                    "deprecated": deprecated_value,
+                    "multiline": bool(prop.get("multiline", False)),
+                    "type": prop_type,
+                    "description": prop.get("description", ""),
+                    "default": default_val,
+                    "enum": enum_values,
+                    "items_enum": items_enum,
+                    "examples": prop.get("examples", []),
+                }
+                if union_types:
+                    entry["union_types"] = union_types
+                group_data[prop_name] = entry
+            section_data[group_key] = group_data
+        config_data[section_name] = section_data
 
     config_data_js = _inject_json(config_data, indent=8)
     # Full JSON schema for the wizard's Validate YAML view to run Ajv against

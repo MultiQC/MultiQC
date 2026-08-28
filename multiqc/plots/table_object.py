@@ -903,15 +903,15 @@ def render_html(
                 else:
                     percentage = 100.0
 
-                # This is horrible, but Python locale settings are worse
-                if config.thousandsSep_format is None:
-                    config.thousandsSep_format = '<span class="mqc_small_space"></span>'
-                if config.decimalPoint_format is None:
-                    config.decimalPoint_format = "."
+                # This is horrible, but Python locale settings are worse.
+                # A single space is the schema default; swap it for a CSS
+                # small space so the separator isn't copied to the clipboard
+                # when the user selects the cell value.
+                thousands_sep = config.thousandsSep_format
+                if thousands_sep == " ":
+                    thousands_sep = '<span class="mqc_small_space"></span>'
                 valstr = valstr.replace(".", "DECIMAL").replace(",", "THOUSAND")
-                valstr = valstr.replace("DECIMAL", config.decimalPoint_format).replace(
-                    "THOUSAND", config.thousandsSep_format
-                )
+                valstr = valstr.replace("DECIMAL", config.decimalPoint_format).replace("THOUSAND", thousands_sep)
 
                 suffix = header.suffix
                 if suffix:

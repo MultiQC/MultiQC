@@ -19,9 +19,93 @@ Demultiplexes and converts Element AVITI base calls into FASTQ files.
 [https://docs.elembio.io/docs/bases2fastq/introduction/](https://docs.elembio.io/docs/bases2fastq/introduction/)
 :::
 
+Bases2Fastq is Element Biosciences' secondary analysis software for demultiplexing
+sequencing data from AVITI systems and converting base calls into FASTQ files.
+
+Data Flow Overview
+------------------
+The module handles three distinct data hierarchy levels:
+
+1. **Run Level**: Single sequencing run with all samples in one output
+    - Directory: `<run_output>/`
+    - Files: `RunStats.json`, `RunManifest.json`
+    - Samples identified by: `{RunName}-{AnalysisID}__{SampleName}`
+
+2. **Project Level**: Demultiplexing by project, samples split into project subdirectories
+    - Directory: `<run_output>/Samples/<ProjectName>/`
+    - Files: Project-specific `RunStats.json`
+    - Run-level `RunManifest.json` accessed via `../../RunManifest.json`
+    - Samples identified by: `{RunName}-{AnalysisID}__{SampleName}`
+
+3. **Combined Level**: Both run and project data present (merged view)
+
+Parsing Flow
+------------
+```
+__init__()
+    │
+    ├─> _init_data_structures()     # Initialize empty dicts for all data levels
+    │
+    ├─> _parse_and_validate_data()  # Main parsing entry point
+    │       │
+    │       ├─> _parse_run_project_data("bases2fastq/run")     # Parse run-level RunStats.json
+    │       │       └─> Populates: run_level_data, run_level_samples, run_level_samples_to_project
+    │       │
+    │       ├─> _parse_run_project_data("bases2fastq/project") # Parse project-level RunStats.json
+    │       │       └─> Populates: project_level_data, project_level_samples, project_level_samples_to_project
+    │       │
+    │       └─> _determine_summary_path()  # Returns: "run_level" | "project_level" | "combined_level"
+    │
+    ├─> _select_data_by_summary_path()  # Route to appropriate data sources
+    │       │
+    │       ├─> _parse_run_manifest() or _parse_run_manifest_in_project()
+    │       │       └─> Returns: manifest_data (lane settings, adapter info)
+    │       │
+    │       ├─> _parse_index_assignment() or _parse_index_assignment_in_project()
+    │       │       └─> Returns: index_assignment_data (per-sample index stats)
+    │       │
+    │       └─> _parse_run_unassigned_sequences() (run_level only)
+    │               └─> Returns: unassigned_sequences (unknown barcodes)
+    │
+    ├─> _setup_colors()             # Assign colors to runs/projects/samples
+    │
+    └─> _generate_plots()           # Create all report sections and plots
+```
+
+Data Structures
+---------------
+- `run_level_data`: Dict[run_name, run_stats] - Run-level QC metrics
+- `run_level_samples`: Dict[sample_id, sample_stats] - Sample metrics from run-level
+- `project_level_data`: Dict[project_name, project_stats] - Project-level QC metrics
+- `project_level_samples`: Dict[sample_id, sample_stats] - Sample metrics from project-level
+- `*_samples_to_project`: Dict[sample_id, project_name] - Maps samples to their projects
+
+Sample Naming Convention
+------------------------
+Samples are uniquely identified as: `{RunName}-{AnalysisID[0:4]}__{SampleName}`
+This ensures uniqueness across multiple runs while keeping names readable.
+
+Files Parsed
+------------
+- `RunStats.json`: Run/project QC metrics, sample statistics, lane data
+- `RunManifest.json`: Sample sheet info, index sequences, adapter settings
+
+Metrics Displayed
+-----------------
+- Polony counts and yields
+- Base quality distributions (histogram and by-cycle)
+- Index assignment statistics
+- Per-sample sequence content and GC distribution
+- Adapter content analysis
+- Unassigned/unknown barcode sequences (run-level only)
+
 ### File search patterns
 
 ```yaml
+bases2fastq/manifest:
+  contents: Settings
+  fn: RunManifest.json
+  num_lines: 100
 bases2fastq/project:
   contents: SampleStats
   fn: '*_RunStats.json'
@@ -29,10 +113,6 @@ bases2fastq/project:
 bases2fastq/run:
   contents: SampleStats
   fn: RunStats.json
-  num_lines: 100
-bases2fastq/manifest:
-  contents: Settings
-  fn: RunManifest.json
   num_lines: 100
 ```
     

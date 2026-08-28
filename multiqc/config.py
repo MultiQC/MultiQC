@@ -76,7 +76,7 @@ custom_logo_width: int
 custom_favicon: Optional[str]
 custom_css_files: List[str]
 simple_output: bool
-template: Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]
+template: str
 template_dark_mode: bool
 plot_font_family: Optional[str]
 profile_runtime: bool

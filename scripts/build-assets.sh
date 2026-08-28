@@ -9,10 +9,13 @@ if [ $# -gt 0 ]; then
     # Change to the default template directory
     cd multiqc/templates/default
 
-    # Check if node_modules exists
+    # Install from the lockfile if needed. Use `npm ci`, not `npm install`:
+    # `npm install` rewrites package-lock.json (differently per platform / npm
+    # version), which dirties the tree and fails the hook in CI. `npm ci`
+    # installs exactly what the lockfile pins and never modifies it.
     if [ ! -d "node_modules" ]; then
         echo "Installing npm dependencies..."
-        npm install
+        npm ci
     fi
 
     # Build with Vite
