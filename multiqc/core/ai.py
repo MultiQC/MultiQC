@@ -506,19 +506,26 @@ class AWSBedrockClient(Client):
 
     def _query(self, prompt: str) -> ApiResponse:
         # TODO consider error-handling/backoff
-        body = json.dumps(
-            {
-                # this is the only allowable value as of 2025/03/04
-                # if they ever add more, we can make it configurable
-                # or add smart logic to figure it out.
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-                "max_tokens": 4096,
-            }
-        )
+        body = {
+            # this is the only allowable value as of 2025/03/04
+            # if they ever add more, we can make it configurable
+            # or add smart logic to figure it out.
+            "anthropic_version": "bedrock-2023-05-31",
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            "max_tokens": 4096,
+        }
+
+        if config.ai_extended_thinking:
+            thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+            if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+            body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
+        else:
+            body["thinking"] = {"type": "disabled"}
 
         response = self.client.invoke_model(
-            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
         )
 
         response_body = json.loads(response["body"].read())
