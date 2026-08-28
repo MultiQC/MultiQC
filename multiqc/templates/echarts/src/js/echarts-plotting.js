@@ -237,7 +237,47 @@ function renderPlot(anchor) {
     return;
   }
 
-  // 1. Pick the active dataset.
+  // 1-5. Build the complete option (skeleton + theme + log/pct + toolbox-aware series).
+  let option = buildCurrentOption(plot);
+  if (!option) {
+    // All series hidden. Hide the graph, same as plotting.js.
+    container.hide();
+    return;
+  }
+
+  container.show();
+
+  // Class bookkeeping identical to the Plotly renderPlot's first-render handling.
+  if (!plot.rendered) {
+    plot.rendered = true;
+    container.removeClass("not_rendered").removeClass("not_loaded").parent().find(".render_plot").remove();
+    if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
+  }
+
+  // 6. Get-or-init the chart instance, then always setOption with notMerge so stale
+  // series/axis state from a previous render never leaks through.
+  plot.chart ??= echarts.init(el, null, { renderer: plot.echarts.renderer });
+  plot.chart.setOption(option, { notMerge: true });
+
+  if (!plot._resizeObserver) {
+    plot._resizeObserver = new ResizeObserver(() => {
+      if (plot.chart) plot.chart.resize();
+    });
+    plot._resizeObserver.observe(el);
+  }
+
+  plot.afterPlotCreated();
+}
+
+// Make renderPlot available globally
+window.renderPlot = renderPlot;
+
+// Build the complete ECharts option for the plot's currently active dataset: skeleton
+// clone + theme colors + log/pct switch state + toolbox-aware series (steps 2-5 of
+// renderPlot() above). Shared by renderPlot() and the export helper (toolbox-export.js)
+// so the exported image can never drift from what's on screen. Returns null when every
+// series is hidden (toolbox "hide all"), same signal renderPlot uses to hide the container.
+function buildCurrentOption(plot) {
   let dataset = plot.datasets[plot.activeDatasetIdx];
 
   // 2. Clone the skeleton option (must stay JSON-safe: no functions live in it).
@@ -285,42 +325,17 @@ function renderPlot(anchor) {
 
   // 5. Build series from the raw dataset fields (toolbox-aware).
   let series = plot.buildSeries();
-  if (!series || series.length === 0) {
-    // All series hidden. Hide the graph, same as plotting.js.
-    container.hide();
-    return;
-  }
+  if (!series || series.length === 0) return null;
   option.series = series;
   if (plot._axisData && option.yAxis) {
     option.yAxis.data = plot._axisData;
   }
 
-  container.show();
-
-  // Class bookkeeping identical to the Plotly renderPlot's first-render handling.
-  if (!plot.rendered) {
-    plot.rendered = true;
-    container.removeClass("not_rendered").removeClass("not_loaded").parent().find(".render_plot").remove();
-    if ($(".hc-plot.not_rendered").length === 0) $("#mqc-warning-many-samples").hide();
-  }
-
-  // 6. Get-or-init the chart instance, then always setOption with notMerge so stale
-  // series/axis state from a previous render never leaks through.
-  plot.chart ??= echarts.init(el, null, { renderer: plot.echarts.renderer });
-  plot.chart.setOption(option, { notMerge: true });
-
-  if (!plot._resizeObserver) {
-    plot._resizeObserver = new ResizeObserver(() => {
-      if (plot.chart) plot.chart.resize();
-    });
-    plot._resizeObserver.observe(el);
-  }
-
-  plot.afterPlotCreated();
+  return option;
 }
 
-// Make renderPlot available globally
-window.renderPlot = renderPlot;
+// Make buildCurrentOption available globally (used by toolbox-export.js)
+window.buildCurrentOption = buildCurrentOption;
 
 // Re-render every already-rendered plot when the color theme changes, so the option is
 // rebuilt from the skeleton with new theme colors (no echarts setTheme dependency).

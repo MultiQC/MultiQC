@@ -35,10 +35,10 @@ import "../../../default/src/js/toolbox/filters.js";
 import "../../../default/src/js/toolbox/highlights.js";
 import "../../../default/src/js/toolbox/rename.js";
 import "../../../default/src/js/toolbox/hide.js";
-// toolbox/export.js: default's Plotly.toImage export code only fires when the
-// export button is clicked, so it's safe to reuse until Task 0.7 replaces it
-// with ./toolbox-export.js.
-import "../../../default/src/js/toolbox/export.js";
+// ECharts-specific image export (PNG/SVG): replaces default's Plotly.toImage-based
+// toolbox/export.js with an ECharts equivalent (Task 0.7). Data export (csv/tsv/json)
+// is unchanged, inherited via each plot's exportData().
+import "./toolbox-export.js";
 import "../../../default/src/js/toolbox/ai.js";
 import "../../../default/src/js/toolbox/save-load.js";
 import "../../../default/src/js/toolbox/citations.js";
