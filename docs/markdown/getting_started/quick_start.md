@@ -116,3 +116,7 @@ Try using the toolbox features in the right hand sidebar, for example hiding and
 
 Also have a look at the directory `multiqc_data` that was created.
 This contains the parsed data in a nice friendly format, ready for any further downstream analysis.
+
+## Customise the report
+
+When you want to set a title, hide modules, rename samples, or change anything else about the report, MultiQC reads a `multiqc_config.yaml` from your project directory. The easiest way to write one is the [Config Wizard](config_wizard.md): a browser-based editor with a live YAML preview and schema validation. See the [Configuration](config.md) page for the precedence rules and search paths.

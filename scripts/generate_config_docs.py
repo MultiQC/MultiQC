@@ -53,19 +53,58 @@ def _dump_yaml(value):
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults, load_sections  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups  # noqa: E402
 from multiqc.utils.config_schema import (  # noqa: E402
     AiProviderLiteral,
     CleanPattern,
+    CondFormattingRule,
     GeneralStatsColumnConfig,
     GeneralStatsModuleConfig,
+    ModuleOverride,
     MultiQCConfig,
     SearchPattern,
+    SectionOrderOverride,
 )
 
-# Properties skipped in the section walk; sp is documented manually below under
-# "Special Types".
-SKIP_PROPERTIES = {"sp"}
+# Special-type names that are documented under "## Special Types" further down
+# the same page. References to these names are linkified to the in-page anchor.
+SPECIAL_TYPES = (
+    "SearchPattern",
+    "CleanPattern",
+    "GeneralStatsColumnConfig",
+    "GeneralStatsModuleConfig",
+    "CondFormattingRule",
+    "ModuleOverride",
+    "SectionOrderOverride",
+)
+_SPECIAL_TYPE_RE = re.compile(r"\b(" + "|".join(SPECIAL_TYPES) + r")\b")
+
+
+def linkify_type_string(type_str: str) -> str:
+    """Return an inline-code HTML rendering of ``type_str`` with ``SPECIAL_TYPES``
+    occurrences wrapped in same-page anchor links.
+
+    Inline-code is emitted as ``<code>...</code>`` rather than backticks so the
+    ``<a>`` link is rendered inside the monospace span.
+    """
+    body = _SPECIAL_TYPE_RE.sub(lambda m: f'<a href="#{m.group(1).lower()}">{m.group(1)}</a>', type_str)
+    return f"<code>{body}</code>"
+
+
+def linkify_markdown(text: str) -> str:
+    """Wrap bare ``SPECIAL_TYPES`` occurrences in markdown anchor links.
+
+    Matches inside backtick code spans are left alone (they render as monospace
+    code and shouldn't become links). Splitting on backticks keeps the
+    backticked segments verbatim and only linkifies the prose between them.
+    """
+    parts = text.split("`")
+    out = []
+    for i, segment in enumerate(parts):
+        if i % 2 == 0:  # outside backticks
+            segment = _SPECIAL_TYPE_RE.sub(lambda m: f"[{m.group(1)}](#{m.group(1).lower()})", segment)
+        out.append(segment)
+    return "`".join(out)
 
 
 def format_type_annotation(annotation):
@@ -116,18 +155,14 @@ def format_type_annotation(annotation):
         return "Dict"
     elif annotation is list or annotation is List:
         return "List"
-    elif annotation is SearchPattern:
-        return "SearchPattern"
-    elif annotation is CleanPattern:
-        return "CleanPattern"
-    elif annotation is GeneralStatsColumnConfig:
-        return "GeneralStatsColumnConfig"
-    elif annotation is GeneralStatsModuleConfig:
-        return "GeneralStatsModuleConfig"
     elif annotation is Any:
         return "Any"
 
-    # For any other type, return its string representation
+    # Classes (eg. Pydantic models) render as their plain class name, not the
+    # noisy ``<class 'multiqc.utils.config_schema.X'>`` form.
+    if isinstance(annotation, type):
+        return annotation.__name__
+
     return str(annotation).replace("typing.", "")
 
 
@@ -219,72 +254,106 @@ Configuration values are loaded in the following order of precedence (highest to
 
 The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
+
+:::tip
+
+If you'd rather build your config visually, the [Config Wizard](https://seqera.io/multiqc_config_wizard) renders every option below as a form field with the same descriptions and defaults, and validates as you type.
+
+:::
 """)
 
-    # Group properties into logical sections from the schema's per-field tags.
-    sections = load_sections(properties, skip=SKIP_PROPERTIES)
+    def render_prop(prop_name: str, heading_level: int) -> None:
+        """Append rendered markdown for one property to ``output``."""
+        if prop_name not in properties:
+            return
+        prop = properties[prop_name]
 
-    # Generate markdown for each section
-    for section, props in sections.items():
-        if not props:
+        # Get type information from Pydantic model if available
+        if prop_name in config_attrs:
+            type_info = format_type_annotation(config_attrs[prop_name])
+        else:
+            # Fallback to JSON schema type
+            type_info = prop.get("type", "any")
+            if type_info == "array":
+                items = prop.get("items", {})
+                item_type = items.get("type", "any")
+                if "oneOf" in items:
+                    item_types = [t.get("type", "any") for t in items.get("oneOf", [])]
+                    item_type = " | ".join(item_types)
+                type_info = f"List[{item_type}]"
+            elif not type_info:
+                type_info = "any"
+
+        description = prop.get("description", "")
+
+        # Get default value - first from config_defaults.yaml, then fall back to schema
+        if prop_name in config_defaults:
+            default_val = config_defaults[prop_name]
+        else:
+            default_val = prop.get("default")
+        default_inline, default_block = render_default(default_val)
+
+        hashes = "#" * heading_level
+        output.append(f"{hashes} `{prop_name}`\n")
+        output.append(f"**Type**: {linkify_type_string(type_info)}{default_inline}\n")
+        output.append(f"{linkify_markdown(description)}\n")
+        if default_block:
+            output.append(default_block)
+
+        examples = prop.get("examples") or []
+        if examples:
+            label = "Example" if len(examples) == 1 else "Examples"
+            output.append(f"**{label}**:\n")
+            for ex in examples:
+                yaml_text = _dump_yaml({prop_name: ex}).rstrip()
+                output.append(f"```yaml\n{yaml_text}\n```\n")
+
+    # Group properties into sections and sub-groups using the schema's
+    # per-field tags. When a section has only one group, the group heading
+    # is redundant under the section heading, so render the fields directly
+    # under `## section` as `### prop_name`. Otherwise, emit `### group`
+    # headings and demote fields to `#### prop_name`.
+    sections_with_groups = load_sections_with_groups(properties)
+
+    for section, groups in sections_with_groups.items():
+        if not groups:
             continue
-
         output.append(f"## {section}\n")
-
-        for prop_name in props:
-            if prop_name in properties:
-                prop = properties[prop_name]
-
-                # Get type information from Pydantic model if available
-                if prop_name in config_attrs:
-                    type_info = format_type_annotation(config_attrs[prop_name])
-                else:
-                    # Fallback to JSON schema type
-                    type_info = prop.get("type", "any")
-                    if type_info == "array":
-                        items = prop.get("items", {})
-                        item_type = items.get("type", "any")
-                        if "oneOf" in items:
-                            item_types = [t.get("type", "any") for t in items.get("oneOf", [])]
-                            item_type = " | ".join(item_types)
-                        type_info = f"List[{item_type}]"
-                    elif not type_info:
-                        type_info = "any"
-
-                # Get description
-                description = prop.get("description", "")
-
-                # Get default value - first from config_defaults.yaml, then fall back to schema
-                if prop_name in config_defaults:
-                    default_val = config_defaults[prop_name]
-                else:
-                    default_val = prop.get("default")
-                default_inline, default_block = render_default(default_val)
-
-                # Format the markdown
-                output.append(f"### {prop_name}\n")
-                output.append(f"**Type**: `{type_info}`{default_inline}\n")
-                output.append(f"{description}\n")
-                if default_block:
-                    output.append(default_block)
-
-                # Render examples as YAML code blocks
-                examples = prop.get("examples") or []
-                if examples:
-                    label = "Example" if len(examples) == 1 else "Examples"
-                    output.append(f"**{label}**:\n")
-                    for ex in examples:
-                        yaml_text = _dump_yaml({prop_name: ex}).rstrip()
-                        output.append(f"```yaml\n{yaml_text}\n```\n")
-
+        named_groups = [(g, names) for g, names in groups.items() if g is not None]
+        single_group = len(named_groups) == 1 and not groups.get(None)
+        ungrouped = groups.get(None, [])
+        for prop_name in ungrouped:
+            render_prop(prop_name, heading_level=3)
+        for group_name, names in named_groups:
+            if not single_group:
+                output.append(f"### {group_name}\n")
+            prop_level = 3 if single_group else 4
+            for prop_name in names:
+                render_prop(prop_name, heading_level=prop_level)
         output.append("")  # Add blank line between sections
 
-    # Describe special types
+    def render_special_type(model_cls, body_md):
+        """Append a Special Types section for ``model_cls``.
+
+        ``body_md`` is the prose+example block shown under the heading. The
+        properties bullet list is built from ``get_type_hints(model_cls)`` and
+        descriptions pulled from the model's ``$defs`` entry.
+        """
+        name = model_cls.__name__
+        output.append(f"### {name}\n")
+        output.append(linkify_markdown(body_md) + "\n\nProperties:\n\n")
+        defs_props = schema.get("$defs", {}).get(name, {}).get("properties", {})
+        for prop_name, prop_type in sorted(get_type_hints(model_cls).items()):
+            description = defs_props.get(prop_name, {}).get("description", "")
+            type_info = format_type_annotation(prop_type)
+            output.append(f"- **{prop_name}** ({linkify_type_string(type_info)}): {linkify_markdown(description)}")
+        output.append("")
+
     output.append("## Special Types\n")
 
-    # Search Pattern
-    output.append("### SearchPattern\n")
-    output.append("""Configuration for file search patterns used to find tool outputs.
+    render_special_type(
+        SearchPattern,
+        """Configuration for file search patterns used to find tool outputs.
 
 The `SearchPattern` type is used in the `sp` configuration option to define patterns for finding and parsing tool output files.
 
@@ -297,25 +366,12 @@ sp:
   custom_tool:
     fn: "*.log"
     contents: "Started analysis"
-```
+```""",
+    )
 
-Properties:\n\n""")
-    search_pattern_attrs = get_type_hints(SearchPattern)
-    for prop_name, prop_type in sorted(search_pattern_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "SearchPattern" in schema["$defs"]:
-            sp_props = schema["$defs"]["SearchPattern"].get("properties", {})
-            if prop_name in sp_props:
-                description = sp_props[prop_name].get("description", "")
-
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
-
-    # Clean Pattern
-    output.append("### CleanPattern\n")
-    output.append("""Pattern for cleaning sample names.
+    render_special_type(
+        CleanPattern,
+        """Pattern for cleaning sample names.
 
 The `CleanPattern` type is used in the `fn_clean_exts` and `extra_fn_clean_exts` configuration options to define patterns for cleaning sample names.
 
@@ -327,25 +383,29 @@ fn_clean_exts:
     pattern: '_S\\d+_L\\d+'
   - type: regex
     pattern: '\\d{4}-\\d{2}-\\d{2}'
-```
+```""",
+    )
 
-Properties:\n\n""")
-    clean_pattern_attrs = get_type_hints(CleanPattern)
-    for prop_name, prop_type in sorted(clean_pattern_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "CleanPattern" in schema["$defs"]:
-            cp_props = schema["$defs"]["CleanPattern"].get("properties", {})
-            if prop_name in cp_props:
-                description = cp_props[prop_name].get("description", "")
+    render_special_type(
+        GeneralStatsModuleConfig,
+        """Per-module wrapper for General Stats column overrides.
 
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
-    output.append("")
+The `GeneralStatsModuleConfig` type is the value of each module entry in the `general_stats_columns` configuration option. It has a single `columns` key mapping column IDs to `GeneralStatsColumnConfig` settings.
 
-    # General Stats Column Configuration
-    output.append("### GeneralStatsColumnConfig\n")
-    output.append("""Configuration for columns in the general statistics table.
+Example:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        title: "% Dups"
+```""",
+    )
+
+    render_special_type(
+        GeneralStatsColumnConfig,
+        """Configuration for columns in the general statistics table.
 
 The `GeneralStatsColumnConfig` type is used in the `general_stats_columns` configuration option to customize the appearance and behavior of columns in the general statistics table.
 
@@ -361,20 +421,62 @@ general_stats_columns:
         scale: "RdYlGn-rev"
         max: 100
         min: 0
-```
+```""",
+    )
 
-Properties:\n\n""")
-    gs_col_attrs = get_type_hints(GeneralStatsColumnConfig)
-    for prop_name, prop_type in sorted(gs_col_attrs.items()):
-        # Get description from schema
-        description = ""
-        if "$defs" in schema and "GeneralStatsColumnConfig" in schema["$defs"]:
-            gs_props = schema["$defs"]["GeneralStatsColumnConfig"].get("properties", {})
-            if prop_name in gs_props:
-                description = gs_props[prop_name].get("description", "")
+    render_special_type(
+        CondFormattingRule,
+        """One conditional-formatting comparison for a table cell.
 
-        type_info = format_type_annotation(prop_type)
-        output.append(f"- **{prop_name}** (`{type_info}`): {description}")
+Used in the `table_cond_formatting_rules` configuration option. Each rule is a dict with exactly one operator key paired with its comparison value. String operators (`s_eq`, `s_ne`, `s_contains`) compare case-insensitively; numeric operators (`eq`, `ne`, `gt`, `lt`, `ge`, `le`) cast both sides via `float()`.
+
+Example:
+
+```yaml
+table_cond_formatting_rules:
+  all_columns:
+    pass:
+      - s_eq: "pass"
+    fail:
+      - gt: 50
+```""",
+    )
+
+    render_special_type(
+        ModuleOverride,
+        """Per-module override values for `top_modules` and `module_order` entries.
+
+Each entry in `top_modules` / `module_order` is either a module ID (string) or a single-key dict mapping the module ID to a `ModuleOverride` dict.
+
+Example:
+
+```yaml
+module_order:
+  - fastqc:
+      name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*_trimmed*"
+```""",
+    )
+
+    render_special_type(
+        SectionOrderOverride,
+        """Override dict accepted as a `report_section_order` value.
+
+Each value in `report_section_order` is either the literal string `"remove"` (drops the section) or a `SectionOrderOverride` dict combining any of `order`, `before` and `after`.
+
+Example:
+
+```yaml
+report_section_order:
+  fastqc:
+    order: -10
+  custom_content-my-section:
+    before: fastqc
+  mod_section_2: remove
+```""",
+    )
 
     text = "\n".join(output)
     # Match Prettier's expectations so the file survives the commit hook

@@ -24,29 +24,37 @@ Configuration values are loaded in the following order of precedence (highest to
 The options below can be specified in your YAML configuration files.
 For boolean options, use `true` or `false` (all lowercase) in your YAML files.
 
+:::tip
+
+If you'd rather build your config visually, the [Config Wizard](https://seqera.io/multiqc_config_wizard) renders every option below as a form field with the same descriptions and defaults, and validates as you type.
+
+:::
+
 ## Report Meta
 
-### title
+### Header text
 
-**Type**: `str`
+#### `title`
+
+**Type**: <code>str</code>
 
 Title shown at the top of the report and used in the page title.
 
-### subtitle
+#### `subtitle`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Subtitle shown under the report title. Plain text only.
 
-### intro_text
+#### `intro_text`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Paragraph shown under the title. Useful for adding context about the analysis.
 
-### report_comment
+#### `report_comment`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Free-text comment shown at the top of the report. HTML is allowed.
 
@@ -56,9 +64,9 @@ Free-text comment shown at the top of the report. HTML is allowed.
 report_comment: This report was generated from the RNA-seq pipeline on 2024-08-21.
 ```
 
-### report_header_info
+#### `report_header_info`
 
-**Type**: `List[Dict[str, str]]`
+**Type**: <code>List[Dict[str, str]]</code>
 
 Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. Each list item is a single-key dictionary.
 
@@ -72,35 +80,53 @@ report_header_info:
   - Sequencing Platform: HiSeq 2500 High Output V4
 ```
 
-### show_analysis_paths
+### Report generation info
 
-**Type**: `bool` (default: `true`)
+#### `show_analysis_paths`
+
+**Type**: <code>bool</code> (default: `true`)
 
 Show the absolute paths of analysed directories in the report header.
 
-### show_analysis_time
+#### `show_analysis_time`
 
-**Type**: `bool` (default: `true`)
+**Type**: <code>bool</code> (default: `true`)
 
 Show the date and time the report was generated in the header.
 
 ## Report Appearance
 
-### template
+### Template
 
-**Type**: `Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"]` (default: `"default"`)
+#### `template`
 
-Name of the report template.
+**Type**: <code>str</code> (default: `"default"`)
 
-### template_dark_mode
+Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.
 
-**Type**: `bool` (default: `true`)
+**Example**:
+
+```yaml
+template: default
+```
+
+#### `template_dark_mode`
+
+**Type**: <code>bool</code> (default: `true`)
 
 Enable the dark mode toggle in the report template.
 
-### custom_logo
+#### `simple_output`
 
-**Type**: `str`
+**Type**: <code>bool</code> (default: `false`)
+
+Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.
+
+### Logo
+
+#### `custom_logo`
+
+**Type**: <code>str</code>
 
 Path to an image to show at the top of the report, replacing the MultiQC logo.
 
@@ -114,9 +140,9 @@ custom_logo: /path/to/logo.png
 custom_logo: ./assets/logo.svg
 ```
 
-### custom_logo_dark
+#### `custom_logo_dark`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Path to an alternative logo for dark mode. Falls back to custom_logo if unset.
 
@@ -126,9 +152,9 @@ Path to an alternative logo for dark mode. Falls back to custom_logo if unset.
 custom_logo_dark: ./assets/logo_dark.svg
 ```
 
-### custom_logo_url
+#### `custom_logo_url`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 URL the custom logo links to when clicked.
 
@@ -138,9 +164,9 @@ URL the custom logo links to when clicked.
 custom_logo_url: https://www.scilifelab.se
 ```
 
-### custom_logo_title
+#### `custom_logo_title`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Tooltip text shown when hovering over the custom logo.
 
@@ -150,9 +176,9 @@ Tooltip text shown when hovering over the custom logo.
 custom_logo_title: Our institute name
 ```
 
-### custom_logo_width
+#### `custom_logo_width`
 
-**Type**: `int`
+**Type**: <code>int</code>
 
 Logo width in pixels. Height scales proportionally.
 
@@ -162,9 +188,27 @@ Logo width in pixels. Height scales proportionally.
 custom_logo_width: 200
 ```
 
-### custom_css_files
+### Branding
 
-**Type**: `List[str]`
+#### `custom_favicon`
+
+**Type**: <code>str</code>
+
+Path to a custom favicon image to show in the browser tab.
+
+**Examples**:
+
+```yaml
+custom_favicon: /path/to/favicon.ico
+```
+
+```yaml
+custom_favicon: ./assets/favicon.png
+```
+
+#### `custom_css_files`
+
+**Type**: <code>List[str]</code>
 
 Paths to additional CSS files to inline into the report. Useful for branding overrides.
 
@@ -173,20 +217,16 @@ Paths to additional CSS files to inline into the report. Useful for branding ove
 ```yaml
 custom_css_files:
   - ./assets/custom.css
-  - ./assets/branding.css
+  - /path/to/branding.css
 ```
-
-### simple_output
-
-**Type**: `bool` (default: `false`)
-
-Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.
 
 ## Report Contents
 
-### custom_content
+### Custom content
 
-**Type**: `Dict[str, Any]`
+#### `custom_content`
+
+**Type**: <code>Dict[str, Any]</code>
 
 Embed arbitrary plots, tables or text in the report. See the [Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.
 
@@ -209,21 +249,23 @@ custom_content:
     - my-other-section-id
 ```
 
-### custom_content_modules
+#### `custom_content_modules`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Extra module IDs whose output should be parsed as custom content.
 
-### custom_data
+#### `custom_data`
 
-**Type**: `Dict[str, Any]`
+**Type**: <code>Dict[str, Any]</code>
 
 Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.
 
-### top_modules
+### Module ordering
 
-**Type**: `List[Union[str, Dict[str, Dict[str, str]]]]`
+#### `top_modules`
+
+**Type**: <code>List[Union[str, Dict[str, <a href="#moduleoverride">ModuleOverride</a>]]]</code>
 
 Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.
 
@@ -235,11 +277,11 @@ top_modules:
   - cutadapt
 ```
 
-### module_order
+#### `module_order`
 
-**Type**: `List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]`
+**Type**: <code>List[Union[str, Dict[str, <a href="#moduleoverride">ModuleOverride</a>]]]</code>
 
-Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).
+Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, path_filters, path_filters_exclude, generalstats, custom_config).
 
 <details><summary>Default value</summary>
 
@@ -329,6 +371,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - umitools
 - truvari
 - megahit
+- sincei
 - ganon
 - gtdbtk
 - bbmap
@@ -375,6 +418,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - sickle
 - skewer
 - sortmerna
+- ribodetector
 - biobloomtools
 - seqfu
 - fastq_screen
@@ -424,12 +468,15 @@ module_order:
       name: FastQC (trimmed)
       path_filters:
         - "*_trimmed*"
+  - fastqc:
+      generalstats: false
+      name: FastQC (raw)
   - cutadapt
 ```
 
-### run_modules
+#### `run_modules`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).
 
@@ -442,9 +489,9 @@ run_modules:
   - samtools
 ```
 
-### exclude_modules
+#### `exclude_modules`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Module IDs to skip (mirror of the --exclude CLI flag).
 
@@ -455,9 +502,9 @@ exclude_modules:
   - fastqc
 ```
 
-### remove_sections
+#### `remove_sections`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Module sections to hide. Use the section anchor as it appears in the URL.
 
@@ -469,11 +516,11 @@ remove_sections:
   - gatk-compare-overlap
 ```
 
-### report_section_order
+#### `report_section_order`
 
-**Type**: `Dict[str, Any]`
+**Type**: <code>Dict[str, Union[Literal["remove"], <a href="#sectionorderoverride">SectionOrderOverride</a>]]</code>
 
-Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
+Reorder, group or hide report sections by ID. Values are either the literal string 'remove' (drops the section) or a dict with any combination of `order` (int), `before` (str) and `after` (str). See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.
 
 **Example**:
 
@@ -485,9 +532,11 @@ report_section_order:
     order: -10
 ```
 
-### section_comments
+### Section comments + indicators
 
-**Type**: `Dict[str, str]`
+#### `section_comments`
+
+**Type**: <code>Dict[str, str]</code>
 
 Markdown text shown under specific module sections. Keys are section anchors.
 
@@ -500,9 +549,9 @@ section_comments:
   samtools: Reviewed by *Phil* on 2024-08-21.
 ```
 
-### section_status_checks
+#### `section_status_checks`
 
-**Type**: `Dict[str, Union[bool, Dict[str, bool]]]`
+**Type**: <code>Dict[str, Union[bool, Dict[str, bool]]]</code>
 
 Enable or disable the green/yellow/red status indicators on report sections. Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool.
 
@@ -517,39 +566,55 @@ section_status_checks:
 
 ## Output Options
 
-### force
+### Report file
 
-**Type**: `bool` (default: `false`)
+#### `force`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Overwrite existing output files without prompting.
 
-### output_fn_name
+#### `output_fn_name`
 
-**Type**: `str` (default: `"multiqc_report.html"`)
+**Type**: <code>str</code> (default: `"multiqc_report.html"`)
 
 Filename for the generated HTML report. Defaults to multiqc_report.html.
 
-### data_dir_name
+#### `make_report`
 
-**Type**: `str` (default: `"multiqc_data"`)
+**Type**: <code>bool</code> (default: `true`)
+
+Generate the HTML report. Set to false to only produce data files.
+
+### Data files
+
+#### `make_data_dir`
+
+**Type**: <code>bool</code> (default: `true`)
+
+Write parsed data as files alongside the report.
+
+#### `zip_data_dir`
+
+**Type**: <code>bool</code> (default: `false`)
+
+Compress the data directory into a single .zip file.
+
+#### `data_dir_name`
+
+**Type**: <code>str</code> (default: `"multiqc_data"`)
 
 Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.
 
-### plots_dir_name
+#### `data_format`
 
-**Type**: `str` (default: `"multiqc_plots"`)
-
-Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.
-
-### data_format
-
-**Type**: `Literal["tsv", "csv", "json", "yaml"]` (default: `"tsv"`)
+**Type**: <code>Literal["tsv", "csv", "json", "yaml"]</code> (default: `"tsv"`)
 
 Format used when writing parsed data files.
 
-### data_format_extensions
+#### `data_format_extensions`
 
-**Type**: `Dict[str, str]` (default: `{"tsv":"txt","csv":"csv","json":"json","yaml":"yaml"}`)
+**Type**: <code>Dict[str, str]</code> (default: `{"tsv":"txt","csv":"csv","json":"json","yaml":"yaml"}`)
 
 Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.
 
@@ -562,89 +627,85 @@ data_format_extensions:
   yaml: yml
 ```
 
-### parquet_format
+#### `parquet_format`
 
-**Type**: `Literal["long", "wide"]` (default: `"long"`)
+**Type**: <code>Literal["long", "wide"]</code> (default: `"long"`)
 
 Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.
 
-### make_data_dir
+### Data dump
 
-**Type**: `bool` (default: `true`)
+#### `data_dump_file`
 
-Write parsed data as files alongside the report.
-
-### zip_data_dir
-
-**Type**: `bool` (default: `false`)
-
-Compress the data directory into a single .zip file.
-
-### data_dump_file
-
-**Type**: `bool` (default: `true`)
+**Type**: <code>bool</code> (default: `true`)
 
 Write a single JSON file containing all parsed data, for re-running MultiQC later.
 
-### data_dump_file_write_raw
+#### `data_dump_file_write_raw`
 
-**Type**: `bool` (default: `true`)
+**Type**: <code>bool</code> (default: `true`)
 
 Include raw values (before any normalisation or filtering) in the dumped JSON.
 
-### export_plots
+### Plot export
 
-**Type**: `bool` (default: `false`)
+#### `export_plots`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Save each plot as a static image (formats set by export_plot_formats).
 
-### export_plot_formats
+#### `export_plot_formats`
 
-**Type**: `List[Literal["png", "svg", "pdf"]]` (default: `["png","svg","pdf"]`)
+**Type**: <code>List[Literal["png", "svg", "pdf"]]</code> (default: `["png","svg","pdf"]`)
 
 Image formats to export when export_plots is on.
 
-### export_plots_timeout
+#### `export_plots_timeout`
 
-**Type**: `int` (default: `60`)
+**Type**: <code>int</code> (default: `60`)
 
 Timeout for exporting each plot, in seconds.
 
-### make_report
+#### `plots_dir_name`
 
-**Type**: `bool` (default: `true`)
+**Type**: <code>str</code> (default: `"multiqc_plots"`)
 
-Generate the HTML report. Set to false to only produce data files.
+Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.
 
-### make_pdf
+### PDF
 
-**Type**: `bool` (default: `false`)
+#### `make_pdf`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Also generate a PDF version of the report. Requires Pandoc to be installed.
 
-### pandoc_template
+#### `pandoc_template`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Path to a Pandoc template used when exporting the report as PDF.
 
 ## Sample Names
 
-### prepend_dirs
+### Prepend directory
 
-**Type**: `bool` (default: `false`)
+#### `prepend_dirs`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.
 
-### prepend_dirs_depth
+#### `prepend_dirs_depth`
 
-**Type**: `int` (default: `0`)
+**Type**: <code>int</code> (default: `0`)
 
 How many parent directories to include. 0 means all the way to the root.
 
-### prepend_dirs_sep
+#### `prepend_dirs_sep`
 
-**Type**: `str` (default: `" | "`)
+**Type**: <code>str</code> (default: `" | "`)
 
 String inserted between directory names and the sample name. Defaults to '|'.
 
@@ -658,15 +719,17 @@ prepend_dirs_sep: _
 prepend_dirs_sep: " - "
 ```
 
-### fn_clean_sample_names
+### Name cleaning
 
-**Type**: `bool` (default: `true`)
+#### `fn_clean_sample_names`
+
+**Type**: <code>bool</code> (default: `true`)
 
 Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.
 
-### extra_fn_clean_exts
+#### `extra_fn_clean_exts`
 
-**Type**: `List[Union[str, CleanPattern]]`
+**Type**: <code>List[Union[str, <a href="#cleanpattern">CleanPattern</a>]]</code>
 
 Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.
 
@@ -681,9 +744,9 @@ extra_fn_clean_exts:
     type: remove
 ```
 
-### extra_fn_clean_trim
+#### `extra_fn_clean_trim`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Strings appended to the built-in trim list, without overriding defaults.
 
@@ -695,9 +758,9 @@ extra_fn_clean_trim:
   - _processed
 ```
 
-### fn_clean_exts
+#### `fn_clean_exts`
 
-**Type**: `List[Union[str, CleanPattern]]`
+**Type**: <code>List[Union[str, <a href="#cleanpattern">CleanPattern</a>]]</code>
 
 Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.
 
@@ -856,6 +919,9 @@ Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in li
 - _totalReadConversionRate
 - .sylphmpa
 - _qual
+- _hifi_trimmer
+- .hifi_trimmer
+- _trimmer
 ```
 
 </details>
@@ -871,9 +937,9 @@ fn_clean_exts:
     type: regex
 ```
 
-### fn_clean_trim
+#### `fn_clean_trim`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Strings trimmed from the start or end of sample names. Replaces the built-in list.
 
@@ -919,15 +985,17 @@ fn_clean_trim:
   - _001
 ```
 
-### use_filename_as_sample_name
+#### `use_filename_as_sample_name`
 
-**Type**: `Union[bool, List[str]]` (default: `false`)
+**Type**: <code>Union[bool, List[str]]</code> (default: `false`)
 
 Use the source filename as the sample name instead of any name parsed from the log. Set to true for all modules, or to a list of module IDs / patterns to apply selectively.
 
-### sample_names_ignore
+### Ignore samples
 
-**Type**: `List[str]`
+#### `sample_names_ignore`
+
+**Type**: <code>List[str]</code>
 
 Glob patterns. Matching samples are dropped from the report.
 
@@ -939,9 +1007,9 @@ sample_names_ignore:
   - control_*
 ```
 
-### sample_names_ignore_re
+#### `sample_names_ignore_re`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Regex patterns. Matching samples are dropped from the report.
 
@@ -953,9 +1021,9 @@ sample_names_ignore_re:
   - .*_neg_ctrl$
 ```
 
-### sample_names_only_include
+#### `sample_names_only_include`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Glob patterns. If set, only matching samples are kept.
 
@@ -967,9 +1035,9 @@ sample_names_only_include:
   - Sample_??
 ```
 
-### sample_names_only_include_re
+#### `sample_names_only_include_re`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Regex patterns. If set, only matching samples are kept.
 
@@ -980,11 +1048,13 @@ sample_names_only_include_re:
   - ^WGS_[0-9]+$
 ```
 
-### sample_names_rename
+### Rename and replace
 
-**Type**: `List[List[str]]`
+#### `sample_names_rename`
 
-Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.
+**Type**: <code>List[List[str]]</code>
+
+Toolbox rename rows. Each entry is a list where the first element is the source sample name and each subsequent element is the rename for the corresponding button in `sample_names_rename_buttons` (so inner lists should have `1 + len(sample_names_rename_buttons)` elements).
 
 **Example**:
 
@@ -998,9 +1068,9 @@ sample_names_rename:
     - Patient_C
 ```
 
-### sample_names_rename_buttons
+#### `sample_names_rename_buttons`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.
 
@@ -1013,9 +1083,9 @@ sample_names_rename_buttons:
   - Lane
 ```
 
-### sample_names_replace
+#### `sample_names_replace`
 
-**Type**: `Dict[str, str]`
+**Type**: <code>Dict[str, str]</code>
 
 Substring replacements applied to every sample name. Keys are matched, values are replacements.
 
@@ -1027,65 +1097,71 @@ sample_names_replace:
   _001: ""
 ```
 
-### sample_names_replace_complete
+#### `sample_names_replace_complete`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Replace the entire sample name when the key matches anywhere in it.
 
-### sample_names_replace_exact
+#### `sample_names_replace_exact`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Only replace when the key matches the sample name exactly, not as a substring.
 
-### sample_names_replace_regex
+#### `sample_names_replace_regex`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Treat keys in sample_names_replace as regex patterns.
 
 ## File Discovery
 
-### file_list
+### Input source
 
-**Type**: `bool` (default: `false`)
+#### `file_list`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Treat the input path as a file containing a list of paths to scan, one per line.
 
-### require_logs
+#### `require_logs`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Fail with an error if any module explicitly requested with `--module` has no log files found. Off by default, so missing inputs are skipped silently.
 
-### log_filesize_limit
+### Size limits
 
-**Type**: `int` (default: `50000000`)
+#### `log_filesize_limit`
+
+**Type**: <code>int</code> (default: `50000000`)
 
 Skip log files larger than this many bytes.
 
-### filesearch_lines_limit
+#### `filesearch_lines_limit`
 
-**Type**: `int` (default: `1000`)
+**Type**: <code>int</code> (default: `1000`)
 
 Stop reading a log file after this many lines.
 
-### ignore_symlinks
+### Skip patterns
 
-**Type**: `bool` (default: `false`)
+#### `ignore_symlinks`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Skip symlinked files and directories during the file search.
 
-### ignore_images
+#### `ignore_images`
 
-**Type**: `bool` (default: `true`)
+**Type**: <code>bool</code> (default: `true`)
 
 Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.
 
-### fn_ignore_dirs
+#### `fn_ignore_dirs`
 
-**Type**: `List[str]` (default: `["multiqc_data",".git","icarus_viewers","runs_per_reference","not_aligned","contigs_reports"]`)
+**Type**: <code>List[str]</code> (default: `["multiqc_data",".git","icarus_viewers","runs_per_reference","not_aligned","contigs_reports"]`)
 
 Glob patterns for directory names to skip entirely during the file search.
 
@@ -1098,9 +1174,9 @@ fn_ignore_dirs:
   - "*_logs"
 ```
 
-### fn_ignore_paths
+#### `fn_ignore_paths`
 
-**Type**: `List[str]` (default: `["*/work/??/??????????????????????????????","*/.snakemake","*/.singularity","*/__pycache__","*/site-packages/multiqc"]`)
+**Type**: <code>List[str]</code> (default: `["*/work/??/??????????????????????????????","*/.snakemake","*/.singularity","*/__pycache__","*/site-packages/multiqc"]`)
 
 Glob patterns for paths to skip during the file search.
 
@@ -1112,9 +1188,9 @@ fn_ignore_paths:
   - "*/.snakemake/*"
 ```
 
-### fn_ignore_files
+#### `fn_ignore_files`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Glob patterns for file names to skip during the file search.
 
@@ -1157,59 +1233,1351 @@ fn_ignore_files:
   - "*.tmp"
 ```
 
-### filesearch_file_shared
+#### `filesearch_file_shared`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
 Module IDs whose log files may be matched by multiple modules during the search.
 
+### Search patterns
+
+#### `sp`
+
+**Type**: <code>Dict[str, Union[<a href="#searchpattern">SearchPattern</a>, List[<a href="#searchpattern">SearchPattern</a>]]]</code>
+
+Override or add to the built-in module search patterns. Top-level keys are module IDs (eg. `fastqc`); values are a single `SearchPattern` dict or a list of them. See the [SearchPattern](#searchpattern) definition below for the accepted fields.
+
+<details><summary>Default value</summary>
+
+```yaml
+multiqc_data:
+  fn: "*multiqc.parquet"
+adapterremoval:
+  fn: "*.settings"
+  contents: AdapterRemoval
+  num_lines: 1
+xenium/metrics:
+  fn: metrics_summary.csv
+  contents: num_cells_detected
+  num_lines: 5
+xenium/experiment:
+  fn: experiment.xenium
+  num_lines: 50
+afterqc:
+  fn: "*.json"
+  contents: allow_mismatch_in_poly
+  num_lines: 10000
+anglerfish:
+  fn: "*.json"
+  contents: anglerfish_version
+bakta:
+  fn: "*.txt"
+  contents: "Bakta:"
+bamdst/coverage:
+  contents: "## The file was created by bamdst"
+  num_lines: 5
+bamtools/stats:
+  contents: "Stats for BAM file(s):"
+  num_lines: 10
+bases2fastq/run:
+  fn: RunStats.json
+  contents: SampleStats
+  num_lines: 100
+bases2fastq/project:
+  fn: "*_RunStats.json"
+  contents: SampleStats
+  num_lines: 100
+bases2fastq/manifest:
+  fn: RunManifest.json
+  contents: Settings
+  num_lines: 100
+bbduk:
+  contents: Executing jgi.BBDuk
+  num_lines: 2
+bbmap/stats:
+  contents:
+    - "#File"
+    - "#Total"
+    - "#Matched"
+    - "#Name\tReads\tReadsPct"
+  num_lines: 10
+bbmap/bbsplit:
+  contents: "#name\t%unambiguousReads\tunambiguousMB\t%ambiguousReads"
+  num_lines: 5
+bbmap/aqhist:
+  contents: "#Quality\tcount1\tfraction1\tcount2\tfraction2"
+  num_lines: 10
+bbmap/bhist:
+  contents: "#Pos\tA\tC\tG\tT\tN"
+  num_lines: 10
+bbmap/bincov:
+  contents: "#RefName\tCov\tPos\tRunningPos"
+  num_lines: 10
+bbmap/bqhist:
+  contents: "#BaseNum\tcount_1\tmin_1\tmax_1\tmean_1\tQ1_1\tmed_1\tQ3_1\tLW_1\tRW_1\t\
+    count_2\tmin_2\tmax_2\tmean_2\tQ1_2\tmed_2\tQ3_2\tLW_2\tRW_2"
+  num_lines: 10
+bbmap/covhist:
+  contents: "#Coverage\tnumBases"
+  num_lines: 10
+bbmap/covstats:
+  contents: "#ID\tAvg_fold"
+  num_lines: 10
+bbmap/ehist:
+  contents: "#Errors\tCount"
+  num_lines: 10
+bbmap/gchist:
+  contents:
+    - "#Mean\t"
+    - "#GC\tCount"
+  num_lines: 10
+bbmap/idhist:
+  contents:
+    - "#Mean_reads"
+    - "#Identity\tReads\tBases"
+  num_lines: 10
+bbmap/ihist:
+  contents:
+    - "#Mean\t"
+    - "#InsertSize\tCount"
+  num_lines: 10
+bbmap/indelhist:
+  contents: "#Length\tDeletions\tInsertions"
+  num_lines: 10
+bbmap/lhist:
+  contents: "#Length\tCount"
+  num_lines: 10
+bbmap/mhist:
+  contents: "#BaseNum\tMatch1\tSub1\tDel1\tIns1\tN1\tOther1\tMatch2\tSub2\tDel2\t\
+    Ins2\tN2\tOther2"
+  num_lines: 10
+bbmap/qahist:
+  contents: "#Quality\tMatch\tSub\tIns\tDel"
+  num_lines: 10
+bbmap/qchist:
+  contents_re: "#Quality\tcount1\tfraction1$"
+  num_lines: 10
+bbmap/qhist:
+  contents: "#BaseNum\tRead1_linear\tRead1_log\tRead1_measured"
+  num_lines: 10
+bbmap/rpkm:
+  contents:
+    - "#File\t"
+    - "#Reads\t"
+    - "#Mapped\t"
+    - "#RefSequences\t"
+    - "#Name Length"
+  num_lines: 10
+bbmap/statsfile_machine:
+  contents: Reads Used=
+  num_lines: 10
+bbmap/statsfile:
+  contents:
+    - "Reads Used:"
+    - "Mapping:"
+    - "Reads/sec:"
+    - "kBases/sec:"
+  num_lines: 10
+bcftools/stats:
+  contents: This file was produced by bcftools stats
+bcl2fastq:
+  fn: Stats.json
+  contents: DemuxResults
+  num_lines: 300
+bclconvert/runinfo:
+  fn: RunInfo.xml
+bclconvert/demux:
+  fn: Demultiplex_Stats.csv
+bclconvert/quality_metrics:
+  fn: Quality_Metrics.csv
+bclconvert/adaptermetrics:
+  fn: Adapter_Metrics.csv
+bclconvert/unknown_barcodes:
+  fn: Top_Unknown_Barcodes.csv
+biobambam2/bamsormadup:
+  contents: "# bamsormadup"
+  num_lines: 2
+biobloomtools:
+  contents: "filter_id\thits\tmisses\tshared\trate_hit\trate_miss\trate_shared"
+  num_lines: 2
+biscuit/align_mapq:
+  fn: "*_mapq_table.txt"
+  contents: BISCUITqc Mapping Quality Table
+  num_lines: 3
+biscuit/align_strand:
+  fn: "*_strand_table.txt"
+  contents: BISCUITqc Strand Table
+  num_lines: 3
+biscuit/align_isize:
+  fn: "*_isize_table.txt"
+  contents: BISCUITqc Insert Size Table
+  num_lines: 3
+biscuit/dup_report:
+  fn: "*_dup_report.txt"
+  contents: BISCUITqc Read Duplication Table
+  num_lines: 3
+biscuit/qc_cv:
+  fn: "*_cv_table.txt"
+  contents: BISCUITqc Uniformity Table
+  num_lines: 3
+biscuit/covdist_all_base_botgc:
+  fn: "*_covdist_all_base_botgc_table.txt"
+biscuit/covdist_all_base:
+  fn: "*_covdist_all_base_table.txt"
+biscuit/covdist_all_base_topgc:
+  fn: "*_covdist_all_base_topgc_table.txt"
+biscuit/covdist_q40_base_botgc:
+  fn: "*_covdist_q40_base_botgc_table.txt"
+biscuit/covdist_q40_base:
+  fn: "*_covdist_q40_base_table.txt"
+biscuit/covdist_q40_base_topgc:
+  fn: "*_covdist_q40_base_topgc_table.txt"
+biscuit/covdist_all_cpg_botgc:
+  fn: "*_covdist_all_cpg_botgc_table.txt"
+biscuit/covdist_all_cpg:
+  fn: "*_covdist_all_cpg_table.txt"
+biscuit/covdist_all_cpg_topgc:
+  fn: "*_covdist_all_cpg_topgc_table.txt"
+biscuit/covdist_q40_cpg_botgc:
+  fn: "*_covdist_q40_cpg_botgc_table.txt"
+biscuit/covdist_q40_cpg:
+  fn: "*_covdist_q40_cpg_table.txt"
+biscuit/covdist_q40_cpg_topgc:
+  fn: "*_covdist_q40_cpg_topgc_table.txt"
+biscuit/cpg_retention_readpos:
+  fn: "*_CpGRetentionByReadPos.txt"
+biscuit/cph_retention_readpos:
+  fn: "*_CpHRetentionByReadPos.txt"
+biscuit/base_avg_retention_rate:
+  fn: "*_totalBaseConversionRate.txt"
+biscuit/read_avg_retention_rate:
+  fn: "*_totalReadConversionRate.txt"
+bismark/align:
+  fn: "*_[SP]E_report.txt"
+bismark/dedup:
+  fn: "*.deduplication_report.txt"
+bismark/meth_extract:
+  fn: "*_splitting_report.txt"
+bismark/m_bias:
+  fn: "*M-bias.txt"
+bismark/bam2nuc:
+  fn: "*.nucleotide_stats.txt"
+bowtie1:
+  contents: "# reads processed:"
+  exclude_fn:
+    - bowtie.left_kept_reads.log
+    - bowtie.left_kept_reads.m2g_um.log
+    - bowtie.left_kept_reads.m2g_um_seg1.log
+    - bowtie.left_kept_reads.m2g_um_seg2.log
+    - bowtie.right_kept_reads.log
+    - bowtie.right_kept_reads.m2g_um.log
+    - bowtie.right_kept_reads.m2g_um_seg1.log
+    - bowtie.right_kept_reads.m2g_um_seg2.log
+  shared: true
+bowtie2:
+  contents: "reads; of these:"
+  exclude_contents:
+    - bisulfite
+    - HiC-Pro
+  shared: true
+busco:
+  fn: short_summary*
+  contents: "BUSCO version is:"
+  num_lines: 1
+bustools:
+  fn: "*inspect.json"
+ccs/v4:
+  contents: ZMWs generating CCS
+  num_lines: 2
+  max_filesize: 1024
+ccs/v5:
+  contents: '"id": "ccs_processing"'
+  fn: "*.json"
+checkatlas/summary:
+  fn: "*.tsv"
+  contents_re: ^AtlasFileType\tNbCells\tNbGenes
+  num_lines: 1
+checkatlas/adata:
+  fn: "*.tsv"
+  contents_re: ^atlas_obs\tobsm\tvar\tvarm\tuns
+  num_lines: 1
+checkatlas/qc:
+  fn: "*.tsv"
+  contents_re: cellrank_(total_counts|n_genes_by_counts|pct_counts_mt)
+  num_lines: 1
+checkatlas/cluster:
+  fn: "*.tsv"
+  contents_re: ^Clust_Sample\tobs
+  num_lines: 1
+checkatlas/annotation:
+  fn: "*.tsv"
+  contents_re: ^Annot_Sample\tReference\tobs
+  num_lines: 1
+checkatlas/dimred:
+  fn: "*.tsv"
+  contents_re: ^Dimred_Sample\tobsm
+  num_lines: 1
+cellranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "count"'
+    num_lines: 20
+cellranger/vdj_html:
+  - fn: "*.html"
+    contents: '"command":"Cell Ranger","subcommand":"vdj"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Cell Ranger", "subcommand": "vdj"'
+    num_lines: 20
+cellranger_arc:
+  - fn: "*.html"
+    contents: Cell Ranger ARC
+    num_lines: 250
+cells2stats/run:
+  fn: RunStats.json
+  contents: '"AnalysisID": "c2s.'
+  num_lines: 100
+checkm:
+  - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})#\
+      \ markers(?:\t| {3,})# marker sets.*"
+    num_lines: 10
+checkm2:
+  contents: "Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used"
+  num_lines: 10
+checkqc:
+  contents: instrument_and_reagent_type
+  fn: "*.json"
+custom_content:
+  fn_re: .+_mqc\.(yaml|yml|json|txt|csv|tsv|log|out|png|jpg|jpeg|gif|webp|tiff|html|md)
+clipandmerge:
+  contents: ClipAndMerge (
+  num_lines: 5
+clusterflow/logs:
+  fn: "*_clusterFlow.txt"
+  shared: true
+clusterflow/runfiles:
+  fn: "*.run"
+  contents: Cluster Flow Run File
+  num_lines: 2
+conpair/concordance:
+  contents: markers (coverage per marker threshold
+  num_lines: 3
+conpair/contamination:
+  contents: "Tumor sample contamination level: "
+  num_lines: 3
+cutadapt:
+  - contents: This is cutadapt
+    exclude_contents_re: "Trim Galore version: (?:[2-9]|\\d{2,})\\."
+    num_lines: 100
+  - fn: "*.json"
+    contents: Cutadapt report
+damageprofiler:
+  fn: "*dmgprof.json"
+deacon:
+  fn: "*.json"
+  contents: '"version": "deacon'
+  num_lines: 30
+dedup:
+  fn: "*.json"
+  contents: '"tool_name": "DeDup"'
+  num_lines: 20
+deeptools/bamPEFragmentSizeTable:
+  contents: "\tFrag. Sampled\tFrag. Len. Min.\tFrag. Len. 1st. Qu.\tFrag. Len. Mean\t\
+    Frag. Len. Median\tFrag. Len. 3rd Qu."
+  num_lines: 1
+deeptools/bamPEFragmentSizeDistribution:
+  contents: "#bamPEFragmentSize"
+  num_lines: 1
+deeptools/estimateReadFiltering:
+  contents: "Sample\tTotal Reads\tMapped Reads\tAlignments in blacklisted regions\t\
+    Estimated mapped reads"
+  num_lines: 1
+deeptools/plotCorrelationData:
+  contents: "#plotCorrelation --outFileCorMatrix"
+  num_lines: 1
+deeptools/plotCoverageStdout:
+  contents: "sample\tmean\tstd\tmin\t25%\t50%\t75%\tmax"
+  num_lines: 1
+deeptools/plotCoverageOutRawCounts:
+  contents: "#plotCoverage --outRawCounts"
+  num_lines: 1
+deeptools/plotEnrichment:
+  contents: "file\tfeatureType\tpercent\tfeatureReadCount\ttotalReadCount"
+  num_lines: 1
+deeptools/plotFingerprintOutRawCounts:
+  contents: "#plotFingerprint --outRawCounts"
+  num_lines: 1
+deeptools/plotFingerprintOutQualityMetrics:
+  contents: "Sample\tAUC\tSynthetic AUC\tX-intercept\tSynthetic X-intercept\tElbow\
+    \ Point\tSynthetic Elbow Point"
+  num_lines: 1
+deeptools/plotPCAData:
+  contents: "#plotPCA --outFileNameData"
+  num_lines: 1
+deeptools/plotProfile:
+  contents: bin labels
+  num_lines: 1
+diamond:
+  fn: diamond.log
+disambiguate:
+  contents: unique species A pairs
+  num_lines: 2
+dragen/vc_metrics:
+  fn: "*.vc_metrics.csv"
+dragen/gvcf_metrics:
+  fn: "*.gvcf_metrics.csv"
+dragen/ploidy_estimation_metrics:
+  fn: "*.ploidy_estimation_metrics.csv"
+dragen/wgs_contig_mean_cov:
+  fn_re: .*\.wgs_contig_mean_cov_?(tumor|normal)?\.csv
+dragen/overall_mean_cov_metrics:
+  fn_re: .*_overall_mean_cov.*\.csv
+dragen/coverage_metrics:
+  fn_re: .*_coverage_metrics.*\.csv
+dragen/wgs_fine_hist:
+  fn_re: .*\.wgs_fine_hist_?(tumor|normal)?\.csv
+dragen/fragment_length_hist:
+  fn: "*.fragment_length_hist.csv"
+dragen/mapping_metrics:
+  fn: "*.mapping_metrics.csv"
+  contents: Number of unique reads (excl. duplicate marked reads)
+  num_lines: 50
+dragen/gc_metrics:
+  fn: "*.gc_metrics.csv"
+dragen/trimmer_metrics:
+  fn: "*.trimmer_metrics.csv"
+dragen/time_metrics:
+  fn: "*.time_metrics.csv"
+dragen/rna_quant_metrics:
+  fn: "*.quant[._]metrics.csv"
+dragen/rna_transcript_cov:
+  fn: "*.quant.transcript_coverage.txt"
+dragen/sc_rna_metrics:
+  fn: "*.scRNA[._]metrics.csv"
+dragen/sc_atac_metrics:
+  fn: "*.scATAC[._]metrics.csv"
+dragen_fastqc:
+  fn: "*.fastqc_metrics.csv"
+eigenstratdatabasetools:
+  fn: "*_eigenstrat_coverage.json"
+fastp:
+  fn: "*.json"
+  contents: '"before_filtering": {'
+  num_lines: 50
+fastq_screen:
+  fn: "*_screen.txt"
+fastqe:
+  fn: "*fastqe*"
+  contents: "Filename\tStatistic\tQualities"
+  num_lines: 1
+fastqc/data:
+  fn: "*fastqc_data.txt"
+fastqc/zip:
+  fn: "*_fastqc.zip"
+fastqc/theoretical_gc:
+  fn: "*fastqc_theoretical_gc*"
+featurecounts:
+  fn: "*.summary"
+  shared: true
+fgbio/groupreadsbyumi:
+  contents: fraction_gt_or_eq_family_size
+  num_lines: 3
+fgbio/errorratebyreadposition:
+  contents: "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\t\
+    a_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate"
+  num_lines: 3
+filtlong:
+  contents: Scoring long reads
+  contents_re: .*Filtering long reads.*
+  num_lines: 5
+flash/log:
+  contents: "[FLASH]"
+flash/hist:
+  fn: "*flash*.hist"
+flexbar:
+  contents: Flexbar - flexible barcode and adapter removal
+freyja:
+  fn: "*.tsv"
+  contents: "summarized\t["
+  num_lines: 6
+ganon:
+  contents:
+    - ganon-classify processed
+  num_lines: 100
+gatk/varianteval:
+  contents: "#:GATKTable:TiTvVariantEvaluator"
+gatk/base_recalibrator:
+  - contents: "#:GATKTable:Arguments:Recalibration"
+    num_lines: 3
+  - contents: "#:SENTIEON_QCAL_TABLE:Arguments:Recalibration"
+    num_lines: 3
+gatk/analyze_saturation_mutagenesis:
+  fn: "*.readCounts"
+  contents: ">>Reads in disjoint pairs evaluated separately:"
+  num_lines: 10
+gffcompare:
+  fn: "*.stats"
+  contents: "# gffcompare"
+  num_lines: 2
+glimpse/err_spl:
+  fn: "*.error.spl.txt.gz"
+  num_lines: 1
+glimpse/err_grp:
+  fn: "*.error.grp.txt.gz"
+  num_lines: 1
+goleft_indexcov/roc:
+  fn: "*-indexcov.roc"
+goleft_indexcov/ped:
+  fn: "*-indexcov.ped"
+gopeaks:
+  fn: "*_gopeaks.json"
+gtdbtk:
+  contents: "user_genome\tclassification\tclosest_genome_reference\tclosest_genome_reference_radius\t\
+    closest_genome_taxonomy\tclosest_genome_ani"
+  num_lines: 10
+haplocheck:
+  contents: "\"Sample\"\t\"Contamination Status\"\t\"Contamination Level\"\t\"Distance\"\
+    \t\"Sample Coverage\""
+  num_lines: 10
+happy:
+  fn: "*.summary.csv"
+  contents: Type,Filter,TRUTH
+htseq:
+  - contents_re: ^feature\tcount$
+    num_lines: 1
+    shared: true
+  - contents_re: ^\w+.*\t\d+$
+    num_lines: 1
+    shared: true
+hicexplorer:
+  contents: Min rest. site distance
+  max_filesize: 4096
+  num_lines: 26
+hicup:
+  fn: HiCUP_summary_report*
+hicup/html:
+  fn: "*HiCUP_summary_report*.html"
+hicpro/mmapstat:
+  fn: "*mapstat"
+  contents: total_R
+  num_lines: 10
+hicpro/mpairstat:
+  fn: "*pairstat"
+  contents: Total_pairs_processed
+  num_lines: 10
+hicpro/mergestat:
+  fn: "*.mergestat"
+  contents: valid_interaction
+  num_lines: 10
+hicpro/mRSstat:
+  fn: "*RSstat"
+  contents: Valid_interaction_pairs
+hicpro/assplit:
+  fn: "*assplit.stat"
+hicstuff/pipeline_stats:
+  - fn: "*.txt"
+    contents: "## hicstuff:"
+    num_lines: 100
+  - fn: "*.log"
+    contents: "## hicstuff:"
+    num_lines: 10
+hicstuff/distancelaw:
+  contents: "## distance_law"
+  num_lines: 5
+hifiasm:
+  contents: "[M::ha_analyze_count]"
+  num_lines: 1
+hifi_trimmer:
+  fn: "*.json"
+  contents: '"total_reads_trimmed"'
+  num_lines: 10
+hisat2:
+  contents: "HISAT2 summary stats:"
+homer/findpeaks:
+  contents: "# HOMER Peaks"
+  num_lines: 3
+homer/GCcontent:
+  fn: tagGCcontent.txt
+homer/genomeGCcontent:
+  fn: genomeGCcontent.txt
+homer/RestrictionDistribution:
+  fn: petagRestrictionDistribution.*.txt
+homer/LengthDistribution:
+  fn: tagLengthDistribution.txt
+homer/tagInfo:
+  fn: tagInfo.txt
+homer/FreqDistribution:
+  fn: petag.FreqDistribution_1000.txt
+hops:
+  fn: heatmap_overview_Wevid.json
+hostile:
+  fn: "*.json"
+  contents: '"reads_removed_proportion"'
+  num_lines: 100
+humid/stats:
+  fn: stats.dat
+  contents: "total: "
+  num_lines: 1
+humid/neighbours:
+  fn: neigh.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/counts:
+  fn: counts.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+humid/clusters:
+  fn: clusters.dat
+  contents_re: "[0-9]+ [0-9]+"
+  num_lines: 1
+interop/summary:
+  contents: Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30
+interop/index-summary:
+  contents: Total Reads,PF Reads,% Read Identified (PF),CV,Min,Max
+isoseq/refine-json:
+  contents: '"num_reads_fl"'
+  fn: "*.json"
+isoseq/refine-csv:
+  contents: id,strand,fivelen,threelen,polyAlen,insertlen,primer
+  fn: "*.csv"
+isoseq/cluster-csv:
+  contents: cluster_id
+  fn: "*cluster_report.csv"
+  num_lines: 1
+ivar/trim:
+  contents: Number of references
+  num_lines: 8
+jcvi:
+  contents: "     o    % GC    % of genome    Average size (bp)    Median size (bp)\
+    \    Number    Total length (Mb)"
+jellyfish:
+  fn: "*_jf.hist"
+kaiju:
+  contents_re: file\tpercent\treads\ttaxon_id\ttaxon_name
+  num_lines: 1
+kallisto:
+  contents: "[quant] finding pseudoalignments for the reads"
+kat:
+  fn: "*.dist_analysis.json"
+kraken:
+  contents_re: ^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]
+  num_lines: 2
+librarian:
+  fn: librarian_heatmap.txt
+leehom:
+  contents: Adapter dimers/chimeras
+  num_lines: 100
+lima/summary:
+  contents: ZMWs above all thresholds
+  num_lines: 2
+  max_filesize: 1024
+lima/counts:
+  contents: "IdxFirst\tIdxCombined\tIdxFirstNamed\tIdxCombinedNamed\tCounts\tMeanScore"
+  num_lines: 1
+longranger/summary:
+  fn: "*summary.csv"
+  contents: longranger_version,instrument_ids,gems_detected,mean_dna_per_gem,bc_on_whitelist,bc_mean_qscore,n50_linked_reads_per_molecule
+  num_lines: 2
+longranger/invocation:
+  fn: _invocation
+  contents: call PHASER_SVCALLER_CS(
+  max_filesize: 2048
+macs2:
+  fn: "*_peaks.xls"
+malt:
+  contents: MaltRun - Aligns sequences using MALT (MEGAN alignment tool)
+  num_lines: 2
+mapdamage:
+  - fn: 3p*_freq.txt
+  - fn: 5p*_freq.txt
+  - fn: lgdistribution.txt
+megahit:
+  contents: " - MEGAHIT v"
+  num_lines: 5
+metaphlan:
+  fn: "*.txt"
+  contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
+methurator:
+  fn: "*methurator_summary.yml"
+methylqa:
+  fn: "*.report"
+  shared: true
+mgikit/mgi_ambiguous_barcode:
+  fn: "*.mgikit.ambiguous_barcode"
+mgikit/mgi_sample_stats:
+  fn: "*.mgikit.sample_stats"
+mgikit/mgi_general_info:
+  fn: "*.mgikit.general"
+mgikit/mgi_sample_reads:
+  fn: "*.mgikit.info"
+mgikit/mgi_undetermined_barcode:
+  fn: "*.mgikit.undetermined_barcode"
+minionqc:
+  fn: summary.yaml
+  contents: total.gigabases
+mirtop:
+  fn: "*_mirtop_stats.log"
+mirtrace/summary:
+  fn: mirtrace-results.json
+mirtrace/length:
+  fn: mirtrace-stats-length.tsv
+mirtrace/contaminationbasic:
+  fn: mirtrace-stats-contamination_basic.tsv
+mirtrace/mirnacomplexity:
+  fn: mirtrace-stats-mirna-complexity.tsv
+mtnucratio:
+  fn: "*mtnuc.json"
+mosdepth/summary:
+  fn: "*.mosdepth.summary.txt"
+mosdepth/global_dist:
+  fn: "*.mosdepth.global.dist.txt"
+mosdepth/region_dist:
+  fn: "*.mosdepth.region.dist.txt"
+motus:
+  contents: Reads are aligned (by BWA) to marker gene sequences in the reference database
+  num_lines: 2
+multivcfanalyzer:
+  fn: MultiVCFAnalyzer.json
+nanostat:
+  max_filesize: 4096
+  contents_re: Metrics\s+dataset\s*
+  num_lines: 1
+nanostat/legacy:
+  max_filesize: 4096
+  contents_re: General summary:\s*
+  num_lines: 1
+nanoq:
+  contents: Nanoq Read Summary
+  num_lines: 3
+nextclade:
+  contents: seqName;clade;
+  num_lines: 1
+ngsbits/readqc:
+  - fn: "*.qcML"
+    contents: ReadQC
+    num_lines: 20
+  - fn: "*.qcML"
+    contents: SeqPurge
+    num_lines: 20
+ngsbits/mappingqc:
+  - fn: "*.qcML"
+    contents: MappingQC
+    num_lines: 20
+ngsbits/samplegender:
+  - fn: "*_ngsbits_sex.tsv"
+ngsderive/strandedness:
+  contents: "File\tTotalReads\tForwardPct\tReversePct\tPredicted"
+  num_lines: 1
+ngsderive/instrument:
+  contents: "File\tInstrument\tConfidence\tBasis"
+  num_lines: 1
+ngsderive/readlen:
+  contents: "File\tEvidence\tMajorityPctDetected\tConsensusReadLength"
+  num_lines: 1
+ngsderive/encoding:
+  contents: "File\tEvidence\tProbableEncoding"
+  num_lines: 1
+ngsderive/junction_annotation:
+  contents: "File\ttotal_junctions\ttotal_splice_events\tknown_junctions\tpartial_novel_junctions\t\
+    complete_novel_junctions\tknown_spliced_reads\tpartial_novel_spliced_reads\tcomplete_novel_spliced_reads"
+  num_lines: 1
+nonpareil:
+  - fn: "*.json"
+    contents: LRstar
+    num_lines: 50
+    max_filesize: 1048576
+optitype:
+  contents: "\tA1\tA2\tB1\tB2\tC1\tC2\tReads\tObjective"
+  num_lines: 1
+pangolin:
+  contents: pangolin_version
+  num_lines: 1
+odgi:
+  - fn: "*.og.stats.yaml"
+  - fn: "*.og.stats.yml"
+  - fn: "*.odgi.stats.yaml"
+  - fn: "*.odgi.stats.yml"
+pairtools:
+  contents:
+    - "total_single_sided_mapped\t"
+    - "cis\t"
+    - "trans\t"
+    - pair_types/
+  num_lines: 20
+peddy/summary_table:
+  fn: "*.peddy.ped"
+peddy/het_check:
+  fn: "*.het_check.csv"
+peddy/ped_check:
+  fn: "*.ped_check.csv"
+peddy/sex_check:
+  fn: "*.sex_check.csv"
+peddy/background_pca:
+  fn: "*.background_pca.json"
+percolator:
+  fn: "*percolator_feature_weights.tsv"
+seqera_cli/run_dump:
+  fn: runs_*.tar.gz
+seqera_cli/json:
+  fn: workflow.json
+sequali:
+  fn: "*.json"
+  contents: '"sequali_version"'
+  num_lines: 10
+somalier/somalier-ancestry:
+  fn: "*.somalier-ancestry.tsv"
+somalier/samples:
+  fn: "*.samples.tsv"
+  contents: "#family_id"
+  num_lines: 5
+somalier/pairs:
+  fn: "*.pairs.tsv"
+  contents: hom_concordance
+  num_lines: 5
+sourmash/compare:
+  fn: "*.labels.txt"
+sourmash/gather:
+  contents: intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,
+  num_lines: 1
+pbmarkdup:
+  contents_re: LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS
+  num_lines: 5
+phantompeakqualtools/out:
+  fn: "*.spp.out"
+picard/alignment_metrics:
+  - contents: picard.analysis.AlignmentSummaryMetrics
+  - contents: --algo AlignmentStat
+picard/basedistributionbycycle:
+  contents: BaseDistributionByCycleMetrics
+picard/crosscheckfingerprints:
+  contents: CrosscheckFingerprints
+picard/gcbias:
+  - contents: GcBiasDetailMetrics
+  - contents: GcBiasSummaryMetrics
+  - contents: --algo GCBias
+picard/hsmetrics:
+  - contents: HsMetrics
+  - contents: --algo HsMetricAlgo
+picard/insertsize:
+  - contents: picard.analysis.InsertSizeMetrics
+  - contents: --algo InsertSizeMetricAlgo
+picard/markdups:
+  - contents: picard.sam.MarkDuplicates
+  - contents: picard.sam.DuplicationMetrics
+  - contents: picard.sam.markduplicates.MarkDuplicates
+  - contents: markduplicates.DuplicationMetrics
+  - contents: MarkDuplicatesSpark
+  - contents: markduplicates.GATKDuplicationMetrics
+  - contents: --algo Dedup
+picard/oxogmetrics:
+  - contents: "# picard.analysis.CollectOxoGMetrics"
+  - contents: "# CollectOxoGMetrics"
+  - contents_re: "# CollectMultipleMetrics .*OxoGMetrics"
+    shared: true
+picard/pcr_metrics:
+  - contents: "# picard.analysis.directed.CollectTargetedPcrMetrics"
+  - contents_re: "# CollectMultipleMetrics .*TargetedPcrMetrics"
+    shared: true
+picard/quality_by_cycle:
+  - contents: "# MeanQualityByCycle"
+  - contents: --algo MeanQualityByCycle
+  - contents_re: .*CollectMultipleMetrics.*MeanQualityByCycle
+    shared: true
+picard/quality_score_distribution:
+  - contents: "# QualityScoreDistribution"
+  - contents: --algo QualDistribution
+  - contents_re: .*CollectMultipleMetrics.*QualityScoreDistribution
+    shared: true
+picard/quality_yield_metrics:
+  - contents: "# CollectQualityYieldMetrics"
+  - contents_re: .*CollectMultipleMetrics.*QualityYieldMetrics
+    shared: true
+picard/rnaseqmetrics:
+  - contents: "# picard.analysis.Collectrnaseqmetrics"
+  - contents: "# picard.analysis.CollectRnaSeqMetrics"
+  - contents: "# CollectRnaSeqMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RnaSeqMetrics"
+    shared: true
+picard/rrbs_metrics:
+  - contents: "# picard.analysis.CollectRrbsMetrics"
+  - contents_re: "# CollectMultipleMetrics .*RrbsMetrics"
+    shared: true
+picard/sam_file_validation:
+  fn: "*[Vv]alidate[Ss]am[Ff]ile*"
+picard/variant_calling_metrics:
+  contents_re: "## METRICS CLASS.*VariantCallingDetailMetrics"
+picard/wgs_metrics:
+  - contents: --algo WgsMetricsAlgo
+  - contents_re: "## METRICS CLASS.*WgsMetrics"
+    shared: true
+picard/collectilluminabasecallingmetrics:
+  contents: CollectIlluminaBasecallingMetrics
+picard/collectilluminalanemetrics:
+  contents: CollectIlluminaLaneMetrics
+picard/extractilluminabarcodes:
+  contents: ExtractIlluminaBarcodes
+picard/markilluminaadapters:
+  contents: MarkIlluminaAdapters
+porechop:
+  contents: Looking for known adapter sets
+  num_lines: 10
+preseq:
+  - contents: EXPECTED_DISTINCT
+    num_lines: 2
+  - contents: distinct_reads
+    num_lines: 2
+preseq/real_counts:
+  fn: "*preseq_real_counts*"
+prinseqplusplus:
+  - contents: reads removed by -
+    num_lines: 2
+prokka:
+  contents: "contigs:"
+  num_lines: 2
+purple/qc:
+  fn: "*.purple.qc"
+purple/purity:
+  fn: "*.purple.purity.tsv"
+pycoqc:
+  contents: '"pycoqc":'
+  num_lines: 2
+pychopper:
+  contents: "Classification\tRescue"
+  num_lines: 6
+qc3C:
+  fn: "*.qc3C.json"
+qorts:
+  contents: BENCHMARK_MinutesOnSamIteration
+  num_lines: 100
+qorts/log:
+  fn: QC.*.log
+  contents: Starting QoRTs
+  num_lines: 2
+qualimap/bamqc/genome_results:
+  fn: genome_results.txt
+qualimap/bamqc/coverage:
+  fn: coverage_histogram.txt
+qualimap/bamqc/insert_size:
+  fn: insert_size_histogram.txt
+qualimap/bamqc/genome_fraction:
+  fn: genome_fraction_coverage.txt
+qualimap/bamqc/gc_dist:
+  fn: mapped_reads_gc-content_distribution.txt
+qualimap/bamqc/html:
+  fn: qualimapReport.html
+  contents: "Qualimap report: BAM QC"
+  num_lines: 10
+qualimap/rnaseq/rnaseq_results:
+  fn: rnaseq_qc_results.txt
+qualimap/rnaseq/coverage:
+  fn: coverage_profile_along_genes_(total).txt
+qualimap/rnaseq/html:
+  fn: qualimapReport.html
+  contents: "Qualimap report: RNA Seq QC"
+  num_lines: 10
+quast:
+  fn: report.tsv
+  contents: "Assembly\t"
+  num_lines: 2
+rna_seqc/metrics_v1:
+  fn: "*metrics.tsv"
+  contents: "Sample\tNote\t"
+rna_seqc/metrics_v2:
+  fn: "*metrics.tsv"
+  contents: High Quality Ambiguous Alignment Rate
+rna_seqc/coverage:
+  fn_re: meanCoverageNorm_(high|medium|low)\.txt
+rna_seqc/correlation:
+  fn_re: corrMatrix(Pearson|Spearman)\.txt
+rna_seqc/html:
+  fn: index.html
+  contents: RNA-SeQC</a> v
+  num_lines: 200
+ribotish/qual:
+  fn: "*_qual.txt"
+  num_lines: 10
+ribowaltz/psite_region:
+  fn: "*ribowaltz*psite_region.tsv"
+  contents_re: "sample[,\t]region[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/frames:
+  fn: "*ribowaltz*frames.tsv"
+  contents_re: "sample[,\t]region[,\t]frame[,\t]count[,\t]scaled_count"
+  num_lines: 1
+ribowaltz/metaprofile:
+  fn: "*ribowaltz*metaprofile_psite.tsv"
+  contents_re: "sample[,\t]region[,\t]x[,\t]y"
+  num_lines: 1
+riker/alignment:
+  fn: "*.alignment-metrics.txt"
+  contents_re: ^sample\b.*\bcategory\b
+  num_lines: 1
+riker/basic_base_dist:
+  fn: "*.base-distribution-by-cycle.txt"
+  contents_re: ^sample\b.*\bfrac_a\b
+  num_lines: 1
+riker/basic_mean_quality:
+  fn: "*.mean-quality-by-cycle.txt"
+  contents_re: ^sample\b.*\bmean_quality\b
+  num_lines: 1
+riker/basic_quality_dist:
+  fn: "*.quality-score-distribution.txt"
+  contents_re: ^sample\b.*\bfrac_bases\b
+  num_lines: 1
+riker/gcbias_detail:
+  fn: "*.gcbias-detail.txt"
+  contents_re: ^sample\b.*\bnormalized_coverage\b
+  num_lines: 1
+riker/gcbias_summary:
+  fn: "*.gcbias-summary.txt"
+  contents_re: ^sample\b.*\bgc_0_19_normcov\b
+  num_lines: 1
+riker/hybcap_metrics:
+  fn: "*.hybcap-metrics.txt"
+  contents_re: ^sample\b.*\bbait_territory\b
+  num_lines: 1
+riker/isize_metrics:
+  fn: "*.isize-metrics.txt"
+  contents_re: ^sample\b.*\bpair_orientation\b
+  num_lines: 1
+riker/isize_histogram:
+  fn: "*.isize-histogram.txt"
+  contents_re: ^sample\b.*\bfr_count\b
+  num_lines: 1
+riker/wgs_metrics:
+  fn: "*.wgs-metrics.txt"
+  contents_re: ^sample\b.*\bgenome_territory\b
+  num_lines: 1
+riker/wgs_coverage:
+  fn: "*.wgs-coverage.txt"
+  contents_re: ^sample\b.*\bbases_at_or_above\b
+  num_lines: 1
+rockhopper:
+  fn: summary.txt
+  contents: Number of gene-pairs predicted to be part of the same operon
+  max_filesize: 500000
+ribodetector:
+  contents: Writing output non-rRNA sequences into file
+  num_lines: 20
+rsem:
+  fn: "*.cnt"
+rseqc/bam_stat:
+  contents: "Proper-paired reads map to different chrom:"
+  max_filesize: 500000
+rseqc/gene_body_coverage:
+  fn: "*.geneBodyCoverage.txt"
+rseqc/inner_distance:
+  fn: "*.inner_distance_freq.txt"
+rseqc/junction_annotation:
+  contents: "Partial Novel Splicing Junctions:"
+  max_filesize: 500000
+rseqc/junction_saturation:
+  fn: "*.junctionSaturation_plot.r"
+rseqc/read_gc:
+  fn: "*.GC.xls"
+rseqc/read_distribution:
+  contents: Group               Total_bases         Tag_count           Tags/Kb
+  max_filesize: 500000
+rseqc/read_duplication_pos:
+  fn: "*.pos.DupRate.xls"
+rseqc/infer_experiment:
+  - fn: "*infer_experiment.txt"
+  - contents: Fraction of reads explained by
+    max_filesize: 500000
+rseqc/tin:
+  fn: "*.summary.txt"
+  contents: TIN(median)
+  num_lines: 1
+salmon/meta:
+  fn: meta_info.json
+  contents: salmon_version
+  num_lines: 10
+  max_filesize: 50000
+salmon/lfc:
+  fn: lib_format_counts.json
+salmon/fld:
+  fn: flenDist.txt
+sambamba/markdup:
+  contents: finding positions of the duplicate reads in the file
+  num_lines: 50
+samblaster:
+  contents: "samblaster: Version"
+samtools/stats:
+  contents: This file was produced by samtools stats
+samtools/flagstat:
+  contents: in total (QC-passed reads + QC-failed reads)
+samtools/idxstats:
+  fn: "*idxstat*"
+samtools/rmdup:
+  contents: "[bam_rmdup"
+samtools/ampliconclip:
+  contents:
+    - "COMMAND:"
+    - samtools ampliconclip
+  num_lines: 11
+samtools/coverage:
+  contents: "#rname\tstartpos\tendpos\tnumreads\tcovbases\tcoverage\tmeandepth\tmeanbaseq\t\
+    meanmapq"
+  num_lines: 10
+samtools/markdup_txt:
+  contents:
+    - "^COMMAND:"
+    - samtools markdup
+  num_lines: 2
+samtools/markdup_json:
+  contents:
+    - '"COMMAND":'
+    - samtools markdup
+  num_lines: 10
+sargasso:
+  fn: overall_filtering_summary.txt
+seqfu/stats:
+  contents: "File\t#Seq\tTotal bp\tAvg\tN50\tN75\tN90\tauN\tMin\tMax"
+  num_lines: 1
+seqkit/stats:
+  contents_re: ^file\s+format\s+type\s+num_seqs\s+sum_len
+  num_lines: 1
+seqwho:
+  contents: '  "Per Base Seq": ['
+  num_lines: 10
+seqyclean:
+  fn: "*_SummaryStatistics.tsv"
+sexdeterrmine:
+  fn: sexdeterrmine.json
+sickle:
+  contents_re: "FastQ \\w*\\s?records kept: .*"
+  num_lines: 2
+sincei/scFilterStats:
+  contents: "Cell_ID\tTotal_sampled\tFiltered\tBlacklisted\tLow_MAPQ\tMissing_Flags\t\
+    Excluded_Flags"
+  num_lines: 1
+sincei/scCountQC:
+  fn: "*.cells.tsv"
+  contents: "Cell_ID\tbarcodes\tsample\tn_genes_by_counts\tlog1p_n_genes_by_counts\t\
+    total_counts"
+skewer:
+  contents: "maximum error ratio allowed (-r):"
+slamdunk/summary:
+  contents: "# slamdunk summary"
+  num_lines: 1
+slamdunk/PCA:
+  contents: "# slamdunk PCA"
+  num_lines: 1
+slamdunk/rates:
+  contents: "# slamdunk rates"
+  num_lines: 1
+slamdunk/utrrates:
+  contents: "# slamdunk utrrates"
+  num_lines: 1
+slamdunk/tcperreadpos:
+  contents: "# slamdunk tcperreadpos"
+  num_lines: 1
+slamdunk/tcperutrpos:
+  contents: "# slamdunk tcperutr"
+  num_lines: 1
+snippy/snippy:
+  contents: snippy
+  num_lines: 20
+snippy/snippy-core:
+  contents_re: ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV
+  num_lines: 1
+snpeff:
+  contents: SnpEff_version
+  max_filesize: 5000000
+snpsplit/old:
+  contents: "Writing allele-flagged output file to:"
+  num_lines: 2
+snpsplit/new:
+  fn: "*SNPsplit_report.yaml"
+software_versions:
+  fn_re: .+_mqc_versions\.(yaml|yml)
+sompy:
+  fn: "*.stats.csv"
+  contents: ",sompyversion,sompycmd"
+  num_lines: 2
+sortmerna:
+  contents: Minimal SW score based on E-value
+spaceranger/count_html:
+  - fn: "*.html"
+    contents: '"command":"Space Ranger","subcommand":"count"'
+    num_lines: 20
+  - fn: "*.html"
+    contents: '"command": "Space Ranger", "subcommand": "count"'
+    num_lines: 20
+stacks/gstacks:
+  fn: gstacks.log.distribs
+  contents: BEGIN effective_coverages_per_sample
+stacks/populations:
+  fn: populations.log.distribs
+  contents: BEGIN missing_samples_per_loc_prefilters
+stacks/sumstats:
+  fn: "*.sumstats_summary.tsv"
+  contents: "# Pop ID\tPrivate\tNum_Indv\tVar\tStdErr\tP\tVar"
+  max_filesize: 1000000
+star:
+  fn: "*Log.final.out"
+star/genecounts:
+  fn: "*ReadsPerGene.out.tab"
+supernova/report:
+  fn: "*report*.txt"
+  num_lines: 100
+  contents: "- assembly checksum ="
+supernova/summary:
+  fn: summary.json
+  num_lines: 120
+  contents: '"lw_mean_mol_len":'
+supernova/molecules:
+  fn: histogram_molecules.json
+  num_lines: 10
+  contents: '"description": "molecules",'
+supernova/kmers:
+  fn: histogram_kmer_count.json
+  num_lines: 10
+  contents: '"description": "kmer_count",'
+sylphtax:
+  fn: "*.sylphmpa"
+telseq:
+  num_lines: 3
+  contents: "ReadGroup\tLibrary\tSample\tTotal\tMapped\tDuplicates\tLENGTH_ESTIMATE"
+theta2:
+  fn: "*.BEST.results"
+tophat:
+  fn: "*align_summary.txt"
+  shared: true
+trim_galore:
+  fn: "*_trimming_report.json"
+trimmomatic:
+  contents_re: ^Trimmomatic
+truvari/bench:
+  contents_re: .*truvari.* bench.*
+  fn: log.txt
+  num_lines: 10
+umicollapse:
+  num_lines: 100
+  contents: "UMI collapsing finished in "
+umitools/extract:
+  contents: "# output generated by extract"
+  num_lines: 100
+umitools/dedup:
+  contents: "# output generated by dedup"
+  num_lines: 100
+varscan2/mpileup2snp:
+  contents: Only SNPs will be reported
+  num_lines: 10
+varscan2/mpileup2indel:
+  contents: Only indels will be reported
+  num_lines: 10
+varscan2/mpileup2cns:
+  contents: Only variants will be reported
+  num_lines: 10
+vcftools/relatedness2:
+  fn: "*.relatedness2"
+vcftools/tstv_by_count:
+  fn: "*.TsTv.count"
+vcftools/tstv_by_qual:
+  fn: "*.TsTv.qual"
+vcftools/tstv_summary:
+  fn: "*.TsTv.summary"
+vep/vep_html:
+  fn: "*.html"
+  contents: VEP summary
+  num_lines: 10
+  max_filesize: 1000000
+vep/vep_txt:
+  contents: "[VEP run statistics]"
+  num_lines: 1
+  max_filesize: 100000
+verifybamid/selfsm:
+  fn: "*.selfSM"
+vg/stats:
+  contents:
+    - "Total perfect:"
+    - "Total gapless (softclips allowed):"
+    - "Total time:"
+    - "Speed:"
+  num_lines: 30
+whatshap/stats:
+  contents: "#sample\tchromosome\tfile_name\tvariants\tphased\tunphased\tsingletons"
+  num_lines: 1
+xenome:
+  contents: "B\tG\tH\tM\tcount\tpercent\tclass"
+  num_lines: 2
+xengsort:
+  contents: "# Xengsort classify"
+  num_lines: 2
+ataqv:
+  fn: "*.json"
+  contents: ataqv_version
+  num_lines: 10
+mosaicatcher:
+  fn: "*.mosaicatcher_info_raw.txt"
+```
+
+</details>
+
+**Example**:
+
+```yaml
+sp:
+  fastqc/data:
+    fn: fastqc_data.txt
+  fastqc/zip:
+    fn: "*_fastqc.zip"
+```
+
 ## Plot Settings
 
-### plots_force_flat
+### Rendering mode
 
-**Type**: `bool` (default: `false`)
+#### `plots_force_flat`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Render plots as static images instead of interactive Plotly. Useful for very large reports.
 
-### plots_force_interactive
+#### `plots_force_interactive`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Force interactive plots even when MultiQC would normally fall back to flat images.
 
-### plots_export_font_scale
+#### `plots_flat_numseries`
 
-**Type**: `float` (default: `1.0`)
-
-Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.
-
-### plots_flat_numseries
-
-**Type**: `int` (default: `2000`)
+**Type**: <code>int</code> (default: `2000`)
 
 If a plot has more than this many series, MultiQC switches it from interactive to flat image.
 
-### plots_defer_loading_numseries
+#### `plots_defer_loading_numseries`
 
-**Type**: `int` (default: `100`)
+**Type**: <code>int</code> (default: `100`)
 
 Plots with more than this many series start collapsed. The user clicks a button to render them.
 
-### num_datasets_plot_limit
+#### `num_datasets_plot_limit`
 
-**Type**: `int` (default: `100`)
+**Type**: <code>int</code> (default: `100`)
 
 Deprecated. Use `plots_defer_loading_numseries` instead.
 
-### plot_font_family
+### Appearance
 
-**Type**: `str`
+#### `plots_export_font_scale`
+
+**Type**: <code>float</code> (default: `1.0`)
+
+Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.
+
+#### `plot_font_family`
+
+**Type**: <code>str</code>
 
 CSS font-family for plot text. Defaults to a system font stack.
 
-### custom_plot_config
+#### `custom_plot_config`
 
-**Type**: `Dict[str, Any]`
+**Type**: <code>Dict[str, Any]</code>
 
 Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.
 
@@ -1223,59 +2591,63 @@ custom_plot_config:
       title: Phred score
 ```
 
-### lineplot_number_of_points_to_hide_markers
+#### `lineplot_number_of_points_to_hide_markers`
 
-**Type**: `int` (default: `50`)
+**Type**: <code>int</code> (default: `50`)
 
 Hide individual data point markers in line plots once the total point count across samples exceeds this.
 
-### barplot_legend_on_bottom
+#### `barplot_legend_on_bottom`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Place bar plot legends below the plot instead of to the side. Not recommended.
 
-### boxplot_boxpoints
+### Boxplot and violin
 
-**Type**: `Literal["outliers", "suspectedoutliers", "all", False]` (default: `"outliers"`)
+#### `boxplot_boxpoints`
+
+**Type**: <code>Literal["outliers", "suspectedoutliers", "all", False]</code> (default: `"outliers"`)
 
 How boxplot data points are drawn. Use false to hide individual points.
 
-### box_min_threshold_outliers
+#### `box_min_threshold_outliers`
 
-**Type**: `int` (default: `100`)
+**Type**: <code>int</code> (default: `100`)
 
 When a boxplot has more samples than this, only outlier points are drawn.
 
-### box_min_threshold_no_points
+#### `box_min_threshold_no_points`
 
-**Type**: `int` (default: `1000`)
+**Type**: <code>int</code> (default: `1000`)
 
 When a boxplot has more samples than this, no individual points are drawn.
 
-### violin_downsample_after
+#### `violin_downsample_after`
 
-**Type**: `int` (default: `2000`)
+**Type**: <code>int</code> (default: `2000`)
 
 Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.
 
-### violin_min_threshold_outliers
+#### `violin_min_threshold_outliers`
 
-**Type**: `int` (default: `100`)
+**Type**: <code>int</code> (default: `100`)
 
 When a violin plot has more samples than this, only outlier points are drawn.
 
-### violin_min_threshold_no_points
+#### `violin_min_threshold_no_points`
 
-**Type**: `int` (default: `1000`)
+**Type**: <code>int</code> (default: `1000`)
 
 When a violin plot has more samples than this, no individual points are drawn.
 
 ## Toolbox
 
-### highlight_patterns
+### Highlighting
 
-**Type**: `List[str]`
+#### `highlight_patterns`
+
+**Type**: <code>List[str]</code>
 
 Substring (or regex) patterns. Matching samples are highlighted in plots and tables.
 
@@ -1287,11 +2659,11 @@ highlight_patterns:
   - treated
 ```
 
-### highlight_colors
+#### `highlight_colors`
 
-**Type**: `List[str]`
+**Type**: <code>List[str]</code>
 
-Hex colour for each entry in highlight_patterns, in the same order.
+CSS colour for each entry in highlight_patterns, in the same order. Accepts hex (`#377eb8`), named colours (`red`), or any CSS colour function (`rgb(...)`, `hsl(...)`).
 
 **Example**:
 
@@ -1301,15 +2673,17 @@ highlight_colors:
   - "#e41a1c"
 ```
 
-### highlight_regex
+#### `highlight_regex`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Treat highlight_patterns as regex instead of plain substring.
 
-### show_hide_buttons
+### Show/hide buttons
 
-**Type**: `List[str]`
+#### `show_hide_buttons`
+
+**Type**: <code>List[str]</code>
 
 Labels for the toolbox show/hide buttons. One per pattern set.
 
@@ -1321,9 +2695,9 @@ show_hide_buttons:
   - Normal samples
 ```
 
-### show_hide_patterns
+#### `show_hide_patterns`
 
-**Type**: `List[Union[str, List[str]]]`
+**Type**: <code>List[Union[str, List[str]]]</code>
 
 Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.
 
@@ -1337,11 +2711,11 @@ show_hide_patterns:
     - _normal_
 ```
 
-### show_hide_mode
+#### `show_hide_mode`
 
-**Type**: `List[str]`
+**Type**: <code>List[Literal["show", "hide", "show_re", "hide_re"]]</code>
 
-Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).
+Action for each show/hide button: 'show' (only show matches), 'hide' (hide matches), or their `_re` variants which signal regex patterns (set by the TSV loader).
 
 **Example**:
 
@@ -1351,9 +2725,9 @@ show_hide_mode:
   - show
 ```
 
-### show_hide_regex
+#### `show_hide_regex`
 
-**Type**: `List[Union[str, bool]]`
+**Type**: <code>List[Union[str, bool]]</code>
 
 Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.
 
@@ -1367,29 +2741,31 @@ show_hide_regex:
 
 ## Table Settings
 
-### collapse_tables
+### General
 
-**Type**: `bool` (default: `true`)
+#### `collapse_tables`
+
+**Type**: <code>bool</code> (default: `true`)
 
 Collapse module tables by default. Users click to expand.
 
-### max_table_rows
+#### `max_table_rows`
 
-**Type**: `int` (default: `500`)
+**Type**: <code>int</code> (default: `500`)
 
 Tables larger than this many rows are rendered as a violin plot instead.
 
-### max_configurable_table_columns
+#### `max_configurable_table_columns`
 
-**Type**: `int` (default: `200`)
+**Type**: <code>int</code> (default: `200`)
 
 Cap on the number of columns the user can toggle in the table-configure toolbox.
 
-### decimalPoint_format
+#### `decimalPoint_format`
 
-**Type**: `str`
+**Type**: <code>str</code> (default: `"."`)
 
-Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.
+Decimal-point character used in formatted numbers. Defaults to `.`
 
 **Example**:
 
@@ -1397,25 +2773,23 @@ Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.
 decimalPoint_format: ","
 ```
 
-### thousandsSep_format
+#### `thousandsSep_format`
 
-**Type**: `str`
+**Type**: <code>str</code> (default: `" "`)
 
-Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`
+Thousands separator used in formatted numbers. Defaults to a single space, which is rendered as a small non-breaking space.
 
-**Examples**:
-
-```yaml
-thousandsSep_format: " "
-```
+**Example**:
 
 ```yaml
-thousandsSep_format: "'"
+thousandsSep_format: ","
 ```
 
-### general_stats_columns
+### General Stats table
 
-**Type**: `Dict[str, GeneralStatsModuleConfig]`
+#### `general_stats_columns`
+
+**Type**: <code>Dict[str, <a href="#generalstatsmoduleconfig">GeneralStatsModuleConfig</a>]</code>
 
 Per-module overrides for General Stats columns. Top-level keys are module IDs.
 
@@ -1433,21 +2807,23 @@ general_stats_columns:
         title: "% Dups"
 ```
 
-### general_stats_helptext
+#### `general_stats_helptext`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Help text shown under the General Statistics heading at the top of the report.
 
-### skip_generalstats
+#### `skip_generalstats`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Hide the General Statistics table at the top of the report.
 
-### table_columns_name
+### Column overrides
 
-**Type**: `Dict[str, Union[str, Dict[str, str]]]`
+#### `table_columns_name`
+
+**Type**: <code>Dict[str, Union[str, Dict[str, str]]]</code>
 
 Rename table columns. Top-level keys are module IDs, inner keys are column IDs, values are the new display name.
 
@@ -1460,9 +2836,9 @@ table_columns_name:
     percent_gc: "% GC"
 ```
 
-### table_columns_placement
+#### `table_columns_placement`
 
-**Type**: `Dict[str, Dict[str, float]]`
+**Type**: <code>Dict[str, Dict[str, float]]</code>
 
 Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, values are float sort weights (lower is further left).
 
@@ -1476,9 +2852,9 @@ table_columns_placement:
     total_sequences: 700
 ```
 
-### table_columns_visible
+#### `table_columns_visible`
 
-**Type**: `Dict[str, Union[bool, Dict[str, bool]]]`
+**Type**: <code>Dict[str, Union[bool, Dict[str, bool]]]</code>
 
 Hide or show specific columns. Top-level keys are module IDs, values are either a bool (apply to all columns) or a dict mapping column ID to bool.
 
@@ -1492,11 +2868,30 @@ table_columns_visible:
     raw_total_sequences: true
 ```
 
-### table_cond_formatting_rules
+#### `custom_table_header_config`
 
-**Type**: `Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]`
+**Type**: <code>Dict[str, Any]</code>
 
-Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.
+Override table column config. Same shape as custom_plot_config but for table headers.
+
+**Example**:
+
+```yaml
+custom_table_header_config:
+  general_stats_table:
+    "% Dups":
+      format: "{:,.1f}%"
+      max: 100
+      min: 0
+```
+
+### Conditional formatting
+
+#### `table_cond_formatting_rules`
+
+**Type**: <code>Dict[str, Dict[str, List[<a href="#condformattingrule">CondFormattingRule</a>]]]</code>
+
+Conditional cell formatting. Nested dicts map table ID (or the literal 'all_columns') to colour ID to a list of rules. Each rule has exactly one operator: string operators (s_eq, s_ne, s_contains) compare case-insensitively; numeric operators (eq, ne, gt, lt, ge, le) cast both sides to float. See the customisation docs for the full grammar.
 
 <details><summary>Default value</summary>
 
@@ -1546,9 +2941,9 @@ table_cond_formatting_rules:
       - gt: 20
 ```
 
-### table_cond_formatting_colours
+#### `table_cond_formatting_colours`
 
-**Type**: `List[Dict[str, str]]`
+**Type**: <code>List[Dict[str, str]]</code>
 
 Background colours referenced by table_cond_formatting_rules. List of single-key dicts mapping a colour ID to a hex code.
 
@@ -1575,30 +2970,21 @@ table_cond_formatting_colours:
   - fail: "#d9534f"
 ```
 
-### custom_table_header_config
+### Row merging
 
-**Type**: `Dict[str, Any]`
+#### `table_sample_merge`
 
-Override table column config. Same shape as custom_plot_config but for table headers.
+**Type**: <code>Dict[str, Union[str, <a href="#cleanpattern">CleanPattern</a>, List[Union[str, <a href="#cleanpattern">CleanPattern</a>]]]]</code>
 
-**Example**:
+Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a {type, pattern} dict) or a list of such entries.
+
+**Examples**:
 
 ```yaml
-custom_table_header_config:
-  general_stats_table:
-    "% Dups":
-      format: "{:,.1f}%"
-      max: 100
-      min: 0
+table_sample_merge:
+  R1: _1
+  R2: _2
 ```
-
-### table_sample_merge
-
-**Type**: `Dict[str, List[Union[str, Dict[str, Union[str, List[str]]]]]]`
-
-Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).
-
-**Example**:
 
 ```yaml
 table_sample_merge:
@@ -1614,13 +3000,13 @@ table_sample_merge:
 
 ## Software Versions
 
-### software_versions
+### `software_versions`
 
-**Type**: `Dict[str, Any]`
+**Type**: <code>Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]</code>
 
-Manually specify software versions for the Software Versions section. Top-level keys are tool names.
+Manually specify software versions for the Software Versions section. Top-level keys are group or software names. Values are a single version string, a list of version strings, or a dict mapping software name to a version string or list of version strings (when the group contains multiple tools).
 
-**Example**:
+**Examples**:
 
 ```yaml
 software_versions:
@@ -1629,61 +3015,69 @@ software_versions:
   samtools: "1.20"
 ```
 
-### versions_table_group_header
+```yaml
+software_versions:
+  quast:
+    - 5.2.0
+    - 5.1.0
+```
 
-**Type**: `str` (default: `"Group"`)
+```yaml
+software_versions:
+  samtools:
+    htslib: "1.3"
+    samtools: "1.11"
+```
+
+### `versions_table_group_header`
+
+**Type**: <code>str</code> (default: `"Group"`)
 
 Column header for the grouping column in the Software Versions table. Defaults to 'Group'.
 
-### disable_version_detection
+### `disable_version_detection`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Skip parsing software versions from module log files.
 
-### skip_versions_section
+### `skip_versions_section`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Hide the Software Versions section.
 
 ## Read & Base Counts
 
-### read_count_multiplier
+### Short reads
 
-**Type**: `float` (default: `1e-06`)
+#### `read_count_multiplier`
+
+**Type**: <code>float</code> (default: `1e-06`)
 
 Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.
 
-**Examples**:
+**Example**:
 
 ```yaml
 read_count_multiplier: 0.001
 ```
 
-```yaml
-read_count_multiplier: 1
-```
+#### `read_count_prefix`
 
-### read_count_prefix
-
-**Type**: `str` (default: `"M"`)
+**Type**: <code>str</code> (default: `"M"`)
 
 Suffix shown after formatted read counts, eg. 'M' for millions.
 
-**Examples**:
+**Example**:
 
 ```yaml
 read_count_prefix: K
 ```
 
-```yaml
-read_count_prefix: ""
-```
+#### `read_count_desc`
 
-### read_count_desc
-
-**Type**: `str` (default: `"millions"`)
+**Type**: <code>str</code> (default: `"millions"`)
 
 Word used in plot/axis labels for read counts, eg. 'millions'.
 
@@ -1697,97 +3091,77 @@ read_count_desc: thousands
 read_count_desc: raw reads
 ```
 
-### long_read_count_multiplier
+### Long reads
 
-**Type**: `float` (default: `0.001`)
+#### `long_read_count_multiplier`
+
+**Type**: <code>float</code> (default: `0.001`)
 
 Multiplier for long-read counts. Default 0.001 shows counts in thousands.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_multiplier: 1.0e-06
 ```
 
-```yaml
-long_read_count_multiplier: 1
-```
+#### `long_read_count_prefix`
 
-### long_read_count_prefix
-
-**Type**: `str` (default: `"K"`)
+**Type**: <code>str</code> (default: `"K"`)
 
 Suffix shown after formatted long-read counts, eg. 'K' for thousands.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_prefix: M
 ```
 
-```yaml
-long_read_count_prefix: ""
-```
+#### `long_read_count_desc`
 
-### long_read_count_desc
-
-**Type**: `str` (default: `"thousands"`)
+**Type**: <code>str</code> (default: `"thousands"`)
 
 Word used in labels for long-read counts, eg. 'thousands'.
 
-**Examples**:
+**Example**:
 
 ```yaml
 long_read_count_desc: millions
 ```
 
-```yaml
-long_read_count_desc: reads
-```
+### Bases
 
-### base_count_multiplier
+#### `base_count_multiplier`
 
-**Type**: `float` (default: `1e-06`)
+**Type**: <code>float</code> (default: `1e-06`)
 
-Multiplier for base counts. Default 0.000000001 shows bases in gigabases.
+Multiplier for base counts. Default 0.000001 shows bases in megabases.
 
-**Examples**:
-
-```yaml
-base_count_multiplier: 1.0e-06
-```
+**Example**:
 
 ```yaml
 base_count_multiplier: 0.001
 ```
 
-### base_count_prefix
+#### `base_count_prefix`
 
-**Type**: `str` (default: `"Mb"`)
+**Type**: <code>str</code> (default: `"Mb"`)
 
-Suffix shown after formatted base counts, eg. 'Gb' for gigabases.
+Suffix shown after formatted base counts, eg. 'Mb' for megabases.
 
-**Examples**:
-
-```yaml
-base_count_prefix: Mb
-```
+**Example**:
 
 ```yaml
 base_count_prefix: Kb
 ```
 
-### base_count_desc
+#### `base_count_desc`
 
-**Type**: `str` (default: `"millions"`)
+**Type**: <code>str</code> (default: `"millions"`)
 
-Word used in labels for base counts, eg. 'gigabases'.
+Word used in labels for base counts, eg. 'megabases'.
 
-**Examples**:
-
-```yaml
-base_count_desc: megabases
-```
+**Example**:
 
 ```yaml
 base_count_desc: kilobases
@@ -1795,27 +3169,72 @@ base_count_desc: kilobases
 
 ## AI Summary
 
-### ai_summary
+### On/off
 
-**Type**: `bool` (default: `false`)
+#### `ai_summary`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Generate a short AI-written summary at the top of the report.
 
-### ai_summary_full
+#### `ai_summary_full`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Also generate a longer per-section AI summary. Requires ai_summary to be on.
 
-### ai_provider
+#### `no_ai`
 
-**Type**: `Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]` (default: `"seqera"`)
+**Type**: <code>bool</code> (default: `false`)
+
+Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.
+
+### Prompts
+
+#### `ai_prompt_short`
+
+**Type**: <code>str</code>
+
+Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
+
+**Example**:
+
+```yaml
+ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, no
+  jargon.
+```
+
+#### `ai_prompt_full`
+
+**Type**: <code>str</code>
+
+Custom prompt prepended to the full-section AI summary request.
+
+**Example**:
+
+```yaml
+ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
+```
+
+### Privacy
+
+#### `ai_anonymize_samples`
+
+**Type**: <code>bool</code> (default: `false`)
+
+Replace sample names with placeholders before sending data to the AI provider.
+
+### Provider
+
+#### `ai_provider`
+
+**Type**: <code>Literal["seqera", "openai", "anthropic", "aws_bedrock", "custom"]</code> (default: `"seqera"`)
 
 AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.
 
-### ai_model
+#### `ai_model`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Model name. Provider-specific.
 
@@ -1829,9 +3248,9 @@ ai_model: gpt-4o
 ai_model: claude-sonnet-4-5.
 ```
 
-### ai_custom_endpoint
+#### `ai_custom_endpoint`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.
 
@@ -1845,21 +3264,35 @@ ai_custom_endpoint: http://localhost:11434/v1
 ai_custom_endpoint: https://api.example.com/v1
 ```
 
-### ai_auth_type
+#### `ai_auth_type`
 
-**Type**: `Literal["bearer", "api-key"]`
+**Type**: <code>Literal["bearer", "api-key"]</code>
 
 Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
 
-### ai_retries
+#### `seqera_website`
 
-**Type**: `int` (default: `3`)
+**Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
+
+Base URL used for Seqera Platform links in the report.
+
+#### `seqera_api_url`
+
+**Type**: <code>str</code> (default: `"https://ai.seqera.io/v1/web"`)
+
+Base URL for the Seqera Platform API. Defaults to the public instance.
+
+### Tuning
+
+#### `ai_retries`
+
+**Type**: <code>int</code> (default: `3`)
 
 Number of times to retry an AI request on transient errors.
 
-### ai_extra_query_options
+#### `ai_extra_query_options`
 
-**Type**: `Dict[str, Any]`
+**Type**: <code>Dict[str, Any]</code>
 
 Extra request-body fields merged into the AI request payload (provider-specific).
 
@@ -1871,186 +3304,145 @@ ai_extra_query_options:
   top_p: 0.9
 ```
 
-### ai_custom_context_window
+#### `ai_custom_context_window`
 
-**Type**: `int`
+**Type**: <code>int</code>
 
 Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.
 
-### ai_max_completion_tokens
+#### `ai_max_completion_tokens`
 
-**Type**: `int`
+**Type**: <code>int</code>
 
 Maximum completion tokens for OpenAI reasoning models.
 
-### ai_reasoning_effort
+#### `ai_reasoning_effort`
 
-**Type**: `Literal["low", "medium", "high"]`
+**Type**: <code>Literal["low", "medium", "high"]</code>
 
 Reasoning effort for OpenAI reasoning models.
 
-### ai_extended_thinking
+#### `ai_extended_thinking`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Enable extended thinking on Anthropic Claude models that support it.
 
-### ai_thinking_budget_tokens
+#### `ai_thinking_budget_tokens`
 
-**Type**: `int`
+**Type**: <code>int</code>
 
 Token budget for Anthropic extended thinking when enabled.
 
-### ai_prompt_short
+## MegaQC
 
-**Type**: `str`
+### `megaqc_url`
 
-Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
-
-**Example**:
-
-```yaml
-ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, no
-  jargon.
-```
-
-### ai_prompt_full
-
-**Type**: `str`
-
-Custom prompt prepended to the full-section AI summary request.
-
-**Example**:
-
-```yaml
-ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
-```
-
-### no_ai
-
-**Type**: `bool` (default: `false`)
-
-Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.
-
-### ai_anonymize_samples
-
-**Type**: `bool` (default: `false`)
-
-Replace sample names with placeholders before sending data to the AI provider.
-
-## MegaQC Integration
-
-### megaqc_url
-
-**Type**: `str`
+**Type**: <code>str</code>
 
 URL of a MegaQC instance to upload report data to after generation.
 
-### megaqc_access_token
+### `megaqc_access_token`
 
-**Type**: `str`
+**Type**: <code>str</code>
 
 Auth token for the MegaQC instance.
 
-### megaqc_timeout
+### `megaqc_timeout`
 
-**Type**: `int` (default: `30`)
+**Type**: <code>int</code> (default: `30`)
 
 Upload timeout in seconds when posting to MegaQC.
 
-### megaqc_upload
+### `megaqc_upload`
 
-**Type**: `bool`
+**Type**: <code>bool</code>
 
 Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.
 
-## Seqera Integration
-
-### seqera_website
-
-**Type**: `str` (default: `"https://seqera.io"`)
-
-Base URL used for Seqera Platform links in the report.
-
-### seqera_api_url
-
-**Type**: `str` (default: `"https://intern.seqera.io"`)
-
-Base URL for the Seqera Platform API. Defaults to the public instance.
-
 ## Performance & Debugging
 
-### profile_runtime
+### Profiling
 
-**Type**: `bool` (default: `false`)
+#### `profile_runtime`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Time each module and include the breakdown in the report.
 
-### profile_memory
+#### `profile_memory`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Track peak memory per module. Adds runtime overhead.
 
-### verbose
+### Logging
 
-**Type**: `bool` (default: `false`)
+#### `verbose`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Print extra debug log messages to the terminal.
 
-### no_ansi
+#### `no_ansi`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Disable ANSI colour codes in terminal output.
 
-### quiet
+#### `quiet`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Suppress non-essential log messages.
 
-### lint
+### Linting
 
-**Type**: `bool` (default: `false`)
+#### `strict`
 
-Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
-
-### strict
-
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
 Treat module warnings as errors. Stricter than lint.
 
-### development
+#### `lint`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
 
-Enable developer-mode features such as live JS reloading. Internal use.
+Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.
 
-### report_readerrors
+### Developer
 
-**Type**: `bool` (default: `false`)
+#### `development`
+
+**Type**: <code>bool</code> (default: `false`)
+
+Enable developer-mode features such as live JS reloading. For internal use.
+
+#### `report_readerrors`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Surface file read errors in the log instead of silently skipping them.
 
-### no_version_check
+#### `preserve_module_raw_data`
 
-**Type**: `bool` (default: `false`)
+**Type**: <code>bool</code> (default: `false`)
+
+Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.
+
+### Version check
+
+#### `no_version_check`
+
+**Type**: <code>bool</code> (default: `false`)
 
 Skip the network check for newer MultiQC versions on startup.
 
-### version_check_url
+#### `version_check_url`
 
-**Type**: `str` (default: `"https://api.multiqc.info/version"`)
+**Type**: <code>str</code> (default: `"https://api.multiqc.info/version"`)
 
 URL queried by MultiQC's own update check. Set to override the default endpoint.
-
-### preserve_module_raw_data
-
-**Type**: `bool` (default: `false`)
-
-Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.
 
 ## Special Types
 
@@ -2073,18 +3465,18 @@ sp:
 
 Properties:
 
-- **contents** (`Union[str, List[str]]`): File contents to match
-- **contents_re** (`Union[str, List[str]]`): File contents regex pattern to match
-- **exclude_contents** (`Union[str, List[str]]`): Exclude files containing this content
-- **exclude_contents_re** (`Union[str, List[str]]`): Exclude files containing this regex content
-- **exclude_fn** (`Union[str, List[str]]`): Exclude files matching this pattern
-- **exclude_fn_re** (`Union[str, List[str]]`): Exclude files matching this regex pattern
-- **fn** (`str`): Filename pattern to match
-- **fn_re** (`str`): Filename regex pattern to match
-- **max_filesize** (`int`): Maximum file size to process
-- **num_lines** (`int`): Number of lines to search
-- **shared** (`bool`): Allow file to be processed by multiple search patterns
-- **skip** (`bool`): Skip this search pattern
+- **contents** (<code>Union[str, List[str]]</code>): File contents to match
+- **contents_re** (<code>Union[str, List[str]]</code>): File contents regex pattern to match
+- **exclude_contents** (<code>Union[str, List[str]]</code>): Exclude files containing this content
+- **exclude_contents_re** (<code>Union[str, List[str]]</code>): Exclude files containing this regex content
+- **exclude_fn** (<code>Union[str, List[str]]</code>): Exclude files matching this pattern
+- **exclude_fn_re** (<code>Union[str, List[str]]</code>): Exclude files matching this regex pattern
+- **fn** (<code>str</code>): Filename pattern to match
+- **fn_re** (<code>str</code>): Filename regex pattern to match
+- **max_filesize** (<code>int</code>): Maximum file size to process
+- **num_lines** (<code>int</code>): Number of lines to search
+- **shared** (<code>bool</code>): Allow file to be processed by multiple search patterns
+- **skip** (<code>bool</code>): Skip this search pattern
 
 ### CleanPattern
 
@@ -2104,9 +3496,29 @@ fn_clean_exts:
 
 Properties:
 
-- **module** (`Union[str, List[str]]`): Module(s) to apply this pattern to
-- **pattern** (`str`): Pattern to match
-- **type** (`Literal["truncate", "remove", "regex", "regex_keep"]`): Type of pattern matching to use
+- **module** (<code>Union[str, List[str]]</code>): Module(s) to apply this pattern to
+- **pattern** (<code>str</code>): Pattern to match
+- **type** (<code>Literal["truncate", "remove", "regex", "regex_keep"]</code>): Type of pattern matching to use
+
+### GeneralStatsModuleConfig
+
+Per-module wrapper for General Stats column overrides.
+
+The `GeneralStatsModuleConfig` type is the value of each module entry in the `general_stats_columns` configuration option. It has a single `columns` key mapping column IDs to `GeneralStatsColumnConfig` settings.
+
+Example:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        title: "% Dups"
+```
+
+Properties:
+
+- **columns** (<code>Dict[str, <a href="#generalstatscolumnconfig">GeneralStatsColumnConfig</a>]</code>): Columns to show in general stats table. Keys are column IDs.
 
 ### GeneralStatsColumnConfig
 
@@ -2130,15 +3542,98 @@ general_stats_columns:
 
 Properties:
 
-- **ceiling** (`float`): Ceiling value
-- **description** (`str`): Column description
-- **floor** (`float`): Floor value
-- **format** (`str`): Number format
-- **hidden** (`bool`): Whether column is hidden by default
-- **max** (`float`): Maximum value
-- **min** (`float`): Minimum value
-- **namespace** (`str`): Column namespace
-- **placement** (`float`): Column placement order
-- **scale** (`str`): Color scale
-- **shared_key** (`str`): Shared key name
-- **title** (`str`): Column title
+- **ceiling** (<code>float</code>): Ceiling value
+- **description** (<code>str</code>): Column description
+- **floor** (<code>float</code>): Floor value
+- **format** (<code>str</code>): Number format
+- **hidden** (<code>bool</code>): Whether column is hidden by default
+- **max** (<code>float</code>): Maximum value
+- **min** (<code>float</code>): Minimum value
+- **namespace** (<code>str</code>): Column namespace
+- **placement** (<code>float</code>): Column placement order
+- **scale** (<code>str</code>): Color scale
+- **shared_key** (<code>str</code>): Shared key name
+- **title** (<code>str</code>): Column title
+
+### CondFormattingRule
+
+One conditional-formatting comparison for a table cell.
+
+Used in the `table_cond_formatting_rules` configuration option. Each rule is a dict with exactly one operator key paired with its comparison value. String operators (`s_eq`, `s_ne`, `s_contains`) compare case-insensitively; numeric operators (`eq`, `ne`, `gt`, `lt`, `ge`, `le`) cast both sides via `float()`.
+
+Example:
+
+```yaml
+table_cond_formatting_rules:
+  all_columns:
+    pass:
+      - s_eq: "pass"
+    fail:
+      - gt: 50
+```
+
+Properties:
+
+- **eq** (<code>Union[float, int]</code>): Numeric equality
+- **ge** (<code>Union[float, int]</code>): Greater than or equal to
+- **gt** (<code>Union[float, int]</code>): Strictly greater than
+- **le** (<code>Union[float, int]</code>): Less than or equal to
+- **lt** (<code>Union[float, int]</code>): Strictly less than
+- **ne** (<code>Union[float, int]</code>): Numeric inequality
+- **s_contains** (<code>str</code>): Case-insensitive substring match
+- **s_eq** (<code>str</code>): Case-insensitive string equality
+- **s_ne** (<code>str</code>): Case-insensitive string inequality
+
+### ModuleOverride
+
+Per-module override values for `top_modules` and `module_order` entries.
+
+Each entry in `top_modules` / `module_order` is either a module ID (string) or a single-key dict mapping the module ID to a `ModuleOverride` dict.
+
+Example:
+
+```yaml
+module_order:
+  - fastqc:
+      name: "FastQC (trimmed)"
+      anchor: "fastqc_trimmed"
+      path_filters:
+        - "*_trimmed*"
+```
+
+Properties:
+
+- **anchor** (<code>str</code>): HTML/section anchor for this module run
+- **comment** (<code>str</code>): Comment text rendered as markdown under the heading
+- **custom_config** (<code>Dict[str, Any]</code>): Module-specific config values merged into config.<module_id>
+- **doi** (<code>Union[str, List[str]]</code>): DOI or list of DOIs
+- **extra** (<code>str</code>): Extra HTML appended after the intro
+- **generalstats** (<code>bool</code>): Set to false to suppress this module's general-stats columns
+- **href** (<code>Union[str, List[str]]</code>): Tool homepage URL, or list of URLs
+- **info** (<code>str</code>): Intro text rendered as markdown under the section heading
+- **name** (<code>str</code>): Display name for this module run
+- **path_filters** (<code>Union[str, List[str]]</code>): Glob patterns restricting which files this module run sees
+- **path_filters_exclude** (<code>Union[str, List[str]]</code>): Glob patterns excluding files from this module run
+
+### SectionOrderOverride
+
+Override dict accepted as a `report_section_order` value.
+
+Each value in `report_section_order` is either the literal string `"remove"` (drops the section) or a `SectionOrderOverride` dict combining any of `order`, `before` and `after`.
+
+Example:
+
+```yaml
+report_section_order:
+  fastqc:
+    order: -10
+  custom_content-my-section:
+    before: fastqc
+  mod_section_2: remove
+```
+
+Properties:
+
+- **after** (<code>str</code>): Section/module/anchor ID to position this entry after
+- **before** (<code>str</code>): Section/module/anchor ID to position this entry before
+- **order** (<code>int</code>): Explicit numeric order

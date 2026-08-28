@@ -4,9 +4,14 @@ Script to generate JSON Schema for MultiQC config files.
 """
 
 import json
+import sys
 from pathlib import Path
 
-from multiqc.utils.config_schema import config_to_schema
+# Prefer the repo's source tree over any installed `multiqc` in site-packages
+# so this script always reflects local edits, with or without `pip install -e`.
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from multiqc.utils.config_schema import config_to_schema  # noqa: E402
 
 
 def main():

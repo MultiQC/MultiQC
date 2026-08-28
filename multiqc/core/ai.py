@@ -517,6 +517,13 @@ class AWSBedrockClient(Client):
         )
 
         response_body = json.loads(response["body"].read())
+        if (
+            "content" not in response_body
+            or len(response_body["content"]) != 1
+            or "text" not in response_body["content"][0]
+        ):
+            logger.error(f"bedrock response content: {response_body}")
+            raise ValueError("Unexpected bedrock response body")
         content = response_body["content"][0]["text"]  # Extract the assistant's response
         return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
@@ -547,7 +554,7 @@ class SeqeraClient(Client):
         self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
     ) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
-            f"{config.seqera_api_url}/internal-ai/query",
+            f"{config.seqera_api_url}/internal-ai/report-summary",
             headers={"Authorization": f"Bearer {self.api_key}"},
             body={
                 "message": self.wrap_details(prompt + "\n\n" + report_content),

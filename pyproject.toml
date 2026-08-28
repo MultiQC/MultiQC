@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "multiqc"
-version = "1.35dev"
+version = "1.36dev"
 dependencies = [
     "boto3",              # for aws bedrock ai support
     "click",
@@ -17,7 +17,9 @@ dependencies = [
     "packaging",
     "requests",
     "Pillow>=10",         # to add a logo into flat plots
-    "plotly>=5.18",
+    # plotly 6.1 dropped the kaleido v0 export backend and requires kaleido>=1
+    # (which needs a system Chrome). Cap until we migrate off kaleido 0.2.1.
+    "plotly>=5.18,<6.1",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",
@@ -139,6 +141,7 @@ clusterflow = "multiqc.modules.clusterflow:MultiqcModule"
 conpair = "multiqc.modules.conpair:MultiqcModule"
 cutadapt = "multiqc.modules.cutadapt:MultiqcModule"
 damageprofiler = "multiqc.modules.damageprofiler:MultiqcModule"
+deacon = "multiqc.modules.deacon:MultiqcModule"
 dedup = "multiqc.modules.dedup:MultiqcModule"
 deeptools = "multiqc.modules.deeptools:MultiqcModule"
 diamond = "multiqc.modules.diamond:MultiqcModule"
@@ -168,7 +171,9 @@ happy = "multiqc.modules.happy:MultiqcModule"
 hicexplorer = "multiqc.modules.hicexplorer:MultiqcModule"
 hicpro = "multiqc.modules.hicpro:MultiqcModule"
 hicup = "multiqc.modules.hicup:MultiqcModule"
+hicstuff = "multiqc.modules.hicstuff:MultiqcModule"
 hifiasm = "multiqc.modules.hifiasm:MultiqcModule"
+hifi_trimmer = "multiqc.modules.hifi_trimmer:MultiqcModule"
 hisat2 = "multiqc.modules.hisat2:MultiqcModule"
 homer = "multiqc.modules.homer:MultiqcModule"
 hops = "multiqc.modules.hops:MultiqcModule"
@@ -233,7 +238,9 @@ quast = "multiqc.modules.quast:MultiqcModule"
 rna_seqc = "multiqc.modules.rna_seqc:MultiqcModule"
 ribotish = "multiqc.modules.ribotish:MultiqcModule"
 ribowaltz = "multiqc.modules.ribowaltz:MultiqcModule"
+riker = "multiqc.modules.riker:MultiqcModule"
 rockhopper = "multiqc.modules.rockhopper:MultiqcModule"
+ribodetector = "multiqc.modules.ribodetector:MultiqcModule"
 rsem = "multiqc.modules.rsem:MultiqcModule"
 rseqc = "multiqc.modules.rseqc:MultiqcModule"
 salmon = "multiqc.modules.salmon:MultiqcModule"
@@ -249,6 +256,7 @@ seqwho = "multiqc.modules.seqwho:MultiqcModule"
 seqyclean = "multiqc.modules.seqyclean:MultiqcModule"
 sexdeterrmine = "multiqc.modules.sexdeterrmine:MultiqcModule"
 sickle = "multiqc.modules.sickle:MultiqcModule"
+sincei = "multiqc.modules.sincei:MultiqcModule"
 skewer = "multiqc.modules.skewer:MultiqcModule"
 slamdunk = "multiqc.modules.slamdunk:MultiqcModule"
 snippy = "multiqc.modules.snippy:MultiqcModule"

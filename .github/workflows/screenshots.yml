@@ -2,14 +2,22 @@ name: Docs screenshots
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   rich_codex:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
+      # Intentionally persists credentials: rich-codex below runs
+      # `git commit && git push` internally with no token input, so it
+      # relies on the checkout having persisted GITHUB_TOKEN.
       - name: Check out MultiQC code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
           cache: "pip"
@@ -24,7 +32,7 @@ jobs:
           mv test-data-main/ test-data/
 
       - name: Generate terminal images with rich-codex
-        uses: ewels/rich-codex@v1
+        uses: ewels/rich-codex@1af970c6b6850d5870fed9041ac7a6337940fdc3 # v1.3.1
         with:
           clean_img_paths: docs/images/screenshots/*.svg
           commit_changes: "true"

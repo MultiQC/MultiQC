@@ -6,6 +6,7 @@ import pytest
 
 from multiqc import config, report
 from multiqc.modules.samtools import MultiqcModule
+from multiqc.types import ColumnKey, SampleGroup, SectionKey
 from multiqc.utils import testing
 
 
@@ -75,3 +76,51 @@ def test_rep2(rep1, rep2):
         del res2[k]
 
     assert res1 == res2
+
+
+def _flagstat_report(total_passed: int, mapped_passed: int, total_failed: int, mapped_failed: int) -> str:
+    mapped_passed_pct = mapped_passed / total_passed * 100
+    mapped_failed_pct = mapped_failed / total_failed * 100
+    return f"""\
+{total_passed} + {total_failed} in total (QC-passed reads + QC-failed reads)
+0 + 0 secondary
+0 + 0 supplementary
+0 + 0 duplicates
+{mapped_passed} + {mapped_failed} mapped ({mapped_passed_pct:.2f}% : {mapped_failed_pct:.2f}%)
+{total_passed} + {total_failed} paired in sequencing
+{total_passed // 2} + {total_failed // 2} read1
+{total_passed // 2} + {total_failed // 2} read2
+{mapped_passed} + {mapped_failed} properly paired ({mapped_passed_pct:.2f}% : {mapped_failed_pct:.2f}%)
+{mapped_passed} + {mapped_failed} with itself and mate mapped
+0 + 0 singletons (0.00% : N/A)
+0 + 0 with mate mapped to a different chr
+0 + 0 with mate mapped to a different chr (mapQ>=5)
+"""
+
+
+def test_grouped_lanes_sum_mapped_reads_in_general_stats(tmp_path):
+    """Grouped lane-level flagstat reports should sum mapped reads."""
+    report.reset()
+    config.reset()
+
+    (tmp_path / "sample_L001.flagstat").write_text(
+        _flagstat_report(total_passed=100, mapped_passed=80, total_failed=20, mapped_failed=10)
+    )
+    (tmp_path / "sample_L002.flagstat").write_text(
+        _flagstat_report(total_passed=200, mapped_passed=150, total_failed=100, mapped_failed=50)
+    )
+
+    config.table_sample_merge = {
+        "L001": "_L001",
+        "L002": "_L002",
+    }
+    report.analysis_files = [tmp_path]
+    report.search_files(["samtools"])
+
+    MultiqcModule()
+
+    group_rows = report.general_stats_data[SectionKey("samtools")][SampleGroup("sample")]
+    assert group_rows[0].data[ColumnKey("mapped_passed")] == 230
+    assert group_rows[0].data[ColumnKey("total_passed")] == 300
+    assert group_rows[0].data[ColumnKey("flagstat_total")] == 420
+    assert group_rows[0].data[ColumnKey("mapped_passed_pct")] == pytest.approx(76.67, abs=0.01)

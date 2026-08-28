@@ -9,6 +9,8 @@ MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
+Most of the settings on this page live in `multiqc_config.yaml`. The [Config Wizard](../getting_started/config_wizard.md) helps you to build one in the browser with validation as you type.
+
 Note that much more extensive customisation of reports is possible using
 [custom templates](../development/templates.md).
 
@@ -45,10 +47,10 @@ show_analysis_paths: False
 show_analysis_time: False
 ```
 
-## Report Logo
+## Report Logo / Favicon
 
 To add your own custom logo to reports, you can add the following
-three lines to your MultiQC configuration file:
+lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
@@ -62,6 +64,16 @@ Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
 hover title text. Width allows you to adjust the logo size and dark
 lets you have an alternate variant shown when the report is in dark mode.
+
+If you like, you can also provide a custom favicon (the icon shown in the browser
+address bar):
+
+```yaml
+custom_favicon: "/abs/path/to/favicon.png"
+```
+
+Favicons and logos can be any of the following file formats:
+`.png`, `.svg`, `.ico`, `.gif`, `.jpg`, `.jpeg`, `.webp`.
 
 ## Project level information
 
@@ -574,10 +586,14 @@ The other available configuration options are:
 
 - `name`: Section name
 - `anchor`: Section report ID
-- `target`: Intro link text
-- `href`: Intro link URL
-- `info`: Intro text
-- `extra`: Additional HTML after intro.
+- `href`: Tool homepage URL (or list of URLs)
+- `doi`: DOI (or list of DOIs)
+- `info`: Intro text, rendered as markdown
+- `comment`: Comment text, rendered as markdown
+- `extra`: Additional HTML after intro
+- `path_filters`: Glob patterns; only files matching these are used by this module run
+- `path_filters_exclude`: Glob patterns; files matching these are excluded
+- `generalstats`: Set to `false` to suppress this module's General Statistics columns
 - `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
@@ -589,7 +605,6 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      target: ""
       path_filters:
         - "*_1_trimmed_fastqc.zip"
   - cutadapt
@@ -910,6 +925,8 @@ The following comparison operators are available:
 - `ne` - Value does not equal
 - `gt` - Value is greater than
 - `lt` - Value is less than
+- `ge` - Value is greater than or equal to
+- `le` - Value is less than or equal to
 
 To have matches for a specific table or column, use that ID instead of `all_columns`.
 

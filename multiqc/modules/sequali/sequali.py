@@ -39,7 +39,7 @@ DUPLICATION_EXPLANATION = textwrap.dedent(
 )
 
 
-def avg_x_label(x_label: str):
+def avg_x_label(x_label: str) -> int:
     if "-" not in x_label:
         return int(x_label)
     min_x, max_x = x_label.split("-")
@@ -190,6 +190,13 @@ class MultiqcModule(BaseMultiqcModule):
         self.adapter_content_from_overlap(data)
 
     def sequali_general_stats(self, data):
+        def mean_read_quality(sample_dict):
+            quality_counts = sample_dict["per_sequence_quality_scores"]["average_quality_counts"]
+            qualities = [int(q) for q in sample_dict["per_sequence_quality_scores"]["x_labels"]]
+            prod = sum(q * c for q, c in zip(qualities, quality_counts))
+            total_counts = sum(quality_counts)
+            return prod / total_counts
+
         general_stats = dict()
         for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
@@ -198,7 +205,10 @@ class MultiqcModule(BaseMultiqcModule):
                     100 * summary["total_gc_bases"] / max(summary["total_bases"] - summary["total_n_bases"], 1)
                 ),
                 "sequali_mean_sequence_length": summary["mean_length"],
+                "sequali_n50_length": sample_dict["sequence_length_distribution"].get("n50", None),
                 "sequali_total_reads": summary["total_reads"],
+                "sequali_total_bases": summary["total_bases"],
+                "sequali_mean_quality": mean_read_quality(sample_dict),
                 "sequali_duplication_percentage": (1 - sample_dict["duplication_fractions"]["remaining_fraction"])
                 * 100,
             }
@@ -211,6 +221,8 @@ class MultiqcModule(BaseMultiqcModule):
                     stats_entry["sequali_insert_size_estimate"] = insert_size_estimate
 
             general_stats[sample_name] = stats_entry
+
+        hide_n50_length = any(entry.get("sequali_n50_length") is None for entry in general_stats.values())
         headers = {
             "sequali_gc_percentage": {
                 "title": "GC %",
@@ -238,6 +250,21 @@ class MultiqcModule(BaseMultiqcModule):
                 # Longer reads is considered better for long-read technologies.
                 # Use green to signal that.
                 "scale": "Greens",
+                # If N50 length is available for all samples, hide the mean length
+                # as it is less informative and can be redundant.
+                "hidden": not hide_n50_length,
+            },
+            "sequali_n50_length": {
+                "title": "N50 length",
+                "description": "N50 length of all sequences",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,.1f}",
+                "shared_key": "read_length",
+                # N50 read length was added in sequali v1.0.0
+                # shown in the general stats table if available.
+                "hidden": hide_n50_length,
+                "scale": "Blues",
             },
             "sequali_total_reads": {
                 "title": "Total reads",
@@ -250,6 +277,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # good quality has a distinct advantage:
                 # https://www.youtube.com/watch?v=Q2FzZSBD5LE
                 "scale": "Purples",
+            },
+            "sequali_total_bases": {
+                "title": "Total bases",
+                "description": f"Total Bases ({multiqc.config.base_count_desc})",
+                "shared_key": "base_count",
+                "scale": "Greys",
             },
             "sequali_duplication_percentage": {
                 "title": "% est. dups.",
@@ -270,6 +303,12 @@ class MultiqcModule(BaseMultiqcModule):
                 # Larger insert sizes could be good or bad depending on context
                 # Use a neutral color scale
                 "scale": "Blues",
+            },
+            "sequali_mean_quality": {
+                "title": "Mean quality",
+                "description": "Mean read quality (Phred score)",
+                "min": 0,
+                "scale": "RdYlGn",
             },
         }
         self.general_stats_addcols(general_stats, headers)
@@ -379,20 +418,38 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "per_sequence_quality_scores_read2"
-            plot_data = {}
+            plot_data = [{}, {}]  # First dict is for percentage, second for count
             for sample_name, sample_dict in data.items():
                 qual_dict = sample_dict.get(key)
                 if qual_dict is None:
                     continue
                 x_labels = qual_dict["x_labels"]
                 average_quality_counts = qual_dict["average_quality_counts"]
-                plot_data[sample_name] = {int(phred): count for phred, count in zip(x_labels, average_quality_counts)}
+                plot_data[1][sample_name] = {
+                    int(phred): count for phred, count in zip(x_labels, average_quality_counts)
+                }
+                total_count = max(sum(average_quality_counts), 1)
+                plot_data[0][sample_name] = {
+                    int(phred): (100 * count / total_count) for phred, count in zip(x_labels, average_quality_counts)
+                }
 
             plot_config = {
                 "id": "sequali_per_sequence_quality_scores_plot" + id_suffix,
                 "title": "Sequali: Per Sequence Average Quality Scores" + title_suffix,
-                "ylab": "Number of Sequences",
-                "xlab": "Mean Sequence Quality (Phred Score)",
+                "data_labels": [
+                    {
+                        "name": "Percentage",
+                        "ylab": "% of Sequences",
+                        "xlab": "Mean Sequence Quality (Phred Score)",
+                        "tt_label": "Q{point.x}: {point.y:.1f}%",
+                    },
+                    {
+                        "name": "Count",
+                        "ylab": "Number of Sequences",
+                        "xlab": "Mean Sequence Quality (Phred Score)",
+                        "tt_label": "Q{point.x}: {point.y:,.0f}",
+                    },
+                ],
                 "ymin": 0,
                 "xmin": 0,
             }
@@ -400,14 +457,14 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name="Per Sequence Average Quality Scores" + title_suffix,
                 anchor="sequali_per_sequence_quality_scores" + id_suffix,
-                description="The number of reads with average quality scores.",
+                description="The distribution of average read quality scores.",
                 helptext=textwrap.dedent(
                     """
                     Shows the quality score profile on a read level. As Illumina
-                    FASTQ files only utilize four different phred scores, the plot
+                    FASTQ files only utilize four different Phred scores, the plot
                     may look a bit erratic at times. Due to the logarithmic nature
                     of Phred scores, lower Phred scores have a more significant
-                    impact on the average quality as than higher phred scores.
+                    impact on the average quality than higher Phred scores.
                 """
                 )
                 + PHRED_SCORE_EXPLANATION,
@@ -487,7 +544,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "id": "sequali_per_sequence_gc_content_plot" + id_suffix,
                 "title": "Sequali: Per Sequence GC Content" + title_suffix,
                 "xlab": "% GC",
-                "ylab": "Percentage",
+                "ylab": "% of Sequences",
                 "ymin": 0,
                 "xmin": 0,
                 "xmax": 100,
@@ -519,18 +576,40 @@ class MultiqcModule(BaseMultiqcModule):
                 id_suffix = "_read2"
                 title_suffix = ": Read 2"
                 key = "sequence_length_distribution_read2"
-            plot_data = dict()
+            plot_data = [{}, {}]
             for sample_name, sample_dict in data.items():
                 seqlength_dict = sample_dict.get(key)
                 if seqlength_dict is None:
                     continue
-                x_labels = seqlength_dict["length_ranges"]
+                x_labels = [avg_x_label(x_label) for x_label in seqlength_dict["length_ranges"]]
                 counts = seqlength_dict["counts"]
-                plot_data[sample_name] = {avg_x_label(x_label): count for x_label, count in zip(x_labels, counts)}
+                total_bases = sum(count * x_label for x_label, count in zip(x_labels, counts))
+                total_bases = max(total_bases, 1)
+
+                plot_data[1][sample_name] = {x_label: count for x_label, count in zip(x_labels, counts)}
+                # Calculate percentage of bases in each length category for the percentage plot. This is more
+                # informative than percentage of sequences as it takes into account the amount of data (bases).
+                plot_data[0][sample_name] = {
+                    x_label: (100 * x_label * count / total_bases) for x_label, count in zip(x_labels, counts)
+                }
 
             plot_config = {
                 "id": "sequali_sequence_length_distribution_plot" + id_suffix,
                 "title": "Sequali: Sequence Length Distribution" + title_suffix,
+                "data_labels": [
+                    {
+                        "name": "Base density",
+                        "ylab": "% of Bases",
+                        "xlab": "Sequence Length (bp)",
+                        "tt_label": "{point.x} bp: {point.y:.1f}%",
+                    },
+                    {
+                        "name": "Sequences",
+                        "ylab": "Number of Sequences",
+                        "xlab": "Sequence Length (bp)",
+                        "tt_label": "{point.x} bp: {point.y:,.0f}",
+                    },
+                ],
                 "ylab": "Read Count",
                 "ymin": 0,
                 "xlab": "Sequence Length (bp)",
@@ -569,7 +648,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def insert_size_distribution_plot(self, data):
         """Plot showing insert size distribution from paired-end data"""
-        plot_data = {}
+        plot_data = [{}, {}]  # First dict is for percentage, second for count
         has_insert_size_data = False
 
         for sample_name, sample_dict in data.items():
@@ -585,7 +664,10 @@ class MultiqcModule(BaseMultiqcModule):
                         sample_data[i] = count
 
                 if sample_data:
-                    plot_data[sample_name] = sample_data
+                    total_counts = max(sum(sample_data.values()), 1)
+                    plot_data[0][sample_name] = {i: (100 * count / total_counts) for i, count in sample_data.items()}
+                    plot_data[1][sample_name] = sample_data
+
                     has_insert_size_data = True
 
         if not has_insert_size_data:
@@ -594,8 +676,20 @@ class MultiqcModule(BaseMultiqcModule):
         plot_config = {
             "id": "sequali_insert_size_distribution_plot",
             "title": "Sequali: Insert Size Distribution",
-            "ylab": "Number of Read Pairs",
-            "xlab": "Insert Size",
+            "data_labels": [
+                {
+                    "name": "Percentage",
+                    "ylab": "% of Read Pairs",
+                    "xlab": "Insert Size (bp)",
+                    "tt_label": "{point.x} bp: {point.y:.1f}%",
+                },
+                {
+                    "name": "Count",
+                    "ylab": "Number of Read Pairs",
+                    "xlab": "Insert Size (bp)",
+                    "tt_label": "{point.x} bp: {point.y:,.0f}",
+                },
+            ],
             "ymin": 0,
             "xmin": 0,
         }

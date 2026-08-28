@@ -1,6 +1,7 @@
 {
   "$defs": {
     "CleanPattern": {
+      "additionalProperties": false,
       "description": "Pattern for cleaning sample names",
       "properties": {
         "type": {
@@ -37,6 +38,149 @@
       },
       "required": ["pattern"],
       "title": "CleanPattern",
+      "type": "object"
+    },
+    "CondFormattingRule": {
+      "additionalProperties": false,
+      "description": "One conditional-formatting comparison for a table cell.\n\nA rule is a dict with exactly one operator key and its comparison value.\nEvaluated in ``multiqc/plots/table_object.py``. String operators are\ncase-insensitive substring/equality checks; numeric operators cast both\nsides via ``float()`` and silently skip on a parse error.",
+      "properties": {
+        "s_eq": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Case-insensitive string equality",
+          "title": "S Eq"
+        },
+        "s_ne": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Case-insensitive string inequality",
+          "title": "S Ne"
+        },
+        "s_contains": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Case-insensitive substring match",
+          "title": "S Contains"
+        },
+        "eq": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Numeric equality",
+          "title": "Eq"
+        },
+        "ne": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Numeric inequality",
+          "title": "Ne"
+        },
+        "gt": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Strictly greater than",
+          "title": "Gt"
+        },
+        "lt": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Strictly less than",
+          "title": "Lt"
+        },
+        "ge": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Greater than or equal to",
+          "title": "Ge"
+        },
+        "le": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Less than or equal to",
+          "title": "Le"
+        }
+      },
+      "title": "CondFormattingRule",
       "type": "object"
     },
     "GeneralStatsColumnConfig": {
@@ -203,6 +347,7 @@
       "type": "object"
     },
     "GeneralStatsModuleConfig": {
+      "additionalProperties": false,
       "description": "Configuration for a module's general stats columns",
       "properties": {
         "columns": {
@@ -217,7 +362,184 @@
       "title": "GeneralStatsModuleConfig",
       "type": "object"
     },
+    "ModuleOverride": {
+      "additionalProperties": false,
+      "description": "Per-module override values used inside ``module_order`` / ``top_modules`` entries.\n\nThe keys are exactly those read off ``self.mod_cust_config`` in\n``multiqc/base_module.py``: name, anchor, info, comment, extra, href, doi,\npath_filters, path_filters_exclude, generalstats, custom_config. Nothing\nelse is consumed (no iteration over the dict, no splat, no plugin hook),\nso ``extra=\"forbid\"`` is safe and surfaces typos like ``path_filter``.",
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Display name for this module run",
+          "title": "Name"
+        },
+        "anchor": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "HTML/section anchor for this module run",
+          "title": "Anchor"
+        },
+        "info": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Intro text rendered as markdown under the section heading",
+          "title": "Info"
+        },
+        "comment": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Comment text rendered as markdown under the heading",
+          "title": "Comment"
+        },
+        "extra": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Extra HTML appended after the intro",
+          "title": "Extra"
+        },
+        "href": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Tool homepage URL, or list of URLs",
+          "title": "Href"
+        },
+        "doi": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "DOI or list of DOIs",
+          "title": "Doi"
+        },
+        "path_filters": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Glob patterns restricting which files this module run sees",
+          "title": "Path Filters"
+        },
+        "path_filters_exclude": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Glob patterns excluding files from this module run",
+          "title": "Path Filters Exclude"
+        },
+        "generalstats": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Set to false to suppress this module's general-stats columns",
+          "title": "Generalstats"
+        },
+        "custom_config": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Module-specific config values merged into config.<module_id>",
+          "title": "Custom Config"
+        }
+      },
+      "title": "ModuleOverride",
+      "type": "object"
+    },
     "SearchPattern": {
+      "additionalProperties": false,
       "description": "Search pattern configuration for finding tool outputs",
       "properties": {
         "fn": {
@@ -401,6 +723,53 @@
       },
       "title": "SearchPattern",
       "type": "object"
+    },
+    "SectionOrderOverride": {
+      "additionalProperties": false,
+      "description": "Override dict accepted as a ``report_section_order`` value.\n\nAll three keys are independent and may be combined. ``order`` is an integer\n(default scheme starts at 10, increments by 10; lower numbers float to the\nbottom). ``before`` / ``after`` reference another section/module/anchor ID\nby string. Unknown IDs are silently skipped at runtime.",
+      "properties": {
+        "order": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Explicit numeric order",
+          "title": "Order"
+        },
+        "before": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Section/module/anchor ID to position this entry before",
+          "title": "Before"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Section/module/anchor ID to position this entry after",
+          "title": "After"
+        }
+      },
+      "title": "SectionOrderOverride",
+      "type": "object"
     }
   },
   "additionalProperties": true,
@@ -417,6 +786,7 @@
       ],
       "default": null,
       "description": "Title shown at the top of the report and used in the page title.",
+      "group": "Header text",
       "section": "Report Meta",
       "title": "Title"
     },
@@ -431,6 +801,7 @@
       ],
       "default": null,
       "description": "Subtitle shown under the report title. Plain text only.",
+      "group": "Header text",
       "section": "Report Meta",
       "title": "Subtitle"
     },
@@ -445,6 +816,7 @@
       ],
       "default": null,
       "description": "Paragraph shown under the title. Useful for adding context about the analysis.",
+      "group": "Header text",
       "multiline": true,
       "section": "Report Meta",
       "title": "Intro Text"
@@ -461,6 +833,7 @@
       "default": null,
       "description": "Free-text comment shown at the top of the report. HTML is allowed.",
       "examples": ["This report was generated from the RNA-seq pipeline on 2024-08-21."],
+      "group": "Header text",
       "multiline": true,
       "section": "Report Meta",
       "title": "Report Comment"
@@ -498,6 +871,7 @@
           }
         ]
       ],
+      "group": "Header text",
       "section": "Report Meta",
       "title": "Report Header Info"
     },
@@ -512,6 +886,7 @@
       ],
       "default": null,
       "description": "Show the absolute paths of analysed directories in the report header.",
+      "group": "Report generation info",
       "section": "Report Meta",
       "title": "Show Analysis Paths"
     },
@@ -526,13 +901,13 @@
       ],
       "default": null,
       "description": "Show the date and time the report was generated in the header.",
+      "group": "Report generation info",
       "section": "Report Meta",
       "title": "Show Analysis Time"
     },
     "template": {
       "anyOf": [
         {
-          "enum": ["default", "original", "simple", "sections", "gathered", "geo", "disco"],
           "type": "string"
         },
         {
@@ -540,12 +915,13 @@
         }
       ],
       "default": null,
-      "description": "Name of the report template.",
+      "description": "Name of the report template. Built-in templates: default, original, simple, sections, gathered, geo, disco. Plugin packages can register additional templates via the `multiqc.templates.v1` entry point.",
+      "examples": ["default"],
+      "group": "Template",
       "section": "Report Appearance",
       "title": "Template"
     },
     "template_dark_mode": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -556,8 +932,24 @@
       ],
       "default": null,
       "description": "Enable the dark mode toggle in the report template.",
+      "group": "Template",
       "section": "Report Appearance",
       "title": "Template Dark Mode"
+    },
+    "simple_output": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
+      "group": "Template",
+      "section": "Report Appearance",
+      "title": "Simple Output"
     },
     "custom_logo": {
       "anyOf": [
@@ -571,6 +963,7 @@
       "default": null,
       "description": "Path to an image to show at the top of the report, replacing the MultiQC logo.",
       "examples": ["/path/to/logo.png", "./assets/logo.svg"],
+      "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo"
     },
@@ -586,6 +979,7 @@
       "default": null,
       "description": "Path to an alternative logo for dark mode. Falls back to custom_logo if unset.",
       "examples": ["./assets/logo_dark.svg"],
+      "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Dark"
     },
@@ -601,6 +995,7 @@
       "default": null,
       "description": "URL the custom logo links to when clicked.",
       "examples": ["https://www.scilifelab.se"],
+      "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Url"
     },
@@ -616,6 +1011,7 @@
       "default": null,
       "description": "Tooltip text shown when hovering over the custom logo.",
       "examples": ["Our institute name"],
+      "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Title"
     },
@@ -632,8 +1028,25 @@
       "default": null,
       "description": "Logo width in pixels. Height scales proportionally.",
       "examples": [200],
+      "group": "Logo",
       "section": "Report Appearance",
       "title": "Custom Logo Width"
+    },
+    "custom_favicon": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Path to a custom favicon image to show in the browser tab.",
+      "examples": ["/path/to/favicon.ico", "./assets/favicon.png"],
+      "group": "Branding",
+      "section": "Report Appearance",
+      "title": "Custom Favicon"
     },
     "custom_css_files": {
       "anyOf": [
@@ -649,23 +1062,10 @@
       ],
       "default": null,
       "description": "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
-      "examples": [["./assets/custom.css", "./assets/branding.css"]],
+      "examples": [["./assets/custom.css", "/path/to/branding.css"]],
+      "group": "Branding",
       "section": "Report Appearance",
       "title": "Custom Css Files"
-    },
-    "simple_output": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Render a minimal HTML report without the toolbox or interactive widgets. Useful for very large reports.",
-      "section": "Report Appearance",
-      "title": "Simple Output"
     },
     "custom_content": {
       "anyOf": [
@@ -699,11 +1099,11 @@
           "order": ["my-section-id", "my-other-section-id"]
         }
       ],
+      "group": "Custom content",
       "section": "Report Contents",
       "title": "Custom Content"
     },
     "custom_content_modules": {
-      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -717,6 +1117,7 @@
       ],
       "default": null,
       "description": "Extra module IDs whose output should be parsed as custom content.",
+      "group": "Custom content",
       "section": "Report Contents",
       "title": "Custom Content Modules"
     },
@@ -732,6 +1133,7 @@
       ],
       "default": null,
       "description": "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer splitting the metadata and the data across two top-level keys.",
+      "group": "Custom content",
       "section": "Report Contents",
       "title": "Custom Data"
     },
@@ -745,10 +1147,7 @@
               },
               {
                 "additionalProperties": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
-                  "type": "object"
+                  "$ref": "#/$defs/ModuleOverride"
                 },
                 "type": "object"
               }
@@ -763,6 +1162,7 @@
       "default": null,
       "description": "Module IDs to render before module_order. Useful for pinning a module to the top regardless of where it appears in module_order. Same shape as module_order entries.",
       "examples": [["fastqc", "cutadapt"]],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Top Modules"
     },
@@ -776,20 +1176,7 @@
               },
               {
                 "additionalProperties": {
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "items": {
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    ]
-                  },
-                  "type": "object"
+                  "$ref": "#/$defs/ModuleOverride"
                 },
                 "type": "object"
               }
@@ -802,7 +1189,7 @@
         }
       ],
       "default": null,
-      "description": "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, path_filters).",
+      "description": "Order in which modules appear in the report. Each entry is either a module ID, or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, path_filters, path_filters_exclude, generalstats, custom_config).",
       "examples": [
         [
           "fastqc",
@@ -812,9 +1199,16 @@
               "path_filters": ["*_trimmed*"]
             }
           },
+          {
+            "fastqc": {
+              "generalstats": false,
+              "name": "FastQC (raw)"
+            }
+          },
           "cutadapt"
         ]
       ],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Module Order"
     },
@@ -833,6 +1227,7 @@
       "default": null,
       "description": "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
       "examples": [["fastqc", "cutadapt", "samtools"]],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Run Modules"
     },
@@ -851,6 +1246,7 @@
       "default": null,
       "description": "Module IDs to skip (mirror of the --exclude CLI flag).",
       "examples": [["fastqc"]],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Exclude Modules"
     },
@@ -869,13 +1265,24 @@
       "default": null,
       "description": "Module sections to hide. Use the section anchor as it appears in the URL.",
       "examples": [["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Remove Sections"
     },
     "report_section_order": {
       "anyOf": [
         {
-          "additionalProperties": true,
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "const": "remove",
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/SectionOrderOverride"
+              }
+            ]
+          },
           "type": "object"
         },
         {
@@ -883,7 +1290,7 @@
         }
       ],
       "default": null,
-      "description": "Reorder, group or hide report sections by ID. Values can be a position string ('before'/'after'), an explicit order number, or a dict of overrides. See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.",
+      "description": "Reorder, group or hide report sections by ID. Values are either the literal string 'remove' (drops the section) or a dict with any combination of `order` (int), `before` (str) and `after` (str). See the [customisation docs](https://docs.seqera.io/multiqc/reports/customisation#order-of-module-and-module-subsection-output) for the full grammar.",
       "examples": [
         {
           "custom_content-my-section": {
@@ -894,6 +1301,7 @@
           }
         }
       ],
+      "group": "Module ordering",
       "section": "Report Contents",
       "title": "Report Section Order"
     },
@@ -917,11 +1325,11 @@
           "samtools": "Reviewed by *Phil* on 2024-08-21."
         }
       ],
+      "group": "Section comments + indicators",
       "section": "Report Contents",
       "title": "Section Comments"
     },
     "section_status_checks": {
-      "advanced": true,
       "anyOf": [
         {
           "additionalProperties": {
@@ -953,6 +1361,7 @@
           }
         }
       ],
+      "group": "Section comments + indicators",
       "section": "Report Contents",
       "title": "Section Status Checks"
     },
@@ -967,6 +1376,7 @@
       ],
       "default": null,
       "description": "Overwrite existing output files without prompting.",
+      "group": "Report file",
       "section": "Output Options",
       "title": "Force"
     },
@@ -981,8 +1391,54 @@
       ],
       "default": null,
       "description": "Filename for the generated HTML report. Defaults to multiqc_report.html.",
+      "group": "Report file",
       "section": "Output Options",
       "title": "Output Fn Name"
+    },
+    "make_report": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Generate the HTML report. Set to false to only produce data files.",
+      "group": "Report file",
+      "section": "Output Options",
+      "title": "Make Report"
+    },
+    "make_data_dir": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Write parsed data as files alongside the report.",
+      "group": "Data files",
+      "section": "Output Options",
+      "title": "Make Data Dir"
+    },
+    "zip_data_dir": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Compress the data directory into a single .zip file.",
+      "group": "Data files",
+      "section": "Output Options",
+      "title": "Zip Data Dir"
     },
     "data_dir_name": {
       "anyOf": [
@@ -995,22 +1451,9 @@
       ],
       "default": null,
       "description": "Name of the directory written alongside the report holding parsed data. Defaults to multiqc_data.",
+      "group": "Data files",
       "section": "Output Options",
       "title": "Data Dir Name"
-    },
-    "plots_dir_name": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
-      "section": "Output Options",
-      "title": "Plots Dir Name"
     },
     "data_format": {
       "anyOf": [
@@ -1024,11 +1467,11 @@
       ],
       "default": null,
       "description": "Format used when writing parsed data files.",
+      "group": "Data files",
       "section": "Output Options",
       "title": "Data Format"
     },
     "data_format_extensions": {
-      "advanced": true,
       "anyOf": [
         {
           "additionalProperties": {
@@ -1049,11 +1492,11 @@
           "yaml": "yml"
         }
       ],
+      "group": "Data files",
       "section": "Output Options",
       "title": "Data Format Extensions"
     },
     "parquet_format": {
-      "advanced": true,
       "anyOf": [
         {
           "enum": ["long", "wide"],
@@ -1065,39 +1508,11 @@
       ],
       "default": null,
       "description": "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), easier for analytics but can hit column limits or mixed-type issues.",
+      "group": "Data files",
       "section": "Output Options",
       "title": "Parquet Format"
     },
-    "make_data_dir": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Write parsed data as files alongside the report.",
-      "section": "Output Options",
-      "title": "Make Data Dir"
-    },
-    "zip_data_dir": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Compress the data directory into a single .zip file.",
-      "section": "Output Options",
-      "title": "Zip Data Dir"
-    },
     "data_dump_file": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -1108,11 +1523,11 @@
       ],
       "default": null,
       "description": "Write a single JSON file containing all parsed data, for re-running MultiQC later.",
+      "group": "Data dump",
       "section": "Output Options",
       "title": "Data Dump File"
     },
     "data_dump_file_write_raw": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -1123,6 +1538,7 @@
       ],
       "default": null,
       "description": "Include raw values (before any normalisation or filtering) in the dumped JSON.",
+      "group": "Data dump",
       "section": "Output Options",
       "title": "Data Dump File Write Raw"
     },
@@ -1137,6 +1553,7 @@
       ],
       "default": null,
       "description": "Save each plot as a static image (formats set by export_plot_formats).",
+      "group": "Plot export",
       "section": "Output Options",
       "title": "Export Plots"
     },
@@ -1155,12 +1572,14 @@
       ],
       "default": null,
       "description": "Image formats to export when export_plots is on.",
+      "group": "Plot export",
       "section": "Output Options",
       "title": "Export Plot Formats"
     },
     "export_plots_timeout": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1169,22 +1588,24 @@
       ],
       "default": null,
       "description": "Timeout for exporting each plot, in seconds.",
+      "group": "Plot export",
       "section": "Output Options",
       "title": "Export Plots Timeout"
     },
-    "make_report": {
+    "plots_dir_name": {
       "anyOf": [
         {
-          "type": "boolean"
+          "type": "string"
         },
         {
           "type": "null"
         }
       ],
       "default": null,
-      "description": "Generate the HTML report. Set to false to only produce data files.",
+      "description": "Directory for exported plot images when export_plots is on. Defaults to multiqc_plots.",
+      "group": "Plot export",
       "section": "Output Options",
-      "title": "Make Report"
+      "title": "Plots Dir Name"
     },
     "make_pdf": {
       "anyOf": [
@@ -1197,11 +1618,11 @@
       ],
       "default": null,
       "description": "Also generate a PDF version of the report. Requires Pandoc to be installed.",
+      "group": "PDF",
       "section": "Output Options",
       "title": "Make Pdf"
     },
     "pandoc_template": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -1212,6 +1633,7 @@
       ],
       "default": null,
       "description": "Path to a Pandoc template used when exporting the report as PDF.",
+      "group": "PDF",
       "section": "Output Options",
       "title": "Pandoc Template"
     },
@@ -1226,6 +1648,7 @@
       ],
       "default": null,
       "description": "Prefix sample names with their parent directory. Useful when the same sample name occurs in multiple directories.",
+      "group": "Prepend directory",
       "section": "Sample Names",
       "title": "Prepend Dirs"
     },
@@ -1240,11 +1663,11 @@
       ],
       "default": null,
       "description": "How many parent directories to include. 0 means all the way to the root.",
+      "group": "Prepend directory",
       "section": "Sample Names",
       "title": "Prepend Dirs Depth"
     },
     "prepend_dirs_sep": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -1256,6 +1679,7 @@
       "default": null,
       "description": "String inserted between directory names and the sample name. Defaults to '|'.",
       "examples": ["_", " - "],
+      "group": "Prepend directory",
       "section": "Sample Names",
       "title": "Prepend Dirs Sep"
     },
@@ -1270,6 +1694,7 @@
       ],
       "default": null,
       "description": "Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.",
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Fn Clean Sample Names"
     },
@@ -1304,6 +1729,7 @@
           }
         ]
       ],
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Extra Fn Clean Exts"
     },
@@ -1322,11 +1748,11 @@
       "default": null,
       "description": "Strings appended to the built-in trim list, without overriding defaults.",
       "examples": [["sample_", "_processed"]],
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Extra Fn Clean Trim"
     },
     "fn_clean_exts": {
-      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1358,11 +1784,11 @@
           }
         ]
       ],
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Fn Clean Exts"
     },
     "fn_clean_trim": {
-      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1377,6 +1803,7 @@
       "default": null,
       "description": "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
       "examples": [["_R1", "_R2", "_001"]],
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Fn Clean Trim"
     },
@@ -1397,6 +1824,7 @@
       ],
       "default": false,
       "description": "Use the source filename as the sample name instead of any name parsed from the log. Set to true for all modules, or to a list of module IDs / patterns to apply selectively.",
+      "group": "Name cleaning",
       "section": "Sample Names",
       "title": "Use Filename As Sample Name"
     },
@@ -1415,6 +1843,7 @@
       "default": null,
       "description": "Glob patterns. Matching samples are dropped from the report.",
       "examples": [["*_temp", "control_*"]],
+      "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Ignore"
     },
@@ -1433,11 +1862,11 @@
       "default": null,
       "description": "Regex patterns. Matching samples are dropped from the report.",
       "examples": [["^test_.*", ".*_neg_ctrl$"]],
+      "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Ignore Re"
     },
     "sample_names_only_include": {
-      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1452,11 +1881,11 @@
       "default": null,
       "description": "Glob patterns. If set, only matching samples are kept.",
       "examples": [["RNA_*", "Sample_??"]],
+      "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Only Include"
     },
     "sample_names_only_include_re": {
-      "advanced": true,
       "anyOf": [
         {
           "items": {
@@ -1471,6 +1900,7 @@
       "default": null,
       "description": "Regex patterns. If set, only matching samples are kept.",
       "examples": [["^WGS_[0-9]+$"]],
+      "group": "Ignore samples",
       "section": "Sample Names",
       "title": "Sample Names Only Include Re"
     },
@@ -1490,7 +1920,7 @@
         }
       ],
       "default": null,
-      "description": "Toolbox rename pairs. Each entry is a [from, to] pair, grouped by the buttons in sample_names_rename_buttons.",
+      "description": "Toolbox rename rows. Each entry is a list where the first element is the source sample name and each subsequent element is the rename for the corresponding button in `sample_names_rename_buttons` (so inner lists should have `1 + len(sample_names_rename_buttons)` elements).",
       "examples": [
         [
           ["SMP001", "Patient_A"],
@@ -1498,6 +1928,7 @@
           ["SMP003", "Patient_C"]
         ]
       ],
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Rename"
     },
@@ -1516,6 +1947,7 @@
       "default": null,
       "description": "Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
       "examples": [["Sample ID", "Patient ID", "Lane"]],
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Rename Buttons"
     },
@@ -1539,6 +1971,7 @@
           "_001": ""
         }
       ],
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Replace"
     },
@@ -1553,6 +1986,7 @@
       ],
       "default": null,
       "description": "Replace the entire sample name when the key matches anywhere in it.",
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Replace Complete"
     },
@@ -1567,6 +2001,7 @@
       ],
       "default": null,
       "description": "Only replace when the key matches the sample name exactly, not as a substring.",
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Replace Exact"
     },
@@ -1581,6 +2016,7 @@
       ],
       "default": null,
       "description": "Treat keys in sample_names_replace as regex patterns.",
+      "group": "Rename and replace",
       "section": "Sample Names",
       "title": "Sample Names Replace Regex"
     },
@@ -1595,6 +2031,7 @@
       ],
       "default": null,
       "description": "Treat the input path as a file containing a list of paths to scan, one per line.",
+      "group": "Input source",
       "section": "File Discovery",
       "title": "File List"
     },
@@ -1609,12 +2046,14 @@
       ],
       "default": null,
       "description": "Fail with an error if any module explicitly requested with `--module` has no log files found. Off by default, so missing inputs are skipped silently.",
+      "group": "Input source",
       "section": "File Discovery",
       "title": "Require Logs"
     },
     "log_filesize_limit": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1623,12 +2062,14 @@
       ],
       "default": null,
       "description": "Skip log files larger than this many bytes.",
+      "group": "Size limits",
       "section": "File Discovery",
       "title": "Log Filesize Limit"
     },
     "filesearch_lines_limit": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1637,11 +2078,11 @@
       ],
       "default": null,
       "description": "Stop reading a log file after this many lines.",
+      "group": "Size limits",
       "section": "File Discovery",
       "title": "Filesearch Lines Limit"
     },
     "ignore_symlinks": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -1652,6 +2093,7 @@
       ],
       "default": null,
       "description": "Skip symlinked files and directories during the file search.",
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Ignore Symlinks"
     },
@@ -1666,6 +2108,7 @@
       ],
       "default": null,
       "description": "Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.",
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Ignore Images"
     },
@@ -1684,6 +2127,7 @@
       "default": null,
       "description": "Glob patterns for directory names to skip entirely during the file search.",
       "examples": [["work", ".nextflow", "*_logs"]],
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Dirs"
     },
@@ -1702,6 +2146,7 @@
       "default": null,
       "description": "Glob patterns for paths to skip during the file search.",
       "examples": [["*/test_data/*", "*/.snakemake/*"]],
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Paths"
     },
@@ -1720,6 +2165,7 @@
       "default": null,
       "description": "Glob patterns for file names to skip during the file search.",
       "examples": [["*.bai", "*.bak", "*.tmp"]],
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Fn Ignore Files"
     },
@@ -1737,8 +2183,47 @@
       ],
       "default": null,
       "description": "Module IDs whose log files may be matched by multiple modules during the search.",
+      "group": "Skip patterns",
       "section": "File Discovery",
       "title": "Filesearch File Shared"
+    },
+    "sp": {
+      "anyOf": [
+        {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SearchPattern"
+              },
+              {
+                "items": {
+                  "$ref": "#/$defs/SearchPattern"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Override or add to the built-in module search patterns. Top-level keys are module IDs (eg. `fastqc`); values are a single `SearchPattern` dict or a list of them. See the SearchPattern definition below for the accepted fields.",
+      "examples": [
+        {
+          "fastqc/data": {
+            "fn": "fastqc_data.txt"
+          },
+          "fastqc/zip": {
+            "fn": "*_fastqc.zip"
+          }
+        }
+      ],
+      "group": "Search patterns",
+      "section": "File Discovery",
+      "title": "Sp"
     },
     "plots_force_flat": {
       "anyOf": [
@@ -1751,6 +2236,7 @@
       ],
       "default": null,
       "description": "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+      "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plots Force Flat"
     },
@@ -1765,26 +2251,14 @@
       ],
       "default": null,
       "description": "Force interactive plots even when MultiQC would normally fall back to flat images.",
+      "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plots Force Interactive"
-    },
-    "plots_export_font_scale": {
-      "anyOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
-      "section": "Plot Settings",
-      "title": "Plots Export Font Scale"
     },
     "plots_flat_numseries": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1793,12 +2267,14 @@
       ],
       "default": null,
       "description": "If a plot has more than this many series, MultiQC switches it from interactive to flat image.",
+      "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plots Flat Numseries"
     },
     "plots_defer_loading_numseries": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1807,11 +2283,11 @@
       ],
       "default": null,
       "description": "Plots with more than this many series start collapsed. The user clicks a button to render them.",
+      "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plots Defer Loading Numseries"
     },
     "num_datasets_plot_limit": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -1823,11 +2299,27 @@
       "default": null,
       "deprecated": true,
       "description": "Deprecated. Use `plots_defer_loading_numseries` instead.",
+      "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Num Datasets Plot Limit"
     },
+    "plots_export_font_scale": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Multiplier applied to font sizes in exported plot images. Bump up for publication-quality output.",
+      "group": "Appearance",
+      "section": "Plot Settings",
+      "title": "Plots Export Font Scale"
+    },
     "plot_font_family": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -1838,6 +2330,7 @@
       ],
       "default": null,
       "description": "CSS font-family for plot text. Defaults to a system font stack.",
+      "group": "Appearance",
       "section": "Plot Settings",
       "title": "Plot Font Family"
     },
@@ -1863,11 +2356,11 @@
           }
         }
       ],
+      "group": "Appearance",
       "section": "Plot Settings",
       "title": "Custom Plot Config"
     },
     "lineplot_number_of_points_to_hide_markers": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "integer"
@@ -1878,11 +2371,11 @@
       ],
       "default": null,
       "description": "Hide individual data point markers in line plots once the total point count across samples exceeds this.",
+      "group": "Appearance",
       "section": "Plot Settings",
       "title": "Lineplot Number Of Points To Hide Markers"
     },
     "barplot_legend_on_bottom": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -1893,6 +2386,7 @@
       ],
       "default": null,
       "description": "Place bar plot legends below the plot instead of to the side. Not recommended.",
+      "group": "Appearance",
       "section": "Plot Settings",
       "title": "Barplot Legend On Bottom"
     },
@@ -1907,12 +2401,14 @@
       ],
       "default": null,
       "description": "How boxplot data points are drawn. Use false to hide individual points.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Boxplot Boxpoints"
     },
     "box_min_threshold_outliers": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1921,12 +2417,14 @@
       ],
       "default": null,
       "description": "When a boxplot has more samples than this, only outlier points are drawn.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Box Min Threshold Outliers"
     },
     "box_min_threshold_no_points": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1935,12 +2433,14 @@
       ],
       "default": null,
       "description": "When a boxplot has more samples than this, no individual points are drawn.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Box Min Threshold No Points"
     },
     "violin_downsample_after": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1949,12 +2449,14 @@
       ],
       "default": null,
       "description": "Start downsampling violin plot data once the sample count exceeds this. Keeps rendering snappy.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Violin Downsample After"
     },
     "violin_min_threshold_outliers": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1963,12 +2465,14 @@
       ],
       "default": null,
       "description": "When a violin plot has more samples than this, only outlier points are drawn.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Violin Min Threshold Outliers"
     },
     "violin_min_threshold_no_points": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -1977,6 +2481,7 @@
       ],
       "default": null,
       "description": "When a violin plot has more samples than this, no individual points are drawn.",
+      "group": "Boxplot and violin",
       "section": "Plot Settings",
       "title": "Violin Min Threshold No Points"
     },
@@ -1995,6 +2500,7 @@
       "default": null,
       "description": "Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
       "examples": [["control", "treated"]],
+      "group": "Highlighting",
       "section": "Toolbox",
       "title": "Highlight Patterns"
     },
@@ -2011,8 +2517,9 @@
         }
       ],
       "default": null,
-      "description": "Hex colour for each entry in highlight_patterns, in the same order.",
+      "description": "CSS colour for each entry in highlight_patterns, in the same order. Accepts hex (`#377eb8`), named colours (`red`), or any CSS colour function (`rgb(...)`, `hsl(...)`).",
       "examples": [["#377eb8", "#e41a1c"]],
+      "group": "Highlighting",
       "section": "Toolbox",
       "title": "Highlight Colors"
     },
@@ -2027,6 +2534,7 @@
       ],
       "default": null,
       "description": "Treat highlight_patterns as regex instead of plain substring.",
+      "group": "Highlighting",
       "section": "Toolbox",
       "title": "Highlight Regex"
     },
@@ -2045,6 +2553,7 @@
       "default": null,
       "description": "Labels for the toolbox show/hide buttons. One per pattern set.",
       "examples": [["Tumour samples", "Normal samples"]],
+      "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Buttons"
     },
@@ -2078,6 +2587,7 @@
           ["_N_", "_normal_"]
         ]
       ],
+      "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Patterns"
     },
@@ -2085,6 +2595,7 @@
       "anyOf": [
         {
           "items": {
+            "enum": ["show", "hide", "show_re", "hide_re"],
             "type": "string"
           },
           "type": "array"
@@ -2094,8 +2605,9 @@
         }
       ],
       "default": null,
-      "description": "Action for each show/hide button: 'show' (only show matches) or 'hide' (hide matches).",
+      "description": "Action for each show/hide button: 'show' (only show matches), 'hide' (hide matches), or their `_re` variants which signal regex patterns (set by the TSV loader).",
       "examples": [["show", "show"]],
+      "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Mode"
     },
@@ -2121,11 +2633,11 @@
       "default": null,
       "description": "Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
       "examples": [[false, false]],
+      "group": "Show/hide buttons",
       "section": "Toolbox",
       "title": "Show Hide Regex"
     },
     "collapse_tables": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -2136,12 +2648,14 @@
       ],
       "default": null,
       "description": "Collapse module tables by default. Users click to expand.",
+      "group": "General",
       "section": "Table Settings",
       "title": "Collapse Tables"
     },
     "max_table_rows": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -2150,12 +2664,14 @@
       ],
       "default": null,
       "description": "Tables larger than this many rows are rendered as a violin plot instead.",
+      "group": "General",
       "section": "Table Settings",
       "title": "Max Table Rows"
     },
     "max_configurable_table_columns": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -2164,38 +2680,27 @@
       ],
       "default": null,
       "description": "Cap on the number of columns the user can toggle in the table-configure toolbox.",
+      "group": "General",
       "section": "Table Settings",
       "title": "Max Configurable Table Columns"
     },
     "decimalPoint_format": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Decimal-point character used in formatted numbers, eg. `.` (default) or `,`.",
+      "default": ".",
+      "description": "Decimal-point character used in formatted numbers. Defaults to `.`",
       "examples": [","],
+      "group": "General",
       "section": "Table Settings",
-      "title": "Decimalpoint Format"
+      "title": "Decimalpoint Format",
+      "type": "string"
     },
     "thousandsSep_format": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Thousands separator used in formatted numbers, eg. `,` (default), ` ` (space), or `.`",
-      "examples": [" ", "'"],
+      "default": " ",
+      "description": "Thousands separator used in formatted numbers. Defaults to a single space, which is rendered as a small non-breaking space.",
+      "examples": [","],
+      "group": "General",
       "section": "Table Settings",
-      "title": "Thousandssep Format"
+      "title": "Thousandssep Format",
+      "type": "string"
     },
     "general_stats_columns": {
       "additionalProperties": {
@@ -2217,6 +2722,7 @@
           }
         }
       ],
+      "group": "General Stats table",
       "section": "Table Settings",
       "title": "General Stats Columns",
       "type": "object"
@@ -2232,6 +2738,7 @@
       ],
       "default": null,
       "description": "Help text shown under the General Statistics heading at the top of the report.",
+      "group": "General Stats table",
       "multiline": true,
       "section": "Table Settings",
       "title": "General Stats Helptext"
@@ -2247,6 +2754,7 @@
       ],
       "default": null,
       "description": "Hide the General Statistics table at the top of the report.",
+      "group": "General Stats table",
       "section": "Table Settings",
       "title": "Skip Generalstats"
     },
@@ -2282,6 +2790,7 @@
           }
         }
       ],
+      "group": "Column overrides",
       "section": "Table Settings",
       "title": "Table Columns Name"
     },
@@ -2311,6 +2820,7 @@
           }
         }
       ],
+      "group": "Column overrides",
       "section": "Table Settings",
       "title": "Table Columns Placement"
     },
@@ -2347,8 +2857,36 @@
           }
         }
       ],
+      "group": "Column overrides",
       "section": "Table Settings",
       "title": "Table Columns Visible"
+    },
+    "custom_table_header_config": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Override table column config. Same shape as custom_plot_config but for table headers.",
+      "examples": [
+        {
+          "general_stats_table": {
+            "% Dups": {
+              "format": "{:,.1f}%",
+              "max": 100,
+              "min": 0
+            }
+          }
+        }
+      ],
+      "group": "Column overrides",
+      "section": "Table Settings",
+      "title": "Custom Table Header Config"
     },
     "table_cond_formatting_rules": {
       "anyOf": [
@@ -2356,20 +2894,7 @@
           "additionalProperties": {
             "additionalProperties": {
               "items": {
-                "additionalProperties": {
-                  "anyOf": [
-                    {
-                      "type": "string"
-                    },
-                    {
-                      "type": "integer"
-                    },
-                    {
-                      "type": "number"
-                    }
-                  ]
-                },
-                "type": "object"
+                "$ref": "#/$defs/CondFormattingRule"
               },
               "type": "array"
             },
@@ -2382,7 +2907,7 @@
         }
       ],
       "default": null,
-      "description": "Conditional cell formatting. Nested dicts map table ID to column ID to a list of rules (eg. {s_eq: pass} matches an exact value). See the customisation docs for the full grammar.",
+      "description": "Conditional cell formatting. Nested dicts map table ID (or the literal 'all_columns') to colour ID to a list of rules. Each rule has exactly one operator: string operators (s_eq, s_ne, s_contains) compare case-insensitively; numeric operators (eq, ne, gt, lt, ge, le) cast both sides to float. See the customisation docs for the full grammar.",
       "examples": [
         {
           "all_columns": {
@@ -2419,6 +2944,7 @@
           }
         }
       ],
+      "group": "Conditional formatting",
       "section": "Table Settings",
       "title": "Table Cond Formatting Rules"
     },
@@ -2452,64 +2978,35 @@
           }
         ]
       ],
+      "group": "Conditional formatting",
       "section": "Table Settings",
       "title": "Table Cond Formatting Colours"
     },
-    "custom_table_header_config": {
-      "anyOf": [
-        {
-          "additionalProperties": true,
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Override table column config. Same shape as custom_plot_config but for table headers.",
-      "examples": [
-        {
-          "general_stats_table": {
-            "% Dups": {
-              "format": "{:,.1f}%",
-              "max": 100,
-              "min": 0
-            }
-          }
-        }
-      ],
-      "section": "Table Settings",
-      "title": "Custom Table Header Config"
-    },
     "table_sample_merge": {
-      "advanced": true,
       "anyOf": [
         {
           "additionalProperties": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/CleanPattern"
+              },
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "$ref": "#/$defs/CleanPattern"
+                    }
+                  ]
                 },
-                {
-                  "additionalProperties": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "items": {
-                          "type": "string"
-                        },
-                        "type": "array"
-                      }
-                    ]
-                  },
-                  "type": "object"
-                }
-              ]
-            },
-            "type": "array"
+                "type": "array"
+              }
+            ]
           },
           "type": "object"
         },
@@ -2518,8 +3015,12 @@
         }
       ],
       "default": null,
-      "description": "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name, values are clean-pattern entries (string or {type, pattern}).",
+      "description": "Group samples by merging rows of supporting modules' tables, by collapsing samples that match a pattern. Keys are the merged group name; values are a clean-pattern entry (a string suffix, or a {type, pattern} dict) or a list of such entries.",
       "examples": [
+        {
+          "R1": "_1",
+          "R2": "_2"
+        },
         {
           "R1": [
             "_R1",
@@ -2537,13 +3038,42 @@
           ]
         }
       ],
+      "group": "Row merging",
       "section": "Table Settings",
       "title": "Table Sample Merge"
     },
     "software_versions": {
       "anyOf": [
         {
-          "additionalProperties": true,
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  ]
+                },
+                "type": "object"
+              }
+            ]
+          },
           "type": "object"
         },
         {
@@ -2551,14 +3081,24 @@
         }
       ],
       "default": null,
-      "description": "Manually specify software versions for the Software Versions section. Top-level keys are tool names.",
+      "description": "Manually specify software versions for the Software Versions section. Top-level keys are group or software names. Values are a single version string, a list of version strings, or a dict mapping software name to a version string or list of version strings (when the group contains multiple tools).",
       "examples": [
         {
           "bwa": "0.7.17",
           "fastqc": "0.12.1",
           "samtools": "1.20"
+        },
+        {
+          "quast": ["5.2.0", "5.1.0"]
+        },
+        {
+          "samtools": {
+            "htslib": "1.3",
+            "samtools": "1.11"
+          }
         }
       ],
+      "group": "Software Versions",
       "section": "Software Versions",
       "title": "Software Versions"
     },
@@ -2573,6 +3113,7 @@
       ],
       "default": null,
       "description": "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
+      "group": "Software Versions",
       "section": "Software Versions",
       "title": "Versions Table Group Header"
     },
@@ -2587,6 +3128,7 @@
       ],
       "default": null,
       "description": "Skip parsing software versions from module log files.",
+      "group": "Software Versions",
       "section": "Software Versions",
       "title": "Disable Version Detection"
     },
@@ -2601,12 +3143,14 @@
       ],
       "default": null,
       "description": "Hide the Software Versions section.",
+      "group": "Software Versions",
       "section": "Software Versions",
       "title": "Skip Versions Section"
     },
     "read_count_multiplier": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "number"
         },
         {
@@ -2615,7 +3159,8 @@
       ],
       "default": null,
       "description": "Multiplier applied to read counts before display. Default 0.000001 shows reads in millions.",
-      "examples": [0.001, 1],
+      "examples": [0.001],
+      "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Multiplier"
     },
@@ -2630,7 +3175,8 @@
       ],
       "default": null,
       "description": "Suffix shown after formatted read counts, eg. 'M' for millions.",
-      "examples": ["K", ""],
+      "examples": ["K"],
+      "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Prefix"
     },
@@ -2646,12 +3192,14 @@
       "default": null,
       "description": "Word used in plot/axis labels for read counts, eg. 'millions'.",
       "examples": ["thousands", "raw reads"],
+      "group": "Short reads",
       "section": "Read & Base Counts",
       "title": "Read Count Desc"
     },
     "long_read_count_multiplier": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "number"
         },
         {
@@ -2660,7 +3208,8 @@
       ],
       "default": null,
       "description": "Multiplier for long-read counts. Default 0.001 shows counts in thousands.",
-      "examples": [1e-6, 1],
+      "examples": [1e-6],
+      "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Multiplier"
     },
@@ -2675,7 +3224,8 @@
       ],
       "default": null,
       "description": "Suffix shown after formatted long-read counts, eg. 'K' for thousands.",
-      "examples": ["M", ""],
+      "examples": ["M"],
+      "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Prefix"
     },
@@ -2690,13 +3240,15 @@
       ],
       "default": null,
       "description": "Word used in labels for long-read counts, eg. 'thousands'.",
-      "examples": ["millions", "reads"],
+      "examples": ["millions"],
+      "group": "Long reads",
       "section": "Read & Base Counts",
       "title": "Long Read Count Desc"
     },
     "base_count_multiplier": {
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "number"
         },
         {
@@ -2704,8 +3256,9 @@
         }
       ],
       "default": null,
-      "description": "Multiplier for base counts. Default 0.000000001 shows bases in gigabases.",
-      "examples": [1e-6, 0.001],
+      "description": "Multiplier for base counts. Default 0.000001 shows bases in megabases.",
+      "examples": [0.001],
+      "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Multiplier"
     },
@@ -2719,8 +3272,9 @@
         }
       ],
       "default": null,
-      "description": "Suffix shown after formatted base counts, eg. 'Gb' for gigabases.",
-      "examples": ["Mb", "Kb"],
+      "description": "Suffix shown after formatted base counts, eg. 'Mb' for megabases.",
+      "examples": ["Kb"],
+      "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Prefix"
     },
@@ -2734,8 +3288,9 @@
         }
       ],
       "default": null,
-      "description": "Word used in labels for base counts, eg. 'gigabases'.",
-      "examples": ["megabases", "kilobases"],
+      "description": "Word used in labels for base counts, eg. 'megabases'.",
+      "examples": ["kilobases"],
+      "group": "Bases",
       "section": "Read & Base Counts",
       "title": "Base Count Desc"
     },
@@ -2750,6 +3305,7 @@
       ],
       "default": null,
       "description": "Generate a short AI-written summary at the top of the report.",
+      "group": "On/off",
       "section": "AI Summary",
       "title": "Ai Summary"
     },
@@ -2764,8 +3320,73 @@
       ],
       "default": null,
       "description": "Also generate a longer per-section AI summary. Requires ai_summary to be on.",
+      "group": "On/off",
       "section": "AI Summary",
       "title": "Ai Summary Full"
+    },
+    "no_ai": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
+      "group": "On/off",
+      "section": "AI Summary",
+      "title": "No Ai"
+    },
+    "ai_prompt_short": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+      "examples": ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
+      "group": "Prompts",
+      "multiline": true,
+      "section": "AI Summary",
+      "title": "Ai Prompt Short"
+    },
+    "ai_prompt_full": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Custom prompt prepended to the full-section AI summary request.",
+      "examples": ["Use bullet points and call out any sample that looks like an outlier."],
+      "group": "Prompts",
+      "multiline": true,
+      "section": "AI Summary",
+      "title": "Ai Prompt Full"
+    },
+    "ai_anonymize_samples": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Replace sample names with placeholders before sending data to the AI provider.",
+      "group": "Privacy",
+      "section": "AI Summary",
+      "title": "Ai Anonymize Samples"
     },
     "ai_provider": {
       "anyOf": [
@@ -2779,6 +3400,7 @@
       ],
       "default": null,
       "description": "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
+      "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Provider"
     },
@@ -2794,6 +3416,7 @@
       "default": null,
       "description": "Model name. Provider-specific.",
       "examples": ["gpt-4o", "claude-sonnet-4-5."],
+      "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Model"
     },
@@ -2809,11 +3432,11 @@
       "default": null,
       "description": "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
       "examples": ["http://localhost:11434/v1", "https://api.example.com/v1"],
+      "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Custom Endpoint"
     },
     "ai_auth_type": {
-      "advanced": true,
       "anyOf": [
         {
           "enum": ["bearer", "api-key"],
@@ -2825,13 +3448,44 @@
       ],
       "default": null,
       "description": "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+      "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Auth Type"
     },
-    "ai_retries": {
-      "advanced": true,
+    "seqera_website": {
       "anyOf": [
         {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Base URL used for Seqera Platform links in the report.",
+      "group": "Provider",
+      "section": "AI Summary",
+      "title": "Seqera Website"
+    },
+    "seqera_api_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Base URL for the Seqera Platform API. Defaults to the public instance.",
+      "group": "Provider",
+      "section": "AI Summary",
+      "title": "Seqera Api Url"
+    },
+    "ai_retries": {
+      "anyOf": [
+        {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -2840,11 +3494,11 @@
       ],
       "default": null,
       "description": "Number of times to retry an AI request on transient errors.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Retries"
     },
     "ai_extra_query_options": {
-      "advanced": true,
       "anyOf": [
         {
           "additionalProperties": true,
@@ -2862,11 +3516,11 @@
           "top_p": 0.9
         }
       ],
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Extra Query Options"
     },
     "ai_custom_context_window": {
-      "advanced": true,
       "anyOf": [
         {
           "exclusiveMinimum": 0,
@@ -2878,13 +3532,14 @@
       ],
       "default": null,
       "description": "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Custom Context Window"
     },
     "ai_max_completion_tokens": {
-      "advanced": true,
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -2893,11 +3548,11 @@
       ],
       "default": null,
       "description": "Maximum completion tokens for OpenAI reasoning models.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Max Completion Tokens"
     },
     "ai_reasoning_effort": {
-      "advanced": true,
       "anyOf": [
         {
           "enum": ["low", "medium", "high"],
@@ -2909,11 +3564,11 @@
       ],
       "default": null,
       "description": "Reasoning effort for OpenAI reasoning models.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Reasoning Effort"
     },
     "ai_extended_thinking": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -2924,13 +3579,14 @@
       ],
       "default": null,
       "description": "Enable extended thinking on Anthropic Claude models that support it.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Extended Thinking"
     },
     "ai_thinking_budget_tokens": {
-      "advanced": true,
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -2939,71 +3595,11 @@
       ],
       "default": null,
       "description": "Token budget for Anthropic extended thinking when enabled.",
+      "group": "Tuning",
       "section": "AI Summary",
       "title": "Ai Thinking Budget Tokens"
     },
-    "ai_prompt_short": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
-      "examples": ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
-      "multiline": true,
-      "section": "AI Summary",
-      "title": "Ai Prompt Short"
-    },
-    "ai_prompt_full": {
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Custom prompt prepended to the full-section AI summary request.",
-      "examples": ["Use bullet points and call out any sample that looks like an outlier."],
-      "multiline": true,
-      "section": "AI Summary",
-      "title": "Ai Prompt Full"
-    },
-    "no_ai": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
-      "section": "AI Summary",
-      "title": "No Ai"
-    },
-    "ai_anonymize_samples": {
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Replace sample names with placeholders before sending data to the AI provider.",
-      "section": "AI Summary",
-      "title": "Ai Anonymize Samples"
-    },
     "megaqc_url": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -3014,11 +3610,11 @@
       ],
       "default": null,
       "description": "URL of a MegaQC instance to upload report data to after generation.",
-      "section": "MegaQC Integration",
+      "group": "MegaQC Integration",
+      "section": "MegaQC",
       "title": "Megaqc Url"
     },
     "megaqc_access_token": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -3029,13 +3625,14 @@
       ],
       "default": null,
       "description": "Auth token for the MegaQC instance.",
-      "section": "MegaQC Integration",
+      "group": "MegaQC Integration",
+      "section": "MegaQC",
       "title": "Megaqc Access Token"
     },
     "megaqc_timeout": {
-      "advanced": true,
       "anyOf": [
         {
+          "exclusiveMinimum": 0,
           "type": "integer"
         },
         {
@@ -3044,11 +3641,11 @@
       ],
       "default": null,
       "description": "Upload timeout in seconds when posting to MegaQC.",
-      "section": "MegaQC Integration",
+      "group": "MegaQC Integration",
+      "section": "MegaQC",
       "title": "Megaqc Timeout"
     },
     "megaqc_upload": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3059,38 +3656,9 @@
       ],
       "default": null,
       "description": "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
-      "section": "MegaQC Integration",
+      "group": "MegaQC Integration",
+      "section": "MegaQC",
       "title": "Megaqc Upload"
-    },
-    "seqera_website": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Base URL used for Seqera Platform links in the report.",
-      "section": "Seqera Integration",
-      "title": "Seqera Website"
-    },
-    "seqera_api_url": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Base URL for the Seqera Platform API. Defaults to the public instance.",
-      "section": "Seqera Integration",
-      "title": "Seqera Api Url"
     },
     "profile_runtime": {
       "anyOf": [
@@ -3103,11 +3671,11 @@
       ],
       "default": null,
       "description": "Time each module and include the breakdown in the report.",
+      "group": "Profiling",
       "section": "Performance & Debugging",
       "title": "Profile Runtime"
     },
     "profile_memory": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3118,6 +3686,7 @@
       ],
       "default": null,
       "description": "Track peak memory per module. Adds runtime overhead.",
+      "group": "Profiling",
       "section": "Performance & Debugging",
       "title": "Profile Memory"
     },
@@ -3132,6 +3701,7 @@
       ],
       "default": null,
       "description": "Print extra debug log messages to the terminal.",
+      "group": "Logging",
       "section": "Performance & Debugging",
       "title": "Verbose"
     },
@@ -3146,6 +3716,7 @@
       ],
       "default": null,
       "description": "Disable ANSI colour codes in terminal output.",
+      "group": "Logging",
       "section": "Performance & Debugging",
       "title": "No Ansi"
     },
@@ -3160,8 +3731,24 @@
       ],
       "default": null,
       "description": "Suppress non-essential log messages.",
+      "group": "Logging",
       "section": "Performance & Debugging",
       "title": "Quiet"
+    },
+    "strict": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Treat module warnings as errors. Stricter than lint.",
+      "group": "Linting",
+      "section": "Performance & Debugging",
+      "title": "Strict"
     },
     "lint": {
       "anyOf": [
@@ -3175,26 +3762,11 @@
       "default": null,
       "deprecated": true,
       "description": "Deprecated. Run module linting and fail the build on issues. Used in MultiQC's own tests, rarely useful otherwise.",
+      "group": "Linting",
       "section": "Performance & Debugging",
       "title": "Lint"
     },
-    "strict": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Treat module warnings as errors. Stricter than lint.",
-      "section": "Performance & Debugging",
-      "title": "Strict"
-    },
     "development": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3204,12 +3776,12 @@
         }
       ],
       "default": null,
-      "description": "Enable developer-mode features such as live JS reloading. Internal use.",
+      "description": "Enable developer-mode features such as live JS reloading. For internal use.",
+      "group": "Developer",
       "section": "Performance & Debugging",
       "title": "Development"
     },
     "report_readerrors": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "boolean"
@@ -3220,8 +3792,24 @@
       ],
       "default": null,
       "description": "Surface file read errors in the log instead of silently skipping them.",
+      "group": "Developer",
       "section": "Performance & Debugging",
       "title": "Report Readerrors"
+    },
+    "preserve_module_raw_data": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
+      "group": "Developer",
+      "section": "Performance & Debugging",
+      "title": "Preserve Module Raw Data"
     },
     "no_version_check": {
       "anyOf": [
@@ -3234,11 +3822,11 @@
       ],
       "default": null,
       "description": "Skip the network check for newer MultiQC versions on startup.",
+      "group": "Version check",
       "section": "Performance & Debugging",
       "title": "No Version Check"
     },
     "version_check_url": {
-      "advanced": true,
       "anyOf": [
         {
           "type": "string"
@@ -3249,49 +3837,9 @@
       ],
       "default": null,
       "description": "URL queried by MultiQC's own update check. Set to override the default endpoint.",
+      "group": "Version check",
       "section": "Performance & Debugging",
       "title": "Version Check Url"
-    },
-    "preserve_module_raw_data": {
-      "advanced": true,
-      "anyOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Keep each module's raw parsed data in memory after report generation. Used by Python API consumers.",
-      "section": "Performance & Debugging",
-      "title": "Preserve Module Raw Data"
-    },
-    "sp": {
-      "anyOf": [
-        {
-          "additionalProperties": {
-            "anyOf": [
-              {
-                "$ref": "#/$defs/SearchPattern"
-              },
-              {
-                "items": {
-                  "$ref": "#/$defs/SearchPattern"
-                },
-                "type": "array"
-              }
-            ]
-          },
-          "type": "object"
-        },
-        {
-          "type": "null"
-        }
-      ],
-      "default": null,
-      "description": "Search patterns for finding tool outputs",
-      "title": "Sp"
     }
   },
   "title": "MultiQCConfig",
