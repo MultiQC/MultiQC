@@ -1292,7 +1292,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 pressed=False,
             )
             # Sort buttons for heatmap mode (hidden by default)
-            switch_buttons += f'<div class="btn-group heatmap-sort-group" style="display:none; margin-left: 5px;">\n'
+            switch_buttons += '<div class="btn-group heatmap-sort-group" style="display:none; margin-left: 5px;">\n'
             switch_buttons += self._btn(
                 cls="heatmap-sort-btn",
                 label="Original",
