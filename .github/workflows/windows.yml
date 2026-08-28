@@ -37,9 +37,14 @@ jobs:
       # NB: download the zip instead of git clone, as Windows complains about
       # reserved filenames and certain characters in the test data.
       - name: "Download test data"
+        shell: bash
         run: |
-          Invoke-WebRequest -Uri "https://github.com/MultiQC/test-data/archive/main.zip" -OutFile test-data.zip
-          7z x test-data.zip -y -o"test-data"
+          curl -fsSL https://github.com/MultiQC/test-data/archive/main.zip -o test-data.zip
+          # 7-Zip 26+ refuses symlinks that point outside the archive (all under
+          # special_cases/, not used by this smoke test) and exits non-zero.
+          # Ignore that, then verify the data we actually need was extracted.
+          7z x test-data.zip -y -o"test-data" || true
+          test -d test-data/test-data-main/data/modules
 
       # Flat plot export doesn't work on Windows, so force interactive plots.
       # Only run selected modules: some fail when dumping plot JSON with
