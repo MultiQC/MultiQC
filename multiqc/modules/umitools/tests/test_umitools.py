@@ -50,7 +50,7 @@ def test_parse_name(tmp_path):
 
 def test_parse_whitelist(tmp_path):
     config.reset()
-    
+
     f1 = tmp_path / "whitelist.log"
     f1.write_text("""\
 # UMI-tools version: 1.1.2
@@ -81,7 +81,7 @@ def test_parse_whitelist(tmp_path):
 
 def test_parse_count(tmp_path):
     config.reset()
-    
+
     f1 = tmp_path / "count.log"
     f1.write_text("""\
 # UMI-tools version: 1.1.2
@@ -114,7 +114,7 @@ def test_parse_count(tmp_path):
 def test_all_commands_together(tmp_path):
     """Test that all four commands can be parsed in one module instance"""
     config.reset()
-    
+
     # Create log files for all commands
     f_dedup = tmp_path / "dedup.log"
     f_dedup.write_text("""\
@@ -128,7 +128,7 @@ def test_all_commands_together(tmp_path):
 2024-06-05 19:57:52,145 INFO Mean number of unique UMIs per position: 1.67
 2024-06-05 19:57:52,145 INFO Max. number of unique UMIs per position: 5
 """)
-    
+
     f_extract = tmp_path / "extract.log"
     f_extract.write_text("""\
 # UMI-tools version: 1.1.2
@@ -136,7 +136,7 @@ def test_all_commands_together(tmp_path):
 2024-06-05 19:57:52,145 INFO Input Reads: 120000
 2024-06-05 19:57:52,145 INFO Reads output: 115000
 """)
-    
+
     f_whitelist = tmp_path / "whitelist.log"
     f_whitelist.write_text("""\
 # UMI-tools version: 1.1.2
@@ -145,7 +145,7 @@ def test_all_commands_together(tmp_path):
 2024-06-05 19:57:52,145 INFO Reads with cell barcodes: 140000
 2024-06-05 19:57:52,145 INFO Reads with whitelisted cell barcodes: 135000
 """)
-    
+
     f_count = tmp_path / "count.log"
     f_count.write_text("""\
 # UMI-tools version: 1.1.2
@@ -158,14 +158,14 @@ def test_all_commands_together(tmp_path):
     report.search_files(["umitools"])
     config.preserve_module_raw_data = True
     m = MultiqcModule()
-    
+
     # Check that all data types are present
     assert m.saved_raw_data is not None
     assert "multiqc_umitools_dedup" in m.saved_raw_data
     assert "multiqc_umitools_extract" in m.saved_raw_data
     assert "multiqc_umitools_whitelist" in m.saved_raw_data
     assert "multiqc_umitools_count" in m.saved_raw_data
-    
+
     # Check that we have the expected sample names
     assert len(m.saved_raw_data["multiqc_umitools_dedup"]) == 1
     assert len(m.saved_raw_data["multiqc_umitools_extract"]) == 1

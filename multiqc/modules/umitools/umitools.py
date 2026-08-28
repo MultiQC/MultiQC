@@ -99,11 +99,15 @@ class MultiqcModule(BaseMultiqcModule):
         extract_data_by_sample = self.ignore_samples(extract_data_by_sample)
         whitelist_data_by_sample = self.ignore_samples(whitelist_data_by_sample)
         count_data_by_sample = self.ignore_samples(count_data_by_sample)
-        
-        if (len(dedup_data_by_sample) == 0 and len(extract_data_by_sample) == 0 and 
-            len(whitelist_data_by_sample) == 0 and len(count_data_by_sample) == 0):
+
+        if (
+            len(dedup_data_by_sample) == 0
+            and len(extract_data_by_sample) == 0
+            and len(whitelist_data_by_sample) == 0
+            and len(count_data_by_sample) == 0
+        ):
             raise ModuleNoSamplesFound
-        
+
         log.info(f"Found {len(dedup_data_by_sample)} deduplication reports")
         log.info(f"Found {len(extract_data_by_sample)} extract reports")
         log.info(f"Found {len(whitelist_data_by_sample)} whitelist reports")
@@ -252,7 +256,11 @@ class MultiqcModule(BaseMultiqcModule):
             (int, "whitelist_input_reads", r"INFO Input Reads: (\d+)"),
             (int, "reads_matched_barcode", r"INFO Reads with cell barcodes: (\d+)"),
             (int, "reads_matched_whitelisted", r"INFO Reads with whitelisted cell barcodes: (\d+)"),
-            (int, "reads_error_corrected", r"INFO Reads with cell barcodes error corrected to whitelisted cell barcodes: (\d+)"),
+            (
+                int,
+                "reads_error_corrected",
+                r"INFO Reads with cell barcodes error corrected to whitelisted cell barcodes: (\d+)",
+            ),
             (int, "unique_barcodes", r"INFO Number of unique cell barcodes: (\d+)"),
             (int, "whitelisted_barcodes", r"INFO Number of whitelisted cell barcodes: (\d+)"),
             (str, "version", r"# UMI-tools version: ([\d\.]+)"),
@@ -314,9 +322,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate supplementary stats
         try:
-            data["count_percent_passing"] = round(
-                ((data["count_output_reads"] / data["count_input_reads"]) * 100.0), 2
-            )
+            data["count_percent_passing"] = round(((data["count_output_reads"] / data["count_input_reads"]) * 100.0), 2)
         except (KeyError, ZeroDivisionError):
             pass
         try:
@@ -324,9 +330,7 @@ class MultiqcModule(BaseMultiqcModule):
         except KeyError:
             pass
         try:
-            data["deduplication_rate"] = round(
-                ((data["count_removed_reads"] / data["count_input_reads"]) * 100.0), 2
-            )
+            data["deduplication_rate"] = round(((data["count_removed_reads"] / data["count_input_reads"]) * 100.0), 2)
         except (KeyError, ZeroDivisionError):
             pass
 
@@ -412,7 +416,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "PuRd",
             },
             "count_percent_passing": {
-                "title": "% UMI Counted", 
+                "title": "% UMI Counted",
                 "description": "% reads that passed UMI counting",
                 "max": 100,
                 "min": 0,
@@ -574,12 +578,12 @@ class MultiqcModule(BaseMultiqcModule):
 
     def whitelist_barplot(self, data_by_sample):
         """Generate bar plots for whitelist metrics"""
-        
+
         # Whitelist success rate plot
         keys = {
             "reads_matched_whitelisted": {"color": "#7fc97f", "name": "Whitelisted reads"},
         }
-        
+
         # Calculate non-whitelisted but matched reads
         plot_data = {}
         for sample, data in data_by_sample.items():
@@ -597,7 +601,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.add_section(
             name="Whitelist Success Rate",
-            anchor="umitools-whitelist-plot", 
+            anchor="umitools-whitelist-plot",
             description="Cell barcode whitelisting success rate from `umi_tools whitelist`",
             plot=bargraph.plot(
                 plot_data,
@@ -643,7 +647,7 @@ class MultiqcModule(BaseMultiqcModule):
                         barcode_keys,
                         {
                             "id": "umitools_whitelist_barcodes_barplot",
-                            "title": "UMI-tools: Cell Barcode Statistics", 
+                            "title": "UMI-tools: Cell Barcode Statistics",
                             "ylab": "# Barcodes",
                             "cpswitch_counts_label": "Number of Barcodes",
                         },
@@ -652,7 +656,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def count_barplot(self, data_by_sample):
         """Generate bar plots for count metrics"""
-        
+
         # Count deduplication plot
         keys = {
             "count_output_reads": {"color": "#7fc97f", "name": "Reads counted"},
@@ -660,7 +664,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         self.add_section(
-            name="UMI Count Results", 
+            name="UMI Count Results",
             anchor="umitools-count-plot",
             description="Read counting and deduplication results from `umi_tools count`",
             plot=bargraph.plot(
