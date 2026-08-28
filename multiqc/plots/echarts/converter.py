@@ -11,9 +11,35 @@ This module never adds `series`, axis `data` arrays, or formatter functions: see
 the "ECharts model->JSON contract" in `multiqc-echarts-exploration/BUILD_PLAN.md`.
 """
 
+import html
+import re
 from typing import Any, Dict, Optional
 
 import plotly.graph_objects as go  # type: ignore
+
+_BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
+_TAG_RE = re.compile(r"<[^>]+>")
+_WHITESPACE_RE = re.compile(r"\s+")
+
+
+def _clean_title_segment(segment: str) -> str:
+    unescaped = html.unescape(segment)
+    stripped = _TAG_RE.sub("", unescaped)
+    return _WHITESPACE_RE.sub(" ", stripped).strip()
+
+
+def _convert_title(title_text: Optional[str]) -> Dict[str, Optional[str]]:
+    """
+    Convert a Plotly title string (which may contain HTML like `<br>` and `<sup>`)
+    into ECharts `title.text`/`title.subtext` fields, which are plain text.
+    """
+    if not title_text:
+        return {"text": None, "subtext": None}
+
+    segments = _BR_RE.split(title_text)
+    text = _clean_title_segment(segments[0])
+    subtext = _clean_title_segment(" ".join(segments[1:])) if len(segments) > 1 else None
+    return {"text": text, "subtext": subtext or None}
 
 
 def _axis_name(axis: Any) -> Optional[str]:
@@ -75,7 +101,7 @@ def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[st
 
     return {
         "animation": False,
-        "title": {"text": title_text, "left": "center"},
+        "title": {**_convert_title(title_text), "left": "center"},
         "grid": {"containLabel": True},
         "xAxis": _convert_axis(merged.xaxis),
         "yAxis": _convert_axis(merged.yaxis),

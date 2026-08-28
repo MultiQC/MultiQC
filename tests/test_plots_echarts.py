@@ -50,6 +50,23 @@ def test_interactive_plot_adds_echarts_key_when_engine_is_echarts():
     assert "series" not in skeleton
 
 
+def test_interactive_plot_title_strips_html():
+    config.plotting_engine = "echarts"
+    plot = bargraph.plot(
+        {
+            "Sample1": {"Cat1": 1},
+        },
+        ["Cat1"],
+        bargraph.BarPlotConfig(id="bargraph_title", title="Foo Bar<br><sup>42 things</sup>"),
+    )
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["title"]["text"] == "Foo Bar"
+    assert skeleton["title"]["subtext"] == "42 things"
+
+
 def test_interactive_plot_unsupported_plot_type_does_not_raise():
     config.plotting_engine = "echarts"
     plot = _make_line_plot()
