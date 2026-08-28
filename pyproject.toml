@@ -297,6 +297,7 @@ simple = "multiqc.templates.simple"
 gathered = "multiqc.templates.gathered"
 geo = "multiqc.templates.geo"
 disco = "multiqc.templates.disco"
+echarts = "multiqc.templates.echarts"
 
 ### See https://docs.seqera.io/multiqc/development/plugins for documentation
 #[project.entry-points."multiqc.cli_options.v1"]

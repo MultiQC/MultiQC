@@ -11,6 +11,9 @@ repos:
     rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
+        # Vendored, minified third-party JS bundles (Plotly, ECharts) and
+        # packaged fonts are legitimately large build/vendor assets.
+        exclude: '^(multiqc/templates/.*/assets/js/packages/.*\.min\.js|multiqc/plots/echarts/fonts/.*)$'
       - id: check-merge-conflict
       - id: debug-statements
 
