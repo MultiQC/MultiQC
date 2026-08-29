@@ -102,7 +102,20 @@ BOX_FILL_ALPHA = 0.55
 _DEFAULT_STROKE = "rgb(153,153,153)"
 _DEFAULT_FILL = f"rgba(153,153,153,{FILL_ALPHA})"
 _DEFAULT_BOX_FILL = f"rgba(153,153,153,{BOX_FILL_ALPHA})"
-_SCATTER_COLOR = "rgba(30,50,80,0.85)"
+
+# Beeswarm point defaults (POLISH.md #9/FIX #9): matches `multiqc/plots/violin.py`'s own
+# `Dataset.create` scatter_trace_params exactly (`marker: {size: 4, color: ..., opacity: 1}`,
+# no marker line/border), so the echarts beeswarm reads the same as Plotly's. `_SCATTER_SIZE`
+# is the non-highlighted point diameter; the SSR path never renders a highlighted state
+# (that's an interactive-only toolbox feature), so unlike the JS port there is only one size.
+_SCATTER_SIZE = 4
+# Plotly's own choice: black when any metric has a custom color (so grey dots don't clash
+# with a color-coded violin), else blue (so a plain grey violin's dots read as interactive).
+# The SSR/flat path always renders against the registered "multiqc-light" theme (see
+# static_export.py), so unlike the interactive JS port (which also handles a dark viewer
+# theme) this never needs the dark-mode swap Plotly's own JS applies client-side.
+_SCATTER_COLOR_COLORED = "#000000"
+_SCATTER_COLOR_PLAIN = "#0b79e6"
 
 # --- Per-row grid geometry: the cross-language contract --------------------------------
 #
@@ -394,13 +407,31 @@ def _annotation_render_series(row_idx: int, lo_obs: float, hi_obs: float) -> Dic
     }
 
 
-def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: int) -> Dict[str, Any]:
+def _scatter_base_color(dataset: Dataset) -> str:
+    """
+    One base beeswarm color for the whole dataset (mirrors `multiqc/plots/violin.py`'s
+    `Dataset.create`: `"#000000" if any(h.color is not None for h in
+    ds.header_by_metric.values()) else "#0b79e6"`), so a color-coded violin's dots don't
+    visually clash with it, while a plain grey violin gets a blue "this is interactive"
+    hint. Computed once per dataset, not per row: every row's beeswarm shares it.
+    """
+    if any(h.color is not None for h in dataset.header_by_metric.values()):
+        return _SCATTER_COLOR_COLORED
+    return _SCATTER_COLOR_PLAIN
+
+
+def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: int, base_color: str) -> Dict[str, Any]:
     """
     ONE beeswarm `scatter` series for this metric (not one shared series across all
     metrics, unlike the reference script): `jitter`/`jitterOverlap` gives ECharts 6's
     native beeswarm spread. Items are `{"value": [real_value, 0], "name": sample}` (real
     value, not normalized; POLISH.md #6); per-sample coloring and the interactive
     tooltip are added by the interactive JS builder in Task 2.2, not here.
+
+    Point style (FIX #9) matches Plotly's own beeswarm marker exactly: size 4, solid
+    (`opacity: 1`), no border (Plotly's `scatter_trace_params` never sets a marker line).
+    `label.show: False` (FIX #2) is explicit, not just relying on ECharts' own default,
+    so no per-point text ever draws next to a dot outside the hover tooltip.
     """
     header = dataset.header_by_metric[metric]
     data: List[Dict[str, Any]] = []
@@ -420,10 +451,11 @@ def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: 
         "xAxisIndex": row_idx,
         "yAxisIndex": row_idx,
         "data": data,
-        "symbolSize": 6,
+        "symbolSize": _SCATTER_SIZE,
         "jitter": 22,
         "jitterOverlap": False,
-        "itemStyle": {"color": _SCATTER_COLOR, "borderColor": "#fff", "borderWidth": 0.5},
+        "itemStyle": {"color": base_color, "opacity": 1},
+        "label": {"show": False},
         "z": 2,
     }
 
@@ -571,6 +603,7 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
     plots have no percentage switch, so `is_pct` is unused here.
     """
     metrics = _visible_metrics(dataset)
+    base_color = _scatter_base_color(dataset)
 
     violin_series = []
     annotation_series = []
@@ -588,7 +621,7 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
         lo_obs, hi_obs = min(values), max(values)
         annotation_series.append(_annotation_render_series(row_idx, lo_obs, hi_obs))
 
-        scatter_series.append(_scatter_series_for_metric(dataset, metric, row_idx))
+        scatter_series.append(_scatter_series_for_metric(dataset, metric, row_idx, base_color))
 
     return violin_series + annotation_series + scatter_series
 

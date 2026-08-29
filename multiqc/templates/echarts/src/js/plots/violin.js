@@ -70,7 +70,24 @@ function kde(values, xs) {
 const ROW_HEIGHT = 0.42;
 const N_BINS = 60;
 const RANGE_PAD = 0.15;
-const SCATTER_COLOR = "rgba(30,50,80,0.85)";
+
+// Beeswarm point defaults (POLISH.md #9/FIX #9): mirrors multiqc/plots/violin.py's own
+// Dataset.create scatter_trace_params (marker: {size: 4, color: ..., opacity: 1}, no
+// marker line/border) and its default-template client-side dark-mode swap (black ->
+// white, blue -> lighter blue when the viewer is in dark mode), so the echarts beeswarm
+// reads the same as Plotly's in both themes. SCATTER_SIZE is the non-highlighted point
+// diameter; SCATTER_HIGHLIGHT_SIZE (used only when toolbox highlighting is active)
+// matches the default template's own highlighted-point size.
+const SCATTER_SIZE = 4;
+const SCATTER_HIGHLIGHT_SIZE = 8;
+// Plotly's own choice: black when any metric has a custom color (so grey dots don't
+// clash with a color-coded violin), else blue (so a plain grey violin's dots read as
+// interactive); mirrors multiqc/plots/echarts/violin.py's _scatter_base_color.
+const SCATTER_COLOR_COLORED = "#000000";
+const SCATTER_COLOR_PLAIN = "#0b79e6";
+// Dark-mode swap for the two base colors above (templates/default/src/js/plots/violin.js's
+// own isDarkMode ? ... swap), applied only to the base (non-highlighted) color.
+const SCATTER_COLOR_DARK_SWAP = { [SCATTER_COLOR_COLORED]: "#ffffff", [SCATTER_COLOR_PLAIN]: "#5dade2" };
 
 // Inner Q1-Q3 box + median line drawn over each violin (POLISH.md #10b), sized as
 // fractions of ROW_HEIGHT; mirrors multiqc/plots/echarts/violin.py's constants of the
@@ -493,6 +510,21 @@ class EchartsViolinPlot extends window.Plot {
     const xAxis = [];
     const yAxis = [];
 
+    // Beeswarm base point color (FIX #9): one choice for the whole dataset, mirroring
+    // multiqc/plots/violin.py's Dataset.create (black when any metric has a custom
+    // color, else blue) plus the default template's own dark-mode swap, so the two
+    // engines' beeswarms look the same in either viewer theme.
+    const isDarkMode = document.documentElement.getAttribute("data-bs-theme") === "dark";
+    const anyColored = Object.values(headerByMetric).some((h) => h.color);
+    let scatterBaseColor = anyColored ? SCATTER_COLOR_COLORED : SCATTER_COLOR_PLAIN;
+    if (isDarkMode) scatterBaseColor = SCATTER_COLOR_DARK_SWAP[scatterBaseColor] || scatterBaseColor;
+
+    // sample (display name) -> [{title, value, suffix}, ...] across every row (FIX #3):
+    // built alongside each row's scatterData below, so the combined cross-row tooltip
+    // (wired via option.tooltip.formatter in applyOptionOverrides()) can show one
+    // sample's value in every metric row at once without re-walking the series data.
+    const sampleTooltipData = {};
+
     rows.forEach(({ metric, header, numericValues }, rowIdx) => {
       let poly, lo, hi;
       const pre = violinsFromPython[metric];
@@ -544,6 +576,7 @@ class EchartsViolinPlot extends window.Plot {
       });
 
       const title = metricTitle(header);
+      const suffix = (header.xaxis && header.xaxis.ticksuffix) || "";
 
       const scatterData = [];
       if (header.show_points) {
@@ -551,20 +584,26 @@ class EchartsViolinPlot extends window.Plot {
         Object.entries(svBySample).forEach(([sample, value]) => {
           if (typeof value !== "number" || !Number.isFinite(value)) return;
           const state = sampleSettings[allSamples.indexOf(sample)];
-          let color = SCATTER_COLOR;
-          let size = 6;
+          let color = scatterBaseColor;
+          let size = SCATTER_SIZE;
           if (highlightingEnabled) {
             color = state?.highlight ?? "#ddd";
-            size = state?.highlight != null ? 8 : 6;
+            size = state?.highlight != null ? SCATTER_HIGHLIGHT_SIZE : SCATTER_SIZE;
           }
+          const name = state?.name ?? sample;
           scatterData.push({
             // Real value: no denormalization needed any more, this row's x-axis is
             // already real-valued (POLISH.md #6).
             value: [value, 0],
-            name: state?.name ?? sample,
-            itemStyle: { color, borderColor: "#fff", borderWidth: 0.5 },
+            name,
+            // FIX #9: no marker border/opacity fade, matching Plotly's own solid,
+            // borderless beeswarm dots (multiqc/plots/violin.py's scatter_trace_params).
+            itemStyle: { color, opacity: 1 },
             symbolSize: size,
           });
+          // FIX #3: this row's contribution to the sample's combined cross-row tooltip.
+          if (!sampleTooltipData[name]) sampleTooltipData[name] = [];
+          sampleTooltipData[name].push({ title, value, suffix });
         });
       }
       scatterSeries.push({
@@ -573,9 +612,12 @@ class EchartsViolinPlot extends window.Plot {
         xAxisIndex: rowIdx,
         yAxisIndex: rowIdx,
         data: scatterData,
-        symbolSize: 6,
+        symbolSize: SCATTER_SIZE,
         jitter: 22,
         jitterOverlap: false,
+        // FIX #2: no persistent per-point text; the sample's info only ever shows in the
+        // hover tooltip (option.tooltip.formatter, applyOptionOverrides() below).
+        label: { show: false },
         z: 2,
       });
 
@@ -588,7 +630,6 @@ class EchartsViolinPlot extends window.Plot {
       // axes since they're built fresh here, after that step already ran).
       const [top, gridHeight] = rowGeometry(rowIdx, n);
       grids.push({ top, height: gridHeight, left: rowLeft, right: 16, containLabel: true });
-      const suffix = (header.xaxis && header.xaxis.ticksuffix) || "";
       xAxis.push({
         type: "value",
         gridIndex: rowIdx,
@@ -634,6 +675,7 @@ class EchartsViolinPlot extends window.Plot {
       });
     });
     this._sampleIndexMap = sampleIndexMap;
+    this._sampleTooltipData = sampleTooltipData;
 
     return violinSeries.concat(annotationSeries, scatterSeries);
   }
@@ -665,11 +707,24 @@ class EchartsViolinPlot extends window.Plot {
       moveOnMouseWheel: false,
     }));
 
+    // FIX #3: one combined tooltip per hovered sample, listing that sample's value in
+    // EVERY metric row at once (Plotly-style shared hover), not just the hovered row's
+    // own value. `_sampleTooltipData` (built in buildSeries() above, alongside each
+    // row's scatterData) already holds every row's {title, value, suffix} for a given
+    // sample name, so no re-walking of series data is needed here. Falls back to the
+    // single hovered-point value on the off chance a sample somehow isn't in the map
+    // (e.g. mid-render race), so a tooltip still shows something rather than nothing.
     if (option.tooltip) {
+      const self = this;
       option.tooltip.formatter = (params) => {
         if (params.seriesType !== "scatter") return "";
-        let real = Array.isArray(params.value) ? params.value[0] : params.value;
-        return `<b>${params.name}</b>: ${window.formatNumber(real)}`;
+        const rows = self._sampleTooltipData && self._sampleTooltipData[params.name];
+        if (!rows || rows.length === 0) {
+          let real = Array.isArray(params.value) ? params.value[0] : params.value;
+          return `<b>${params.name}</b>: ${window.formatNumber(real)}`;
+        }
+        const lines = rows.map((r) => `${r.title}: ${window.formatNumber(r.value)}${r.suffix}`);
+        return `<b>${params.name}</b><br>${lines.join("<br>")}`;
       };
     }
   }
