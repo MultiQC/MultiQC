@@ -61,6 +61,13 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
 
     option["xAxis"]["type"] = "category"
     option["yAxis"]["type"] = "category"
+    # Angle the x-axis sample labels like Plotly's own `xaxis.tickangle = 45`
+    # (`HeatmapPlot.create`, `multiqc/plots/heatmap.py`), so many more (often all) of
+    # them fit before ECharts' auto label-skipping kicks in, instead of most being
+    # dropped as horizontal text. `grid.containLabel` (set by `convert_layout` above)
+    # already grows the plot area to fit the taller rotated bounding box, so no extra
+    # bottom margin is needed here.
+    option["xAxis"]["axisLabel"] = {"rotate": 45}
     # First sample/row at the top, matching Plotly's `yaxis.autorange = "reversed"`.
     option["yAxis"]["inverse"] = True
     option["tooltip"]["trigger"] = "item"
