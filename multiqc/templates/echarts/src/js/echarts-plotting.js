@@ -354,6 +354,34 @@ function renderPlot(anchor) {
   plot.chart ??= echarts.init(el, null, { renderer: plot.echarts.renderer });
   plot.chart.setOption(option, { notMerge: true });
 
+  // Plotly-style click+drag box zoom (POLISH.md #17): activate ECharts' toolbox
+  // dataZoom "brush select" cursor mode so the user can drag-to-zoom immediately,
+  // without first clicking a toolbar button (there is none visible; see converter.py's
+  // `zoom_option`, which pushes the toolbox icon row off-canvas). `notMerge: true`
+  // above resets the chart's cursor mode on every render, so this has to be re-applied
+  // every time, not just on first init. Plots with no zoomable axis (violin) never get
+  // a `toolbox.feature.dataZoom` in their option, so this is a no-op for them.
+  if (option.toolbox && option.toolbox.feature && option.toolbox.feature.dataZoom) {
+    plot.chart.dispatchAction({
+      type: "takeGlobalCursor",
+      key: "dataZoomSelect",
+      dataZoomSelectActive: true,
+    });
+  }
+
+  if (isFirstChartInit) {
+    // Double-click to reset zoom (Plotly behavior): reset every dataZoom component to
+    // its full range. Harmless (no-op) on a chart with no dataZoom component (violin).
+    // Registered once per chart instance, not per render, since ECharts event
+    // listeners persist across setOption calls. Must be `chart.getZr().on(...)`
+    // (zrender's own event bus), not `chart.on(...)` (ECharts' higher-level event bus,
+    // which never fires "dblclick": confirmed empirically, it's not one of the named
+    // events ECharts re-emits there, only zrender sees the raw DOM-level double-click).
+    plot.chart.getZr().on("dblclick", () => {
+      plot.chart.dispatchAction({ type: "dataZoom", start: 0, end: 100 });
+    });
+  }
+
   if (isFirstChartInit && plot.square) {
     // Unlike Plotly (which honors `layout.width` directly on `newPlot`, forcing a square
     // figure from the first render), ECharts always sizes its canvas to the container's

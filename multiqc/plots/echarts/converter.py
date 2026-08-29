@@ -338,6 +338,55 @@ def bands_and_lines(
     return result
 
 
+def zoom_option(*, x: bool = True, y: bool = True) -> Dict[str, Any]:
+    """
+    Plotly-style click+drag box-zoom (POLISH.md #17). ECharts' rubber-band box-zoom lives
+    behind the toolbox `dataZoom` feature; the interactive JS renderer
+    (`templates/echarts/src/js/echarts-plotting.js`) activates its cursor mode
+    automatically after every render via `takeGlobalCursor`, so the user never has to
+    click a toolbar button first, matching Plotly's default click-drag-to-zoom. The
+    toolbox icon row itself is pushed off-canvas (`top: "150%"`): MultiQC already has its
+    own sidebar toolbox, so a second visible one would just be clutter, but the feature
+    still has to be declared here for `takeGlobalCursor` to find it. An `inside` dataZoom
+    on the same axes holds the current zoom range (so pinch-zoom and the box-zoom above
+    stay in sync); wheel zoom/pan stay off so a long report's mouse wheel keeps scrolling
+    the page instead of zooming a chart under the cursor.
+
+    `x`/`y` restrict which axis is zoomable, matching which axis is semantically
+    continuous for a given plot type (see each `layout_option`'s call site: `bar.py`/
+    `box.py` pass `y=False`, since their category y-axis is a sample list already managed
+    by MultiQC's own sidebar toolbox (hide/highlight), not something worth a second,
+    duplicate "zoom" interaction; `heatmap.py` passes both, since it has no numeric axis
+    at all, both sample-category axes ARE the zoomable space; `line.py`/`scatter.py` pass
+    both, since both axes carry real numeric/positional data either way).
+    `violin.py` never calls this: its axes are a normalized 0..1-per-row x-trick and a
+    row-index y-trick (see its module docstring), not real data coordinates, so zoom is
+    disabled outright, the same reasoning POLISH.md #13 already used to disable its
+    axisPointer.
+    """
+    x_idx = [0] if x else []
+    y_idx = [0] if y else []
+    # One `inside` dataZoom PER zoomable axis, not one combined entry declaring both
+    # xAxisIndex and yAxisIndex together: empirically (agent-browser drag test on a
+    # scatter plot), a single dataZoom spanning both axes never actually updates its
+    # start/end when the toolbox's box-select zoom fires, even though the identical
+    # setup with one axis per component (bar/box's x-only case) works correctly. Two
+    # independent components is also what ECharts' own box-zoom examples use.
+    inside: List[Dict[str, Any]] = []
+    if x:
+        inside.append({"type": "inside", "xAxisIndex": [0], "zoomOnMouseWheel": False, "moveOnMouseWheel": False})
+    if y:
+        inside.append({"type": "inside", "yAxisIndex": [0], "zoomOnMouseWheel": False, "moveOnMouseWheel": False})
+    return {
+        "toolbox": {
+            "show": True,
+            "top": "150%",
+            "feature": {"dataZoom": {"show": True, "xAxisIndex": x_idx, "yAxisIndex": y_idx}},
+        },
+        "dataZoom": inside,
+    }
+
+
 def trailing_bands_lines_series(
     pconfig: "PConfig",
     *,

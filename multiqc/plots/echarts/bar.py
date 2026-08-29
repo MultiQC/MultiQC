@@ -9,7 +9,7 @@ for the Plotly-JS equivalent this mirrors.
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from multiqc.plots.bargraph import BarPlotConfig, Dataset
-from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, trailing_bands_lines_series
+from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, trailing_bands_lines_series, zoom_option
 
 if TYPE_CHECKING:
     from multiqc.plots.plot import Plot
@@ -92,6 +92,10 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     # flipping it (verified against a live FastQC "Sequence Counts" render in both
     # engines with agent-browser).
     option["tooltip"]["trigger"] = "axis"
+    # Plotly-style click+drag box-zoom (POLISH.md #17), X (value) axis only: the y-axis
+    # is a sample-name category list already managed by MultiQC's own sidebar toolbox
+    # (hide/highlight), see `zoom_option`.
+    option.update(zoom_option(x=True, y=False))
 
     # JS reads this to decide whether series stack (default) or sit side by side.
     option["_mqc"] = {"barmode": plot.layout.barmode}

@@ -8,7 +8,13 @@ counterpart of `series()` below.
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, echarts_dash, trailing_bands_lines_series
+from multiqc.plots.echarts.converter import (
+    bands_and_lines,
+    convert_layout,
+    echarts_dash,
+    trailing_bands_lines_series,
+    zoom_option,
+)
 from multiqc.plots.linegraph import Dataset, LinePlotConfig
 
 if TYPE_CHECKING:
@@ -42,11 +48,10 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option = convert_layout(plot.layout, dataset.layout, scale_x=not categorical, scale_y=True)
 
     option["tooltip"]["trigger"] = "axis"
-    # No slider (Plotly has no mini-plot strip either). Keep "inside" for drag-pan/
-    # pinch-zoom, but disable mouse-wheel zoom so it doesn't hijack page scrolling on a
-    # long report (Plotly doesn't scroll-zoom by default; there's no toolbox box-zoom
-    # tool here to fall back on instead).
-    option["dataZoom"] = [{"type": "inside", "zoomOnMouseWheel": False, "moveOnMouseWheel": False}]
+    # Plotly-style click+drag box-zoom on both axes (POLISH.md #17): both x and y carry
+    # real data (a categorical x here is still a meaningful position, e.g. read-length
+    # bins, not a sample list), see `zoom_option`.
+    option.update(zoom_option(x=True, y=True))
 
     if categorical:
         option["xAxis"]["data"] = _categories(dataset)

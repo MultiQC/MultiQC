@@ -36,7 +36,7 @@ not (and, lacking raw values, cannot) recompute quartiles or outliers for these 
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, cast
 
 from multiqc.plots.box import BoxPlotConfig, BoxStatsT, Dataset
-from multiqc.plots.echarts.converter import convert_layout
+from multiqc.plots.echarts.converter import convert_layout, zoom_option
 from multiqc.utils.mqc_colour import color_to_rgb_string
 
 if TYPE_CHECKING:
@@ -123,6 +123,10 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option["yAxis"]["type"] = "category"
     option["yAxis"]["inverse"] = True
     option["tooltip"]["trigger"] = "item"
+    # Plotly-style click+drag box-zoom (POLISH.md #17), X (value) axis only: the y-axis
+    # is a sample-name category list already managed by MultiQC's own sidebar toolbox
+    # (hide/highlight), see `zoom_option`.
+    option.update(zoom_option(x=True, y=False))
 
     return option
 

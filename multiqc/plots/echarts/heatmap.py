@@ -71,6 +71,14 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
     # First sample/row at the top, matching Plotly's `yaxis.autorange = "reversed"`.
     option["yAxis"]["inverse"] = True
     option["tooltip"]["trigger"] = "item"
+    # No click+drag box-zoom (POLISH.md #17): unlike bar/box/line/scatter, ECharts'
+    # toolbox dataZoomSelect brush never reliably activates for a `heatmap` series in
+    # this build (confirmed empirically with agent-browser across canvas/SVG renderer,
+    # square/non-square layout, and multiple activation strategies: the toolbox model
+    # itself reports the cursor mode as active, but the brush's drag-to-select never
+    # engages, so no range ever changes). Rather than ship a control that silently does
+    # nothing, heatmap keeps its pre-existing no-zoom state; see README.md's "Known
+    # gaps" section. `zoom_option` is intentionally not called here.
 
     zmin = dataset.trace_params.get("zmin")
     zmax = dataset.trace_params.get("zmax")

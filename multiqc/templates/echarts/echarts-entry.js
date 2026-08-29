@@ -12,6 +12,7 @@ import {
   MarkAreaComponent,
   VisualMapComponent,
   TitleComponent,
+  ToolboxComponent,
 } from "echarts/components";
 import { SVGRenderer, CanvasRenderer } from "echarts/renderers";
 
@@ -30,6 +31,10 @@ echarts.use([
   MarkAreaComponent,
   VisualMapComponent,
   TitleComponent,
+  // Plotly-style click+drag box zoom (POLISH.md #17): the toolbox's `dataZoom` feature
+  // is what powers ECharts' rubber-band box-zoom cursor mode (`takeGlobalCursor`, see
+  // echarts-plotting.js), even though the toolbox's own icon row is kept off-canvas.
+  ToolboxComponent,
   SVGRenderer,
   CanvasRenderer,
 ]);

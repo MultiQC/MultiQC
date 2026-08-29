@@ -113,6 +113,13 @@ silently glossed over:
 - **`tickformat` on axes is not converted** (the related `hoverformat`, `ticksuffix` and
   numeric tooltip precision are handled). No shipped module currently relies on
   `tickformat`, so this is a low-risk gap.
+- **Heatmaps have no click+drag box-zoom.** Bar, box, line, and scatter plots all support
+  Plotly-style rubber-band zoom (drag to zoom, double-click to reset; see
+  `converter.zoom_option`). Heatmaps don't: ECharts' toolbox `dataZoomSelect` brush never
+  reliably engages for a `heatmap` series in this build, confirmed with agent-browser
+  across canvas/SVG renderer and square/non-square layouts, so rather than ship a control
+  that silently does nothing, heatmap keeps its pre-existing no-zoom state. Also disabled
+  outright, matching Plotly (its axes aren't real data coordinates): violin plots.
 
 None of the above are silent: PDF export logs a warning, and the notebook/module-JS
 limitations are documented here since there is nowhere sensible to log them at the point a
