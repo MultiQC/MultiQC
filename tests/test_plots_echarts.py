@@ -8,7 +8,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 import math
 
 from multiqc import config, report
-from multiqc.plots import bargraph, box, echarts, linegraph, scatter
+from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter
 from multiqc.types import Anchor
 
 
@@ -70,6 +70,36 @@ def _make_large_scatter_plot(n_points: int):
     return scatter.plot(
         {f"Sample{i}": [{"x": i, "y": i}] for i in range(n_points)},
         scatter.ScatterConfig(id="scatterplot_large", title="Test: Large Scatter"),
+    )
+
+
+def _make_heatmap_plot(display_values=False):
+    return heatmap.plot(
+        data=[[1, 2], [3, 4]],
+        xcats=["Cat1", "Cat2"],
+        ycats=["Sample1", "Sample2"],
+        pconfig=heatmap.HeatmapConfig(id="echarts_heatmap", title="Test: Heatmap", display_values=display_values),
+    )
+
+
+def _make_clustered_heatmap_plot():
+    # Same fixture as test_plots.py::test_heatmap_clustering_produces_reordered_data:
+    # designed so clustering actually reorders rows/cats (a 2x2 or uniform matrix may not).
+    data = [
+        [10, 0, 11],
+        [0, 10, 0],
+        [11, 0, 10],
+    ]
+    return heatmap.plot(
+        data=data,
+        xcats=["X1", "X2", "X3"],
+        ycats=["A", "B", "C"],
+        pconfig=heatmap.HeatmapConfig(
+            id="echarts_heatmap_clustered",
+            title="Test: Clustered Heatmap",
+            cluster_rows=True,
+            cluster_cols=True,
+        ),
     )
 
 
@@ -294,3 +324,76 @@ def test_serialize_scatter_uses_canvas_renderer_above_threshold():
     plot = _make_large_scatter_plot(3001)
     result = echarts.serialize(plot)
     assert result["renderer"] == "canvas"
+
+
+def test_interactive_plot_adds_echarts_key_for_heatmap_plot():
+    config.plotting_engine = "echarts"
+    plot = _make_heatmap_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert "echarts" in dumped
+    assert dumped["echarts"]["renderer"] == "svg"
+
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["xAxis"]["type"] == "category"
+    assert skeleton["yAxis"]["type"] == "category"
+    assert "series" not in skeleton
+    assert "data" not in skeleton["xAxis"]
+    assert "data" not in skeleton["yAxis"]
+
+    # visualMap: converted from the Plotly colorscale stop list (BUILD_PLAN.md "Colorscale
+    # conversion" risk: stop positions are dropped, only the ordered color list survives).
+    visual_map = skeleton["visualMap"]
+    assert visual_map["calculable"] is True
+    assert isinstance(visual_map["inRange"]["color"], list)
+    assert len(visual_map["inRange"]["color"]) > 0
+    assert visual_map["min"] == 1
+    assert visual_map["max"] == 4
+
+
+def test_get_option_heatmap_builds_xyz_cell_data():
+    plot = _make_heatmap_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    assert option["xAxis"]["data"] == ["Cat1", "Cat2"]
+    assert option["yAxis"]["data"] == ["Sample1", "Sample2"]
+
+    series_option = option["series"][0]
+    assert series_option["type"] == "heatmap"
+    assert sorted(series_option["data"]) == [[0, 0, 1], [0, 1, 3], [1, 0, 2], [1, 1, 4]]
+
+
+def test_heatmap_mark_count_is_rows_times_cols():
+    plot = _make_heatmap_plot()
+    assert echarts.heatmap.mark_count(plot.datasets[0]) == 4
+
+
+def test_get_option_heatmap_cell_labels_when_display_values_enabled():
+    plot = _make_heatmap_plot(display_values=True)
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    series_option = option["series"][0]
+    for item in series_option["data"]:
+        assert isinstance(item, dict)
+        assert item["label"]["show"] is True
+        _xi, _yi, val = item["value"]
+        assert item["label"]["formatter"] == f"{val:.2f}"
+
+
+def test_get_option_heatmap_clustered_switch_uses_clustered_categories():
+    plot = _make_clustered_heatmap_plot()
+    dataset = plot.datasets[0]
+    assert dataset.rows_clustered is not None  # sanity: clustering actually happened
+
+    plot.pconfig.cluster_switch_clustered_active = True
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    assert option["xAxis"]["data"] == list(dataset.xcats_clustered)
+    assert option["yAxis"]["data"] == list(dataset.ycats_clustered)
+
+    plot.pconfig.cluster_switch_clustered_active = False
+    option_unclustered = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option_unclustered["xAxis"]["data"] == list(dataset.xcats)
+    assert option_unclustered["yAxis"]["data"] == list(dataset.ycats)

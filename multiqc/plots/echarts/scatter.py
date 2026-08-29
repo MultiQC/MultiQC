@@ -77,7 +77,7 @@ def series(dataset: Dataset, pconfig: ScatterConfig, is_pct: bool) -> List[Dict[
     ]
 
 
-def axis_data(dataset: Dataset) -> Optional[Tuple[str, List[str]]]:
+def axis_data(dataset: Dataset, pconfig: ScatterConfig) -> Optional[List[Tuple[str, List[str]]]]:
     """
     Always `None`: scatter plots use value (continuous) x/y axes, not a sample-name
     category axis, so there is no axis `data` array for the toolbox to fill in.

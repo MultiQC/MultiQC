@@ -46,9 +46,10 @@ import "../../../default/src/js/toolbox/help.js";
 import "../../../default/src/js/toolbox.js";
 
 // Plot types.
-// "bar" (Phase 0), "line" (Phase 1, Task 1.1) and "scatter" (Phase 1, Task 1.2) are
-// ported; other types are not imported here (their window.initPlot falls back to a
-// placeholder Plot that renders an "unsupported" message, per echarts-plotting.js).
+// "bar" (Phase 0), "line" (Phase 1, Task 1.1), "scatter" (Phase 1, Task 1.2) and
+// "heatmap" (Phase 1, Task 1.3) are ported; other types are not imported here (their
+// window.initPlot falls back to a placeholder Plot that renders an "unsupported"
+// message, per echarts-plotting.js).
 // Default's plots/*.js define `class XPlot extends Plot` using the bare global `Plot`
 // identifier: because echarts-plotting.js (imported above) runs first and does
 // `window.Plot = Plot`, that bare reference resolves to OUR echarts Plot base class,
@@ -61,6 +62,13 @@ import "../../../default/src/js/plots/line.js";
 import "./plots/line.js";
 import "../../../default/src/js/plots/scatter.js";
 import "./plots/scatter.js";
+// "heatmap" (Phase 1, Task 1.3) is STANDALONE: it extends window.Plot directly and does
+// NOT import the default template's plots/heatmap.js. That file has a top-level
+// `$(function () {...})` handler (zmin/zmax range sliders + cluster toggle) that calls
+// `Plotly.restyle`, which would run at load time and crash under this template (no
+// `Plotly` global). `./plots/heatmap.js` copies the prepData()/exportData() field access
+// it needs and re-implements both handlers for ECharts instead.
+import "./plots/heatmap.js";
 
 // AI features
 import "../../../default/src/js/ai-helpers.js";

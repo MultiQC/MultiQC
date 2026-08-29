@@ -176,7 +176,7 @@ def series(dataset: Dataset, pconfig: LinePlotConfig, is_pct: bool) -> List[Dict
     return result
 
 
-def axis_data(dataset: Dataset) -> Optional[Tuple[str, List[str]]]:
+def axis_data(dataset: Dataset, pconfig: LinePlotConfig) -> Optional[List[Tuple[str, List[str]]]]:
     """
     Always `None`: unlike bar's sample-name category axis, a line plot's x-category
     labels are static (see the comment in `layout_option`) and already baked into the

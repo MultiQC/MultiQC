@@ -16,7 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Dict
 
 from multiqc import config
-from multiqc.plots.echarts import bar, line, scatter
+from multiqc.plots.echarts import bar, heatmap, line, scatter
 from multiqc.types import PlotType
 
 if TYPE_CHECKING:
@@ -26,6 +26,7 @@ _BUILDERS: Dict[PlotType, ModuleType] = {
     PlotType.BAR: bar,
     PlotType.LINE: line,
     PlotType.SCATTER: scatter,
+    PlotType.HEATMAP: heatmap,
 }
 
 
@@ -81,10 +82,14 @@ def get_option(plot: "Plot[Any, Any]", ds_idx: int, is_log: bool, is_pct: bool) 
     builder = _builder(plot.plot_type)
 
     option = builder.layout_option(plot, dataset)
-    axis = builder.axis_data(dataset)
-    if axis is not None:
-        axis_key, data = axis
-        option[axis_key]["data"] = data
+    # `axis_data` takes `pconfig` too (not just `dataset`) because the heatmap builder
+    # needs `pconfig.cluster_switch_clustered_active` to pick the clustered vs.
+    # unclustered category lists, and can return MULTIPLE `(axis_key, data)` entries
+    # (heatmaps have both x and y category axes; bar has only y, line/scatter have none).
+    axis_entries = builder.axis_data(dataset, plot.pconfig)
+    if axis_entries is not None:
+        for axis_key, data in axis_entries:
+            option[axis_key]["data"] = data
     option["series"] = builder.series(dataset, plot.pconfig, is_pct)
 
     for axis_name in plot.axis_controlled_by_switches:

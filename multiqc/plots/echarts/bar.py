@@ -60,9 +60,9 @@ def series(dataset: Dataset, pconfig: BarPlotConfig, is_pct: bool) -> List[Dict[
     return result
 
 
-def axis_data(dataset: Dataset) -> Tuple[str, List[str]]:
-    """`("yAxis", sample names)`: bar plots are always horizontal, samples on `yAxis`."""
-    return "yAxis", list(dataset.samples)
+def axis_data(dataset: Dataset, pconfig: BarPlotConfig) -> List[Tuple[str, List[str]]]:
+    """`[("yAxis", sample names)]`: bar plots are always horizontal, samples on `yAxis`."""
+    return [("yAxis", list(dataset.samples))]
 
 
 def mark_count(dataset: Dataset) -> int:
