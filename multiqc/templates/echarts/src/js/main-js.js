@@ -75,6 +75,11 @@ import "./plots/heatmap.js";
 // sort-toggle click handler reused as-is).
 import "../../../default/src/js/plots/box.js";
 import "./plots/box.js";
+// "violin" (Phase 2, Task 2.2) is STANDALONE (extends window.Plot directly, does NOT
+// import the default template's plots/violin.js): that class's buildTraces() builds one
+// Plotly subplot per metric row, which has no ECharts equivalent (a single value-axis
+// grid is used instead). See ./plots/violin.js for the full rationale.
+import "./plots/violin.js";
 
 // AI features
 import "../../../default/src/js/ai-helpers.js";

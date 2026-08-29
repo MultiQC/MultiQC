@@ -16,7 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Dict
 
 from multiqc import config
-from multiqc.plots.echarts import bar, box, heatmap, line, scatter
+from multiqc.plots.echarts import bar, box, heatmap, line, scatter, violin
 from multiqc.types import PlotType
 
 if TYPE_CHECKING:
@@ -28,6 +28,7 @@ _BUILDERS: Dict[PlotType, ModuleType] = {
     PlotType.SCATTER: scatter,
     PlotType.HEATMAP: heatmap,
     PlotType.BOX: box,
+    PlotType.VIOLIN: violin,
 }
 
 
@@ -61,7 +62,14 @@ def serialize(plot: "Plot[Any, Any]") -> Dict[str, Any]:
     max_marks = 0
     for dataset in plot.datasets:
         max_marks = max(max_marks, builder.mark_count(dataset))
-        datasets.append({"layout": builder.layout_option(plot, dataset)})
+        dataset_entry: Dict[str, Any] = {"layout": builder.layout_option(plot, dataset)}
+        if plot_type == PlotType.VIOLIN:
+            # VIOLIN EXCEPTION to the skeleton rule (see `violin.py` module docstring):
+            # KDE polygons are expensive and depend only on hidden-sample state, so they
+            # are precomputed here from ALL samples; JS uses them directly when nothing
+            # is hidden and recomputes (its own `kde()` port) only when samples are hidden.
+            dataset_entry["violins"] = builder.violin_polygons(dataset)
+        datasets.append(dataset_entry)
 
     renderer = "canvas" if max_marks > config.echarts_canvas_threshold else "svg"
     result: Dict[str, Any] = {"renderer": renderer, "datasets": datasets}

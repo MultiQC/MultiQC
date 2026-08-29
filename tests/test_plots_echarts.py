@@ -6,10 +6,12 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 """
 
 import math
+from typing import Dict
 
 from multiqc import config, report
 from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter, table, violin
-from multiqc.types import Anchor
+from multiqc.plots.table_object import ColumnDict
+from multiqc.types import Anchor, PlotType
 
 
 def _make_bar_plot():
@@ -121,13 +123,13 @@ def _make_stats_box_plot():
 
 
 def _make_violin_plot():
-    # Violin is not ported to ECharts yet (Phase 2): used to verify the "unsupported
-    # plot type" fallback still works now that bar/line/scatter/heatmap/box are supported.
-    return violin.plot(
-        data={"Sample1": {"x": 1, "y": 2}, "Sample2": {"x": 3, "y": 4}},
-        headers={"x": {"title": "Metric X"}},
-        pconfig=table.TableConfig(id="violinplot", title="Test: Violin"),
-    )
+    data = {f"Sample{i}": {"metric_a": float(i), "metric_b": float(i * 2), "metric_c": float(i % 5)} for i in range(10)}
+    headers: Dict[str, ColumnDict] = {
+        "metric_a": {"title": "Metric A"},
+        "metric_b": {"title": "Metric B"},
+        "metric_c": {"title": "Metric C"},
+    }
+    return violin.plot(data, headers, table.TableConfig(id="violinplot", title="Test: Violin"))
 
 
 def test_interactive_plot_adds_echarts_key_when_engine_is_echarts():
@@ -162,13 +164,17 @@ def test_interactive_plot_title_strips_html():
     assert skeleton["title"]["subtext"] == "42 things"
 
 
-def test_interactive_plot_unsupported_plot_type_does_not_raise():
+def test_interactive_plot_unsupported_plot_type_does_not_raise(monkeypatch):
+    # All PlotTypes with a figure are ported now (bar/line/scatter/heatmap/box/violin);
+    # exercise the generic "unsupported" fallback path directly instead, by pretending
+    # box plots aren't ported, so a single unported type still can't crash the report.
+    monkeypatch.delitem(echarts._BUILDERS, PlotType.BOX)
     config.plotting_engine = "echarts"
-    plot = _make_violin_plot()
+    plot = _make_box_plot()
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
     dumped = report.plot_data[plot.anchor]
-    assert dumped["echarts"] == {"unsupported": "violin plot"}
+    assert dumped["echarts"] == {"unsupported": "box plot"}
 
 
 def test_interactive_plot_adds_echarts_key_for_line_plot():
@@ -505,3 +511,120 @@ def test_box_mark_count_is_samples_plus_outliers():
         **{**dataset.__dict__, "samples": ["S1"], "data": [_GOLDEN_BOX_VALUES], "is_stats_data": False}
     )
     assert echarts.box.mark_count(outlier_dataset) == 1 + len(_GOLDEN_OUTLIERS)
+
+
+# GOLDEN kde() test: this fixed input + expected output is the cross-language contract
+# asserted here AND mirrored in a comment block at the top of `multiqc/plots/echarts/violin.py`
+# (and, in Task 2.2, at the top of `templates/echarts/src/js/plots/violin.js`). The JS
+# `kde()` port must reproduce these same values for the same input.
+_GOLDEN_KDE_VALUES = [1.0, 2.0, 3.0, 4.0, 5.0]
+_GOLDEN_KDE_XS = [1.0, 3.0, 5.0]
+_GOLDEN_KDE_DENSITIES = [0.15916497933387785, 0.1802710624663249, 0.15916497933387785]
+
+
+def test_kde_golden_values():
+    assert echarts.violin.kde(_GOLDEN_KDE_VALUES, _GOLDEN_KDE_XS) == _GOLDEN_KDE_DENSITIES
+
+
+def _renderitem_body(series_option):
+    return series_option["renderItem"]["body"]
+
+
+def test_interactive_plot_adds_echarts_key_for_violin_plot():
+    config.plotting_engine = "echarts"
+    plot = _make_violin_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert "echarts" in dumped
+    assert dumped["echarts"]["renderer"] == "svg"
+
+    dataset_entry = dumped["echarts"]["datasets"][0]
+    skeleton = dataset_entry["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["xAxis"]["type"] == "value"
+    assert skeleton["xAxis"]["show"] is False
+    assert skeleton["yAxis"]["type"] == "value"
+    assert skeleton["yAxis"]["inverse"] is True
+    assert skeleton["yAxis"]["min"] == -0.5
+    assert skeleton["yAxis"]["max"] == 2.5  # 3 metrics -> rows 0, 1, 2
+    assert skeleton["yAxis"]["axisLabel"]["formatter"]["__FN__"] is True
+    assert "series" not in skeleton
+
+    # The skeleton itself must stay plain-JSON-safe (the `__FN__` sentinel is a dict, not
+    # an actual function): `serialize()` already asserts this globally via `json.dumps`.
+
+    # VIOLIN EXCEPTION: precomputed KDE polygons ride along per-dataset, keyed by metric.
+    violins = dataset_entry["violins"]
+    assert set(violins.keys()) == {"metric_a", "metric_b", "metric_c"}
+    for payload in violins.values():
+        assert len(payload["poly"]) == 2 * echarts.violin.N_BINS
+        assert len(payload["range"]) == 2
+        assert payload["range"][0] < payload["range"][1]
+
+
+def test_get_option_violin_series_counts():
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    n_metrics = len(dataset.metrics)
+    assert n_metrics == 3
+
+    kde_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" in _renderitem_body(s)]
+    annotation_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" not in _renderitem_body(s)]
+    scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
+
+    assert len(kde_series) == n_metrics
+    assert len(annotation_series) == n_metrics
+    assert len(scatter_series) == n_metrics
+    assert len(option["series"]) == 3 * n_metrics
+
+
+def test_get_option_violin_scatter_items_shape():
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    scatter_by_name = {s["name"]: s for s in option["series"] if s["type"] == "scatter"}
+    assert set(scatter_by_name) == set(dataset.metrics)
+
+    for metric, series_option in scatter_by_name.items():
+        n_values = len(dataset.violin_value_by_sample_by_metric[metric])
+        assert len(series_option["data"]) == n_values
+        for item in series_option["data"]:
+            assert list(item.keys()) == ["value", "name"]
+            normx, row_idx = item["value"]
+            assert 0.0 <= normx <= 1.0
+            assert isinstance(row_idx, int)
+            assert item["name"] in dataset.all_samples
+
+
+def test_get_option_violin_axis_has_no_static_data():
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert "data" not in option["xAxis"]
+    assert "data" not in option["yAxis"]
+
+
+def test_violin_mark_count_is_total_scatter_points():
+    plot = _make_violin_plot()
+    dataset = plot.datasets[0]
+    expected = sum(len(dataset.violin_value_by_sample_by_metric[m]) for m in dataset.metrics)
+    assert echarts.violin.mark_count(dataset) == expected == 30  # 3 metrics * 10 samples
+
+
+def test_serialize_violin_includes_violins_payload():
+    plot = _make_violin_plot()
+    result = echarts.serialize(plot)
+
+    violins = result["datasets"][0]["violins"]
+    dataset = plot.datasets[0]
+    assert set(violins.keys()) == set(dataset.metrics)
+    for metric in dataset.metrics:
+        payload = violins[metric]
+        assert len(payload["poly"]) == 2 * echarts.violin.N_BINS
+        for x, y in payload["poly"]:
+            assert isinstance(x, float)
+            assert isinstance(y, float)
+        assert payload["range"] == list(echarts.violin._metric_range(echarts.violin._numeric_values(dataset, metric)))
