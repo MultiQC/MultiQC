@@ -95,6 +95,12 @@ def _si_axis_formatter_body(suffix: str) -> str:
     )
 
 
+# Gap (px) ECharts leaves between an axis's tick labels and its `name` (title), when
+# the axis has one. Reused below (`_grid_inset`) so the grid's left/bottom inset can
+# reserve exactly this much extra room, rather than the two numbers drifting apart.
+_AXIS_NAME_GAP = 30
+
+
 def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
     """
     `scale=True` is how a caller asks for Plotly-style autorange on a value axis: by
@@ -109,7 +115,7 @@ def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
         "type": _axis_type(axis),
         "name": _axis_name(axis),
         "nameLocation": "middle",
-        "nameGap": 30,
+        "nameGap": _AXIS_NAME_GAP,
     }
 
     minval: Optional[float] = None
@@ -133,6 +139,27 @@ def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
         axis_option["axisLabel"] = {"formatter": {"__FN__": True, "body": _si_axis_formatter_body(suffix)}}
 
     return axis_option
+
+
+def _grid_inset(axis_option: Dict[str, Any]) -> int:
+    """
+    Px inset `convert_layout` reserves on an axis's outer grid edge (`left` for yAxis,
+    `bottom` for xAxis).
+
+    `containLabel` (set on `grid` below) already grows the plot area to fit tick labels,
+    but NOT the axis `name`/title (POLISH.md #14, a known ECharts limitation: `name` is
+    drawn `nameGap` further out than the tick labels, and `containLabel`'s reserved space
+    stops at the labels). Left at the same tiny inset used when there's no name, a
+    present name gets pushed past the container edge and disappears entirely (confirmed
+    on RiboTish's "Read Length Distribution" and somalier's "Relatedness" scatter, both
+    losing their axis titles outright, not just clipping them short). So: reserve
+    `_AXIS_NAME_GAP` (the same gap `nameGap` uses) plus one line of name text when a name
+    is set, and fall back to the pre-existing tiny inset otherwise, keeping bar/box/violin/
+    heatmap axes (none of which set a `name`) exactly as tight as before.
+    """
+    if axis_option.get("name"):
+        return _AXIS_NAME_GAP + 14
+    return 8
 
 
 def convert_layout(
@@ -162,6 +189,9 @@ def convert_layout(
     title_text = merged.title.text if merged.title is not None else None
     show_legend = bool(merged.showlegend)
 
+    x_axis_option = _convert_axis(merged.xaxis, scale=scale_x)
+    y_axis_option = _convert_axis(merged.yaxis, scale=scale_y)
+
     return {
         "animation": False,
         "title": {**_convert_title(title_text), "left": "center"},
@@ -170,13 +200,21 @@ def convert_layout(
         # those defaults double-counts the label space and produces much bigger margins
         # than Plotly's automargin (which sizes margins to the label content only, plus
         # a small gap). Small fixed insets here let `containLabel` do the same job:
-        # grow only as far as the actual tick/axis-name text needs. The legend (to the
-        # right of the grid, see `legend` below) isn't covered by `containLabel` at all,
-        # so `right` needs a bit more room to keep it clear of the plot when shown, like
-        # Plotly's default template (which also puts the legend on the right).
-        "grid": {"left": 8, "right": 160 if show_legend else 16, "top": 64, "bottom": 8, "containLabel": True},
-        "xAxis": _convert_axis(merged.xaxis, scale=scale_x),
-        "yAxis": _convert_axis(merged.yaxis, scale=scale_y),
+        # grow only as far as the actual tick/axis-name text needs, except `left`/`bottom`
+        # widen further when the respective axis has a `name` set, so that name is never
+        # cropped (see `_grid_inset`, POLISH.md #14). The legend (to the right of the
+        # grid, see `legend` below) isn't covered by `containLabel` at all, so `right`
+        # needs a bit more room to keep it clear of the plot when shown, like Plotly's
+        # default template (which also puts the legend on the right).
+        "grid": {
+            "left": _grid_inset(y_axis_option),
+            "right": 160 if show_legend else 16,
+            "top": 64,
+            "bottom": _grid_inset(x_axis_option),
+            "containLabel": True,
+        },
+        "xAxis": x_axis_option,
+        "yAxis": y_axis_option,
         "legend": {
             "show": bool(merged.showlegend),
             "type": "scroll",
