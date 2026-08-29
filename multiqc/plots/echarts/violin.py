@@ -25,7 +25,10 @@ Two deliberate exceptions to the general "ECharts model->JSON contract"
    key (`{metric: {"poly": [[x, y], ...], "range": [lo, hi]}}`) computed from ALL samples
    (not toolbox-filtered). KDE is too expensive to redo in JS on every render; the
    interactive renderer uses this polygon directly when no samples are hidden, and
-   recomputes with the JS port of `kde()` only when samples are actually hidden.
+   recomputes with the JS port of `kde()` only when samples are actually hidden. The
+   inner Q1-Q3 box + median line (POLISH.md #10b) is NOT cached here: a sort + linear
+   interpolation is cheap enough that the JS side (`buildSeries()`) just recomputes it
+   from the currently-visible values on every render, same as the beeswarm points.
 
 Trust boundary: every `{"__FN__": True, "body": "<js source>"}` sentinel emitted in this
 module is built from typed, MultiQC-generated values (floats, sample names formatted with
@@ -38,6 +41,7 @@ import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
+from multiqc.plots.echarts.box import _quantile
 from multiqc.plots.echarts.converter import convert_layout
 from multiqc.plots.table_object import TableConfig
 from multiqc.plots.violin import ColumnAnchor, Dataset, ViolinColumn
@@ -50,9 +54,32 @@ ROW_HEIGHT = 0.42
 N_BINS = 60
 RANGE_PAD = 0.15
 
-_DEFAULT_FILL = "rgba(91,143,249,0.5)"
-_DEFAULT_STROKE = "#1f4d9e"
+# Inner Q1-Q3 box + median line drawn over each violin (POLISH.md #10b), sized as
+# fractions of ROW_HEIGHT so they scale with it; roughly matches Plotly's own default
+# violin box width ratio (~0.25 of the violin's full height).
+BOX_HALF_HEIGHT = 0.12
+MEDIAN_HALF_HEIGHT = 0.16
+
+# Fill opacity for the violin body (POLISH.md #10a). Matches Plotly's own dark-theme
+# violin fill opacity (see templates/default/src/js/plots/violin.js's
+# `isDarkMode ? 0.3 : 0.5`, applied client-side after Plotly renders); the SSR path here
+# has no way to detect the viewer's theme, so both this module and the interactive JS
+# path fix on the single dark-theme value for consistency (see module docstring).
+FILL_ALPHA = 0.3
+# Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
+BOX_FILL_ALPHA = 0.55
+
+_DEFAULT_STROKE = (
+    "rgb(31,77,158)"  # equivalent to the old "#1f4d9e", kept as rgb(...) so _rgba() below applies uniformly
+)
+_DEFAULT_FILL = f"rgba(91,143,249,{FILL_ALPHA})"
+_DEFAULT_BOX_FILL = f"rgba(31,77,158,{BOX_FILL_ALPHA})"
 _SCATTER_COLOR = "rgba(30,50,80,0.85)"
+
+
+def _rgba(rgb: str, alpha: float) -> str:
+    """`"rgb(r,g,b)"` -> `"rgba(r,g,b,alpha)"`."""
+    return rgb.replace("rgb(", "rgba(").replace(")", f",{alpha})")
 
 
 # --- KDE: the cross-language contract -------------------------------------------------
@@ -113,16 +140,30 @@ def _numeric_values(dataset: Dataset, metric: ColumnAnchor) -> List[float]:
     return [float(v) for v in dataset.violin_value_by_sample_by_metric[metric].values() if isinstance(v, (int, float))]
 
 
-def _metric_range(values: List[float]) -> Tuple[float, float]:
-    """Per-metric row normalization range with 15% padding, per BUILD_PLAN.md Task 2.1."""
+def _metric_range(header: ViolinColumn, values: List[float]) -> Tuple[float, float]:
+    """
+    Per-metric row normalization range. Prefers the column's own configured axis range
+    (`header.xaxis.range`, the exact `[dmin, dmax]` Plotly's per-row x-axis uses, see
+    `Dataset.create` in `multiqc/plots/violin.py`), so a violin occupies the same
+    fraction of its row that Plotly's does instead of always stretching to fill the full
+    row width regardless of how narrow the real data spread is (POLISH.md #10c). Falls
+    back to a padded observed-value range (BUILD_PLAN.md Task 2.1), matching Plotly's own
+    autorange, when the column has no configured range.
+    """
+    if header.xaxis.range is not None:
+        lo, hi = float(header.xaxis.range[0]), float(header.xaxis.range[1])
+        if hi > lo:
+            return lo, hi
+
     lo, hi = min(values), max(values)
     span = hi - lo
     lo -= span * RANGE_PAD
     hi += span * RANGE_PAD
     if hi <= lo:
-        # All values identical (span == 0): give the row a non-degenerate width so the
-        # (x - lo) / (hi - lo) normalization below never divides by zero.
-        hi = lo + 1.0
+        # All values identical (span == 0): center a small synthetic window on the value
+        # instead of pinning it to the row's left edge, so the (x - lo) / (hi - lo)
+        # normalization below never divides by zero.
+        lo, hi = values[0] - 0.5, values[0] + 0.5
     return lo, hi
 
 
@@ -140,6 +181,15 @@ def _violin_polygon(values: List[float], lo: float, hi: float, row_idx: int) -> 
     88-98.
     """
     span = hi - lo
+    if max(values) == min(values):
+        # Degenerate (zero-variance) metric: kde()'s Silverman bandwidth collapses to its
+        # 1e-9 floor here, which would otherwise blow up into a single needle-thin,
+        # full-height spike (POLISH.md #10d). Draw a flat row instead, matching Plotly's
+        # own near-invisible rendering for constant-value metrics; the median tick drawn
+        # over it (see series()) still marks the value.
+        x = (values[0] - lo) / span
+        return [[x, row_idx], [x, row_idx]]
+
     xs = [lo + span * i / (N_BINS - 1) for i in range(N_BINS)]
     ys = kde(values, xs)
     ymax = max(ys) or 1.0
@@ -158,16 +208,32 @@ def violin_polygons(dataset: Dataset) -> Dict[str, Dict[str, Any]]:
     """
     result: Dict[str, Dict[str, Any]] = {}
     for row_idx, metric in enumerate(_visible_metrics(dataset)):
+        header = dataset.header_by_metric[metric]
         values = _numeric_values(dataset, metric)
-        lo, hi = _metric_range(values)
+        lo, hi = _metric_range(header, values)
         poly = _violin_polygon(values, lo, hi, row_idx)
         result[str(metric)] = {"poly": poly, "range": [lo, hi]}
     return result
 
 
-def _violin_colors(header: ViolinColumn) -> Tuple[str, str]:
+def _row_quartiles(values: List[float]) -> Tuple[float, float, float]:
+    """
+    Q1/median/Q3 for one metric row's raw values, via the same linear-interpolation
+    quantile method `multiqc/plots/echarts/box.py` uses for box plots (reused directly,
+    not duplicated), for the inner box + median line drawn over each violin
+    (POLISH.md #10b).
+    """
+    sorted_values = sorted(values)
+    return _quantile(sorted_values, 0.25), _quantile(sorted_values, 0.5), _quantile(sorted_values, 0.75)
+
+
+def _violin_colors(header: ViolinColumn) -> Tuple[str, str, str]:
+    """`[fill, stroke, box_fill]` for one metric row's violin: `fill` is the violin
+    body's own semi-transparent color (`FILL_ALPHA`), `box_fill` is the inner Q1-Q3
+    box's fill, the same stroke hue at a more solid alpha (`BOX_FILL_ALPHA`) so the box
+    reads clearly against the lighter violin body."""
     if not header.color:
-        return _DEFAULT_FILL, _DEFAULT_STROKE
+        return _DEFAULT_FILL, _DEFAULT_STROKE, _DEFAULT_BOX_FILL
     color = header.color
     # General-stats metric colors are bare "r,g,b" triples; color_to_rgb_string only
     # accepts rgb()/hex/named and would fall back to black, so wrap a bare triple first
@@ -175,22 +241,45 @@ def _violin_colors(header: ViolinColumn) -> Tuple[str, str]:
     if re.fullmatch(r"\s*\d+\s*,\s*\d+\s*,\s*\d+\s*", color):
         color = f"rgb({color})"
     stroke = color_to_rgb_string(color)  # "rgb(r,g,b)"
-    fill = stroke.replace("rgb(", "rgba(").replace(")", ",0.5)")
-    return fill, stroke
+    fill = _rgba(stroke, FILL_ALPHA)
+    box_fill = _rgba(stroke, BOX_FILL_ALPHA)
+    return fill, stroke, box_fill
 
 
-def _kde_render_series(poly: List[List[float]], fill: str, stroke: str) -> Dict[str, Any]:
+def _violin_render_series(
+    poly: List[List[float]],
+    q1x: float,
+    medx: float,
+    q3x: float,
+    row_idx: int,
+    fill: str,
+    stroke: str,
+    box_fill: str,
+) -> Dict[str, Any]:
     """
     One `custom` series per row whose `renderItem` draws the KDE polygon computed in
-    Python. This is the ONE place a real function needs to reach the SSR bundle: the
-    `__FN__` sentinel body below is plain MultiQC-generated JS source (a JSON-encoded
-    point list plus fixed fill/stroke strings), never user data.
+    Python, plus an inner Q1-Q3 box and median line (POLISH.md #10b), matching Plotly's
+    `box_visible`/`meanline` violin config. `q1x`/`medx`/`q3x` are already normalized to
+    the same 0..1 x-space as `poly`. This is the ONE place a real function needs to reach
+    the SSR bundle: the `__FN__` sentinel body below is plain MultiQC-generated JS source
+    (a JSON-encoded point list plus fixed numeric/color literals), never user data.
     """
     body = (
         f"var poly = {json.dumps(poly)};"
         "var pts = poly.map(function(p) { return api.coord(p); });"
-        "return { type: 'polygon', shape: { points: pts }, "
-        f"style: {{ fill: {json.dumps(fill)}, stroke: {json.dumps(stroke)}, lineWidth: 1 }} }};"
+        f"var bTL = api.coord([{json.dumps(q1x)}, {json.dumps(row_idx - BOX_HALF_HEIGHT)}]);"
+        f"var bBR = api.coord([{json.dumps(q3x)}, {json.dumps(row_idx + BOX_HALF_HEIGHT)}]);"
+        f"var mTop = api.coord([{json.dumps(medx)}, {json.dumps(row_idx - MEDIAN_HALF_HEIGHT)}]);"
+        f"var mBot = api.coord([{json.dumps(medx)}, {json.dumps(row_idx + MEDIAN_HALF_HEIGHT)}]);"
+        "return { type: 'group', children: ["
+        "{ type: 'polygon', shape: { points: pts }, "
+        f"style: {{ fill: {json.dumps(fill)}, stroke: {json.dumps(stroke)}, lineWidth: 1 }} }},"
+        "{ type: 'rect', shape: { x: Math.min(bTL[0], bBR[0]), y: Math.min(bTL[1], bBR[1]), "
+        "width: Math.abs(bBR[0] - bTL[0]), height: Math.abs(bBR[1] - bTL[1]) }, "
+        f"style: {{ fill: {json.dumps(box_fill)}, stroke: {json.dumps(stroke)}, lineWidth: 1 }} }},"
+        "{ type: 'line', shape: { x1: mTop[0], y1: mTop[1], x2: mBot[0], y2: mBot[1] }, "
+        f"style: {{ stroke: {json.dumps(stroke)}, lineWidth: 2.5 }} }}"
+        "] };"
     )
     return {
         "type": "custom",
@@ -202,12 +291,17 @@ def _kde_render_series(poly: List[List[float]], fill: str, stroke: str) -> Dict[
     }
 
 
-def _annotation_render_series(row_idx: int, lo_obs: float, hi_obs: float) -> Dict[str, Any]:
-    """One `custom` series per row drawing the observed min/max text labels at row ends."""
+def _annotation_render_series(row_idx: int, lo_x: float, hi_x: float, lo_obs: float, hi_obs: float) -> Dict[str, Any]:
+    """
+    One `custom` series per row drawing the observed min/max text labels at the violin's
+    actual extent within the row (`lo_x`/`hi_x`, normalized 0..1): rows no longer always
+    span the full row width (POLISH.md #10c), so labels must follow the drawn blob rather
+    than always sitting at the row's physical ends.
+    """
     lo_label = json.dumps(f"{lo_obs:g}")
     hi_label = json.dumps(f"{hi_obs:g}")
     body = (
-        f"var L = api.coord([0, {row_idx}]); var R = api.coord([1, {row_idx}]);"
+        f"var L = api.coord([{json.dumps(lo_x)}, {row_idx}]); var R = api.coord([{json.dumps(hi_x)}, {row_idx}]);"
         "return { type: 'group', children: ["
         "{ type: 'text', style: { text: " + lo_label + ", x: L[0] - 6, y: L[1], "
         "textAlign: 'right', textVerticalAlign: 'middle', fontSize: 10, fill: '#888' } }, "
@@ -309,10 +403,10 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
 
 def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[str, Any]]:
     """
-    `n_metric` KDE-polygon `custom` series, then `n_metric` min/max-annotation `custom`
-    series, then `n_metric` beeswarm `scatter` series (one per metric; see
-    `_scatter_series_for_metric`). This is the SSR/get_option (non-toolbox) path; the
-    interactive path is `EchartsViolinPlot.buildSeries()`
+    `n_metric` violin (KDE polygon + inner box + median) `custom` series, then `n_metric`
+    min/max-annotation `custom` series, then `n_metric` beeswarm `scatter` series (one per
+    metric; see `_scatter_series_for_metric`). This is the SSR/get_option (non-toolbox)
+    path; the interactive path is `EchartsViolinPlot.buildSeries()`
     (`templates/echarts/src/js/plots/violin.js`, Task 2.2).
 
     `pconfig`/`is_pct` are accepted for dispatch-signature parity with `bar.series`; violin
@@ -320,23 +414,32 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
     """
     metrics = _visible_metrics(dataset)
 
-    kde_series = []
+    violin_series = []
     annotation_series = []
     scatter_series = []
     for row_idx, metric in enumerate(metrics):
         header = dataset.header_by_metric[metric]
         values = _numeric_values(dataset, metric)
-        lo, hi = _metric_range(values)
+        lo, hi = _metric_range(header, values)
+        span = hi - lo
 
         poly = _violin_polygon(values, lo, hi, row_idx)
-        fill, stroke = _violin_colors(header)
-        kde_series.append(_kde_render_series(poly, fill, stroke))
+        fill, stroke, box_fill = _violin_colors(header)
+        q1, median, q3 = _row_quartiles(values)
+        violin_series.append(
+            _violin_render_series(
+                poly, (q1 - lo) / span, (median - lo) / span, (q3 - lo) / span, row_idx, fill, stroke, box_fill
+            )
+        )
 
-        annotation_series.append(_annotation_render_series(row_idx, min(values), max(values)))
+        lo_obs, hi_obs = min(values), max(values)
+        annotation_series.append(
+            _annotation_render_series(row_idx, (lo_obs - lo) / span, (hi_obs - lo) / span, lo_obs, hi_obs)
+        )
 
         scatter_series.append(_scatter_series_for_metric(dataset, metric, row_idx, lo, hi))
 
-    return kde_series + annotation_series + scatter_series
+    return violin_series + annotation_series + scatter_series
 
 
 def axis_data(dataset: Dataset, pconfig: TableConfig) -> Optional[List[Tuple[str, List[str]]]]:

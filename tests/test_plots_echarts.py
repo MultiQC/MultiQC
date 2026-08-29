@@ -812,7 +812,88 @@ def test_serialize_violin_includes_violins_payload():
         for x, y in payload["poly"]:
             assert isinstance(x, float)
             assert isinstance(y, float)
-        assert payload["range"] == list(echarts.violin._metric_range(echarts.violin._numeric_values(dataset, metric)))
+        header = dataset.header_by_metric[metric]
+        values = echarts.violin._numeric_values(dataset, metric)
+        assert payload["range"] == list(echarts.violin._metric_range(header, values))
+
+
+def test_get_option_violin_inner_box_and_median():
+    """POLISH.md #10b: each violin's `renderItem` also draws a Q1-Q3 box and median
+    line, at the same normalized position `_row_quartiles` computes independently."""
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    dataset = plot.datasets[0]
+
+    violin_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" in _renderitem_body(s)]
+    assert len(violin_series) == len(dataset.metrics)
+
+    for metric, series_option in zip(dataset.metrics, violin_series):
+        body = _renderitem_body(series_option)
+        assert "'rect'" in body
+        assert "'line'" in body
+
+        header = dataset.header_by_metric[metric]
+        values = echarts.violin._numeric_values(dataset, metric)
+        lo, hi = echarts.violin._metric_range(header, values)
+        q1, median, q3 = echarts.violin._row_quartiles(values)
+        # The box/median coordinates are baked into the renderItem body as normalized
+        # (0..1) x literals (see `_violin_render_series`); check the expected fractions
+        # actually appear in the generated source rather than re-parsing the JS.
+        for x in ((q1 - lo) / (hi - lo), (median - lo) / (hi - lo), (q3 - lo) / (hi - lo)):
+            assert str(x) in body
+
+
+def test_row_quartiles_matches_box_quantile_method():
+    """`_row_quartiles` reuses `box.py`'s quantile method directly (not a re-derivation),
+    so this just pins the linear-interpolation contract for a simple known input."""
+    q1, median, q3 = echarts.violin._row_quartiles([1.0, 2.0, 3.0, 4.0, 5.0])
+    assert (q1, median, q3) == (2.0, 3.0, 4.0)
+
+
+def test_metric_range_prefers_header_xaxis_range():
+    """POLISH.md #10c: a column with a configured axis range (e.g. a 0-100 percentage)
+    normalizes against that range, not the padded observed-value range, so the violin
+    occupies the same fraction of its row that Plotly's does."""
+    header = violin.ViolinColumn(
+        title="Pct",
+        description="",
+        suffix="%",
+        dmin=0,
+        dmax=100,
+        hidden=False,
+        xaxis=violin.XAxis(range=[0.0, 100.0]),
+        show_only_outliers=False,
+        show_points=True,
+    )
+    assert echarts.violin._metric_range(header, [1.0, 2.0, 3.0]) == (0.0, 100.0)
+
+
+def test_metric_range_falls_back_and_centers_degenerate_values():
+    """No configured range: falls back to the padded observed range; when every value is
+    identical, centers a small synthetic window on it instead of the old behavior of
+    pinning it to the row's left edge (POLISH.md #10c/#10d)."""
+    header = violin.ViolinColumn(
+        title="Metric",
+        description="",
+        suffix="",
+        dmin=None,
+        dmax=None,
+        hidden=False,
+        xaxis=violin.XAxis(),
+        show_only_outliers=False,
+        show_points=True,
+    )
+    lo, hi = echarts.violin._metric_range(header, [5.0, 5.0, 5.0])
+    assert lo < 5.0 < hi
+
+
+def test_violin_polygon_degenerate_metric_is_flat():
+    """POLISH.md #10d: a zero-variance metric must not blow kde()'s bandwidth floor
+    into a needle-thin, full-height spike; the polygon should collapse to a flat
+    (zero-height) line instead."""
+    poly = echarts.violin._violin_polygon([5.0, 5.0, 5.0], lo=4.5, hi=5.5, row_idx=2)
+    ys = [y for _, y in poly]
+    assert ys == [2, 2]
 
 
 ############################################

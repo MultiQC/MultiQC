@@ -61,6 +61,31 @@ const N_BINS = 60;
 const RANGE_PAD = 0.15;
 const SCATTER_COLOR = "rgba(30,50,80,0.85)";
 
+// Inner Q1-Q3 box + median line drawn over each violin (POLISH.md #10b), sized as
+// fractions of ROW_HEIGHT; mirrors multiqc/plots/echarts/violin.py's constants of the
+// same name.
+const BOX_HALF_HEIGHT = 0.12;
+const MEDIAN_HALF_HEIGHT = 0.16;
+
+// Fill opacity for the violin body (POLISH.md #10a); mirrors violin.py's FILL_ALPHA.
+const FILL_ALPHA = 0.3;
+// Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
+const BOX_FILL_ALPHA = 0.55;
+
+// Linear-interpolation quantile (mirrors multiqc/plots/echarts/box.py::_quantile, also
+// duplicated in this template's own box.js's quantile(); re-duplicated here rather than
+// imported because each templates/echarts/src/js/plots/*.js file is its own ES module
+// scope, same reasoning as this file's kde() mirror above).
+function quantile(sortedValues, q) {
+  const n = sortedValues.length;
+  if (n === 1) return sortedValues[0];
+  const h = (n - 1) * q;
+  const lo = Math.floor(h);
+  const hi = Math.min(lo + 1, n - 1);
+  const frac = h - lo;
+  return sortedValues[lo] + frac * (sortedValues[hi] - sortedValues[lo]);
+}
+
 // Reduce-based min/max: `Math.min(...arr)`/`Math.max(...arr)` blow the call stack on
 // large sample counts (general stats tables can have thousands of rows).
 function arrMin(arr) {
@@ -70,14 +95,25 @@ function arrMax(arr) {
   return arr.reduce((a, b) => (b > a ? b : a), arr[0]);
 }
 
-// Mirrors violin.py::_metric_range (RANGE_PAD-padded [lo, hi] domain).
-function metricRange(values) {
+// Mirrors violin.py::_metric_range: prefers the column's own configured axis range
+// (header.xaxis.range, the exact [dmin, dmax] Plotly's per-row x-axis uses) so a violin
+// occupies the same fraction of its row that Plotly's does (POLISH.md #10c), falling
+// back to a padded observed-value range when the column has no configured range.
+function metricRange(header, values) {
+  const range = header && header.xaxis && header.xaxis.range;
+  if (range && range[1] > range[0]) return [range[0], range[1]];
+
   let lo = arrMin(values);
   let hi = arrMax(values);
   const span = hi - lo;
   lo -= span * RANGE_PAD;
   hi += span * RANGE_PAD;
-  if (hi <= lo) hi = lo + 1.0;
+  if (hi <= lo) {
+    // All values identical (span == 0): center a small synthetic window on the value
+    // instead of pinning it to the row's left edge.
+    lo = values[0] - 0.5;
+    hi = values[0] + 0.5;
+  }
   return [lo, hi];
 }
 
@@ -85,6 +121,17 @@ function metricRange(values) {
 // and integer-offset y-space.
 function violinPolygon(values, lo, hi, rowIdx) {
   const span = hi - lo;
+  if (arrMax(values) === arrMin(values)) {
+    // Degenerate (zero-variance) metric: kde()'s Silverman bandwidth collapses to its
+    // 1e-9 floor here, which would otherwise blow up into a single needle-thin,
+    // full-height spike (POLISH.md #10d). Draw a flat row instead; the median tick
+    // (see buildSeries()) still marks the value.
+    const x = (values[0] - lo) / span;
+    return [
+      [x, rowIdx],
+      [x, rowIdx],
+    ];
+  }
   const xs = Array.from({ length: N_BINS }, (_, i) => lo + (span * i) / (N_BINS - 1));
   const ys = kde(values, xs);
   const ymax = arrMax(ys) || 1.0;
@@ -115,11 +162,18 @@ function normalizeColorToRGB(color) {
   return null;
 }
 
-// Mirrors violin.py::_violin_colors: [fill, stroke], falling back to the same defaults.
+// "rgb(r,g,b)" -> "rgba(r,g,b,alpha)"; mirrors violin.py::_rgba.
+function toRgba(rgb, alpha) {
+  return rgb.replace("rgb(", "rgba(").replace(")", `,${alpha})`);
+}
+
+// Mirrors violin.py::_violin_colors: [fill, stroke, boxFill], falling back to the same
+// defaults (kept as rgb(...), not hex, so toRgba() above applies uniformly).
 function violinColors(header) {
   const rgb = header.color ? normalizeColorToRGB(header.color) : null;
-  if (!rgb) return ["rgba(91,143,249,0.5)", "#1f4d9e"];
-  return [`rgba(${rgb},0.5)`, `rgb(${rgb})`];
+  if (!rgb) return [`rgba(91,143,249,${FILL_ALPHA})`, "rgb(31,77,158)", `rgba(31,77,158,${BOX_FILL_ALPHA})`];
+  const stroke = `rgb(${rgb})`;
+  return [toRgba(stroke, FILL_ALPHA), stroke, toRgba(stroke, BOX_FILL_ALPHA)];
 }
 
 // Min/max row label: delegates to the shared window.formatNumber (echarts-plotting.js)
@@ -128,19 +182,49 @@ function formatG(num) {
   return String(window.formatNumber(num));
 }
 
-function makeKdeRenderItem(poly, fill, stroke) {
+// Draws the KDE polygon plus an inner Q1-Q3 box and median line (POLISH.md #10b),
+// matching Plotly's box_visible/meanline violin config. q1x/medx/q3x are already
+// normalized to the same 0..1 x-space as poly. Mirrors violin.py::_violin_render_series.
+function makeViolinRenderItem(poly, q1x, medx, q3x, rowIdx, fill, stroke, boxFill) {
   return function (params, api) {
     const pts = poly.map((p) => api.coord(p));
-    return { type: "polygon", shape: { points: pts }, style: { fill, stroke, lineWidth: 1 } };
+    const bTL = api.coord([q1x, rowIdx - BOX_HALF_HEIGHT]);
+    const bBR = api.coord([q3x, rowIdx + BOX_HALF_HEIGHT]);
+    const mTop = api.coord([medx, rowIdx - MEDIAN_HALF_HEIGHT]);
+    const mBot = api.coord([medx, rowIdx + MEDIAN_HALF_HEIGHT]);
+    return {
+      type: "group",
+      children: [
+        { type: "polygon", shape: { points: pts }, style: { fill, stroke, lineWidth: 1 } },
+        {
+          type: "rect",
+          shape: {
+            x: Math.min(bTL[0], bBR[0]),
+            y: Math.min(bTL[1], bBR[1]),
+            width: Math.abs(bBR[0] - bTL[0]),
+            height: Math.abs(bBR[1] - bTL[1]),
+          },
+          style: { fill: boxFill, stroke, lineWidth: 1 },
+        },
+        {
+          type: "line",
+          shape: { x1: mTop[0], y1: mTop[1], x2: mBot[0], y2: mBot[1] },
+          style: { stroke, lineWidth: 2.5 },
+        },
+      ],
+    };
   };
 }
 
-function makeAnnotationRenderItem(rowIdx, loObs, hiObs) {
+// lo/hi are the violin's actual drawn extent within the row, normalized 0..1: rows no
+// longer always span the full row width (POLISH.md #10c), so labels must follow the
+// drawn blob rather than always sitting at the row's physical ends.
+function makeAnnotationRenderItem(rowIdx, loX, hiX, loObs, hiObs) {
   const loLabel = formatG(loObs);
   const hiLabel = formatG(hiObs);
   return function (params, api) {
-    const L = api.coord([0, rowIdx]);
-    const R = api.coord([1, rowIdx]);
+    const L = api.coord([loX, rowIdx]);
+    const R = api.coord([hiX, rowIdx]);
     return {
       type: "group",
       children: [
@@ -283,10 +367,10 @@ class EchartsViolinPlot extends window.Plot {
     return csv;
   }
 
-  // Builds: n_metric KDE-polygon `custom` series, then n_metric min/max-annotation
-  // `custom` series, then n_metric beeswarm `scatter` series -- same ordering as the
-  // SSR path (multiqc/plots/echarts/violin.py::series()), which is what the
-  // sample -> [seriesIndex, dataIndex] cross-highlight map below relies on.
+  // Builds: n_metric violin (KDE polygon + inner box + median) `custom` series, then
+  // n_metric min/max-annotation `custom` series, then n_metric beeswarm `scatter`
+  // series -- same ordering as the SSR path (multiqc/plots/echarts/violin.py::series()),
+  // which is what the sample -> [seriesIndex, dataIndex] cross-highlight map below relies on.
   buildSeries() {
     let [
       metrics,
@@ -312,7 +396,7 @@ class EchartsViolinPlot extends window.Plot {
       pythonRowIdxByMetric[m] = i;
     });
 
-    const kdeSeries = [];
+    const violinSeries = [];
     const annotationSeries = [];
     const scatterSeries = [];
     const rowTitles = {};
@@ -336,16 +420,36 @@ class EchartsViolinPlot extends window.Plot {
       } else {
         // Slow path: samples are hidden, so the polygon must be recomputed from the
         // currently-visible values only (see the perf note in BUILD_PLAN.md Phase 2 risks).
-        [lo, hi] = metricRange(numericValues);
+        [lo, hi] = metricRange(header, numericValues);
         poly = violinPolygon(numericValues, lo, hi, rowIdx);
       }
+      const span = hi - lo;
 
-      const [fill, stroke] = violinColors(header);
-      kdeSeries.push({
+      // Q1/median/Q3 are cheap (a sort + linear interpolation) compared to the KDE, so
+      // unlike the polygon they're just always recomputed fresh here, fast path or not
+      // (see the module docstring's point 2 note on this).
+      const sorted = [...numericValues].sort((a, b) => a - b);
+      const q1 = quantile(sorted, 0.25);
+      const median = quantile(sorted, 0.5);
+      const q3 = quantile(sorted, 0.75);
+      const obsMin = arrMin(numericValues);
+      const obsMax = arrMax(numericValues);
+
+      const [fill, stroke, boxFill] = violinColors(header);
+      violinSeries.push({
         type: "custom",
         coordinateSystem: "cartesian2d",
         data: [0],
-        renderItem: makeKdeRenderItem(poly, fill, stroke),
+        renderItem: makeViolinRenderItem(
+          poly,
+          (q1 - lo) / span,
+          (median - lo) / span,
+          (q3 - lo) / span,
+          rowIdx,
+          fill,
+          stroke,
+          boxFill,
+        ),
         silent: true,
         z: 1,
       });
@@ -354,7 +458,7 @@ class EchartsViolinPlot extends window.Plot {
         type: "custom",
         coordinateSystem: "cartesian2d",
         data: [0],
-        renderItem: makeAnnotationRenderItem(rowIdx, arrMin(numericValues), arrMax(numericValues)),
+        renderItem: makeAnnotationRenderItem(rowIdx, (obsMin - lo) / span, (obsMax - lo) / span, obsMin, obsMax),
         silent: true,
         z: 3,
       });
@@ -364,7 +468,6 @@ class EchartsViolinPlot extends window.Plot {
       const scatterData = [];
       if (header.show_points) {
         const svBySample = scatterValuesBySampleByMetric[metric] || {};
-        const span = hi - lo;
         Object.entries(svBySample).forEach(([sample, value]) => {
           if (typeof value !== "number" || !Number.isFinite(value)) return;
           const normx = (value - lo) / span;
@@ -400,7 +503,7 @@ class EchartsViolinPlot extends window.Plot {
     // sample -> [[seriesIndex, dataIndex], ...] across every scatter series, for the
     // cross-row highlight wired in afterPlotCreated().
     const sampleIndexMap = {};
-    const scatterOffset = kdeSeries.length + annotationSeries.length;
+    const scatterOffset = violinSeries.length + annotationSeries.length;
     scatterSeries.forEach((series, si) => {
       series.data.forEach((item, di) => {
         if (!sampleIndexMap[item.name]) sampleIndexMap[item.name] = [];
@@ -419,7 +522,7 @@ class EchartsViolinPlot extends window.Plot {
     if (el) el.style.height = height + "px";
     $("#" + this.anchor + "-wrapper").css("height", height + "px");
 
-    return kdeSeries.concat(annotationSeries, scatterSeries);
+    return violinSeries.concat(annotationSeries, scatterSeries);
   }
 
   // Row labels (yAxis is a value axis, per the VALUE-AXIS TRICK in violin.py) and the
