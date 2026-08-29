@@ -6,12 +6,29 @@ from collections import defaultdict
 import re
 from typing import Any, Dict, List, Optional, Set, cast
 
+
+from multiqc.plots import bargraph
+import glob
+import os
+
+import logging
+log = logging.getLogger(__name__)
+
+from multiqc.plots import bargraph
+
+
+
 from multiqc import config
+
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph, table
 from multiqc.plots.table_object import ColumnDict, TableConfig
 from multiqc.types import ColumnKey
+
+import numpy as np
+from scipy.stats import gaussian_kde
+from collections import defaultdict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -206,8 +223,12 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             plot=hs_pen_plot,
         )
 
+    # Parse and plot per-target coverage info
+    _parse_target_coverage(module)
+
     # Return the number of detected samples to the parent module
     return set(data_by_sample.keys())
+
 
 
 def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
@@ -414,6 +435,224 @@ def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]
     }
 
 
+def _parse_target_coverage(self):
+    """
+    Parse all *_per_target_coverage.txt files found under config.analysis_dir.
+    Extract per-sample normalized coverage metrics and add a violin plot.
+    """
+
+    import os
+    import glob
+    import numpy as np
+    from multiqc.plots import violin
+
+    file_pattern = "*_per_target_coverage.txt"
+    all_files = []
+
+    log.debug("Starting _parse_target_coverage()")
+
+    # Ensure config.analysis_dir is iterable
+    analysis_dirs = config.analysis_dir if isinstance(config.analysis_dir, list) else [config.analysis_dir]
+
+    for adir in analysis_dirs:
+        full_pattern = os.path.join(adir, "**", file_pattern)
+        log.debug(f"Searching with pattern: {full_pattern}")
+        matched_files = glob.glob(full_pattern, recursive=True)
+        log.debug(f"Found {len(matched_files)} files in {adir}")
+        all_files.extend(matched_files)
+
+    if not all_files:
+        log.warning("No *_per_target_coverage.txt files found.")
+        return
+
+    # Collect coverage values by sample
+    coverage_data = {}
+
+    for f in all_files:
+        sample_name = os.path.basename(f).split("_per_target_coverage")[0]
+        log.debug(f"Parsing file: {f}")
+        try:
+            with open(f, 'r') as fh:
+                cov_values = []
+                for line in fh:
+                    line = line.strip()
+                    if not line or line.startswith("#") or line.lower().startswith("target name"):
+                        continue
+                    parts = line.split("\t")
+                    try:
+                        # Assume the normalized coverage is in the 6th column (index 5)
+                        norm_cov = float(parts[5])
+                        cov_values.append(norm_cov)
+                    except (IndexError, ValueError):
+                        continue
+                if cov_values:
+                    coverage_data[sample_name] = cov_values
+        except Exception as e:
+            log.error(f"Failed to parse file {f}: {e}")
+
+    if not coverage_data:
+        log.warning("No coverage data parsed for any samples.")
+        return
+
+    # Generate violin plot data
+def _parse_target_coverage(self):
+    """
+    Parse all *_per_target_coverage.txt files found under config.analysis_dir.
+    Extract per-sample normalized coverage metrics and add a line plot.
+    """
+
+    import os
+    import glob
+    import numpy as np
+    from multiqc.plots import linegraph
+    import collections
+
+
+
+    log.debug("Starting _parse_target_coverage()")
+
+    file_pattern = "*_per_target_coverage.txt"
+    all_files = []
+    analysis_dirs = config.analysis_dir if isinstance(config.analysis_dir, list) else [config.analysis_dir]
+
+    for adir in analysis_dirs:
+        full_pattern = os.path.join(adir, "**", file_pattern)
+        matched_files = glob.glob(full_pattern, recursive=True)
+        log.debug(f"Found {len(matched_files)} files in {adir}")
+        all_files.extend(matched_files)
+
+    if not all_files:
+        log.warning("No *_per_target_coverage.txt files found.")
+        return
+
+    all_sample_data = {}
+
+    for f in all_files:
+        try:
+            with open(f) as fh:
+                header = fh.readline().strip().split('\t')
+                if "mean_coverage" not in header:
+                    log.warning(f"'mean_coverage' column missing in {f}")
+                    continue
+                idx = header.index("mean_coverage")
+
+                sample_name = os.path.basename(f).split("_per_target_coverage")[0]
+                cov_vals = []
+
+                for line in fh:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    parts = line.split('\t')
+                    try:
+                        cov = float(parts[idx])
+                        cov_vals.append(cov)
+                    except Exception:
+                        continue
+
+                if cov_vals:
+                    median = np.median(cov_vals)
+                    if median > 0:
+                        norm_cov = [x / median for x in cov_vals]
+                        all_sample_data[sample_name] = norm_cov
+                    else:
+                        log.warning(f"Sample {sample_name} has zero median coverage")
+        except Exception as e:
+            log.error(f"Error reading {f}: {e}")
+
+    if not all_sample_data:
+        log.warning("No valid coverage data found to plot.")
+        return
+
+    # Convert normalized values into histogram-like frequency data
+    # Convert normalized values into list of (x, y) tuples per sample
+    pdata_coverage = {}
+    for sample, values in all_sample_data.items():
+        hist = collections.Counter(round(v, 2) for v in values)
+        x_vals = sorted(hist.keys())
+        y_vals = [hist[x] for x in x_vals]
+        pdata_coverage[sample] = list(zip(x_vals, y_vals))  # <- FIX HERE
+
+    # Plot config
+    pconfig = {
+        "id": "picard_target_coverage",
+        "title": "Picard: Coverage distribution",
+        "ylab": "Frequency",
+        "xlab": "Coverage (median scaled)",
+        "tt_label": "<b>Coverage {point.x}</b>: {point.y:.2f}",
+    }
+
+    self.add_section(
+        name="Target coverage distribution",
+        anchor="picard_target_coverage_distribution",
+        description="Plot shows the median-normalized coverage distribution over the targets.",
+        plot=linegraph.plot(pdata_coverage, pconfig),
+    )
+
+    gc_data = {'collapsed_gcbias': {}, 'uncollapsed_gcbias': {}}
+
+    for f in all_files:
+        sample_name = os.path.basename(f).split("_per_target_coverage")[0]
+
+        anchor = 'collapsed_gcbias' if 'collapsed' in f.lower() else (
+            'uncollapsed_gcbias' if 'uncollapsed' in f.lower() else None
+        )
+        if anchor is None:
+            continue
+
+        try:
+            with open(f, 'r') as fh:
+                header = fh.readline().strip().split("\t")
+                gc_idx = header.index('%gc')
+                cov_idx = header.index('normalized_coverage')
+
+                gc_bins = collections.defaultdict(list)
+                for line in fh:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split("\t")
+                    if len(parts) <= max(gc_idx, cov_idx):
+                        continue
+                    try:
+                        gc = round(float(parts[gc_idx]) * 100, 2)  # Convert to percentage
+                        cov = float(parts[cov_idx])
+                        gc_bins[gc].append(cov)
+                    except ValueError:
+                        continue
+
+                # Average normalized coverage per %GC
+                if gc_bins:
+                    x_vals = sorted(gc_bins.keys())
+                    y_vals = [sum(vals) / len(vals) for gc_val, vals in sorted(gc_bins.items())]
+                    gc_data[anchor][sample_name] = list(zip(x_vals, y_vals))
+        except Exception as e:
+            log.error(f"Failed to parse GC bias for {f}: {e}")
+
+    # Plot for both collapsed and uncollapsed
+    for anchor in ['collapsed_gcbias', 'uncollapsed_gcbias']:
+        if not gc_data[anchor]:
+            log.warning(f"No GC bias data for {anchor}")
+            continue
+
+        pconfig = {
+            "id": anchor,
+            "title": "Picard: GC Bias",
+            "ylab": "Normalized coverage",
+            "xlab": "%GC",
+            "tt_label": "<b>%GC {point.x}</b>: {point.y:.2f}",
+        }
+
+        self.add_section(
+            name="GC Bias (Collapsed BAM)" if anchor == 'collapsed_gcbias' else "GC Bias (Uncollapsed BAM)",
+            anchor=anchor,
+            description="Plot shows the average normalized coverage across GC content bins.",
+            plot=linegraph.plot(gc_data[anchor], pconfig),
+        )
+    return len(all_sample_data)
+
+
+
 def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
     data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
     any_non_zero = False
@@ -437,3 +676,5 @@ def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
 
     if any_non_zero:
         return linegraph.plot(data_clean, pconfig)
+
+
