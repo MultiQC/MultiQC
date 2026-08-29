@@ -35,6 +35,7 @@ the comment at `static_export._FN_WALKER_JS`).
 """
 
 import json
+import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from multiqc.plots.echarts.converter import convert_layout
@@ -167,7 +168,13 @@ def violin_polygons(dataset: Dataset) -> Dict[str, Dict[str, Any]]:
 def _violin_colors(header: ViolinColumn) -> Tuple[str, str]:
     if not header.color:
         return _DEFAULT_FILL, _DEFAULT_STROKE
-    stroke = color_to_rgb_string(header.color)  # "rgb(r,g,b)"
+    color = header.color
+    # General-stats metric colors are bare "r,g,b" triples; color_to_rgb_string only
+    # accepts rgb()/hex/named and would fall back to black, so wrap a bare triple first
+    # (this matches normalizeColorToRGB on the JS side, keeping SSR colors in parity).
+    if re.fullmatch(r"\s*\d+\s*,\s*\d+\s*,\s*\d+\s*", color):
+        color = f"rgb({color})"
+    stroke = color_to_rgb_string(color)  # "rgb(r,g,b)"
     fill = stroke.replace("rgb(", "rgba(").replace(")", ",0.5)")
     return fill, stroke
 
