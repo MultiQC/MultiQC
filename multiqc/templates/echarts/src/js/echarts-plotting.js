@@ -96,6 +96,31 @@ class Plot {
     throw new Error("buildSeries() not implemented");
   }
 
+  // Reads the static markArea/markLine payload for the active dataset's
+  // `x_bands`/`y_bands`/`x_lines`/`y_lines` (precomputed once in Python by
+  // multiqc/plots/echarts/converter.py::bands_and_lines, stashed in the option
+  // skeleton under `_mqc.bandsLines`) and, if present, wraps it as a trailing,
+  // invisible `{type: "line"}` series. renderPlot() always replaces `option.series`
+  // wholesale, so this has to be re-appended by every buildSeries() call rather than
+  // set once; markArea/markLine attach fine to a "line" series even when the rest of
+  // the chart's series are "bar"/"scatter", since they share the same grid/axes.
+  // Called by line.js/bar.js/scatter.js's buildSeries() (DRY: one implementation).
+  bandsLinesSeries() {
+    let bandsLines = this.echarts.datasets[this.activeDatasetIdx].layout["_mqc"]?.bandsLines;
+    if (!bandsLines) return [];
+    return [
+      {
+        type: "line",
+        name: "",
+        data: [],
+        silent: true,
+        showSymbol: false,
+        tooltip: { show: false },
+        ...bandsLines,
+      },
+    ];
+  }
+
   afterPlotCreated() {}
 
   // Hook for a plot type to mutate the fully-assembled option in place before it's set

@@ -9,7 +9,7 @@ for the Plotly-JS equivalent this mirrors.
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from multiqc.plots.bargraph import BarPlotConfig, Dataset
-from multiqc.plots.echarts.converter import convert_layout
+from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, trailing_bands_lines_series
 
 if TYPE_CHECKING:
     from multiqc.plots.plot import Plot
@@ -89,37 +89,53 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     # JS reads this to decide whether series stack (default) or sit side by side.
     option["_mqc"] = {"barmode": plot.layout.barmode}
 
+    # `y_bands`/`y_lines` would target the category (sample) axis here, which is
+    # meaningless for a numeric threshold, so they are dropped (see
+    # `converter.bands_and_lines` docstring for the empirical Plotly evidence).
+    bands_lines = bands_and_lines(plot.pconfig, include_y=False)
+    if bands_lines:
+        option["_mqc"]["bandsLines"] = bands_lines
+
     return option
 
 
 def series(dataset: Dataset, pconfig: BarPlotConfig, is_pct: bool) -> List[Dict[str, Any]]:
     """
-    One `{"type": "bar"}` series per category, or (grouped bars) per sample x category.
-    Mirrors the stacking logic in `BarPlot.initialize` (`multiqc/plots/bargraph.py`).
+    One `{"type": "bar"}` series per category, or (grouped bars) per sample x category,
+    plus (if configured) a trailing silent series carrying the static bands/lines
+    markArea/markLine from `trailing_bands_lines_series`. Mirrors the stacking logic in
+    `BarPlot.initialize` (`multiqc/plots/bargraph.py`).
     """
     if dataset.group_labels:
-        return _grouped_series(dataset, is_pct)
+        result = _grouped_series(dataset, is_pct)
+    else:
+        barmode = pconfig.stacking
+        if barmode is None:  # legacy: non-default None means "group"
+            barmode = "group"
+        if barmode == "normal":  # legacy alias
+            barmode = "relative"
+        is_group = barmode == "group"
 
-    barmode = pconfig.stacking
-    if barmode is None:  # legacy: non-default None means "group"
-        barmode = "group"
-    if barmode == "normal":  # legacy alias
-        barmode = "relative"
-    is_group = barmode == "group"
+        result = []
+        for cat in dataset.cats:
+            data = cat.data_pct if is_pct else cat.data
+            s: Dict[str, Any] = {
+                "type": "bar",
+                "name": cat.name,
+                "data": list(data),
+                "itemStyle": {"color": cat.color},
+                "barCategoryGap": "30%",
+            }
+            if not is_group:
+                s["stack"] = "total"
+            result.append(s)
 
-    result: List[Dict[str, Any]] = []
-    for cat in dataset.cats:
-        data = cat.data_pct if is_pct else cat.data
-        s: Dict[str, Any] = {
-            "type": "bar",
-            "name": cat.name,
-            "data": list(data),
-            "itemStyle": {"color": cat.color},
-            "barCategoryGap": "30%",
-        }
-        if not is_group:
-            s["stack"] = "total"
-        result.append(s)
+    # See the `include_y=False` comment in `layout_option`: bar's category axis makes
+    # y_bands/y_lines meaningless, so they are dropped here too.
+    trailing = trailing_bands_lines_series(pconfig, include_y=False)
+    if trailing:
+        result.append(trailing)
+
     return result
 
 

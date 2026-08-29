@@ -44,20 +44,8 @@ class EchartsLinePlot extends window.LinePlot {
     });
 
     // Static quality-zone bands/lines (e.g. fastqc's green/yellow/red per-base-quality
-    // background): precomputed once in Python, stashed in the skeleton, and here just
-    // carried over onto a silent series so it survives the option.series = [...] reset.
-    let bandsLines = this.echarts.datasets[this.activeDatasetIdx].layout["_mqc"]?.bandsLines;
-    if (bandsLines) {
-      series.push({
-        type: "line",
-        name: "",
-        data: [],
-        silent: true,
-        showSymbol: false,
-        tooltip: { show: false },
-        ...bandsLines,
-      });
-    }
+    // background): see Plot.bandsLinesSeries() in echarts-plotting.js.
+    series.push(...this.bandsLinesSeries());
 
     return series;
   }

@@ -94,6 +94,34 @@ def _make_scatter_plot():
     )
 
 
+def _make_bar_plot_with_bands():
+    return bargraph.plot(
+        {"Sample1": {"Cat1": 1}, "Sample2": {"Cat1": 2}},
+        ["Cat1"],
+        bargraph.BarPlotConfig(
+            id="bargraph_bands",
+            title="Test: Bar Graph With Bands",
+            x_bands=[{"from": 0, "to": 1, "color": "#009500", "opacity": 0.13}],
+            x_lines=[{"value": 1.5, "label": "threshold"}],
+            # Meaningless for bar's category (sample) yAxis: must be dropped, not crash.
+            y_bands=[{"from": 0, "to": 1, "color": "#ff0000"}],
+            y_lines=[{"value": 0.5, "label": "y_ignored"}],
+        ),
+    )
+
+
+def _make_scatter_plot_with_bands():
+    return scatter.plot(
+        {"Sample1": [{"x": 1, "y": 2}], "Sample2": [{"x": 3, "y": 4}]},
+        scatter.ScatterConfig(
+            id="scatterplot_bands",
+            title="Test: Scatter With Bands",
+            x_bands=[{"from": 0, "to": 1, "color": "#009500", "opacity": 0.13}],
+            y_lines=[{"value": 2.5, "label": "y_threshold"}],
+        ),
+    )
+
+
 def _make_large_scatter_plot(n_points: int):
     return scatter.plot(
         {f"Sample{i}": [{"x": i, "y": i}] for i in range(n_points)},
@@ -341,6 +369,49 @@ def test_get_option_line_y_bands_produce_silent_markarea_series():
     # The skeleton (interactive JS path) carries the same payload under `_mqc.bandsLines`.
     skeleton = echarts.serialize(plot)["datasets"][0]["layout"]
     assert skeleton["_mqc"]["bandsLines"]["markArea"] == marker_series[0]["markArea"]
+
+
+def test_get_option_bar_x_bands_and_lines_produce_silent_marker_series():
+    plot = _make_bar_plot_with_bands()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    marker_series = [s for s in option["series"] if s.get("silent")]
+    assert len(marker_series) == 1
+    # x_bands/x_lines land on the value axis (ECharts "xAxis"): bar is horizontal, so
+    # xAxis is the value axis (see converter.bands_and_lines docstring).
+    assert marker_series[0]["markArea"]["data"] == [
+        [{"xAxis": 0, "itemStyle": {"color": "#009500", "opacity": 0.13}}, {"xAxis": 1}]
+    ]
+    assert marker_series[0]["markLine"]["data"][0]["xAxis"] == 1.5
+
+    # y_bands/y_lines target bar's category (sample) axis, which is meaningless for a
+    # numeric threshold: dropped cleanly, not crashed and not emitted.
+    assert "yAxis" not in marker_series[0]["markArea"]["data"][0][0]
+    assert all("yAxis" not in entry for entry in marker_series[0]["markLine"]["data"])
+
+    skeleton = echarts.serialize(plot)["datasets"][0]["layout"]
+    assert skeleton["_mqc"]["bandsLines"]["markArea"] == marker_series[0]["markArea"]
+
+
+def test_get_option_scatter_x_bands_and_y_lines_produce_silent_marker_series():
+    plot = _make_scatter_plot_with_bands()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    marker_series = [s for s in option["series"] if s.get("silent")]
+    assert len(marker_series) == 1
+    assert marker_series[0]["markArea"]["data"] == [
+        [{"xAxis": 0, "itemStyle": {"color": "#009500", "opacity": 0.13}}, {"xAxis": 1}]
+    ]
+    assert marker_series[0]["markLine"]["data"] == [
+        {
+            "yAxis": 2.5,
+            "lineStyle": {"color": None, "width": 2, "type": "solid"},
+            "label": {"formatter": "y_threshold"},
+        }
+    ]
+
+    skeleton = echarts.serialize(plot)["datasets"][0]["layout"]
+    assert skeleton["_mqc"]["bandsLines"]["markLine"] == marker_series[0]["markLine"]
 
 
 def test_interactive_plot_adds_echarts_key_for_scatter_plot():

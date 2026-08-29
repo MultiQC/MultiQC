@@ -13,7 +13,7 @@ defeat that threshold's purpose, one series with thousands of data items does no
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from multiqc.plots.echarts.converter import convert_layout
+from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, trailing_bands_lines_series
 from multiqc.plots.scatter import Dataset, PointT, ScatterConfig
 from multiqc.utils.mqc_colour import color_to_rgb_string
 
@@ -33,6 +33,12 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
 
     option["tooltip"]["trigger"] = "item"
     option["dataZoom"] = [{"type": "inside"}, {"type": "slider"}]
+
+    # Scatter has two meaningful value axes (no category axis), so both dimensions
+    # apply, same as line.
+    bands_lines = bands_and_lines(plot.pconfig)
+    if bands_lines:
+        option["_mqc"] = {"bandsLines": bands_lines}
 
     return option
 
@@ -68,13 +74,19 @@ def series(dataset: Dataset, pconfig: ScatterConfig, is_pct: bool) -> List[Dict[
 
     data = [_point_item(point, default_color, default_size) for point in dataset.points]
 
-    return [
+    result: List[Dict[str, Any]] = [
         {
             "type": "scatter",
             "name": dataset.label,
             "data": data,
         }
     ]
+
+    trailing = trailing_bands_lines_series(pconfig)
+    if trailing:
+        result.append(trailing)
+
+    return result
 
 
 def axis_data(dataset: Dataset, pconfig: ScatterConfig) -> Optional[List[Tuple[str, List[str]]]]:

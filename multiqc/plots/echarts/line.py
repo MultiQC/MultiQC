@@ -8,89 +8,17 @@ counterpart of `series()` below.
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from multiqc.plots.echarts.converter import convert_layout
+from multiqc.plots.echarts.converter import bands_and_lines, convert_layout, echarts_dash, trailing_bands_lines_series
 from multiqc.plots.linegraph import Dataset, LinePlotConfig
 
 if TYPE_CHECKING:
     from multiqc.plots.plot import Plot
-
-# `Series.dash` is already normalized to Plotly dash names by `convert_dash_style`
-# (multiqc/plots/plot.py); ECharts `lineStyle.type` only knows "solid"/"dashed"/"dotted".
-_DASH_MAP = {
-    "solid": "solid",
-    "dash": "dashed",
-    "longdash": "dashed",
-    "dot": "dotted",
-    "dashdot": "dashed",
-    "longdashdot": "dashed",
-}
-
-
-def _echarts_dash(dash: Optional[str]) -> str:
-    if dash is None:
-        return "solid"
-    return _DASH_MAP.get(dash, "solid")
 
 
 def _is_categorical(dataset: Dataset) -> bool:
     # Set by `linegraph.Dataset.create` when `pconfig.categories` (or a per-dataset
     # `dconfig["categories"]` override) is truthy; reused here instead of re-deriving it.
     return dataset.layout.get("xaxis", {}).get("type") == "category"
-
-
-def _bands_and_lines(pconfig: LinePlotConfig) -> Dict[str, Any]:
-    """
-    Static markArea/markLine payload for `pconfig.x_bands`/`y_bands`/`x_lines`/`y_lines`
-    (e.g. the fastqc per-base-quality green/yellow/red zones), mirroring the Plotly
-    `shapes` built by `Plot._set_x_bands_and_range`/`_set_y_bands_and_range`
-    (`multiqc/plots/plot.py`). These are static (independent of toolbox state), so this
-    is computed once and reused by both `layout_option` (stashed in the skeleton under
-    `_mqc.bandsLines` for the interactive JS path) and `series` (the SSR/get_option path).
-
-    Per-dataset `data_labels` overrides of bands/lines are not supported yet (parity gap,
-    same class of gap as bar's sample-groups gap); only the top-level `pconfig` fields
-    are read.
-    """
-    mark_area_data: List[List[Dict[str, Any]]] = []
-    for band in pconfig.y_bands or []:
-        mark_area_data.append(
-            [
-                {"yAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
-                {"yAxis": band.to},
-            ]
-        )
-    for band in pconfig.x_bands or []:
-        mark_area_data.append(
-            [
-                {"xAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
-                {"xAxis": band.to},
-            ]
-        )
-
-    mark_line_data: List[Dict[str, Any]] = []
-    for line in pconfig.y_lines or []:
-        mark_line_data.append(
-            {
-                "yAxis": line.value,
-                "lineStyle": {"color": line.color, "width": line.width, "type": _echarts_dash(line.dash)},
-                "label": {"formatter": line.label or ""},
-            }
-        )
-    for line in pconfig.x_lines or []:
-        mark_line_data.append(
-            {
-                "xAxis": line.value,
-                "lineStyle": {"color": line.color, "width": line.width, "type": _echarts_dash(line.dash)},
-                "label": {"formatter": line.label or ""},
-            }
-        )
-
-    result: Dict[str, Any] = {}
-    if mark_area_data:
-        result["markArea"] = {"silent": True, "data": mark_area_data}
-    if mark_line_data:
-        result["markLine"] = {"silent": True, "symbol": "none", "data": mark_line_data}
-    return result
 
 
 def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
@@ -115,7 +43,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     if _is_categorical(dataset):
         option["xAxis"]["data"] = _categories(dataset)
 
-    bands_lines = _bands_and_lines(plot.pconfig)
+    bands_lines = bands_and_lines(plot.pconfig)
     if bands_lines:
         option["_mqc"] = {"bandsLines": bands_lines}
 
@@ -132,8 +60,8 @@ def series(dataset: Dataset, pconfig: LinePlotConfig, is_pct: bool) -> List[Dict
     """
     One `{"type": "line"}` series per `dataset.lines[i]`, plus (if configured) a trailing
     silent series carrying the static bands/lines markArea/markLine from
-    `_bands_and_lines`. This is the SSR/get_option (non-toolbox) path; the interactive
-    path is `EchartsLinePlot.buildSeries()` (`templates/echarts/src/js/plots/line.js`).
+    `trailing_bands_lines_series`. This is the SSR/get_option (non-toolbox) path; the
+    interactive path is `EchartsLinePlot.buildSeries()` (`templates/echarts/src/js/plots/line.js`).
 
     `is_pct` is accepted for dispatch-signature parity with `bar.series`; line plots
     never enable the percentage switch (`Plot.initialize` only sets `add_pct_tab` for
@@ -153,25 +81,15 @@ def series(dataset: Dataset, pconfig: LinePlotConfig, is_pct: bool) -> List[Dict
                 "data": data,
                 "showSymbol": show_symbol,
                 "smooth": False,
-                "lineStyle": {"width": line.width, "type": _echarts_dash(line.dash)},
+                "lineStyle": {"width": line.width, "type": echarts_dash(line.dash)},
                 "itemStyle": {"color": line.color},
                 "color": line.color,
             }
         )
 
-    bands_lines = _bands_and_lines(pconfig)
-    if bands_lines:
-        result.append(
-            {
-                "type": "line",
-                "name": "",
-                "data": [],
-                "silent": True,
-                "showSymbol": False,
-                "tooltip": {"show": False},
-                **bands_lines,
-            }
-        )
+    trailing = trailing_bands_lines_series(pconfig)
+    if trailing:
+        result.append(trailing)
 
     return result
 

@@ -9,13 +9,20 @@ part of an ECharts `option` dict that is common to every plot type: `animation`,
 
 This module never adds `series`, axis `data` arrays, or formatter functions: see
 the "ECharts model->JSON contract" in `multiqc-echarts-exploration/BUILD_PLAN.md`.
+
+`bands_and_lines`/`echarts_dash` also live here (not in `line.py`) since bar.py and
+scatter.py need the same `x_bands`/`y_bands`/`x_lines`/`y_lines` -> markArea/markLine
+conversion; line.py was the original (and still the reference) caller.
 """
 
 import html
 import re
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import plotly.graph_objects as go  # type: ignore
+
+if TYPE_CHECKING:
+    from multiqc.plots.plot import PConfig
 
 _BR_RE = re.compile(r"<br\s*/?>", re.IGNORECASE)
 _TAG_RE = re.compile(r"<[^>]+>")
@@ -112,4 +119,125 @@ def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[st
             "left": "center",
         },
         "tooltip": {"confine": True},
+    }
+
+
+# `Series.dash` is already normalized to Plotly dash names by `convert_dash_style`
+# (multiqc/plots/plot.py); ECharts `lineStyle.type` only knows "solid"/"dashed"/"dotted".
+_DASH_MAP = {
+    "solid": "solid",
+    "dash": "dashed",
+    "longdash": "dashed",
+    "dot": "dotted",
+    "dashdot": "dashed",
+    "longdashdot": "dashed",
+}
+
+
+def echarts_dash(dash: Optional[str]) -> str:
+    if dash is None:
+        return "solid"
+    return _DASH_MAP.get(dash, "solid")
+
+
+def bands_and_lines(
+    pconfig: "PConfig",
+    *,
+    include_x: bool = True,
+    include_y: bool = True,
+) -> Dict[str, Any]:
+    """
+    Static markArea/markLine payload for `pconfig.x_bands`/`y_bands`/`x_lines`/`y_lines`
+    (e.g. the fastqc per-base-quality green/yellow/red zones), mirroring the Plotly
+    `shapes` built by `Plot._set_x_bands_and_range`/`_set_y_bands_and_range`
+    (`multiqc/plots/plot.py`). These are static (independent of toolbox state), so this
+    is computed once and reused by both `layout_option` (stashed in the skeleton under
+    `_mqc.bandsLines` for the interactive JS path) and `series` (the SSR/get_option path).
+
+    `include_x`/`include_y` let a caller drop a dimension that has no meaningful target
+    axis. Bar plots are horizontal (samples on a category `yAxis`, values on `xAxis`,
+    see `multiqc/plots/echarts/bar.py`), so `y_bands`/`y_lines` would place a numeric
+    band/line against a category axis (meaningless, would misplace or crash); bar.py
+    calls this with `include_y=False`. Verified empirically against the Plotly
+    reference (`BarPlot.get_figure`): a bar plot's `x_bands` land on the final Plotly
+    x-axis (the value axis after bar's own xaxis/yaxis title swap), matching
+    `xAxis` here; `y_bands` land on the category axis and render uselessly there.
+    Line and scatter plots use both axes as meaningful value axes, so both default to
+    `True`.
+
+    Per-dataset `data_labels` overrides of bands/lines are not supported yet (parity gap,
+    same class of gap as bar's sample-groups gap); only the top-level `pconfig` fields
+    are read.
+    """
+    mark_area_data: List[List[Dict[str, Any]]] = []
+    if include_y:
+        for band in pconfig.y_bands or []:
+            mark_area_data.append(
+                [
+                    {"yAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
+                    {"yAxis": band.to},
+                ]
+            )
+    if include_x:
+        for band in pconfig.x_bands or []:
+            mark_area_data.append(
+                [
+                    {"xAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
+                    {"xAxis": band.to},
+                ]
+            )
+
+    mark_line_data: List[Dict[str, Any]] = []
+    if include_y:
+        for line in pconfig.y_lines or []:
+            mark_line_data.append(
+                {
+                    "yAxis": line.value,
+                    "lineStyle": {"color": line.color, "width": line.width, "type": echarts_dash(line.dash)},
+                    "label": {"formatter": line.label or ""},
+                }
+            )
+    if include_x:
+        for line in pconfig.x_lines or []:
+            mark_line_data.append(
+                {
+                    "xAxis": line.value,
+                    "lineStyle": {"color": line.color, "width": line.width, "type": echarts_dash(line.dash)},
+                    "label": {"formatter": line.label or ""},
+                }
+            )
+
+    result: Dict[str, Any] = {}
+    if mark_area_data:
+        result["markArea"] = {"silent": True, "data": mark_area_data}
+    if mark_line_data:
+        result["markLine"] = {"silent": True, "symbol": "none", "data": mark_line_data}
+    return result
+
+
+def trailing_bands_lines_series(
+    pconfig: "PConfig",
+    *,
+    include_x: bool = True,
+    include_y: bool = True,
+) -> Optional[Dict[str, Any]]:
+    """
+    `bands_and_lines` wrapped as a trailing, invisible `{"type": "line"}` series (or
+    `None` if `pconfig` has no bands/lines): appended to `series()` in line.py/bar.py/
+    scatter.py so it shows up in the SSR/get_option (non-toolbox) path. The interactive
+    JS path carries the same `bands_and_lines` payload separately, via `layout_option`
+    stashing it under `option["_mqc"]["bandsLines"]` for `Plot.bandsLinesSeries()`
+    (`templates/echarts/src/js/echarts-plotting.js`) to read.
+    """
+    bands_lines = bands_and_lines(pconfig, include_x=include_x, include_y=include_y)
+    if not bands_lines:
+        return None
+    return {
+        "type": "line",
+        "name": "",
+        "data": [],
+        "silent": True,
+        "showSymbol": False,
+        "tooltip": {"show": False},
+        **bands_lines,
     }

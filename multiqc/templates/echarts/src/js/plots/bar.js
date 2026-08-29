@@ -59,8 +59,8 @@ class EchartsBarPlot extends window.BarPlot {
     // an equivalent would need yAxis.axisLabel.formatter + a `rich` style map keyed per
     // sample. Bar dimming below is the primary highlight signal and matches Plotly;
     // tick-label coloring is deferred.
-    return cats.map((cat) => {
-      let series = {
+    let series = cats.map((cat) => {
+      let s = {
         type: "bar",
         name: cat.name,
         barCategoryGap: "30%",
@@ -74,9 +74,14 @@ class EchartsBarPlot extends window.BarPlot {
           };
         }),
       };
-      if (!isGroup) series.stack = "total";
-      return series;
+      if (!isGroup) s.stack = "total";
+      return s;
     });
+
+    // Bar's category (sample) yAxis makes y_bands/y_lines meaningless, so the Python
+    // side (multiqc/plots/echarts/bar.py) only stashes x_bands/x_lines here.
+    series.push(...this.bandsLinesSeries());
+    return series;
   }
 
   // Grouped ("sample groups" / multicategory) bars, e.g. riboWaltz's per-region frame
@@ -153,6 +158,7 @@ class EchartsBarPlot extends window.BarPlot {
         });
       });
     });
+    series.push(...this.bandsLinesSeries());
     return series;
   }
 

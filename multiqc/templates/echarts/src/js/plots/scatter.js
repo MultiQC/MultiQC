@@ -45,13 +45,15 @@ class EchartsScatterPlot extends window.ScatterPlot {
       };
     });
 
-    return [
+    let series = [
       {
         type: "scatter",
         name: dataset["label"] ?? "",
         data: data,
       },
     ];
+    series.push(...this.bandsLinesSeries());
+    return series;
   }
 
   // Tooltip formatter can't live in the JSON-safe serialized skeleton, so it's attached
