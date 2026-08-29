@@ -60,6 +60,31 @@ function outliers(values) {
   return sorted.filter((v) => v < lowerFence || v > upperFence);
 }
 
+// [r, g, b] from any CSS color (hex, named like "grey", or an existing rgb()/rgba()
+// string). Hex/named colors are resolved via a throwaway canvas context, which always
+// normalizes an opaque color to "#rrggbb".
+function colorToRgbTriplet(color) {
+  let match = color.match(/rgba?\(([^)]+)\)/);
+  if (match)
+    return match[1]
+      .split(",")
+      .slice(0, 3)
+      .map((s) => s.trim());
+  let hex = Object.assign(document.createElement("canvas").getContext("2d"), { fillStyle: color }).fillStyle;
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+}
+
+// Match Plotly's own box rendering exactly (verified against the default template's
+// output: a single stroked SVG path per box at stroke-opacity 1 for the border,
+// whiskers AND median line, with fill-opacity 0.5 for the body). ECharts draws the
+// median line using itemStyle.borderColor, so a solid border against a lighter,
+// semi-transparent fill is what makes the median visible instead of blending into a
+// fully opaque box. Mirrors multiqc/plots/echarts/box.py::_box_item_style.
+function boxItemStyle(color) {
+  let [r, g, b] = colorToRgbTriplet(color);
+  return { color: `rgba(${r},${g},${b},0.5)`, borderColor: `rgb(${r},${g},${b})` };
+}
+
 class EchartsBoxPlot extends window.BoxPlot {
   // Constructs and returns the ECharts boxplot series (+ companion outlier scatter
   // series) for the active dataset, applying the sort switch and toolbox
@@ -89,12 +114,12 @@ class EchartsBoxPlot extends window.BoxPlot {
       if (this.isStatsData) {
         boxData.push({
           value: [values.min ?? 0, values.q1 ?? 0, values.median ?? 0, values.q3 ?? 0, values.max ?? 0],
-          itemStyle: { color: color, borderColor: color },
+          itemStyle: boxItemStyle(color),
         });
         return;
       }
 
-      boxData.push({ value: fiveNumberSummary(values), itemStyle: { color: color, borderColor: color } });
+      boxData.push({ value: fiveNumberSummary(values), itemStyle: boxItemStyle(color) });
 
       if (boxpoints === false) return;
       let shown = boxpoints === "all" ? [...values].sort((a, b) => a - b) : outliers(values);

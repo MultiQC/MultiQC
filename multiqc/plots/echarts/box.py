@@ -37,9 +37,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, cast
 
 from multiqc.plots.box import BoxPlotConfig, BoxStatsT, Dataset
 from multiqc.plots.echarts.converter import convert_layout
+from multiqc.utils.mqc_colour import color_to_rgb_string
 
 if TYPE_CHECKING:
     from multiqc.plots.plot import Plot
+
+_DEFAULT_COLOR = "#4899e8"  # matches multiqc/plots/box.py's trace_params marker color
 
 
 def _quantile(sorted_values: List[float], q: float) -> float:
@@ -94,6 +97,20 @@ def _stats_five_number(stats: BoxStatsT) -> List[float]:
     return [float(stats["min"]), float(stats["q1"]), float(stats["median"]), float(stats["q3"]), float(stats["max"])]
 
 
+def _box_item_style(color: str) -> Dict[str, str]:
+    """
+    Match Plotly's own box rendering exactly (verified against the default template's
+    output: a single stroked SVG path per box at `stroke-opacity: 1` for the border,
+    whiskers AND median line, with `fill-opacity: 0.5` for the body). ECharts draws the
+    median line using `itemStyle.borderColor`, so a solid border against a lighter,
+    semi-transparent fill is what makes the median visible instead of blending into a
+    fully opaque box.
+    """
+    border = color_to_rgb_string(color)  # "rgb(r,g,b)"
+    fill = border.replace("rgb(", "rgba(").replace(")", ",0.5)")
+    return {"color": fill, "borderColor": border}
+
+
 def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     """
     Full ECharts option skeleton for one box-plot dataset, minus `series` and axis
@@ -110,26 +127,28 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     return option
 
 
-def _build(dataset: Dataset) -> Tuple[List[List[float]], List[Dict[str, Any]]]:
+def _build(dataset: Dataset) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Shared computation for `series()` and `mark_count()`, so the two can never disagree
     on how many marks are actually drawn: the boxplot five-number data (one entry per
     sample, in `dataset.samples` order) and the companion outlier/point scatter data.
     """
     boxpoints = dataset.trace_params.get("boxpoints", "outliers")
+    base_color = dataset.trace_params.get("marker", {}).get("color") or _DEFAULT_COLOR
+    item_style = _box_item_style(base_color)
 
-    box_data: List[List[float]] = []
+    box_data: List[Dict[str, Any]] = []
     scatter_data: List[Dict[str, Any]] = []
     for yi, (sample, values) in enumerate(zip(dataset.samples, dataset.data)):
         if dataset.is_stats_data:
-            box_data.append(_stats_five_number(cast(BoxStatsT, values)))
+            box_data.append({"value": _stats_five_number(cast(BoxStatsT, values)), "itemStyle": item_style})
             continue
 
         raw_values = cast(List[Union[int, float]], values)
         if not raw_values:
-            box_data.append([0.0, 0.0, 0.0, 0.0, 0.0])
+            box_data.append({"value": [0.0, 0.0, 0.0, 0.0, 0.0], "itemStyle": item_style})
             continue
-        box_data.append(five_number_summary(raw_values))
+        box_data.append({"value": five_number_summary(raw_values), "itemStyle": item_style})
 
         if boxpoints is False:
             continue

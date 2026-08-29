@@ -634,8 +634,13 @@ def test_get_option_box_series_has_five_number_data():
     dataset = plot.datasets[0]
     boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
     assert len(boxplot_series["data"]) == len(dataset.samples)
-    for values, five_number in zip(dataset.data, boxplot_series["data"]):
-        assert five_number == echarts.box.five_number_summary(values)
+    for values, entry in zip(dataset.data, boxplot_series["data"]):
+        assert entry["value"] == echarts.box.five_number_summary(values)
+        # Semi-transparent fill + solid border, so the median (drawn via borderColor)
+        # is visible against the box body: POLISH.md #6.
+        assert entry["itemStyle"]["color"].startswith("rgba(")
+        assert entry["itemStyle"]["color"].endswith(",0.5)")
+        assert entry["itemStyle"]["borderColor"].startswith("rgb(")
 
 
 def test_get_option_box_outliers_become_scatter_series():
@@ -675,8 +680,8 @@ def test_get_option_box_stats_data_uses_precomputed_values_directly():
     dataset = plot.datasets[0]
     assert dataset.is_stats_data is True
     boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
-    for stats, five_number in zip(dataset.data, boxplot_series["data"]):
-        assert five_number == [stats["min"], stats["q1"], stats["median"], stats["q3"], stats["max"]]
+    for stats, entry in zip(dataset.data, boxplot_series["data"]):
+        assert entry["value"] == [stats["min"], stats["q1"], stats["median"], stats["q3"], stats["max"]]
     # No raw values to derive outliers from.
     assert not any(s["type"] == "scatter" for s in option["series"])
 
@@ -894,7 +899,7 @@ def test_box_sort_by_median_produces_median_sorted_series():
 
     assert option["yAxis"]["data"] == ["SampleB", "SampleA", "SampleC"]
     boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
-    medians = [entry[2] for entry in boxplot_series["data"]]
+    medians = [entry["value"][2] for entry in boxplot_series["data"]]
     assert medians == [2.0, 20.0, 200.0]
     assert medians == sorted(medians)
 
