@@ -16,7 +16,7 @@ import importlib.resources
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import plotly.graph_objects as go  # type: ignore
 
