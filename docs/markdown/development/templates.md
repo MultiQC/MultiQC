@@ -88,6 +88,34 @@ Child templates can also inherit template functions from their parent. For examp
 the default template provides the `material_icon` function which can be used
 in any child template without additional configuration.
 
+## Alternative plotting engines
+
+Reports render their plots with [Plotly](https://plotly.com/python/) by default. MultiQC
+also ships a second, fully supported plotting engine based on
+[Apache ECharts](https://echarts.apache.org/), available as a bundled child template. Select
+it the same way you would select any other template, and the same way the old `highcharts`
+template used to be selected before the switch to Plotly:
+
+```bash
+multiqc . --template echarts
+```
+
+The `echarts` template (`multiqc/templates/echarts/`) is a child template of `default`,
+using the exact `template_parent` mechanism described above: it overrides `includes.html` to
+load the ECharts JavaScript bundle instead of Plotly's, and ships its own
+`src/js/plots/*.js` files that render each plot type. It also sets an internal config value
+in its `__init__.py`,
+`plotting_engine = "echarts"`, which the plot-serialization code reads to decide whether to
+build a Plotly figure or an ECharts option object for each plot. Both engines coexist: the
+`default` template keeps using Plotly, and switching to `--template echarts` does not
+require any changes to module code, since both engines are driven by the same
+`bargraph.plot()`, `linegraph.plot()`, etc. calls.
+
+See `multiqc/templates/echarts/README.md` for how to rebuild its JavaScript bundles, the
+`config.plotting_engine` / `config.echarts_canvas_threshold` settings, the extra
+`pip install 'multiqc[echarts]'` dependency needed for static image export, and a list of
+known differences from the Plotly-rendered default template.
+
 ## Extra init variables
 
 There are a few extra variables that can be added to the `__init__.py` file

@@ -68,6 +68,19 @@ name as a string.
 plot_theme: "plotly_dark"
 ```
 
+### Plotting engines
+
+Reports are rendered with Plotly by default. MultiQC also has an alternative plotting
+engine based on [Apache ECharts](https://echarts.apache.org/), used when a report is built
+with `--template echarts`. Nothing changes on the module author's side: you call
+`bargraph.plot()`, `linegraph.plot()`, `scatter.plot()`, `heatmap.plot()`, `box.plot()` and
+`violin.plot()` exactly as documented below regardless of which engine ends up rendering the
+plot, since both engines consume the same `pconfig` options and data structures. The choice
+of engine is made purely by which report template is selected, not by module code. See
+[Writing new templates](templates.md#alternative-plotting-engines) and
+`multiqc/templates/echarts/README.md` for details on the ECharts template, including a list
+of the small number of Plotly behaviours it does not (yet) replicate exactly.
+
 ## Bar graphs
 
 Simple data can be plotted in bar graphs. Many MultiQC modules make use

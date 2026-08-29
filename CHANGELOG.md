@@ -1,5 +1,11 @@
 # MultiQC Version History
 
+## MultiQC dev version
+
+### Feature updates and improvements
+
+- Plots: Add a new ECharts plotting engine as an alternative to Plotly, selected with `--template echarts`. All 7 plot types (bar, line, scatter, box, violin, heatmap, general stats) render through it, with the same toolbox, switches and export features as the default Plotly-based template; module code needs no changes to support it. Static image export under this template needs `pip install 'multiqc[echarts]'`. See the template's README and the plots development docs for the small number of known differences from Plotly (PDF export, the notebook `Plot.show()`/`Plot.save()` API, and a couple of module-specific Plotly popups).
+
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
 
 This release has a very nice shiny new feature for you: the _MultiQC Configuration Wizard_! 👨🏻‍🎨 🎨
