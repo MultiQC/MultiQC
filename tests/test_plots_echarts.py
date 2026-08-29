@@ -8,7 +8,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 import math
 
 from multiqc import config, report
-from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter
+from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter, table, violin
 from multiqc.types import Anchor
 
 
@@ -104,11 +104,29 @@ def _make_clustered_heatmap_plot():
 
 
 def _make_box_plot():
-    # Box is not ported to ECharts yet (Phase 1, Task 1.4): used to verify the
-    # "unsupported plot type" fallback still works now that bar/line/scatter are supported.
     return box.plot(
-        {"Sample1": [1.0, 2.0, 3.0]},
+        {"Sample1": [1.0, 2.0, 3.0, 4.0], "Sample2": [5.0, 6.0, 7.0, 8.0]},
         box.BoxPlotConfig(id="boxplot", title="Test: Box"),
+    )
+
+
+def _make_stats_box_plot():
+    return box.plot(
+        {
+            "Sample1": {"min": 1.0, "q1": 2.0, "median": 3.0, "q3": 4.0, "max": 5.0},
+            "Sample2": {"min": 2.0, "q1": 3.0, "median": 4.0, "q3": 5.0, "max": 6.0},
+        },
+        box.BoxPlotConfig(id="boxplot_stats", title="Test: Box Stats"),
+    )
+
+
+def _make_violin_plot():
+    # Violin is not ported to ECharts yet (Phase 2): used to verify the "unsupported
+    # plot type" fallback still works now that bar/line/scatter/heatmap/box are supported.
+    return violin.plot(
+        data={"Sample1": {"x": 1, "y": 2}, "Sample2": {"x": 3, "y": 4}},
+        headers={"x": {"title": "Metric X"}},
+        pconfig=table.TableConfig(id="violinplot", title="Test: Violin"),
     )
 
 
@@ -146,11 +164,11 @@ def test_interactive_plot_title_strips_html():
 
 def test_interactive_plot_unsupported_plot_type_does_not_raise():
     config.plotting_engine = "echarts"
-    plot = _make_box_plot()
+    plot = _make_violin_plot()
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
     dumped = report.plot_data[plot.anchor]
-    assert dumped["echarts"] == {"unsupported": "box plot"}
+    assert dumped["echarts"] == {"unsupported": "violin plot"}
 
 
 def test_interactive_plot_adds_echarts_key_for_line_plot():
@@ -397,3 +415,93 @@ def test_get_option_heatmap_clustered_switch_uses_clustered_categories():
     option_unclustered = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
     assert option_unclustered["xAxis"]["data"] == list(dataset.xcats)
     assert option_unclustered["yAxis"]["data"] == list(dataset.ycats)
+
+
+# GOLDEN quartile test: this fixed input + expected five-number/outlier values is the
+# cross-language contract asserted here AND mirrored in a comment block at the top of
+# `multiqc/templates/echarts/src/js/plots/box.js`. The JS `fiveNumberSummary()`/
+# `outliers()` port must produce the same output for the same input (checked manually:
+# there is no JS unit-test runner in this repo).
+_GOLDEN_BOX_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100]
+_GOLDEN_FIVE_NUMBER_SUMMARY = [1.0, 3.5, 6.0, 8.5, 10.0]
+_GOLDEN_OUTLIERS = [100.0]
+
+
+def test_box_five_number_summary_golden_values():
+    assert echarts.box.five_number_summary(_GOLDEN_BOX_VALUES) == _GOLDEN_FIVE_NUMBER_SUMMARY
+
+
+def test_box_outliers_golden_values():
+    assert echarts.box.outliers(_GOLDEN_BOX_VALUES) == _GOLDEN_OUTLIERS
+
+
+def test_interactive_plot_adds_echarts_key_for_box_plot():
+    config.plotting_engine = "echarts"
+    plot = _make_box_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert "echarts" in dumped
+    assert dumped["echarts"]["renderer"] == "svg"
+
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["yAxis"]["type"] == "category"
+    assert skeleton["yAxis"]["inverse"] is True
+    assert skeleton["tooltip"]["trigger"] == "item"
+    assert "series" not in skeleton
+
+
+def test_get_option_box_series_has_five_number_data():
+    plot = _make_box_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
+    assert len(boxplot_series["data"]) == len(dataset.samples)
+    for values, five_number in zip(dataset.data, boxplot_series["data"]):
+        assert five_number == echarts.box.five_number_summary(values)
+
+
+def test_get_option_box_outliers_become_scatter_series():
+    plot = _make_box_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
+    # Neither sample's 4 evenly-spaced values produce a Tukey outlier.
+    total_outliers = sum(len(echarts.box.outliers(values)) for values in dataset.data)
+    assert total_outliers == 0
+    assert scatter_series == []
+
+
+def test_get_option_box_axis_has_no_static_sample_data():
+    plot = _make_box_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["yAxis"]["data"] == list(plot.datasets[0].samples)
+    assert "data" not in option["xAxis"]
+
+
+def test_get_option_box_stats_data_uses_precomputed_values_directly():
+    plot = _make_stats_box_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    assert dataset.is_stats_data is True
+    boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
+    for stats, five_number in zip(dataset.data, boxplot_series["data"]):
+        assert five_number == [stats["min"], stats["q1"], stats["median"], stats["q3"], stats["max"]]
+    # No raw values to derive outliers from.
+    assert not any(s["type"] == "scatter" for s in option["series"])
+
+
+def test_box_mark_count_is_samples_plus_outliers():
+    plot = _make_box_plot()
+    dataset = plot.datasets[0]
+    expected = len(dataset.samples) + sum(len(echarts.box.outliers(values)) for values in dataset.data)
+    assert echarts.box.mark_count(dataset) == expected
+
+    outlier_dataset = box.Dataset(
+        **{**dataset.__dict__, "samples": ["S1"], "data": [_GOLDEN_BOX_VALUES], "is_stats_data": False}
+    )
+    assert echarts.box.mark_count(outlier_dataset) == 1 + len(_GOLDEN_OUTLIERS)

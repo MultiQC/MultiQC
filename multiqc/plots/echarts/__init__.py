@@ -16,7 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Dict
 
 from multiqc import config
-from multiqc.plots.echarts import bar, heatmap, line, scatter
+from multiqc.plots.echarts import bar, box, heatmap, line, scatter
 from multiqc.types import PlotType
 
 if TYPE_CHECKING:
@@ -27,6 +27,7 @@ _BUILDERS: Dict[PlotType, ModuleType] = {
     PlotType.LINE: line,
     PlotType.SCATTER: scatter,
     PlotType.HEATMAP: heatmap,
+    PlotType.BOX: box,
 }
 
 

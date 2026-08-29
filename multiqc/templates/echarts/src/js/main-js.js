@@ -46,8 +46,9 @@ import "../../../default/src/js/toolbox/help.js";
 import "../../../default/src/js/toolbox.js";
 
 // Plot types.
-// "bar" (Phase 0), "line" (Phase 1, Task 1.1), "scatter" (Phase 1, Task 1.2) and
-// "heatmap" (Phase 1, Task 1.3) are ported; other types are not imported here (their
+// "bar" (Phase 0), "line" (Phase 1, Task 1.1), "scatter" (Phase 1, Task 1.2),
+// "heatmap" (Phase 1, Task 1.3) and "box" (Phase 1, Task 1.4) are ported; other types
+// are not imported here (their
 // window.initPlot falls back to a placeholder Plot that renders an "unsupported"
 // message, per echarts-plotting.js).
 // Default's plots/*.js define `class XPlot extends Plot` using the bare global `Plot`
@@ -69,6 +70,11 @@ import "./plots/scatter.js";
 // `Plotly` global). `./plots/heatmap.js` copies the prepData()/exportData() field access
 // it needs and re-implements both handlers for ECharts instead.
 import "./plots/heatmap.js";
+// "box" (Phase 1, Task 1.4): same extends-the-default-class strategy as bar/line/scatter
+// above (default box.js has no top-level Plotly handler, only an engine-neutral
+// sort-toggle click handler reused as-is).
+import "../../../default/src/js/plots/box.js";
+import "./plots/box.js";
 
 // AI features
 import "../../../default/src/js/ai-helpers.js";

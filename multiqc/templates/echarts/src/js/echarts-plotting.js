@@ -213,6 +213,7 @@ function initPlot(dump) {
   if (dump["plot_type"] === "x/y line") return new window.EchartsLinePlot(dump);
   if (dump["plot_type"] === "scatter plot") return new window.EchartsScatterPlot(dump);
   if (dump["plot_type"] === "heatmap") return new window.EchartsHeatmapPlot(dump);
+  if (dump["plot_type"] === "box plot") return new window.EchartsBoxPlot(dump);
   // Not yet ported to ECharts (Phases 1-2 of the build plan). Rather than throwing (which
   // would crash the whole report render, since Plot.interactive_plot serializes every plot
   // on the page), build a lightweight placeholder plot; renderPlot() shows a visible,
