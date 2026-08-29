@@ -8,7 +8,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 import math
 
 from multiqc import config, report
-from multiqc.plots import bargraph, echarts, linegraph, scatter
+from multiqc.plots import bargraph, box, echarts, linegraph, scatter
 from multiqc.types import Anchor
 
 
@@ -57,11 +57,28 @@ def _make_line_plot_with_bands():
 
 
 def _make_scatter_plot():
-    # Scatter is not ported to ECharts yet (Phase 1, Task 1.2): used to verify the
-    # "unsupported plot type" fallback still works now that bar and line are supported.
     return scatter.plot(
-        {"Sample1": [{"x": 1, "y": 2}]},
+        {
+            "Sample1": [{"x": 1, "y": 2, "color": "rgb(255,0,0)", "marker_size": 12}],
+            "Sample2": [{"x": 3, "y": 4}],
+        },
         scatter.ScatterConfig(id="scatterplot", title="Test: Scatter"),
+    )
+
+
+def _make_large_scatter_plot(n_points: int):
+    return scatter.plot(
+        {f"Sample{i}": [{"x": i, "y": i}] for i in range(n_points)},
+        scatter.ScatterConfig(id="scatterplot_large", title="Test: Large Scatter"),
+    )
+
+
+def _make_box_plot():
+    # Box is not ported to ECharts yet (Phase 1, Task 1.4): used to verify the
+    # "unsupported plot type" fallback still works now that bar/line/scatter are supported.
+    return box.plot(
+        {"Sample1": [1.0, 2.0, 3.0]},
+        box.BoxPlotConfig(id="boxplot", title="Test: Box"),
     )
 
 
@@ -99,11 +116,11 @@ def test_interactive_plot_title_strips_html():
 
 def test_interactive_plot_unsupported_plot_type_does_not_raise():
     config.plotting_engine = "echarts"
-    plot = _make_scatter_plot()
+    plot = _make_box_plot()
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
     dumped = report.plot_data[plot.anchor]
-    assert dumped["echarts"] == {"unsupported": "scatter plot"}
+    assert dumped["echarts"] == {"unsupported": "box plot"}
 
 
 def test_interactive_plot_adds_echarts_key_for_line_plot():
@@ -214,3 +231,66 @@ def test_get_option_line_y_bands_produce_silent_markarea_series():
     # The skeleton (interactive JS path) carries the same payload under `_mqc.bandsLines`.
     skeleton = echarts.serialize(plot)["datasets"][0]["layout"]
     assert skeleton["_mqc"]["bandsLines"]["markArea"] == marker_series[0]["markArea"]
+
+
+def test_interactive_plot_adds_echarts_key_for_scatter_plot():
+    config.plotting_engine = "echarts"
+    plot = _make_scatter_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert "echarts" in dumped
+    assert dumped["echarts"]["renderer"] == "svg"
+
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["tooltip"]["trigger"] == "item"
+    assert "series" not in skeleton
+
+
+def test_get_option_scatter_series_has_one_series_with_value_items():
+    plot = _make_scatter_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    assert len(option["series"]) == 1
+    series_option = option["series"][0]
+    assert series_option["type"] == "scatter"
+    assert len(series_option["data"]) == len(dataset.points)
+
+    for point, item in zip(dataset.points, series_option["data"]):
+        assert item["value"] == [point["x"], point["y"]]
+        assert item["name"] == point["name"]
+
+    # Sample1's explicit color/marker_size are carried through per-item.
+    sample1_item = series_option["data"][0]
+    assert sample1_item["symbolSize"] == 12
+    assert sample1_item["itemStyle"]["color"] == "rgb(255,0,0)"
+
+
+def test_get_option_scatter_axis_has_no_static_data():
+    plot = _make_scatter_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert "data" not in option["xAxis"]
+    assert "data" not in option["yAxis"]
+
+
+def test_scatter_mark_count_is_point_count():
+    plot = _make_scatter_plot()
+    assert echarts.scatter.mark_count(plot.datasets[0]) == 2
+
+
+def test_serialize_scatter_uses_svg_renderer_below_threshold():
+    config.plotting_engine = "echarts"
+    config.echarts_canvas_threshold = 3000
+    plot = _make_large_scatter_plot(10)
+    result = echarts.serialize(plot)
+    assert result["renderer"] == "svg"
+
+
+def test_serialize_scatter_uses_canvas_renderer_above_threshold():
+    config.plotting_engine = "echarts"
+    config.echarts_canvas_threshold = 3000
+    plot = _make_large_scatter_plot(3001)
+    result = echarts.serialize(plot)
+    assert result["renderer"] == "canvas"

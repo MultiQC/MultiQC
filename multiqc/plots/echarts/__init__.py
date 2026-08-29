@@ -16,7 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Dict
 
 from multiqc import config
-from multiqc.plots.echarts import bar, line
+from multiqc.plots.echarts import bar, line, scatter
 from multiqc.types import PlotType
 
 if TYPE_CHECKING:
@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 _BUILDERS: Dict[PlotType, ModuleType] = {
     PlotType.BAR: bar,
     PlotType.LINE: line,
+    PlotType.SCATTER: scatter,
 }
 
 

@@ -211,6 +211,7 @@ window.Plot = Plot;
 function initPlot(dump) {
   if (dump["plot_type"] === "bar plot") return new window.EchartsBarPlot(dump);
   if (dump["plot_type"] === "x/y line") return new window.EchartsLinePlot(dump);
+  if (dump["plot_type"] === "scatter plot") return new window.EchartsScatterPlot(dump);
   // Not yet ported to ECharts (Phases 1-2 of the build plan). Rather than throwing (which
   // would crash the whole report render, since Plot.interactive_plot serializes every plot
   // on the page), build a lightweight placeholder plot; renderPlot() shows a visible,
