@@ -6,7 +6,7 @@ category values on the value axis (x). See `templates/default/src/js/plots/bar.j
 for the Plotly-JS equivalent this mirrors.
 """
 
-from typing import TYPE_CHECKING, Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple
 
 from multiqc.plots.bargraph import BarPlotConfig, Dataset
 from multiqc.plots.echarts.converter import convert_layout
@@ -60,9 +60,9 @@ def series(dataset: Dataset, pconfig: BarPlotConfig, is_pct: bool) -> List[Dict[
     return result
 
 
-def axis_data(dataset: Dataset) -> List[str]:
-    """Sample names, for `yAxis.data`."""
-    return list(dataset.samples)
+def axis_data(dataset: Dataset) -> Tuple[str, List[str]]:
+    """`("yAxis", sample names)`: bar plots are always horizontal, samples on `yAxis`."""
+    return "yAxis", list(dataset.samples)
 
 
 def mark_count(dataset: Dataset) -> int:

@@ -8,7 +8,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 import math
 
 from multiqc import config, report
-from multiqc.plots import bargraph, echarts, linegraph
+from multiqc.plots import bargraph, echarts, linegraph, scatter
 from multiqc.types import Anchor
 
 
@@ -28,10 +28,40 @@ def _make_bar_plot():
 def _make_line_plot():
     return linegraph.plot(
         {
-            "Sample1": {0: 1, 1: 1},
-            "Sample2": {0: 1, 1: 1, 2: 1},
+            "Sample1": {0: 1.0, 1: 2.0},
+            "Sample2": {0: 3.0, 1: 4.0, 2: 5.0},
         },
         linegraph.LinePlotConfig(id="linegraph", title="Test: Line Graph"),
+    )
+
+
+def _make_categorical_line_plot():
+    return linegraph.plot(
+        {
+            "Sample1": {"a": 1.0, "b": 2.0},
+            "Sample2": {"a": 3.0, "b": 4.0},
+        },
+        linegraph.LinePlotConfig(id="linegraph_categorical", title="Test: Categorical Line Graph", categories=True),
+    )
+
+
+def _make_line_plot_with_bands():
+    return linegraph.plot(
+        {"Sample1": {0: 1.0, 1: 2.0}},
+        linegraph.LinePlotConfig(
+            id="linegraph_bands",
+            title="Test: Line Graph With Bands",
+            y_bands=[{"from": 0, "to": 1, "color": "#009500", "opacity": 0.13}],
+        ),
+    )
+
+
+def _make_scatter_plot():
+    # Scatter is not ported to ECharts yet (Phase 1, Task 1.2): used to verify the
+    # "unsupported plot type" fallback still works now that bar and line are supported.
+    return scatter.plot(
+        {"Sample1": [{"x": 1, "y": 2}]},
+        scatter.ScatterConfig(id="scatterplot", title="Test: Scatter"),
     )
 
 
@@ -69,11 +99,26 @@ def test_interactive_plot_title_strips_html():
 
 def test_interactive_plot_unsupported_plot_type_does_not_raise():
     config.plotting_engine = "echarts"
+    plot = _make_scatter_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert dumped["echarts"] == {"unsupported": "scatter plot"}
+
+
+def test_interactive_plot_adds_echarts_key_for_line_plot():
+    config.plotting_engine = "echarts"
     plot = _make_line_plot()
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
     dumped = report.plot_data[plot.anchor]
-    assert dumped["echarts"] == {"unsupported": "x/y line"}
+    assert "echarts" in dumped
+
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["xAxis"]["type"] == "value"
+    assert skeleton["dataZoom"] == [{"type": "inside"}, {"type": "slider"}]
+    assert "series" not in skeleton
 
 
 def test_interactive_plot_omits_echarts_key_by_default():
@@ -115,3 +160,57 @@ def test_get_option_is_log_sets_switch_controlled_axis_type():
 
     option = echarts.get_option(plot, ds_idx=0, is_log=True, is_pct=False)
     assert option["xAxis"]["type"] == "log"
+
+
+def test_get_option_line_series_matches_lines():
+    plot = _make_line_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    dataset = plot.datasets[0]
+    assert len(option["series"]) == len(dataset.lines)
+    for line, series_option in zip(dataset.lines, option["series"]):
+        assert series_option["type"] == "line"
+        assert series_option["name"] == line.name
+        assert series_option["data"] == [list(p) for p in line.pairs]
+        assert series_option["smooth"] is False
+
+
+def test_get_option_line_value_axis_has_no_static_data():
+    plot = _make_line_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert "data" not in option["xAxis"]
+
+
+def test_get_option_line_categorical_axis_uses_plain_values():
+    plot = _make_categorical_line_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    assert option["xAxis"]["type"] == "category"
+    assert option["xAxis"]["data"] == ["a", "b"]
+
+    dataset = plot.datasets[0]
+    for line, series_option in zip(dataset.lines, option["series"]):
+        assert series_option["data"] == [y for _, y in line.pairs]
+
+
+def test_get_option_line_is_log_sets_yaxis():
+    plot = _make_line_plot()
+    assert plot.axis_controlled_by_switches == ["yaxis"]
+
+    option = echarts.get_option(plot, ds_idx=0, is_log=True, is_pct=False)
+    assert option["yAxis"]["type"] == "log"
+
+
+def test_get_option_line_y_bands_produce_silent_markarea_series():
+    plot = _make_line_plot_with_bands()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    marker_series = [s for s in option["series"] if s.get("silent")]
+    assert len(marker_series) == 1
+    assert marker_series[0]["markArea"]["data"] == [
+        [{"yAxis": 0, "itemStyle": {"color": "#009500", "opacity": 0.13}}, {"yAxis": 1}]
+    ]
+
+    # The skeleton (interactive JS path) carries the same payload under `_mqc.bandsLines`.
+    skeleton = echarts.serialize(plot)["datasets"][0]["layout"]
+    assert skeleton["_mqc"]["bandsLines"]["markArea"] == marker_series[0]["markArea"]

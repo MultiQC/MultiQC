@@ -80,6 +80,12 @@ class Plot {
 
   afterPlotCreated() {}
 
+  // Hook for a plot type to mutate the fully-assembled option in place before it's set
+  // on the chart (e.g. attaching a tooltip formatter function, which can never live in
+  // the JSON-safe serialized skeleton). Called at the end of buildCurrentOption(),
+  // after series (and any type-specific axis data) are in place.
+  applyOptionOverrides(option) {}
+
   plotAiHeader(view) {
     let prompt = "Plot type: " + this.plotType + "\n";
     return prompt;
@@ -204,6 +210,7 @@ window.Plot = Plot;
 
 function initPlot(dump) {
   if (dump["plot_type"] === "bar plot") return new window.EchartsBarPlot(dump);
+  if (dump["plot_type"] === "x/y line") return new window.EchartsLinePlot(dump);
   // Not yet ported to ECharts (Phases 1-2 of the build plan). Rather than throwing (which
   // would crash the whole report render, since Plot.interactive_plot serializes every plot
   // on the page), build a lightweight placeholder plot; renderPlot() shows a visible,
@@ -327,9 +334,15 @@ function buildCurrentOption(plot) {
   let series = plot.buildSeries();
   if (!series || series.length === 0) return null;
   option.series = series;
-  if (plot._axisData && option.yAxis) {
-    option.yAxis.data = plot._axisData;
+  // Category-axis `data` is toolbox-dependent (sample names get hidden/renamed), so it's
+  // never in the skeleton; each plot class stashes { axis: "xAxis"|"yAxis", data: [...] }
+  // on itself during buildSeries() when (and only when) its category axis is populated
+  // at runtime (bar: always yAxis; line: xAxis, only for `pconfig.categories` plots).
+  if (plot._axisData && option[plot._axisData.axis]) {
+    option[plot._axisData.axis].data = plot._axisData.data;
   }
+
+  plot.applyOptionOverrides(option);
 
   return option;
 }

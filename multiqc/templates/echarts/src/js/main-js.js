@@ -46,16 +46,18 @@ import "../../../default/src/js/toolbox/help.js";
 import "../../../default/src/js/toolbox.js";
 
 // Plot types.
-// Only "bar" is ported in Phase 0; other types are not imported here (their
-// window.initPlot entries throw "not supported yet" in echarts-plotting.js).
-// Default's plots/bar.js defines `class BarPlot extends Plot` using the bare
-// global `Plot` identifier: because echarts-plotting.js (imported above) runs
-// first and does `window.Plot = Plot`, that bare reference resolves to OUR
-// echarts Plot base class, not Plotly's. We import default's bar.js first to
-// get its prepData/exportData/formatDatasetForAiPrompt, then our echarts
-// subclass extends window.BarPlot.
+// "bar" (Phase 0) and "line" (Phase 1, Task 1.1) are ported; other types are not
+// imported here (their window.initPlot entries throw "not supported yet" in
+// echarts-plotting.js). Default's plots/*.js define `class XPlot extends Plot` using
+// the bare global `Plot` identifier: because echarts-plotting.js (imported above) runs
+// first and does `window.Plot = Plot`, that bare reference resolves to OUR echarts Plot
+// base class, not Plotly's. We import each default plot file first to get its
+// prepData/exportData/formatDatasetForAiPrompt, then our echarts subclass extends
+// window.BarPlot / window.LinePlot.
 import "../../../default/src/js/plots/bar.js";
 import "./plots/bar.js";
+import "../../../default/src/js/plots/line.js";
+import "./plots/line.js";
 
 // AI features
 import "../../../default/src/js/ai-helpers.js";

@@ -16,7 +16,7 @@ from types import ModuleType
 from typing import TYPE_CHECKING, Any, Dict
 
 from multiqc import config
-from multiqc.plots.echarts import bar
+from multiqc.plots.echarts import bar, line
 from multiqc.types import PlotType
 
 if TYPE_CHECKING:
@@ -24,6 +24,7 @@ if TYPE_CHECKING:
 
 _BUILDERS: Dict[PlotType, ModuleType] = {
     PlotType.BAR: bar,
+    PlotType.LINE: line,
 }
 
 
@@ -79,9 +80,10 @@ def get_option(plot: "Plot[Any, Any]", ds_idx: int, is_log: bool, is_pct: bool) 
     builder = _builder(plot.plot_type)
 
     option = builder.layout_option(plot, dataset)
-    # ponytail: bar is the only builder so far, so category-axis placement (samples on
-    # yAxis) is hardcoded here; revisit once line/scatter/etc. builders land (Phase 1).
-    option["yAxis"]["data"] = builder.axis_data(dataset)
+    axis = builder.axis_data(dataset)
+    if axis is not None:
+        axis_key, data = axis
+        option[axis_key]["data"] = data
     option["series"] = builder.series(dataset, plot.pconfig, is_pct)
 
     for axis_name in plot.axis_controlled_by_switches:

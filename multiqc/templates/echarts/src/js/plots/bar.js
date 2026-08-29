@@ -44,13 +44,13 @@ class EchartsBarPlot extends window.BarPlot {
     this._updateHiddenSamplesWarning(dataset["samples"].length, this.filteredSettings.length);
 
     if (cats.length === 0 || this.filteredSettings.length === 0) {
-      this._axisData = [];
+      this._axisData = { axis: "yAxis", data: [] };
       return [];
     }
 
     // Stashed here for renderPlot() to assign to option.yAxis.data (samples are
     // toolbox-dependent, so the skeleton from Python never contains them).
-    this._axisData = this.filteredSettings.map((s) => s.name);
+    this._axisData = { axis: "yAxis", data: this.filteredSettings.map((s) => s.name) };
 
     let highlighted = this.filteredSettings.filter((s) => s.highlight);
     let barmode = this.echarts.datasets[this.activeDatasetIdx].layout["_mqc"]?.barmode;
