@@ -24,11 +24,8 @@ class EchartsBarPlot extends window.BarPlot {
   buildSeries() {
     let dataset = this.datasets[this.activeDatasetIdx];
 
-    // Multicategory (sample groups) is out of scope for Phase 0 (see BUILD_PLAN.md
-    // Task 0.5); default's prepData() would silently take its Plotly-only multicategory
-    // branch instead, so we crash loudly here rather than let that happen.
     if (dataset["group_labels"]) {
-      throw new Error("ECharts bar plot does not support sample groups yet");
+      return this.buildGroupedSeries(dataset);
     }
 
     let [cats] = this.prepData();
@@ -82,6 +79,83 @@ class EchartsBarPlot extends window.BarPlot {
     });
   }
 
+  // Grouped ("sample groups" / multicategory) bars, e.g. riboWaltz's per-region frame
+  // plots. `dataset.group_labels`/`dataset.offset_groups` are the same fields the
+  // default template's BarPlot.prepData()/buildTraces() multicategory branch reads
+  // (templates/default/src/js/plots/bar.js); the inherited prepData() already does the
+  // group-aware toolbox work (hide/rename/highlight BY GROUP, not by sample) and sets
+  // this.filteredSettings/originalGroupLabels/filteredGroupLabels/offsetGroups/
+  // groupSettingsMap accordingly, filtered to visible groups.
+  //
+  // Plotly draws this with a shared `offsetgroup` per sample on its native
+  // multicategory axis. ECharts has no multicategory axis, so the pragmatic port is:
+  // unique group labels become the yAxis categories, and each sample becomes one
+  // ECharts `stack` id positioned at its group's slot. Categories within one sample's
+  // stack sum together (mirrors Plotly's overlapping same-offsetgroup traces); ECharts
+  // automatically places different stack ids side by side at a shared category, which
+  // is what makes the groups visually distinct.
+  buildGroupedSeries(dataset) {
+    let [cats] = this.prepData();
+
+    let totalGroups = new Set(dataset["group_labels"]).size;
+    let visibleGroups = new Set(this.filteredGroupLabels).size;
+    this._updateHiddenSamplesWarning(totalGroups, visibleGroups, "groups");
+
+    if (cats.length === 0 || this.filteredSettings.length === 0) {
+      this._axisData = { axis: "yAxis", data: [] };
+      return [];
+    }
+
+    let groupAxis = [];
+    let groupIndex = {};
+    this.filteredGroupLabels.forEach((label) => {
+      if (!(label in groupIndex)) {
+        groupIndex[label] = groupAxis.length;
+        groupAxis.push(label);
+      }
+    });
+    this._axisData = { axis: "yAxis", data: groupAxis };
+
+    // Rows sharing the same (row-level) sample name belong to the same stack, e.g.
+    // riboWaltz's "sample1_28nt"/"sample1_29nt" rows both display as "sample1" and
+    // must stack together to form one compound bar per length group.
+    let rowsBySample = {};
+    this.filteredSettings.forEach((row, rowIdx) => {
+      if (!rowsBySample[row.name]) rowsBySample[row.name] = [];
+      rowsBySample[row.name].push(rowIdx);
+    });
+
+    let anyGroupHighlight = Object.values(this.groupSettingsMap || {}).some((g) => g.highlight);
+
+    let series = [];
+    Object.keys(rowsBySample).forEach((sampleName) => {
+      let rowIndices = rowsBySample[sampleName];
+      let stackId = (this.offsetGroups && this.offsetGroups[sampleName]) || sampleName;
+
+      cats.forEach((cat) => {
+        let data = new Array(groupAxis.length).fill(null);
+        rowIndices.forEach((rowIdx) => {
+          let originalGroupLabel = this.originalGroupLabels[rowIdx];
+          let groupHighlight = this.groupSettingsMap?.[originalGroupLabel]?.highlight;
+          let alpha = anyGroupHighlight && !groupHighlight ? 0.1 : 1;
+          data[groupIndex[this.filteredGroupLabels[rowIdx]]] = {
+            value: cat.data[rowIdx],
+            name: sampleName, // read by the tooltip formatter to disambiguate the stack
+            itemStyle: { color: colorWithAlpha(cat.color, alpha) },
+          };
+        });
+        series.push({
+          type: "bar",
+          name: cat.name,
+          stack: stackId,
+          barCategoryGap: "30%",
+          data,
+        });
+      });
+    });
+    return series;
+  }
+
   // Tooltip formatter can't live in the JSON-safe serialized skeleton, so it's attached
   // here to the fully-assembled option (see Plot.applyOptionOverrides in
   // echarts-plotting.js). Without this, ECharts' default axis-tooltip prints raw float
@@ -90,15 +164,27 @@ class EchartsBarPlot extends window.BarPlot {
     if (!option.tooltip) return;
     option.tooltip.formatter = (params) => {
       let list = Array.isArray(params) ? params : [params];
+      // Grouped bars (buildGroupedSeries) fill unused axis slots with null so a
+      // sample's stack only shows up at the group(s) it belongs to; drop those from
+      // the tooltip instead of printing a blank/NaN row for every other stack.
+      list = list.filter((p) => p.value !== null && p.value !== undefined);
       if (list.length === 0) return "";
       let sampleLabel = list[0].name;
-      let rows = list.map((p) => `${p.marker}${p.seriesName}: <b>${window.formatNumber(p.value)}</b>`).join("<br/>");
+      let rows = list
+        .map((p) => {
+          // Grouped bars stash the row-level sample name on the data item (buildGroupedSeries)
+          // to disambiguate which stack a row belongs to, since several samples' series
+          // share the same seriesName (the category name).
+          let stackLabel = p.data && p.data.name ? `${p.data.name} - ` : "";
+          return `${p.marker}${stackLabel}${p.seriesName}: <b>${window.formatNumber(p.value)}</b>`;
+        })
+        .join("<br/>");
       return `${sampleLabel}<br/>${rows}`;
     };
   }
 
   // See the comment at the buildSeries() call site above.
-  _updateHiddenSamplesWarning(total, visible) {
+  _updateHiddenSamplesWarning(total, visible, label = "samples") {
     let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
     groupDiv.parent().find(".samples-hidden-warning").remove();
 
@@ -112,7 +198,7 @@ class EchartsBarPlot extends window.BarPlot {
     if (nHidden > 0) {
       const alert = `
       <div class="samples-hidden-warning alert alert-warning">
-        ⚠ <strong>Warning:</strong> ${nHidden} samples hidden.
+        ⚠ <strong>Warning:</strong> ${nHidden} ${label} hidden.
         <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
       </div>`;
       groupDiv.before(alert);

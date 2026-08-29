@@ -27,6 +27,32 @@ def _make_bar_plot():
     )
 
 
+def _make_grouped_bar_plot():
+    # Mirrors the real-world usage in multiqc/modules/ribowaltz/ribowaltz.py: one
+    # sample_groups group per region, each containing one row per sample; rows for the
+    # same sample share an offset_group id ("sample1"/"sample2") so they align across
+    # regions.
+    data = {
+        "sample1_5utr": {"Frame 0": 10, "Frame 1": 5, "Frame 2": 2},
+        "sample2_5utr": {"Frame 0": 8, "Frame 1": 4, "Frame 2": 1},
+        "sample1_cds": {"Frame 0": 20, "Frame 1": 3, "Frame 2": 1},
+        "sample2_cds": {"Frame 0": 18, "Frame 1": 2, "Frame 2": 1},
+    }
+    sample_groups = {
+        "5utr": [["sample1_5utr", "sample1"], ["sample2_5utr", "sample2"]],
+        "cds": [["sample1_cds", "sample1"], ["sample2_cds", "sample2"]],
+    }
+    return bargraph.plot(
+        data,
+        ["Frame 0", "Frame 1", "Frame 2"],
+        bargraph.BarPlotConfig(
+            id="bargraph_grouped",
+            title="Test: Grouped Bar Graph",
+            sample_groups=sample_groups,
+        ),
+    )
+
+
 def _make_line_plot():
     return linegraph.plot(
         {
@@ -223,6 +249,36 @@ def test_get_option_is_pct_uses_data_pct():
                 assert math.isnan(actual)
             else:
                 assert actual == expected
+
+
+def test_get_option_grouped_bar_produces_stacked_series_per_sample():
+    # FIX-NEEDED #3 in multiqc-echarts-exploration/PARITY.md: grouped bars
+    # (`dataset.group_labels` set, e.g. by `pconfig.sample_groups`) used to throw.
+    plot = _make_grouped_bar_plot()
+    dataset = plot.datasets[0]
+    assert dataset.group_labels is not None
+
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    unique_groups = list(dict.fromkeys(dataset.group_labels))
+    assert len(unique_groups) == 2  # "5utr" and "cds"
+    assert option["yAxis"]["data"] == unique_groups
+
+    # One series per (unique sample, category): ECharts has no native multicategory
+    # axis, so each sample becomes a `stack` id positioned at its group's slot instead
+    # of Plotly's shared `offsetgroup`.
+    unique_samples = list(dict.fromkeys(dataset.samples))
+    assert len(option["series"]) == len(unique_samples) * len(dataset.cats)
+
+    stack_ids = {s["stack"] for s in option["series"]}
+    assert dataset.offset_groups is not None
+    assert stack_ids == set(dataset.offset_groups.values())
+
+    for s in option["series"]:
+        assert len(s["data"]) == len(unique_groups)
+        # Every row has a value in exactly one group slot for this dataset (each
+        # sample appears once per region); the rest are None placeholders.
+        assert sum(1 for v in s["data"] if v is not None) == 1
 
 
 def test_get_option_is_log_sets_switch_controlled_axis_type():
