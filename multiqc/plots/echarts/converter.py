@@ -115,17 +115,25 @@ def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[st
         # those defaults double-counts the label space and produces much bigger margins
         # than Plotly's automargin (which sizes margins to the label content only, plus
         # a small gap). Small fixed insets here let `containLabel` do the same job:
-        # grow only as far as the actual tick/axis-name text needs. The legend (below
-        # the grid, see `legend` below) isn't covered by `containLabel` at all, so
-        # `bottom` needs a bit more room to keep it clear of the x-axis labels when shown.
-        "grid": {"left": 8, "right": 16, "top": 64, "bottom": 40 if show_legend else 8, "containLabel": True},
+        # grow only as far as the actual tick/axis-name text needs. The legend (to the
+        # right of the grid, see `legend` below) isn't covered by `containLabel` at all,
+        # so `right` needs a bit more room to keep it clear of the plot when shown, like
+        # Plotly's default template (which also puts the legend on the right).
+        "grid": {"left": 8, "right": 160 if show_legend else 16, "top": 64, "bottom": 8, "containLabel": True},
         "xAxis": _convert_axis(merged.xaxis),
         "yAxis": _convert_axis(merged.yaxis),
         "legend": {
             "show": bool(merged.showlegend),
-            "orient": "horizontal",
-            "bottom": 0,
-            "left": "center",
+            "type": "scroll",
+            "orient": "vertical",
+            "right": 8,
+            "top": 56,
+            "bottom": 8,
+            # `right`'s 160px budget covers the icon plus a normal-length category name
+            # (Plotly instead grows the margin to fit, which we can't do without a text
+            # measurer on the Python side); truncate the rare much-longer label instead
+            # of letting it overflow into the plot area.
+            "textStyle": {"width": 110, "overflow": "truncate"},
         },
         "tooltip": {"confine": True},
     }
