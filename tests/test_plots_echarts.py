@@ -331,6 +331,47 @@ def test_get_option_bar_value_axis_is_not_scaled():
     assert "scale" not in option["xAxis"]
 
 
+def test_get_option_value_axis_has_si_formatter_sentinel_category_axis_does_not():
+    # POLISH.md #12: value axes get an SI-abbreviation `__FN__` sentinel (same pattern
+    # violin.py's yAxis uses); bar's yAxis is a category axis (sample names) and must
+    # stay untouched, matching Plotly (no formatter needed on category ticks).
+    plot = _make_bar_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["xAxis"]["type"] == "value"
+    assert option["xAxis"]["axisLabel"]["formatter"]["__FN__"] is True
+    assert option["yAxis"]["type"] == "category"
+    assert "formatter" not in option["yAxis"].get("axisLabel", {})
+
+
+def test_si_axis_formatter_body_golden_values():
+    """
+    GOLDEN cross-language contract (POLISH.md #12): `_si_axis_formatter_body`'s JS source
+    must stay in lockstep with `formatAxisNumber()` in
+    `multiqc/templates/echarts/src/js/echarts-plotting.js` (same duplication pattern as
+    violin.py's kde()/JS kde() pair). Executed here in a real JS engine (MiniRacer,
+    already a project dependency via `static_export.py`) to assert it SI-abbreviates the
+    way Plotly's own axis ticks do: ~3 significant figures, trailing zeros trimmed.
+    """
+    from py_mini_racer import MiniRacer
+
+    from multiqc.plots.echarts.converter import _si_axis_formatter_body
+
+    ctx = MiniRacer()
+    ctx.eval(f"function fmt(v) {{ {_si_axis_formatter_body('')} }}")
+    assert ctx.call("fmt", 450000000) == "450M"
+    assert ctx.call("fmt", 12000) == "12k"
+    assert ctx.call("fmt", 1500000) == "1.5M"
+    assert ctx.call("fmt", 2000000000) == "2G"
+    assert ctx.call("fmt", 20) == "20"
+    assert ctx.call("fmt", 0) == "0"
+    assert ctx.call("fmt", -5000) == "-5k"
+
+    # Suffix (e.g. a coverage "x" unit) combines with the SI abbreviation instead of the
+    # two fighting over the same tick.
+    ctx.eval(f"function fmtx(v) {{ {_si_axis_formatter_body('x')} }}")
+    assert ctx.call("fmtx", 12000) == "12kx"
+
+
 def test_get_option_line_series_matches_lines():
     plot = _make_line_plot()
     option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)

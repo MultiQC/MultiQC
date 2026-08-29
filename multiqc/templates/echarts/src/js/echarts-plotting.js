@@ -64,6 +64,46 @@ function formatNumber(value) {
 // tooltip/label formatter instead of a per-file copy).
 window.formatNumber = formatNumber;
 
+// SI-prefix abbreviation for value/log axis tick labels (POLISH.md #12), matching
+// Plotly's default axis style: large numbers get k/M/G/T suffixes at ~3 significant
+// figures with trailing zeros trimmed (450000000 -> "450M", 1500000 -> "1.5M",
+// 12000 -> "12k"); small numbers pass through with the same rounding but no suffix.
+// `suffix` is an optional caller-supplied unit appended verbatim (e.g. "x" for coverage),
+// combining with the SI abbreviation rather than the two fighting over the same tick.
+//
+// GOLDEN CROSS-LANGUAGE CONTRACT: kept in lockstep with `_si_axis_formatter_body()` in
+// `multiqc/plots/echarts/converter.py` (same duplication pattern as violin's `kde()`
+// pair), since that Python copy is the only one ever executed (SSR path, via a `__FN__`
+// sentinel); this JS copy is what runs for the live interactive render, applied in
+// `buildCurrentOption()` below, which always overwrites the sentinel object before
+// `setOption()` so it never reaches ECharts as-is (same pattern violin.js uses for its
+// yAxis formatter).
+function formatAxisNumber(v, suffix) {
+  suffix = suffix || "";
+  if (typeof v !== "number" || !Number.isFinite(v)) return String(v);
+  const sign = v < 0 ? "-" : "";
+  const abs = Math.abs(v);
+  const units = [
+    [1e12, "T"],
+    [1e9, "G"],
+    [1e6, "M"],
+    [1e3, "k"],
+  ];
+  for (const [threshold, unitSuffix] of units) {
+    if (abs >= threshold) {
+      // ponytail: no rollover guard for a value that rounds up into the next unit
+      // (e.g. 999.6k -> "1000k" not "1M"); axis ticks are always the round numbers
+      // ECharts itself chooses, so this boundary never occurs in practice.
+      return sign + Number((abs / threshold).toPrecision(3)) + unitSuffix + suffix;
+    }
+  }
+  return sign + Number(abs.toPrecision(3)) + suffix;
+}
+
+// Make formatAxisNumber globally available (used by buildCurrentOption() below and by
+// any per-type buildSeries()/applyOptionOverrides() that needs the same axis formatting).
+window.formatAxisNumber = formatAxisNumber;
+
 class Plot {
   constructor(dump) {
     this.anchor = dump["anchor"];
@@ -378,6 +418,21 @@ function buildCurrentOption(plot) {
   if (window.mqc_config && window.mqc_config.plot_font_family) {
     option.textStyle = { ...option.textStyle, fontFamily: window.mqc_config.plot_font_family };
   }
+
+  // 3c. SI-abbreviate value/log axis tick labels (POLISH.md #12), replacing the
+  // JSON-safe `__FN__` sentinel the skeleton carries for these axes (converter.py's
+  // `_convert_axis`) with a real live function; category axes (sample names) are left
+  // alone. Runs before the log/pct switch below so a percent axis's "{value}%" formatter
+  // (set unconditionally there) always wins over SI abbreviation.
+  [
+    ["xAxis", "xaxis"],
+    ["yAxis", "yaxis"],
+  ].forEach(([echartsAxisName, plotlyAxisName]) => {
+    let axis = option[echartsAxisName];
+    if (!axis || axis.type === "category") return;
+    let suffix = plot.layout?.[plotlyAxisName]?.ticksuffix || "";
+    axis.axisLabel = { ...axis.axisLabel, formatter: (v) => formatAxisNumber(v, suffix) };
+  });
 
   // 4. Apply log/pct toggle states over the axes controlled by the plot's switches.
   plot.axisControlledBySwitches.forEach((axisName) => {

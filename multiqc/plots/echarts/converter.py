@@ -7,8 +7,10 @@ part of an ECharts `option` dict that is common to every plot type: `animation`,
 `title`, `grid`, `xAxis`/`yAxis`, `legend`, `tooltip`. Per-type builders (e.g.
 `multiqc/plots/echarts/bar.py`) call this first, then add type-specific fields.
 
-This module never adds `series`, axis `data` arrays, or formatter functions: see
-the "ECharts model->JSON contract" in `multiqc-echarts-exploration/BUILD_PLAN.md`.
+This module never adds `series`, axis `data` arrays, or live formatter functions: see
+the "ECharts model->JSON contract" in `multiqc-echarts-exploration/BUILD_PLAN.md`. It
+does emit `__FN__` sentinels (plain, JSON-safe dicts) for value/log axis tick labels,
+same pattern violin.py uses for its yAxis; see `_si_axis_formatter_body`.
 
 `bands_and_lines`/`echarts_dash` also live here (not in `line.py`) since bar.py and
 scatter.py need the same `x_bands`/`y_bands`/`x_lines`/`y_lines` -> markArea/markLine
@@ -16,6 +18,7 @@ conversion; line.py was the original (and still the reference) caller.
 """
 
 import html
+import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -63,6 +66,35 @@ def _axis_type(axis: Any) -> str:
     return "value"
 
 
+def _si_axis_formatter_body(suffix: str) -> str:
+    """
+    `__FN__` sentinel body (see module docstring / `static_export.py`) for a value/log
+    axis tick label: SI-abbreviates large numbers to ~3 significant figures, trimming
+    trailing zeros (450000000 -> "450M", 1500000 -> "1.5M", 12000 -> "12k"), matching
+    Plotly's default axis tick style (POLISH.md #12), then appends `suffix` verbatim
+    (e.g. a coverage "x" unit).
+
+    GOLDEN CROSS-LANGUAGE CONTRACT: this algorithm must stay identical to
+    `formatAxisNumber()` in `multiqc/templates/echarts/src/js/echarts-plotting.js` (same
+    duplication pattern as `violin.py`'s `kde()`/JS `kde()` pair) since only the SSR path
+    (`static_export.py`) ever executes this body; the interactive JS renderer always
+    overwrites this sentinel with its own live `formatAxisNumber` call before
+    `setOption()`, so a sentinel object never reaches ECharts in the browser.
+    """
+    return (
+        "if (typeof v !== 'number' || !isFinite(v)) return String(v);"
+        "var sign = v < 0 ? '-' : '';"
+        "var abs = Math.abs(v);"
+        "var units = [[1e12, 'T'], [1e9, 'G'], [1e6, 'M'], [1e3, 'k']];"
+        "for (var i = 0; i < units.length; i++) {"
+        "if (abs >= units[i][0]) {"
+        "return sign + Number((abs / units[i][0]).toPrecision(3)) + units[i][1] + " + json.dumps(suffix) + ";"
+        "}"
+        "}"
+        "return sign + Number(abs.toPrecision(3)) + " + json.dumps(suffix) + ";"
+    )
+
+
 def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
     """
     `scale=True` is how a caller asks for Plotly-style autorange on a value axis: by
@@ -94,10 +126,11 @@ def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
     if maxval is not None:
         axis_option["max"] = maxval
 
-    if axis.ticksuffix:
-        # String template, not a function: functions only cross the Python/JS bridge
-        # in the SSR path, via the `__FN__` sentinel (see static_export.py, later task).
-        axis_option["axisLabel"] = {"formatter": "{value}" + str(axis.ticksuffix)}
+    if axis_option["type"] in ("value", "log"):
+        # SI-abbreviate large tick labels (POLISH.md #12), matching Plotly's default axis
+        # style. A category axis (sample names) is never numeric, so it's left untouched.
+        suffix = str(axis.ticksuffix) if axis.ticksuffix else ""
+        axis_option["axisLabel"] = {"formatter": {"__FN__": True, "body": _si_axis_formatter_body(suffix)}}
 
     return axis_option
 
