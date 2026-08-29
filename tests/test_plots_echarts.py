@@ -244,7 +244,10 @@ def test_interactive_plot_adds_echarts_key_for_line_plot():
     skeleton = dumped["echarts"]["datasets"][0]["layout"]
     assert skeleton["animation"] is False
     assert skeleton["xAxis"]["type"] == "value"
-    assert skeleton["dataZoom"] == [{"type": "inside"}, {"type": "slider"}]
+    # No slider (matches Plotly, which has no mini-plot strip); "inside" stays for
+    # drag-pan/pinch-zoom, with mouse-wheel zoom disabled so it doesn't hijack page
+    # scrolling. See `multiqc/plots/echarts/line.py::layout_option`.
+    assert skeleton["dataZoom"] == [{"type": "inside", "zoomOnMouseWheel": False, "moveOnMouseWheel": False}]
     assert "series" not in skeleton
 
 

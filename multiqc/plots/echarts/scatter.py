@@ -35,7 +35,11 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option = convert_layout(plot.layout, dataset.layout, scale_x=True, scale_y=True)
 
     option["tooltip"]["trigger"] = "item"
-    option["dataZoom"] = [{"type": "inside"}, {"type": "slider"}]
+    # No slider (Plotly has no mini-plot strip either). Keep "inside" for drag-pan/
+    # pinch-zoom, but disable mouse-wheel zoom so it doesn't hijack page scrolling on a
+    # long report (Plotly doesn't scroll-zoom by default; there's no toolbox box-zoom
+    # tool here to fall back on instead).
+    option["dataZoom"] = [{"type": "inside", "zoomOnMouseWheel": False, "moveOnMouseWheel": False}]
 
     # Scatter has two meaningful value axes (no category axis), so both dimensions
     # apply, same as line.
