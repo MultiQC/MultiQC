@@ -83,7 +83,14 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option = convert_layout(plot.layout, dataset.layout)
 
     option["yAxis"]["type"] = "category"
-    option["yAxis"]["inverse"] = True
+    # Plotly's default (non-inverted) category axis puts the first sample at the
+    # bottom and the last at the top; `dataset.samples` is already pre-reversed by
+    # `bargraph.py::Dataset.create` for that convention ("Need to reverse samples as
+    # the bar plot will show them reversed"). ECharts' default category axis follows
+    # the same bottom-to-top convention, so leaving `inverse` unset (false) here
+    # reproduces Plotly's top-to-bottom sample order exactly; `inverse: True` was
+    # flipping it (verified against a live FastQC "Sequence Counts" render in both
+    # engines with agent-browser).
     option["tooltip"]["trigger"] = "axis"
 
     # JS reads this to decide whether series stack (default) or sit side by side.
