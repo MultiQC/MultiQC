@@ -411,6 +411,28 @@ function buildCurrentOption(plot) {
     option.tooltip.textStyle = { ...option.tooltip.textStyle, color: colors.hoverlabel_fontcolor };
   }
 
+  // 3a. Theme the Plotly-style crosshair guide lines (POLISH.md #13): dashed lines in
+  // the theme's spike color, label box matching the tooltip's own colors. The `type:
+  // "cross"`/`show`/`triggerOn` structure itself is set once, for every plot type, in
+  // the shared skeleton (converter.py's `convert_layout`); violin.py overrides it to
+  // `{show: false}` there (misleading axis values), so the `option.axisPointer?.show`
+  // guard below skips theming for violin, matching its disabled state.
+  const axisPointerTheme = {
+    crossStyle: { color: colors.spike_color, type: "dashed" },
+    label: {
+      backgroundColor: colors.hoverlabel_bgcolor,
+      color: colors.hoverlabel_fontcolor,
+      borderColor: colors.hoverlabel_bordercolor,
+      borderWidth: 1,
+    },
+  };
+  if (option.tooltip?.axisPointer) {
+    option.tooltip.axisPointer = { ...option.tooltip.axisPointer, ...axisPointerTheme };
+  }
+  if (option.axisPointer?.show) {
+    option.axisPointer = { ...option.axisPointer, ...axisPointerTheme };
+  }
+
   // 3b. Carry `config.plot_font_family` (report config, read from mqc_config -- see
   // echarts template's head.html override) onto the option so ECharts uses it, matching
   // the SSR path's single-family constraint (theme.py FONT_FAMILY). Left unset (ECharts
@@ -454,6 +476,13 @@ function buildCurrentOption(plot) {
   // 5. Build series from the raw dataset fields (toolbox-aware).
   let series = plot.buildSeries();
   if (!series || series.length === 0) return null;
+  // Plotly-style crosshair mouse cursor (POLISH.md #13), not ECharts' default hand/
+  // pointer. One place for every plot type, rather than a per-type buildSeries() edit:
+  // ECharts' own default is `series.cursor: "pointer"`, so an explicit per-series value
+  // already set (there is none, currently) would still win over this.
+  series.forEach((s) => {
+    if (s.cursor === undefined) s.cursor = "crosshair";
+  });
   option.series = series;
   // Category-axis `data` is toolbox-dependent (sample names get hidden/renamed), so it's
   // never in the skeleton; each plot class stashes { axis: "xAxis"|"yAxis", data: [...] }

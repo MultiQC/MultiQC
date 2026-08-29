@@ -190,7 +190,20 @@ def convert_layout(
             # of letting it overflow into the plot area.
             "textStyle": {"width": 110, "overflow": "truncate"},
         },
-        "tooltip": {"confine": True},
+        "tooltip": {"confine": True, "axisPointer": {"type": "cross"}},
+        # Plotly-style crosshair guide lines (POLISH.md #13): dashed lines on both axes
+        # that track the cursor, with small axis-value label boxes. `tooltip.axisPointer`
+        # above is enough for an axis-trigger tooltip (bar/line, `option["tooltip"]["trigger"]
+        # = "axis"`, set per-type); an item-trigger tooltip (scatter/box/heatmap/violin) never
+        # shows an axis pointer on its own, so this top-level `axisPointer` component is what
+        # actually draws the cross for those types. Harmless to set for every type: it's
+        # ignored by the SSR/flat PNG path (no hover there) and, for axis-trigger charts,
+        # simply provides the same cross style tooltip.axisPointer already asks for.
+        # Color/label theming is layered on afterwards in JS (buildCurrentOption's theme
+        # step), same pattern as tooltip/axis/legend colors below it; violin.py turns this
+        # off (see its layout_option) since its axes are normalized/hidden and a value
+        # label here would be actively misleading.
+        "axisPointer": {"type": "cross", "show": True, "triggerOn": "mousemove"},
     }
 
 

@@ -398,6 +398,15 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     }
     option["tooltip"]["trigger"] = "item"
 
+    # No cross spike lines (POLISH.md #13): both axes here are the VALUE-AXIS TRICK
+    # (module docstring), not real data coordinates (x is normalized 0..1 per row, y is
+    # a continuous row index), so a value label following the cursor would show numbers
+    # that mean nothing to the viewer. The crosshair mouse *cursor* (set globally in JS,
+    # see echarts-plotting.js's buildCurrentOption) still applies to violin like every
+    # other type; only the axis-tracking guide lines are skipped here.
+    option["tooltip"]["axisPointer"] = {"show": False}
+    option["axisPointer"] = {"show": False}
+
     return option
 
 
