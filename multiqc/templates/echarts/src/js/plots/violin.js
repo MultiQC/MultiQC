@@ -140,9 +140,21 @@ function violinPolygon(values, lo, hi, rowIdx) {
   return top.concat(bottom);
 }
 
+// Mirrors converter.py's _clean_title_segment (POLISH.md #7): titles/namespaces are
+// authored with HTML entities (e.g. "Mapped &amp; paired") for Plotly's HTML-interpreting
+// axis labels, but ECharts renders axis labels as plain text. DOMParser decodes entities
+// and strips any stray tags in one pass (no HTML re-injection risk: textContent never
+// executes markup, it only reads the parsed text).
+function decodeAndStripHtml(text) {
+  if (!text) return text;
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  return (doc.body.textContent || "").replace(/\s+/g, " ").trim();
+}
+
 // Mirrors violin.py::_metric_title.
 function metricTitle(header) {
-  return header.namespace ? `${header.namespace}: ${header.title}` : header.title;
+  const title = header.namespace ? `${header.namespace}: ${header.title}` : header.title;
+  return decodeAndStripHtml(title);
 }
 
 // Copied from templates/default/src/js/plots/violin.js's buildTraces() (normalizeColorToRGB
@@ -167,11 +179,17 @@ function toRgba(rgb, alpha) {
   return rgb.replace("rgb(", "rgba(").replace(")", `,${alpha})`);
 }
 
+// Default violin body color (POLISH.md #5): matches Plotly's own general-stats violin
+// default, fillcolor="#999999" (multiqc/plots/violin.py's Dataset.create); mirrors
+// violin.py's _DEFAULT_STROKE/_DEFAULT_FILL/_DEFAULT_BOX_FILL. Only used when a metric
+// has no configured header.color; a real per-metric color always takes priority below.
+const DEFAULT_STROKE = "rgb(153,153,153)";
+
 // Mirrors violin.py::_violin_colors: [fill, stroke, boxFill], falling back to the same
 // defaults (kept as rgb(...), not hex, so toRgba() above applies uniformly).
 function violinColors(header) {
   const rgb = header.color ? normalizeColorToRGB(header.color) : null;
-  if (!rgb) return [`rgba(91,143,249,${FILL_ALPHA})`, "rgb(31,77,158)", `rgba(31,77,158,${BOX_FILL_ALPHA})`];
+  if (!rgb) return [toRgba(DEFAULT_STROKE, FILL_ALPHA), DEFAULT_STROKE, toRgba(DEFAULT_STROKE, BOX_FILL_ALPHA)];
   const stroke = `rgb(${rgb})`;
   return [toRgba(stroke, FILL_ALPHA), stroke, toRgba(stroke, BOX_FILL_ALPHA)];
 }

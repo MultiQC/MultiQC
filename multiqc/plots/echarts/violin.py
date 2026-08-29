@@ -42,7 +42,7 @@ import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 from multiqc.plots.echarts.box import _quantile
-from multiqc.plots.echarts.converter import convert_layout
+from multiqc.plots.echarts.converter import _clean_title_segment, convert_layout
 from multiqc.plots.table_object import TableConfig
 from multiqc.plots.violin import ColumnAnchor, Dataset, ViolinColumn
 from multiqc.utils.mqc_colour import color_to_rgb_string
@@ -69,11 +69,14 @@ FILL_ALPHA = 0.3
 # Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
 BOX_FILL_ALPHA = 0.55
 
-_DEFAULT_STROKE = (
-    "rgb(31,77,158)"  # equivalent to the old "#1f4d9e", kept as rgb(...) so _rgba() below applies uniformly
-)
-_DEFAULT_FILL = f"rgba(91,143,249,{FILL_ALPHA})"
-_DEFAULT_BOX_FILL = f"rgba(31,77,158,{BOX_FILL_ALPHA})"
+# Default violin body color (POLISH.md #5): matches Plotly's own general-stats violin
+# default, `fillcolor="#999999"` (see `multiqc/plots/violin.py`'s `Dataset.create`), kept
+# as rgb(...) so _rgba() below applies uniformly. Only used when a metric has no
+# configured `header.color`; a real per-metric color always takes priority (see
+# `_violin_colors` below).
+_DEFAULT_STROKE = "rgb(153,153,153)"
+_DEFAULT_FILL = f"rgba(153,153,153,{FILL_ALPHA})"
+_DEFAULT_BOX_FILL = f"rgba(153,153,153,{BOX_FILL_ALPHA})"
 _SCATTER_COLOR = "rgba(30,50,80,0.85)"
 
 
@@ -168,9 +171,18 @@ def _metric_range(header: ViolinColumn, values: List[float]) -> Tuple[float, flo
 
 
 def _metric_title(header: ViolinColumn) -> str:
+    """
+    Row label text for one metric (POLISH.md #7): titles/namespaces are authored with
+    HTML entities (e.g. "Mapped &amp; paired") for Plotly's HTML-interpreting axis
+    labels, but ECharts renders axis labels as plain text, so the raw entity would show
+    up literally. `_clean_title_segment` (same helper `converter.py` uses for chart
+    titles) unescapes entities and strips any stray tags.
+    """
     if header.namespace:
-        return f"{header.namespace}: {header.title}"
-    return header.title
+        title = f"{header.namespace}: {header.title}"
+    else:
+        title = header.title
+    return _clean_title_segment(title)
 
 
 def _violin_polygon(values: List[float], lo: float, hi: float, row_idx: int) -> List[List[float]]:
