@@ -21,7 +21,11 @@ import "../../../default/src/js/plotting-shared.js";
 // ECharts plotting engine (replaces default's plotting.js)
 import "./echarts-plotting.js";
 
-import "../../../default/src/js/tables.js";
+// "tables.js" is a fork of the default template's file (Task 2.3): the general stats
+// table's "plot a column as a scatter" modal calls Plotly.newPlot() directly (not through
+// initPlot/renderPlot), so it needed its own ECharts rewrite. See the header comment in
+// ./tables.js for the copy-drift risk; everything else in that file is unchanged.
+import "./tables.js";
 import "../../../default/src/js/doi.js";
 import "../../../default/src/js/statuses.js";
 
