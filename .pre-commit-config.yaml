@@ -26,6 +26,10 @@ repos:
     rev: "v3.7.4"
     hooks:
       - id: prettier
+        # templates' head.html mixes Jinja {% raw %} with a JSON blob that
+        # prettier-plugin-jinja-template cannot parse (the default template's
+        # head.html has the same structure); exclude it from prettier.
+        exclude: '^multiqc/templates/.*/head\.html$'
         additional_dependencies:
           - prettier@3.7.4
           - prettier-plugin-jinja-template@2.1.0

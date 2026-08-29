@@ -173,7 +173,7 @@ class EchartsHeatmapPlot extends window.Plot {
       let ycats = this._yAxisData ?? [];
       option.tooltip.formatter = (params) => {
         let [xi, yi, val] = params.value;
-        return `${xlab}: ${xcats[xi]}<br/>${ylab}: ${ycats[yi]}<br/>${zlab}: ${val}`;
+        return `${xlab}: ${xcats[xi]}<br/>${ylab}: ${ycats[yi]}<br/>${zlab}: ${window.formatNumber(val)}`;
       };
     }
   }

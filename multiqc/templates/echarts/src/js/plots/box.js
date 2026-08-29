@@ -122,7 +122,7 @@ class EchartsBoxPlot extends window.BoxPlot {
         // ECharts prepends the category axis value/index to `value` for a boxplot on a
         // category axis (6 elements: [axisValue, min, q1, median, q3, max]), unlike the
         // plain 5-element five-number array in option.series[0].data; drop it here.
-        let [minV, q1, median, q3, maxV] = params.value.slice(-5);
+        let [minV, q1, median, q3, maxV] = params.value.slice(-5).map(window.formatNumber);
         return (
           `<b>${params.name}</b><br/>` +
           `Max: ${maxV}${suffix}<br/>Q3: ${q3}${suffix}<br/>Median: ${median}${suffix}<br/>` +
@@ -130,7 +130,7 @@ class EchartsBoxPlot extends window.BoxPlot {
         );
       }
       let value = Array.isArray(params.value) ? params.value[0] : params.value;
-      return `<b>${params.name}</b>: ${value}${suffix}`;
+      return `<b>${params.name}</b>: ${window.formatNumber(value)}${suffix}`;
     };
   }
 }

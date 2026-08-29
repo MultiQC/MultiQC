@@ -63,7 +63,7 @@ class EchartsScatterPlot extends window.ScatterPlot {
     let ysuffix = this.layout?.yaxis?.ticksuffix ?? "";
     option.tooltip.formatter = (params) => {
       let [x, y] = params.value;
-      return `<b>${params.name}</b><br/>X: ${x}${xsuffix}<br/>Y: ${y}${ysuffix}`;
+      return `<b>${params.name}</b><br/>X: ${window.formatNumber(x)}${xsuffix}<br/>Y: ${window.formatNumber(y)}${ysuffix}`;
     };
   }
 }

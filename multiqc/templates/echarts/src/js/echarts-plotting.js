@@ -46,6 +46,24 @@ function getEchartsThemeColors() {
 // Make getEchartsThemeColors globally available
 window.getEchartsThemeColors = getEchartsThemeColors;
 
+// Shared number formatter for tooltips and data labels across every echarts plot type
+// (bar/line/scatter/box/heatmap/violin). Generalizes the ad hoc
+// `Number.isInteger(v) ? v : parseFloat(v.toFixed(2))` pattern already used throughout the
+// default (Plotly) template's plots/*.js for the same purpose, so hovering a point shows
+// e.g. "0.01" instead of raw float noise like "0.010144431533554423". Values very close to
+// zero fall back to a few significant digits instead of toFixed(2), which would otherwise
+// collapse them to "0.00".
+function formatNumber(value) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return value;
+  if (Number.isInteger(value)) return value;
+  if (value === 0 || Math.abs(value) >= 0.01) return parseFloat(value.toFixed(2));
+  return Number(value.toPrecision(3));
+}
+
+// Make formatNumber globally available (single shared helper, reused by every plots/*.js
+// tooltip/label formatter instead of a per-file copy).
+window.formatNumber = formatNumber;
+
 class Plot {
   constructor(dump) {
     this.anchor = dump["anchor"];
@@ -315,6 +333,14 @@ function buildCurrentOption(plot) {
     option.tooltip.backgroundColor = colors.hoverlabel_bgcolor;
     option.tooltip.borderColor = colors.hoverlabel_bordercolor;
     option.tooltip.textStyle = { ...option.tooltip.textStyle, color: colors.hoverlabel_fontcolor };
+  }
+
+  // 3b. Carry `config.plot_font_family` (report config, read from mqc_config -- see
+  // echarts template's head.html override) onto the option so ECharts uses it, matching
+  // the SSR path's single-family constraint (theme.py FONT_FAMILY). Left unset (ECharts
+  // default) when the user hasn't configured a custom font.
+  if (window.mqc_config && window.mqc_config.plot_font_family) {
+    option.textStyle = { ...option.textStyle, fontFamily: window.mqc_config.plot_font_family };
   }
 
   // 4. Apply log/pct toggle states over the axes controlled by the plot's switches.

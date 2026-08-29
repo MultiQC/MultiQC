@@ -122,11 +122,10 @@ function violinColors(header) {
   return [`rgba(${rgb},0.5)`, `rgb(${rgb})`];
 }
 
-// Mimics Python's `f"{val:g}"` closely enough for a min/max label (not asserted
-// byte-for-byte anywhere, unlike kde()).
+// Min/max row label: delegates to the shared window.formatNumber (echarts-plotting.js)
+// so every echarts plot type rounds numbers the same way.
 function formatG(num) {
-  if (!Number.isFinite(num)) return String(num);
-  return Number(num.toPrecision(6)).toString();
+  return String(window.formatNumber(num));
 }
 
 function makeKdeRenderItem(poly, fill, stroke) {
@@ -435,8 +434,7 @@ class EchartsViolinPlot extends window.Plot {
       option.tooltip.formatter = (params) => {
         if (params.seriesType !== "scatter") return "";
         let real = Array.isArray(params.value) ? params.value[2] : params.value;
-        if (typeof real === "number") real = Number.isInteger(real) ? real : parseFloat(real.toFixed(3));
-        return `<b>${params.name}</b>: ${real}`;
+        return `<b>${params.name}</b>: ${window.formatNumber(real)}`;
       };
     }
   }

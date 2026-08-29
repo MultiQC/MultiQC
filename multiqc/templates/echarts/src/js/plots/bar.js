@@ -82,6 +82,21 @@ class EchartsBarPlot extends window.BarPlot {
     });
   }
 
+  // Tooltip formatter can't live in the JSON-safe serialized skeleton, so it's attached
+  // here to the fully-assembled option (see Plot.applyOptionOverrides in
+  // echarts-plotting.js). Without this, ECharts' default axis-tooltip prints raw float
+  // values (no rounding).
+  applyOptionOverrides(option) {
+    if (!option.tooltip) return;
+    option.tooltip.formatter = (params) => {
+      let list = Array.isArray(params) ? params : [params];
+      if (list.length === 0) return "";
+      let sampleLabel = list[0].name;
+      let rows = list.map((p) => `${p.marker}${p.seriesName}: <b>${window.formatNumber(p.value)}</b>`).join("<br/>");
+      return `${sampleLabel}<br/>${rows}`;
+    };
+  }
+
   // See the comment at the buildSeries() call site above.
   _updateHiddenSamplesWarning(total, visible) {
     let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");

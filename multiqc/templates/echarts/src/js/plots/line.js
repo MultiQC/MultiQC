@@ -74,7 +74,7 @@ class EchartsLinePlot extends window.LinePlot {
       let rows = list
         .map((p) => {
           let y = Array.isArray(p.value) ? p.value[1] : p.value;
-          return `${p.marker}${p.seriesName}: <b>${y}</b>`;
+          return `${p.marker}${p.seriesName}: <b>${window.formatNumber(y)}</b>`;
         })
         .join("<br/>");
       return `${xLabel}<br/>${rows}`;
