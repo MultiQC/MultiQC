@@ -310,8 +310,19 @@ function renderPlot(anchor) {
 
   // 6. Get-or-init the chart instance, then always setOption with notMerge so stale
   // series/axis state from a previous render never leaks through.
+  let isFirstChartInit = plot.chart === null;
   plot.chart ??= echarts.init(el, null, { renderer: plot.echarts.renderer });
   plot.chart.setOption(option, { notMerge: true });
+
+  if (isFirstChartInit && plot.square) {
+    // Unlike Plotly (which honors `layout.width` directly on `newPlot`, forcing a square
+    // figure from the first render), ECharts always sizes its canvas to the container's
+    // current CSS size (full width here). Force the square aspect once up front, reusing
+    // the same width-from-height calc the drag-resize handle already applies via
+    // `Plot.resize()`/`EchartsHeatmapPlot.resize()` (plotting-shared.js's mousedown
+    // handler on `.hc-plot-handle`).
+    plot.resize(plot.layout.height);
+  }
 
   if (!plot._resizeObserver) {
     plot._resizeObserver = new ResizeObserver(() => {

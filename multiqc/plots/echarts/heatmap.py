@@ -75,23 +75,32 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
         vmin, vmax = 0.0, 1.0
 
     show_scale = bool(dataset.trace_params.get("showscale", True))
+    # Vertical colorbar on the right, matching Plotly's default `colorbar` placement.
+    # `itemHeight` is a raw pixel count (ECharts' visualMap ignores percent strings here,
+    # see `VisualMapModel.resetExtent`), so it's derived from `plot.layout.height` (the
+    # same total figure height Plotly uses for its own colorbar length) minus the grid's
+    # top margin and room below the bar for its own min-value label plus the x-axis tick
+    # labels beneath the grid. Clamped so tiny plots don't get a negative/zero bar.
+    plot_height = plot.layout.height or 400
+    item_height = max(100, plot_height - 64 - 90)
     option["visualMap"] = {
         "min": vmin,
         "max": vmax,
         "calculable": True,
-        "orient": "horizontal",
-        "left": "center",
-        "bottom": 0,
+        "orient": "vertical",
+        "right": 8,
+        "top": 64,
+        "itemHeight": item_height,
         "show": show_scale,
         "inRange": {"color": _colorscale_colors(dataset)},
     }
     if show_scale:
-        # The colorbar sits below the grid at a fixed `bottom: 0`, like the legend in
-        # `convert_layout`; it isn't accounted for by `containLabel`, so widen the grid's
-        # bottom margin here too, or the colorbar overlaps the x-axis category labels.
-        # 65 clears the colorbar's own rendered height (~73px, measured empirically)
-        # plus a small gap once `containLabel` adds the x-axis tick-label height on top.
-        option["grid"]["bottom"] = 65
+        # The colorbar sits to the right of the grid at a fixed `right: 8`; it isn't
+        # accounted for by `containLabel`, so widen the grid's right margin here too, or
+        # the colorbar overlaps the last data column. 90 clears the colorbar's own
+        # rendered width (itemWidth plus its min/max value labels, ~70px measured
+        # empirically) plus a small gap.
+        option["grid"]["right"] = 90
 
     if plot.square:
         option["_mqc"] = {"square": True}
