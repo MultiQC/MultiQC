@@ -1,20 +1,31 @@
 // ECharts violin plot: STANDALONE class extending window.Plot directly (Task 2.2).
 // Unlike bar/line/scatter/box, this does NOT extend the default template's ViolinPlot:
 // that class's buildTraces() builds one Plotly subplot (its own x/y axis pair) per
-// metric row, which has no ECharts equivalent (a single value-axis-trick grid is used
-// instead, see multiqc/plots/echarts/violin.py's module docstring). Only the
-// engine-neutral bits are ported here verbatim: `prepData()` field access
+// metric row; this class does the ECharts equivalent itself, PLOTLY-STYLE PER-ROW
+// SUBPLOTS: one ECharts `grid` (with its own `xAxis`/`yAxis` pair) per visible metric,
+// stacked vertically, matching multiqc/plots/echarts/violin.py's own layout_option().
+// Only the engine-neutral bits are ported here verbatim: `prepData()` field access
 // (templates/default/src/js/plots/violin.js:18-43) and `exportData()` (:401-431).
 //
 // Rendering strategy (mirrors multiqc/plots/echarts/violin.py):
-// - Each row is a `custom` series whose renderItem draws a closed KDE polygon.
+// - Each row is a `custom` series whose renderItem draws a closed KDE polygon in REAL
+//   x-coordinates (each row has its own real-valued x-axis, POLISH.md #6) and a small
+//   y-offset symmetric around 0 (the violin's density thickness; no row index baked in
+//   any more, since each row is its own grid).
 // - `plot.echarts.datasets[i].violins` ({metric: {poly, range}}) is precomputed by
 //   Python from ALL samples. When no sample is hidden by the toolbox we reuse that
-//   polygon directly (translating its y-offset if the row position shifted, e.g. a
-//   metric got hidden via the table column config); when a sample IS hidden we
+//   polygon directly verbatim (its y no longer depends on row position, so no
+//   translation is needed even if a metric's row shifted); when a sample IS hidden we
 //   recompute the KDE in JS from the visible values only (kde() below, a byte-for-byte
 //   port of violin.py::kde -- see the golden fixture comment above it).
 // - A beeswarm `scatter` series per row uses ECharts 6's native `jitter`.
+// - `grid`/`xAxis`/`yAxis` are rebuilt wholesale every render (buildSeries(), applied in
+//   applyOptionOverrides()) from the LIVE metric list, since it can differ from the
+//   Python skeleton's SSR-time list (e.g. a table column toggled after page load); each
+//   row gets a real, SI-formatted x-axis (POLISH.md #6) and a per-row `inside`/toolbox
+//   dataZoom so click+drag zoom only affects that row (POLISH.md #8); the row's metric
+//   title is drawn via the VALUE-AXIS TRICK y-axis (a single tick at y=0, the exact
+//   vertical center of the row, POLISH.md #1).
 // - Cross-row sample highlight: hovering a beeswarm point highlights that sample's
 //   point on every other row via chart.on("mouseover")/dispatchAction("highlight").
 
@@ -72,6 +83,45 @@ const FILL_ALPHA = 0.3;
 // Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
 const BOX_FILL_ALPHA = 0.55;
 
+// --- Per-row grid geometry: the cross-language contract (mirrors
+// multiqc/plots/echarts/violin.py's `_row_geometry`/ROW_PX/EXTRA_PX/BOTTOM_PX/
+// ROW_GRID_FRACTION). Unlike the Python copy (whose actual SSR container height is
+// outside its control), THIS copy also picks the container's CSS height directly (see
+// buildSeries() below), so here the row proportions are exact, not just approximate:
+// compact, Plotly-comparable rows (POLISH.md #4).
+const ROW_PX = 42;
+const EXTRA_PX = 55; // space reserved for the chart title/subtitle above the first row
+const BOTTOM_PX = 10; // breathing room below the last row's x-axis tick labels
+// Fraction of a row's slot handed to ECharts as the grid box (`containLabel: true` then
+// shrinks the ACTUAL drawing area within that box to make room for the row's own x-axis
+// tick labels, so this only needs to cover the tick labels plus a small gap to the next
+// row, NOT also the violin height on top of that; mirrors violin.py's ROW_GRID_FRACTION).
+const ROW_GRID_FRACTION = 0.86;
+
+function rowGeometry(rowIdx, n) {
+  const total = ROW_PX * n + EXTRA_PX + BOTTOM_PX;
+  const topPct = (EXTRA_PX / total) * 100;
+  const bottomPct = (BOTTOM_PX / total) * 100;
+  const rowSlotPct = (100 - topPct - bottomPct) / n;
+  const top = topPct + rowIdx * rowSlotPct;
+  const height = rowSlotPct * ROW_GRID_FRACTION;
+  return [`${top}%`, `${height}%`];
+}
+
+// Mirrors violin.py::_grid_left: shared left inset (px) for every row's grid, sized from
+// the LONGEST visible title so every row's plot area starts at the same x, and computed
+// (not left purely to `containLabel`'s own auto-measurement) so it's never smaller than
+// this floor even in a context where text measurement is unreliable.
+const TITLE_CHAR_PX = 6.6;
+const MIN_GRID_LEFT = 60;
+const MAX_GRID_LEFT = 280;
+
+function gridLeft(titles) {
+  if (titles.length === 0) return MIN_GRID_LEFT;
+  const maxLen = arrMax(titles.map((t) => t.length));
+  return Math.min(MAX_GRID_LEFT, Math.max(MIN_GRID_LEFT, maxLen * TITLE_CHAR_PX + 14));
+}
+
 // Linear-interpolation quantile (mirrors multiqc/plots/echarts/box.py::_quantile, also
 // duplicated in this template's own box.js's quantile(); re-duplicated here rather than
 // imported because each templates/echarts/src/js/plots/*.js file is its own ES module
@@ -96,9 +146,9 @@ function arrMax(arr) {
 }
 
 // Mirrors violin.py::_metric_range: prefers the column's own configured axis range
-// (header.xaxis.range, the exact [dmin, dmax] Plotly's per-row x-axis uses) so a violin
-// occupies the same fraction of its row that Plotly's does (POLISH.md #10c), falling
-// back to a padded observed-value range when the column has no configured range.
+// (header.xaxis.range, the exact [dmin, dmax] Plotly's per-row x-axis uses) so a row's
+// x-axis matches Plotly's exactly (POLISH.md #10c/#6), falling back to a padded
+// observed-value range when the column has no configured range.
 function metricRange(header, values) {
   const range = header && header.xaxis && header.xaxis.range;
   if (range && range[1] > range[0]) return [range[0], range[1]];
@@ -117,26 +167,27 @@ function metricRange(header, values) {
   return [lo, hi];
 }
 
-// Mirrors violin.py::_violin_polygon: closed KDE polygon in normalized (0..1) x-space
-// and integer-offset y-space.
-function violinPolygon(values, lo, hi, rowIdx) {
+// Mirrors violin.py::_violin_polygon: closed KDE polygon in REAL x-space (each row has
+// its own real-valued x-axis) and a small y-space symmetric around 0 (no row offset any
+// more, since each row is its own grid).
+function violinPolygon(values, lo, hi) {
   const span = hi - lo;
   if (arrMax(values) === arrMin(values)) {
     // Degenerate (zero-variance) metric: kde()'s Silverman bandwidth collapses to its
     // 1e-9 floor here, which would otherwise blow up into a single needle-thin,
     // full-height spike (POLISH.md #10d). Draw a flat row instead; the median tick
     // (see buildSeries()) still marks the value.
-    const x = (values[0] - lo) / span;
+    const x = values[0];
     return [
-      [x, rowIdx],
-      [x, rowIdx],
+      [x, 0],
+      [x, 0],
     ];
   }
   const xs = Array.from({ length: N_BINS }, (_, i) => lo + (span * i) / (N_BINS - 1));
   const ys = kde(values, xs);
   const ymax = arrMax(ys) || 1.0;
-  const top = xs.map((x, i) => [(x - lo) / span, rowIdx + (ys[i] / ymax) * ROW_HEIGHT]);
-  const bottom = xs.map((x, i) => [(x - lo) / span, rowIdx - (ys[i] / ymax) * ROW_HEIGHT]).reverse();
+  const top = xs.map((x, i) => [x, (ys[i] / ymax) * ROW_HEIGHT]);
+  const bottom = xs.map((x, i) => [x, -(ys[i] / ymax) * ROW_HEIGHT]).reverse();
   return top.concat(bottom);
 }
 
@@ -201,15 +252,15 @@ function formatG(num) {
 }
 
 // Draws the KDE polygon plus an inner Q1-Q3 box and median line (POLISH.md #10b),
-// matching Plotly's box_visible/meanline violin config. q1x/medx/q3x are already
-// normalized to the same 0..1 x-space as poly. Mirrors violin.py::_violin_render_series.
-function makeViolinRenderItem(poly, q1x, medx, q3x, rowIdx, fill, stroke, boxFill) {
+// matching Plotly's box_visible/meanline violin config. q1/median/q3 are real values
+// (same x-space as poly). Mirrors violin.py::_violin_render_series.
+function makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill) {
   return function (params, api) {
     const pts = poly.map((p) => api.coord(p));
-    const bTL = api.coord([q1x, rowIdx - BOX_HALF_HEIGHT]);
-    const bBR = api.coord([q3x, rowIdx + BOX_HALF_HEIGHT]);
-    const mTop = api.coord([medx, rowIdx - MEDIAN_HALF_HEIGHT]);
-    const mBot = api.coord([medx, rowIdx + MEDIAN_HALF_HEIGHT]);
+    const bTL = api.coord([q1, -BOX_HALF_HEIGHT]);
+    const bBR = api.coord([q3, BOX_HALF_HEIGHT]);
+    const mTop = api.coord([median, -MEDIAN_HALF_HEIGHT]);
+    const mBot = api.coord([median, MEDIAN_HALF_HEIGHT]);
     return {
       type: "group",
       children: [
@@ -234,15 +285,14 @@ function makeViolinRenderItem(poly, q1x, medx, q3x, rowIdx, fill, stroke, boxFil
   };
 }
 
-// lo/hi are the violin's actual drawn extent within the row, normalized 0..1: rows no
-// longer always span the full row width (POLISH.md #10c), so labels must follow the
-// drawn blob rather than always sitting at the row's physical ends.
-function makeAnnotationRenderItem(rowIdx, loX, hiX, loObs, hiObs) {
+// loObs/hiObs are the violin's real observed extent; drawn at the row's vertical center
+// (y=0). Mirrors violin.py::_annotation_render_series.
+function makeAnnotationRenderItem(loObs, hiObs) {
   const loLabel = formatG(loObs);
   const hiLabel = formatG(hiObs);
   return function (params, api) {
-    const L = api.coord([loX, rowIdx]);
-    const R = api.coord([hiX, rowIdx]);
+    const L = api.coord([loObs, 0]);
+    const R = api.coord([hiObs, 0]);
     return {
       type: "group",
       children: [
@@ -278,8 +328,6 @@ function makeAnnotationRenderItem(rowIdx, loX, hiX, loObs, hiObs) {
 class EchartsViolinPlot extends window.Plot {
   constructor(dump) {
     super(dump);
-    this.violinHeight = dump["violin_height"];
-    this.extraHeight = dump["extra_height"];
     this.tableAnchor = dump["table_anchor"];
     this.isDownsampled = dump["is_downsampled"];
   }
@@ -388,7 +436,10 @@ class EchartsViolinPlot extends window.Plot {
   // Builds: n_metric violin (KDE polygon + inner box + median) `custom` series, then
   // n_metric min/max-annotation `custom` series, then n_metric beeswarm `scatter`
   // series -- same ordering as the SSR path (multiqc/plots/echarts/violin.py::series()),
-  // which is what the sample -> [seriesIndex, dataIndex] cross-highlight map below relies on.
+  // which is what the sample -> [seriesIndex, dataIndex] cross-highlight map below relies
+  // on. Also (re)builds `this._grids`/`this._xAxis`/`this._yAxis`/`this._toolbox`/
+  // `this._dataZoom` from the LIVE metric list (PLOTLY-STYLE PER-ROW SUBPLOTS), applied
+  // onto the option in applyOptionOverrides() below.
   buildSeries() {
     let [
       metrics,
@@ -398,50 +449,66 @@ class EchartsViolinPlot extends window.Plot {
       violinValuesBySampleByMetric,
       scatterValuesBySampleByMetric,
     ] = this.prepData();
-    if (metrics.length === 0) return [];
 
     const someHidden = sampleSettings.some((s) => s.hidden);
     const highlightingEnabled = sampleSettings.some((s) => s.highlight !== null);
 
     const echartsDs = this.echarts.datasets[this.activeDatasetIdx];
     const violinsFromPython = echartsDs.violins || {};
-    // Row index each metric occupied when Python precomputed the polygons (from ALL
-    // samples, keyed by insertion order): needed to re-align a reused polygon's baked-in
-    // y-offset when the CURRENT row position differs (e.g. a metric got hidden via the
-    // table column config, which Python's serialization doesn't know about).
-    const pythonRowIdxByMetric = {};
-    Object.keys(violinsFromPython).forEach((m, i) => {
-      pythonRowIdxByMetric[m] = i;
-    });
 
-    const violinSeries = [];
-    const annotationSeries = [];
-    const scatterSeries = [];
-    const rowTitles = {};
-    let rowIdx = 0;
-
+    // Pre-filter to metrics that actually have numeric data left to draw (mirrors
+    // violin.py's _visible_metrics: filtered ONCE so the row index / row count used for
+    // series AND for grid/axis geometry never disagree, even though a metric can drop
+    // out here for reasons Python's SSR-time filter didn't know about, e.g. every one of
+    // its samples got hidden via the toolbox).
+    const rows = [];
     metrics.forEach((metric) => {
       const header = headerByMetric[metric];
       const valuesBySample = violinValuesBySampleByMetric[metric] || {};
       const numericValues = Object.values(valuesBySample).filter((v) => typeof v === "number" && Number.isFinite(v));
-      if (numericValues.length === 0) return; // no data left to draw this row (e.g. all its samples hidden)
+      if (numericValues.length === 0) return;
+      rows.push({ metric, header, numericValues });
+    });
+    const n = rows.length;
 
+    const height = ROW_PX * Math.max(n, 1) + EXTRA_PX + BOTTOM_PX;
+    const el = document.getElementById(this.anchor);
+    if (el) el.style.height = height + "px";
+    $("#" + this.anchor + "-wrapper").css("height", height + "px");
+
+    if (n === 0) {
+      this._grids = [];
+      this._xAxis = [];
+      this._yAxis = [];
+      this._rowCount = 0;
+      return [];
+    }
+
+    const colors = window.getEchartsThemeColors();
+    const rowLeft = gridLeft(rows.map(({ header }) => metricTitle(header)));
+    const violinSeries = [];
+    const annotationSeries = [];
+    const scatterSeries = [];
+    const grids = [];
+    const xAxis = [];
+    const yAxis = [];
+
+    rows.forEach(({ metric, header, numericValues }, rowIdx) => {
       let poly, lo, hi;
       const pre = violinsFromPython[metric];
       if (!someHidden && pre) {
-        // Fast path: reuse the precomputed polygon, translating its y-offset if this
-        // metric's row position shifted relative to Python's serialization order.
+        // Fast path: reuse the precomputed polygon verbatim. Its y no longer encodes a
+        // row offset (each row is its own grid), so unlike the old design no translation
+        // is needed even if this metric's row position shifted relative to Python's
+        // serialization order (e.g. a metric hidden via the table column config).
         [lo, hi] = pre.range;
-        const pythonRowIdx = pythonRowIdxByMetric[metric] ?? rowIdx;
-        const dy = rowIdx - pythonRowIdx;
-        poly = dy === 0 ? pre.poly : pre.poly.map(([x, y]) => [x, y + dy]);
+        poly = pre.poly;
       } else {
         // Slow path: samples are hidden, so the polygon must be recomputed from the
         // currently-visible values only (see the perf note in BUILD_PLAN.md Phase 2 risks).
         [lo, hi] = metricRange(header, numericValues);
-        poly = violinPolygon(numericValues, lo, hi, rowIdx);
+        poly = violinPolygon(numericValues, lo, hi);
       }
-      const span = hi - lo;
 
       // Q1/median/Q3 are cheap (a sort + linear interpolation) compared to the KDE, so
       // unlike the polygon they're just always recomputed fresh here, fast path or not
@@ -457,17 +524,10 @@ class EchartsViolinPlot extends window.Plot {
       violinSeries.push({
         type: "custom",
         coordinateSystem: "cartesian2d",
+        xAxisIndex: rowIdx,
+        yAxisIndex: rowIdx,
         data: [0],
-        renderItem: makeViolinRenderItem(
-          poly,
-          (q1 - lo) / span,
-          (median - lo) / span,
-          (q3 - lo) / span,
-          rowIdx,
-          fill,
-          stroke,
-          boxFill,
-        ),
+        renderItem: makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill),
         silent: true,
         z: 1,
       });
@@ -475,20 +535,21 @@ class EchartsViolinPlot extends window.Plot {
       annotationSeries.push({
         type: "custom",
         coordinateSystem: "cartesian2d",
+        xAxisIndex: rowIdx,
+        yAxisIndex: rowIdx,
         data: [0],
-        renderItem: makeAnnotationRenderItem(rowIdx, (obsMin - lo) / span, (obsMax - lo) / span, obsMin, obsMax),
+        renderItem: makeAnnotationRenderItem(obsMin, obsMax),
         silent: true,
         z: 3,
       });
 
-      rowTitles[rowIdx] = metricTitle(header);
+      const title = metricTitle(header);
 
       const scatterData = [];
       if (header.show_points) {
         const svBySample = scatterValuesBySampleByMetric[metric] || {};
         Object.entries(svBySample).forEach(([sample, value]) => {
           if (typeof value !== "number" || !Number.isFinite(value)) return;
-          const normx = (value - lo) / span;
           const state = sampleSettings[allSamples.indexOf(sample)];
           let color = SCATTER_COLOR;
           let size = 6;
@@ -497,8 +558,9 @@ class EchartsViolinPlot extends window.Plot {
             size = state?.highlight != null ? 8 : 6;
           }
           scatterData.push({
-            // Real (denormalized) value stored as the 3rd element for the tooltip.
-            value: [normx, rowIdx, value],
+            // Real value: no denormalization needed any more, this row's x-axis is
+            // already real-valued (POLISH.md #6).
+            value: [value, 0],
             name: state?.name ?? sample,
             itemStyle: { color, borderColor: "#fff", borderWidth: 0.5 },
             symbolSize: size,
@@ -508,6 +570,8 @@ class EchartsViolinPlot extends window.Plot {
       scatterSeries.push({
         type: "scatter",
         name: String(metric),
+        xAxisIndex: rowIdx,
+        yAxisIndex: rowIdx,
         data: scatterData,
         symbolSize: 6,
         jitter: 22,
@@ -515,8 +579,49 @@ class EchartsViolinPlot extends window.Plot {
         z: 2,
       });
 
-      rowIdx++;
+      // Grid/axis geometry for this row (PLOTLY-STYLE PER-ROW SUBPLOTS): a real,
+      // SI-formatted x-axis (POLISH.md #6), and a hidden value y-axis whose single tick
+      // (at y=0, this row's exact vertical center) carries the metric title
+      // (POLISH.md #1, the VALUE-AXIS TRICK, see multiqc/plots/echarts/violin.py's
+      // module docstring), themed to match every other plot type (mirrors the
+      // buildCurrentOption theme step in echarts-plotting.js, which never runs on these
+      // axes since they're built fresh here, after that step already ran).
+      const [top, gridHeight] = rowGeometry(rowIdx, n);
+      grids.push({ top, height: gridHeight, left: rowLeft, right: 16, containLabel: true });
+      const suffix = (header.xaxis && header.xaxis.ticksuffix) || "";
+      xAxis.push({
+        type: "value",
+        gridIndex: rowIdx,
+        min: lo,
+        max: hi,
+        axisLabel: { fontSize: 10, color: colors.tickcolor, formatter: (v) => window.formatAxisNumber(v, suffix) },
+        axisLine: { show: true, lineStyle: { color: colors.axiscolor } },
+        axisTick: { show: true, lineStyle: { color: colors.axiscolor } },
+        splitLine: { show: false },
+      });
+      yAxis.push({
+        type: "value",
+        gridIndex: rowIdx,
+        min: -0.5,
+        max: 0.5,
+        interval: 0.5,
+        axisLabel: {
+          fontSize: 12,
+          align: "right",
+          verticalAlign: "middle",
+          color: colors.tickcolor,
+          formatter: (v) => (Math.abs(v) < 1e-6 ? title : ""),
+        },
+        axisTick: { show: false },
+        axisLine: { show: false },
+        splitLine: { show: false },
+      });
     });
+
+    this._grids = grids;
+    this._xAxis = xAxis;
+    this._yAxis = yAxis;
+    this._rowCount = n;
 
     // sample -> [[seriesIndex, dataIndex], ...] across every scatter series, for the
     // cross-row highlight wired in afterPlotCreated().
@@ -529,32 +634,41 @@ class EchartsViolinPlot extends window.Plot {
       });
     });
     this._sampleIndexMap = sampleIndexMap;
-    this._rowTitles = rowTitles;
-    this._rowCount = rowIdx;
-
-    // Wrapper/container height depends on the current row count (metrics can be
-    // hidden/shown live via the table column config), same as default violin.js's
-    // buildTraces() setting `$(wrapper).css("height", ...)`.
-    const height = (this.violinHeight || 70) * Math.max(rowIdx, 1) + (this.extraHeight || 63);
-    const el = document.getElementById(this.anchor);
-    if (el) el.style.height = height + "px";
-    $("#" + this.anchor + "-wrapper").css("height", height + "px");
 
     return violinSeries.concat(annotationSeries, scatterSeries);
   }
 
-  // Row labels (yAxis is a value axis, per the VALUE-AXIS TRICK in violin.py) and the
-  // tooltip formatter: neither can live in the JSON-safe serialized skeleton.
+  // grid/xAxis/yAxis are rebuilt wholesale from the live metric list in buildSeries()
+  // (arrays, one entry per row: PLOTLY-STYLE PER-ROW SUBPLOTS), since neither the row
+  // count nor titles can live in the JSON-safe serialized skeleton, and since the live
+  // count can differ from what Python's SSR skeleton has. One toolbox dataZoom feature
+  // spanning every row's xAxisIndex plus one `inside` dataZoom per row (POLISH.md #8):
+  // a drag-select inside any row's grid zooms only THAT row's x-axis; double-click reset
+  // (wired once per chart in echarts-plotting.js's renderPlot(), generic across every
+  // plot type) resets every dataZoom component, all rows included.
   applyOptionOverrides(option) {
-    const rowTitles = this._rowTitles || {};
-    if (option.yAxis) {
-      option.yAxis.axisLabel = { ...option.yAxis.axisLabel, formatter: (v) => rowTitles[Math.round(v)] || "" };
-      option.yAxis.max = Math.max((this._rowCount || 0) - 0.5, 0.5);
-    }
+    option.grid = this._grids || [];
+    option.xAxis = this._xAxis || [];
+    option.yAxis = this._yAxis || [];
+    const n = this._rowCount || 0;
+    option.toolbox = {
+      show: true,
+      top: "150%",
+      feature: {
+        dataZoom: { show: true, xAxisIndex: Array.from({ length: n }, (_, i) => i), yAxisIndex: [] },
+      },
+    };
+    option.dataZoom = Array.from({ length: n }, (_, i) => ({
+      type: "inside",
+      xAxisIndex: [i],
+      zoomOnMouseWheel: false,
+      moveOnMouseWheel: false,
+    }));
+
     if (option.tooltip) {
       option.tooltip.formatter = (params) => {
         if (params.seriesType !== "scatter") return "";
-        let real = Array.isArray(params.value) ? params.value[2] : params.value;
+        let real = Array.isArray(params.value) ? params.value[0] : params.value;
         return `<b>${params.name}</b>: ${window.formatNumber(real)}`;
       };
     }

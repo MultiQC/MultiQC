@@ -5,6 +5,7 @@ Uses the same bar plot as `tests/test_plots.py::test_barplot`. The autouse `rese
 fixture in `tests/conftest.py` resets `config`/`report` after every test.
 """
 
+import json
 import math
 from typing import Any, Dict
 
@@ -775,14 +776,34 @@ def test_interactive_plot_adds_echarts_key_for_violin_plot():
     dataset_entry = dumped["echarts"]["datasets"][0]
     skeleton = dataset_entry["layout"]
     assert skeleton["animation"] is False
-    assert skeleton["xAxis"]["type"] == "value"
-    assert skeleton["xAxis"]["show"] is False
-    assert skeleton["yAxis"]["type"] == "value"
-    assert skeleton["yAxis"]["inverse"] is True
-    assert skeleton["yAxis"]["min"] == -0.5
-    assert skeleton["yAxis"]["max"] == 2.5  # 3 metrics -> rows 0, 1, 2
-    assert skeleton["yAxis"]["axisLabel"]["formatter"]["__FN__"] is True
     assert "series" not in skeleton
+
+    # PLOTLY-STYLE PER-ROW SUBPLOTS: one grid/xAxis/yAxis per visible metric (3 here),
+    # not the single shared grid/axis pair every other type gets.
+    assert len(skeleton["grid"]) == 3
+    assert len(skeleton["xAxis"]) == 3
+    assert len(skeleton["yAxis"]) == 3
+    for i, (grid, x_axis, y_axis) in enumerate(zip(skeleton["grid"], skeleton["xAxis"], skeleton["yAxis"])):
+        assert grid["top"] and grid["height"]  # percentage strings, see _row_geometry
+        assert x_axis["type"] == "value"
+        assert x_axis["gridIndex"] == i
+        assert x_axis["axisLabel"]["formatter"]["__FN__"] is True  # SI-abbreviation sentinel
+        assert y_axis["type"] == "value"
+        assert y_axis["gridIndex"] == i
+        assert y_axis["min"] == -0.5
+        assert y_axis["max"] == 0.5
+        assert y_axis["axisLabel"]["formatter"]["__FN__"] is True  # row-title sentinel (VALUE-AXIS TRICK)
+
+    # Per-row click+drag zoom (POLISH.md #8): the toolbox spans every row's xAxisIndex,
+    # and there's one `inside` dataZoom per row, no yAxisIndex anywhere (the y-axis is a
+    # fake per-row thickness scale, never worth zooming).
+    assert skeleton["toolbox"]["feature"]["dataZoom"]["xAxisIndex"] == [0, 1, 2]
+    assert skeleton["toolbox"]["feature"]["dataZoom"]["yAxisIndex"] == []
+    assert skeleton["dataZoom"] == [
+        {"type": "inside", "xAxisIndex": [0], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
+        {"type": "inside", "xAxisIndex": [1], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
+        {"type": "inside", "xAxisIndex": [2], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
+    ]
 
     # The skeleton itself must stay plain-JSON-safe (the `__FN__` sentinel is a dict, not
     # an actual function): `serialize()` already asserts this globally via `json.dumps`.
@@ -825,19 +846,22 @@ def test_get_option_violin_scatter_items_shape():
     for metric, series_option in scatter_by_name.items():
         n_values = len(dataset.violin_value_by_sample_by_metric[metric])
         assert len(series_option["data"]) == n_values
+        values = list(dataset.violin_value_by_sample_by_metric[metric].values())
         for item in series_option["data"]:
             assert list(item.keys()) == ["value", "name"]
-            normx, row_idx = item["value"]
-            assert 0.0 <= normx <= 1.0
-            assert isinstance(row_idx, int)
+            # Real value (POLISH.md #6: no more per-row 0..1 normalization), constant
+            # y=0 (the row's own vertical center; jitter spreads points visually).
+            real_value, y = item["value"]
+            assert real_value in values
+            assert y == 0
             assert item["name"] in dataset.all_samples
 
 
 def test_get_option_violin_axis_has_no_static_data():
     plot = _make_violin_plot()
     option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
-    assert "data" not in option["xAxis"]
-    assert "data" not in option["yAxis"]
+    assert all("data" not in x_axis for x_axis in option["xAxis"])
+    assert all("data" not in y_axis for y_axis in option["yAxis"])
 
 
 def test_violin_mark_count_is_total_scatter_points():
@@ -880,15 +904,14 @@ def test_get_option_violin_inner_box_and_median():
         assert "'rect'" in body
         assert "'line'" in body
 
-        header = dataset.header_by_metric[metric]
         values = echarts.violin._numeric_values(dataset, metric)
-        lo, hi = echarts.violin._metric_range(header, values)
         q1, median, q3 = echarts.violin._row_quartiles(values)
-        # The box/median coordinates are baked into the renderItem body as normalized
-        # (0..1) x literals (see `_violin_render_series`); check the expected fractions
-        # actually appear in the generated source rather than re-parsing the JS.
-        for x in ((q1 - lo) / (hi - lo), (median - lo) / (hi - lo), (q3 - lo) / (hi - lo)):
-            assert str(x) in body
+        # The box/median coordinates are baked into the renderItem body as REAL x
+        # literals (see `_violin_render_series`, no more per-row 0..1 normalization,
+        # POLISH.md #6); check they actually appear in the generated source rather than
+        # re-parsing the JS.
+        for x in (q1, median, q3):
+            assert json.dumps(x) in body
 
 
 def test_row_quartiles_matches_box_quantile_method():
@@ -939,9 +962,86 @@ def test_violin_polygon_degenerate_metric_is_flat():
     """POLISH.md #10d: a zero-variance metric must not blow kde()'s bandwidth floor
     into a needle-thin, full-height spike; the polygon should collapse to a flat
     (zero-height) line instead."""
-    poly = echarts.violin._violin_polygon([5.0, 5.0, 5.0], lo=4.5, hi=5.5, row_idx=2)
+    poly = echarts.violin._violin_polygon([5.0, 5.0, 5.0], lo=4.5, hi=5.5)
     ys = [y for _, y in poly]
-    assert ys == [2, 2]
+    assert ys == [0.0, 0.0]
+
+
+def test_violin_polygon_uses_real_x_not_normalized():
+    """POLISH.md #6: each row draws on its own real-valued x-axis now, so the polygon's
+    x coordinates are the metric's actual values, not fractions normalized to 0..1."""
+    values = [10.0, 20.0, 30.0]
+    lo, hi = echarts.violin._metric_range(
+        violin.ViolinColumn(
+            title="M",
+            description="",
+            suffix="",
+            dmin=None,
+            dmax=None,
+            hidden=False,
+            xaxis=violin.XAxis(),
+            show_only_outliers=False,
+            show_points=True,
+        ),
+        values,
+    )
+    poly = echarts.violin._violin_polygon(values, lo, hi)
+    xs = [x for x, _ in poly]
+    assert min(xs) >= lo
+    assert max(xs) <= hi
+    # Definitely not squeezed into 0..1 (the old normalized convention).
+    assert max(xs) > 1.0
+
+
+def test_row_geometry_rows_tile_without_overlap():
+    """`_row_geometry` (PLOTLY-STYLE PER-ROW SUBPLOTS) must produce non-overlapping,
+    monotonically increasing row slots that fit within the ideal 0-100% container."""
+    n = 5
+    prev_bottom = 0.0
+    for row_idx in range(n):
+        top_s, height_s = echarts.violin._row_geometry(row_idx, n)
+        assert top_s.endswith("%")
+        assert height_s.endswith("%")
+        top, height = float(top_s[:-1]), float(height_s[:-1])
+        assert top >= prev_bottom
+        assert height > 0
+        assert top + height <= 100.0
+        prev_bottom = top  # next row's top must be >= this row's top (rows are ordered)
+
+
+def test_grid_left_scales_with_title_length_and_is_clamped():
+    """`_grid_left` (shared left inset so every row's x-axis starts at the same pixel,
+    see the SSR-vs-interactive containLabel note on the function) grows with the
+    longest title but stays within its documented floor/ceiling."""
+    short = echarts.violin._grid_left(["A"])
+    long = echarts.violin._grid_left(["A very much longer metric title than the others"])
+    assert echarts.violin._MIN_GRID_LEFT <= short < long <= echarts.violin._MAX_GRID_LEFT
+    assert echarts.violin._grid_left([]) == echarts.violin._MIN_GRID_LEFT
+
+
+def test_get_option_violin_series_bound_to_own_row_axes():
+    """Every series (violin/annotation/scatter) must carry `xAxisIndex`/`yAxisIndex`
+    matching its row, so it draws in that row's own grid (PLOTLY-STYLE PER-ROW
+    SUBPLOTS) rather than defaulting to row 0."""
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    dataset = plot.datasets[0]
+    n = len(dataset.metrics)
+
+    violin_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" in _renderitem_body(s)]
+    annotation_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" not in _renderitem_body(s)]
+    scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
+
+    for row_idx, s in enumerate(violin_series):
+        assert s["xAxisIndex"] == row_idx
+        assert s["yAxisIndex"] == row_idx
+    for row_idx, s in enumerate(annotation_series):
+        assert s["xAxisIndex"] == row_idx
+        assert s["yAxisIndex"] == row_idx
+    for row_idx, s in enumerate(scatter_series):
+        assert s["xAxisIndex"] == row_idx
+        assert s["yAxisIndex"] == row_idx
+    assert len(violin_series) == len(annotation_series) == len(scatter_series) == n
 
 
 ############################################
