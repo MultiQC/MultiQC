@@ -105,11 +105,20 @@ def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[st
     merged.update(**dataset_layout)
 
     title_text = merged.title.text if merged.title is not None else None
+    show_legend = bool(merged.showlegend)
 
     return {
         "animation": False,
         "title": {**_convert_title(title_text), "left": "center"},
-        "grid": {"containLabel": True},
+        # ECharts' own grid defaults (left/right: "10%", top/bottom: 60) are sized for
+        # a chart with no `containLabel` compensation; stacking `containLabel` on top of
+        # those defaults double-counts the label space and produces much bigger margins
+        # than Plotly's automargin (which sizes margins to the label content only, plus
+        # a small gap). Small fixed insets here let `containLabel` do the same job:
+        # grow only as far as the actual tick/axis-name text needs. The legend (below
+        # the grid, see `legend` below) isn't covered by `containLabel` at all, so
+        # `bottom` needs a bit more room to keep it clear of the x-axis labels when shown.
+        "grid": {"left": 8, "right": 16, "top": 64, "bottom": 40 if show_legend else 8, "containLabel": True},
         "xAxis": _convert_axis(merged.xaxis),
         "yAxis": _convert_axis(merged.yaxis),
         "legend": {

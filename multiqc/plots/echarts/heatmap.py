@@ -74,6 +74,7 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
         # so `plot.min`/`plot.max` are set in practice (see `HeatmapPlot.create`).
         vmin, vmax = 0.0, 1.0
 
+    show_scale = bool(dataset.trace_params.get("showscale", True))
     option["visualMap"] = {
         "min": vmin,
         "max": vmax,
@@ -81,9 +82,16 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
         "orient": "horizontal",
         "left": "center",
         "bottom": 0,
-        "show": bool(dataset.trace_params.get("showscale", True)),
+        "show": show_scale,
         "inRange": {"color": _colorscale_colors(dataset)},
     }
+    if show_scale:
+        # The colorbar sits below the grid at a fixed `bottom: 0`, like the legend in
+        # `convert_layout`; it isn't accounted for by `containLabel`, so widen the grid's
+        # bottom margin here too, or the colorbar overlaps the x-axis category labels.
+        # 65 clears the colorbar's own rendered height (~73px, measured empirically)
+        # plus a small gap once `containLabel` adds the x-axis tick-label height on top.
+        option["grid"]["bottom"] = 65
 
     if plot.square:
         option["_mqc"] = {"square": True}
