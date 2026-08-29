@@ -63,7 +63,16 @@ def _axis_type(axis: Any) -> str:
     return "value"
 
 
-def _convert_axis(axis: Any) -> Dict[str, Any]:
+def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
+    """
+    `scale=True` is how a caller asks for Plotly-style autorange on a value axis: by
+    default ECharts widens a value axis to always include 0, where Plotly's line/
+    scatter/box traces auto-range tightly to the data extent instead (bar traces keep
+    the 0 baseline, see `bar.py`, which never passes `scale=True`). Setting `scale: true`
+    tells ECharts to fit the axis to the data instead of forcing in 0, matching Plotly.
+    Only meaningful for a numeric axis, and only when nothing already pins the minimum
+    (an explicit Plotly `range`/`autorangeoptions` min is honored as-is below).
+    """
     axis_option: Dict[str, Any] = {
         "type": _axis_type(axis),
         "name": _axis_name(axis),
@@ -80,6 +89,8 @@ def _convert_axis(axis: Any) -> Dict[str, Any]:
         maxval = axis.autorangeoptions.maxallowed
     if minval is not None:
         axis_option["min"] = minval
+    elif scale and axis_option["type"] != "category":
+        axis_option["scale"] = True
     if maxval is not None:
         axis_option["max"] = maxval
 
@@ -91,12 +102,23 @@ def _convert_axis(axis: Any) -> Dict[str, Any]:
     return axis_option
 
 
-def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[str, Any]:
+def convert_layout(
+    layout: go.Layout,
+    dataset_layout: Dict[str, Any],
+    *,
+    scale_x: bool = False,
+    scale_y: bool = False,
+) -> Dict[str, Any]:
     """
     Merge `dataset_layout` (a per-dataset Plotly layout fragment, `BaseDataset.layout`)
     onto a copy of `layout` (the shared `Plot.layout`), mirroring `Plot.get_figure`'s
     `layout.update(**dataset.layout)` (`multiqc/plots/plot.py`), then convert the result
     into the shared part of an ECharts option skeleton.
+
+    `scale_x`/`scale_y` are forwarded to `_convert_axis` as its `scale` flag, letting a
+    per-type builder opt a value axis into Plotly-style data-fitted autorange instead of
+    ECharts' default of always including 0 (see `_convert_axis`). Bar plots leave both
+    False (bars anchor at 0); line/scatter/box pass True for their value axis/axes.
     """
     if layout is None:
         raise ValueError("converter.convert_layout: layout must not be None")
@@ -120,8 +142,8 @@ def convert_layout(layout: go.Layout, dataset_layout: Dict[str, Any]) -> Dict[st
         # so `right` needs a bit more room to keep it clear of the plot when shown, like
         # Plotly's default template (which also puts the legend on the right).
         "grid": {"left": 8, "right": 160 if show_legend else 16, "top": 64, "bottom": 8, "containLabel": True},
-        "xAxis": _convert_axis(merged.xaxis),
-        "yAxis": _convert_axis(merged.yaxis),
+        "xAxis": _convert_axis(merged.xaxis, scale=scale_x),
+        "yAxis": _convert_axis(merged.yaxis, scale=scale_y),
         "legend": {
             "show": bool(merged.showlegend),
             "type": "scroll",

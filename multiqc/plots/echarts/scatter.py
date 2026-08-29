@@ -29,7 +29,10 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     Full ECharts option skeleton for one scatter-plot dataset, minus `series` (a single
     series built by the JS renderer from the raw points + toolbox state).
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    # Scatter has two meaningful value axes (no category axis), so both get Plotly-style
+    # data-fitted autorange instead of ECharts' forced-0 default; see
+    # `converter._convert_axis`.
+    option = convert_layout(plot.layout, dataset.layout, scale_x=True, scale_y=True)
 
     option["tooltip"]["trigger"] = "item"
     option["dataZoom"] = [{"type": "inside"}, {"type": "slider"}]

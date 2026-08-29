@@ -319,6 +319,15 @@ def test_get_option_is_log_sets_switch_controlled_axis_type():
     assert option["xAxis"]["type"] == "log"
 
 
+def test_get_option_bar_value_axis_is_not_scaled():
+    # Bars must anchor at 0 (matches Plotly, which pins an explicit `minallowed=0` for
+    # bar plots, see `bargraph.py`); `scale: true` is for line/scatter/box only.
+    plot = _make_bar_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["xAxis"]["min"] == 0
+    assert "scale" not in option["xAxis"]
+
+
 def test_get_option_line_series_matches_lines():
     plot = _make_line_plot()
     option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
@@ -348,6 +357,25 @@ def test_get_option_line_categorical_axis_uses_plain_values():
     dataset = plot.datasets[0]
     for line, series_option in zip(dataset.lines, option["series"]):
         assert series_option["data"] == [y for _, y in line.pairs]
+
+
+def test_get_option_line_value_axes_are_scaled():
+    # Non-categorical x-axis and y-axis are both value axes for a line plot: `scale:
+    # true` fits them to the data extent instead of ECharts' default of forcing 0 in,
+    # matching Plotly's autorange (POLISH.md #5).
+    plot = _make_line_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["xAxis"]["scale"] is True
+    assert option["yAxis"]["scale"] is True
+
+
+def test_get_option_line_categorical_axis_is_not_scaled():
+    # A categorical x-axis has no meaningful "scale to data" behavior; only the
+    # (still value-typed) y-axis gets it.
+    plot = _make_categorical_line_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert "scale" not in option["xAxis"]
+    assert option["yAxis"]["scale"] is True
 
 
 def test_get_option_line_is_log_sets_yaxis():
@@ -429,6 +457,15 @@ def test_interactive_plot_adds_echarts_key_for_scatter_plot():
     assert skeleton["animation"] is False
     assert skeleton["tooltip"]["trigger"] == "item"
     assert "series" not in skeleton
+
+
+def test_get_option_scatter_value_axes_are_scaled():
+    # Scatter has no category axis: both x and y are value axes, so both get `scale:
+    # true` (Plotly-style data-fitted autorange, not forced-0), matching line/box.
+    plot = _make_scatter_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["xAxis"]["scale"] is True
+    assert option["yAxis"]["scale"] is True
 
 
 def test_get_option_scatter_series_has_one_series_with_value_items():
@@ -615,6 +652,17 @@ def test_get_option_box_axis_has_no_static_sample_data():
     option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
     assert option["yAxis"]["data"] == list(plot.datasets[0].samples)
     assert "data" not in option["xAxis"]
+
+
+def test_get_option_box_value_axis_is_scaled():
+    # Box plots are horizontal: xAxis is the value axis and gets `scale: true`
+    # (Plotly-style data-fitted autorange, POLISH.md #7); yAxis is the (inverted)
+    # category axis and is untouched by scale.
+    plot = _make_box_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    assert option["xAxis"]["scale"] is True
+    assert option["yAxis"]["type"] == "category"
+    assert "scale" not in option["yAxis"]
 
 
 def test_get_option_box_stats_data_uses_precomputed_values_directly():

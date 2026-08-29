@@ -35,12 +35,16 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     safe, and simpler, to bake into the skeleton here rather than recompute in JS on
     every render; see `axis_data` below, which is a no-op for this type as a result.
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    categorical = _is_categorical(dataset)
+    # yAxis is always the value axis; xAxis only is too when not categorical. Scale
+    # (Plotly-style data-fitted autorange, not forced-0) doesn't apply to a category
+    # axis, see `converter._convert_axis`.
+    option = convert_layout(plot.layout, dataset.layout, scale_x=not categorical, scale_y=True)
 
     option["tooltip"]["trigger"] = "axis"
     option["dataZoom"] = [{"type": "inside"}, {"type": "slider"}]
 
-    if _is_categorical(dataset):
+    if categorical:
         option["xAxis"]["data"] = _categories(dataset)
 
     bands_lines = bands_and_lines(plot.pconfig)
