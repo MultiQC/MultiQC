@@ -1,0 +1,41 @@
+name: "ECharts template build"
+on:
+  push:
+    branches: [main]
+    paths:
+      - "multiqc/templates/echarts/**"
+  pull_request:
+    paths:
+      - "multiqc/templates/echarts/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_check_drift:
+    name: "Build echarts template and check for compiled drift"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: "Install echarts template dependencies"
+        working-directory: multiqc/templates/echarts
+        run: npm ci
+
+      - name: "Build vendored ECharts bundle"
+        working-directory: multiqc/templates/echarts
+        run: npm run build:echarts
+
+      - name: "Build echarts template assets"
+        working-directory: multiqc/templates/echarts
+        run: npm run build
+
+      - name: "Fail if committed build outputs are stale"
+        run: |
+          git diff --exit-code -- multiqc/templates/echarts/compiled multiqc/templates/echarts/assets/js/packages

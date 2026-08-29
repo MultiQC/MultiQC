@@ -6,9 +6,11 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 """
 
 import math
-from typing import Dict
+from typing import Any, Dict
 
+import multiqc
 from multiqc import config, report
+from multiqc.core.update_config import ClConfig
 from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor, PlotType
@@ -755,3 +757,131 @@ def test_serialize_violin_includes_violins_payload():
             assert isinstance(x, float)
             assert isinstance(y, float)
         assert payload["range"] == list(echarts.violin._metric_range(echarts.violin._numeric_values(dataset, metric)))
+
+
+############################################
+# Task 3.2 (multiqc-echarts-exploration/BUILD_PLAN.md "test suite integration"):
+# engine-parametrized tests, a box sort-by-median unit test, and end-to-end pipeline
+# tests.
+
+
+def _verify_rendered_for_engine(plot, plotting_engine: str) -> Dict[str, Any]:
+    """
+    Cloned subset of `tests/test_plots.py::_verify_rendered`, parametrized over both
+    backends via the `plotting_engine` fixture (`tests/conftest.py`): render the plot and
+    check the payload contract for whichever engine is active.
+    """
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+    dumped = report.plot_data[plot.anchor]
+    if plotting_engine == "echarts":
+        assert "echarts" in dumped
+        payload = dumped["echarts"]
+        assert "unsupported" not in payload
+        assert payload["renderer"] in ("svg", "canvas")
+        assert len(payload["datasets"]) == len(plot.datasets)
+    else:
+        assert "echarts" not in dumped
+    return dumped
+
+
+def test_engine_parametrized_bar(plotting_engine):
+    _verify_rendered_for_engine(_make_bar_plot(), plotting_engine)
+
+
+def test_engine_parametrized_line(plotting_engine):
+    _verify_rendered_for_engine(_make_line_plot(), plotting_engine)
+
+
+def test_engine_parametrized_scatter(plotting_engine):
+    _verify_rendered_for_engine(_make_scatter_plot(), plotting_engine)
+
+
+def test_engine_parametrized_heatmap(plotting_engine):
+    _verify_rendered_for_engine(_make_heatmap_plot(), plotting_engine)
+
+
+def test_engine_parametrized_box(plotting_engine):
+    _verify_rendered_for_engine(_make_box_plot(), plotting_engine)
+
+
+def test_engine_parametrized_violin(plotting_engine):
+    _verify_rendered_for_engine(_make_violin_plot(), plotting_engine)
+
+
+def test_box_sort_by_median_produces_median_sorted_series():
+    """
+    D3 (`multiqc-echarts-exploration/PARITY.md`): the sort-by-median toggle is wired up
+    only on the JS side (the inherited, engine-neutral `prepData()` swaps in
+    `dataset.data_sorted`/`samples_sorted` when the sort switch is active,
+    `templates/echarts/src/js/plots/box.js`); no shipped module sets `sort_by_median=True`
+    and nothing exercises that sorted path. `Dataset.create` (`multiqc/plots/box.py`)
+    always keeps `dataset.data`/`samples` as the alphabetical order and stashes the
+    ascending-by-median order separately in `data_sorted`/`samples_sorted`. Simulate
+    exactly what the JS toggle does (swap those in as the active dataset fields) and
+    drive the result through the real `echarts.get_option()` used by the SSR/flat export
+    path, proving the ECharts box builder (which only ever reads `dataset.data`/
+    `samples`) is order-agnostic and renders a genuinely median-sorted series.
+    """
+    data = {
+        "SampleB": [1.0, 2.0, 3.0],  # median 2
+        "SampleA": [10.0, 20.0, 30.0],  # median 20
+        "SampleC": [100.0, 200.0, 300.0],  # median 200
+    }
+    plot = box.plot(
+        data,
+        box.BoxPlotConfig(id="boxplot_sorted", title="Test: Box Sorted", sort_by_median=True),
+    )
+    assert isinstance(plot, box.BoxPlot)
+    dataset = plot.datasets[0]
+    assert dataset.samples_sorted == ["SampleB", "SampleA", "SampleC"]
+    assert dataset.data_sorted is not None
+
+    sorted_dataset = box.Dataset(**{**dataset.__dict__, "samples": dataset.samples_sorted, "data": dataset.data_sorted})
+    plot.datasets = [sorted_dataset]
+
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    assert option["yAxis"]["data"] == ["SampleB", "SampleA", "SampleC"]
+    boxplot_series = next(s for s in option["series"] if s["type"] == "boxplot")
+    medians = [entry[2] for entry in boxplot_series["data"]]
+    assert medians == [2.0, 20.0, 200.0]
+    assert medians == sorted(medians)
+
+
+############################################
+# End-to-end: the full `multiqc.run()` pipeline against a single, self-contained module
+# data file (fastp's SAMPLE.json; no directory scan needed) so this stays fast. fastp
+# emits bar, line, and violin plots, so this also touches most of the ported plot types.
+
+
+def test_echarts_template_end_to_end_interactive(data_dir, tmp_path):
+    result = multiqc.run(
+        data_dir / "modules" / "fastp" / "SAMPLE.json",
+        cfg=ClConfig(run_modules=["fastp"], template="echarts", output_dir=tmp_path),
+        return_html=True,
+    )
+
+    assert result.sys_exit_code == 0
+    assert result.html_content is not None
+    # The echarts template's footer credit (multiqc/templates/echarts/footer.html):
+    # proves the echarts bundle/template was actually used, not just the default one.
+    assert "Apache ECharts" in result.html_content
+
+    assert len(report.plot_data) > 0
+    for dumped in report.plot_data.values():
+        assert "echarts" in dumped
+        assert "unsupported" not in dumped["echarts"]
+
+
+def test_echarts_template_end_to_end_flat(data_dir, tmp_path):
+    result = multiqc.run(
+        data_dir / "modules" / "fastp" / "SAMPLE.json",
+        cfg=ClConfig(run_modules=["fastp"], template="echarts", plots_force_flat=True, output_dir=tmp_path),
+        return_html=True,
+    )
+
+    assert result.sys_exit_code == 0
+    assert result.html_content is not None
+    # Static export path (SSR + resvg PNG rasterization): flat plots are embedded as
+    # base64 PNGs, mirroring the Plotly flat-plot contract.
+    assert "data:image/png;base64," in result.html_content
