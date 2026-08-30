@@ -764,6 +764,16 @@ def _renderitem_body(series_option):
     return series_option["renderItem"]["body"]
 
 
+def _is_kde_series(series_option):
+    return series_option["type"] == "custom" and "polygon" in _renderitem_body(series_option)
+
+
+def _is_annotation_series(series_option):
+    # The row TITLE is not a series at all (it's a native `title` component entry, see
+    # violin.py::_title_option), so every non-KDE `custom` series here is an annotation.
+    return series_option["type"] == "custom" and "polygon" not in _renderitem_body(series_option)
+
+
 def test_interactive_plot_adds_echarts_key_for_violin_plot():
     config.plotting_engine = "echarts"
     plot = _make_violin_plot()
@@ -792,7 +802,19 @@ def test_interactive_plot_adds_echarts_key_for_violin_plot():
         assert y_axis["gridIndex"] == i
         assert y_axis["min"] == -0.5
         assert y_axis["max"] == 0.5
-        assert y_axis["axisLabel"]["formatter"]["__FN__"] is True  # row-title sentinel (VALUE-AXIS TRICK)
+        # ROW ALIGNMENT fix: the yAxis label is fully hidden (contributes nothing to the
+        # grid's left inset) rather than carrying the row title as a tick-label formatter
+        # (the old VALUE-AXIS TRICK); the title is instead drawn by a native `title`
+        # component entry (see test_get_option_violin_title_array_matches_rows).
+        assert y_axis["axisLabel"]["show"] is False
+        assert "formatter" not in y_axis["axisLabel"]
+        # ROW ALIGNMENT fix: every row's grid shares the same left/right and disables
+        # both containLabel and ECharts 6's outerBoundsMode, so no row's rect can be
+        # grown/shrunk differently than another's (see violin.py's _row_axes docstring).
+        assert grid["containLabel"] is False
+        assert grid["outerBoundsMode"] == "none"
+        assert grid["left"] == skeleton["grid"][0]["left"]
+        assert grid["right"] == skeleton["grid"][0]["right"]
 
     # Per-row click+drag zoom (POLISH.md #8): the toolbox spans every row's xAxisIndex,
     # and there's one `inside` dataZoom per row, no yAxisIndex anywhere (the y-axis is a
@@ -800,9 +822,27 @@ def test_interactive_plot_adds_echarts_key_for_violin_plot():
     assert skeleton["toolbox"]["feature"]["dataZoom"]["xAxisIndex"] == [0, 1, 2]
     assert skeleton["toolbox"]["feature"]["dataZoom"]["yAxisIndex"] == []
     assert skeleton["dataZoom"] == [
-        {"type": "inside", "xAxisIndex": [0], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
-        {"type": "inside", "xAxisIndex": [1], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
-        {"type": "inside", "xAxisIndex": [2], "zoomOnMouseWheel": False, "moveOnMouseWheel": False},
+        {
+            "type": "inside",
+            "xAxisIndex": [0],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            "filterMode": "none",
+        },
+        {
+            "type": "inside",
+            "xAxisIndex": [1],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            "filterMode": "none",
+        },
+        {
+            "type": "inside",
+            "xAxisIndex": [2],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            "filterMode": "none",
+        },
     ]
 
     # The skeleton itself must stay plain-JSON-safe (the `__FN__` sentinel is a dict, not
@@ -825,8 +865,8 @@ def test_get_option_violin_series_counts():
     n_metrics = len(dataset.metrics)
     assert n_metrics == 3
 
-    kde_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" in _renderitem_body(s)]
-    annotation_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" not in _renderitem_body(s)]
+    kde_series = [s for s in option["series"] if _is_kde_series(s)]
+    annotation_series = [s for s in option["series"] if _is_annotation_series(s)]
     scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
 
     assert len(kde_series) == n_metrics
@@ -1028,8 +1068,8 @@ def test_get_option_violin_series_bound_to_own_row_axes():
     dataset = plot.datasets[0]
     n = len(dataset.metrics)
 
-    violin_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" in _renderitem_body(s)]
-    annotation_series = [s for s in option["series"] if s["type"] == "custom" and "polygon" not in _renderitem_body(s)]
+    violin_series = [s for s in option["series"] if _is_kde_series(s)]
+    annotation_series = [s for s in option["series"] if _is_annotation_series(s)]
     scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
 
     for row_idx, s in enumerate(violin_series):
@@ -1042,6 +1082,38 @@ def test_get_option_violin_series_bound_to_own_row_axes():
         assert s["xAxisIndex"] == row_idx
         assert s["yAxisIndex"] == row_idx
     assert len(violin_series) == len(annotation_series) == len(scatter_series) == n
+
+
+def test_get_option_violin_title_array_matches_rows():
+    """ROW ALIGNMENT fix: the row title is a native `title` component entry (not a
+    series), appended after the chart's own main title, one per visible metric, each
+    fixed at the shared `grid_left` inset and vertically centered on its row."""
+    plot = _make_violin_plot()
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+    dataset = plot.datasets[0]
+    n = len(dataset.metrics)
+
+    titles = option["title"]
+    assert isinstance(titles, list)
+    assert len(titles) == n + 1  # main chart title, then one per row
+    main_title, row_titles = titles[0], titles[1:]
+    assert main_title.get("text")  # the chart's own "Test: Violin" title, untouched
+
+    grid_lefts = {g["left"] for g in option["grid"]}
+    assert len(grid_lefts) == 1  # every row's grid shares the same left (see the grid test)
+    (grid_left,) = grid_lefts
+
+    for row_idx, (metric, title_opt) in enumerate(zip(dataset.metrics, row_titles)):
+        header = dataset.header_by_metric[metric]
+        assert title_opt["text"] == echarts.violin._metric_title(header)
+        assert title_opt["textAlign"] == "right"
+        assert title_opt["textVerticalAlign"] == "middle"
+        assert title_opt["padding"] == 0
+        # Fixed pixel/percent position, not tied to any axis or series: same left for
+        # every row (right-aligned just before that row's shared grid_left), vertically
+        # centered on its own row.
+        assert title_opt["left"] == grid_left - echarts.violin._TITLE_GUTTER_PAD
+        assert title_opt["top"] == f"{echarts.violin._row_center_pct(row_idx, n):.4f}%"
 
 
 ############################################

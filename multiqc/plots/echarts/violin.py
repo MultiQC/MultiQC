@@ -27,20 +27,32 @@ violin's density thickness), identical in scale to the old `ROW_HEIGHT`/`BOX_HAL
 Two deliberate exceptions to the general "ECharts model->JSON contract"
 (`multiqc-echarts-exploration/BUILD_PLAN.md`), both called out there by name:
 
-1. VALUE-AXIS TRICK: each row's `yAxis` is a `type: "value"` axis (not `"category"`),
-   spanning a fixed `[-0.5, 0.5]`, with a SINGLE tick at 0 whose label is the metric
-   title, `verticalAlign: "middle"` (POLISH.md #1: the label is vertically centered on
-   its row, since the tick sits at the exact vertical center of that row's own grid).
-   `layout_option` therefore emits `yAxis.axisLabel.formatter` as a `__FN__` sentinel
-   INSIDE the skeleton returned by `serialize()`, unlike every other type (whose
-   skeletons never carry formatter functions, because the interactive JS renderer
-   attaches its own). This is safe here because the row->title mapping never changes for
-   hidden/renamed/highlighted samples (only for a change in which METRICS exist), and
-   because the interactive JS path (`templates/echarts/src/js/plots/violin.js`) rebuilds
-   `grid`/`xAxis`/`yAxis` wholesale from the LIVE metric list every render (which can
-   differ from this module's SSR-time list, e.g. a table column toggled after page load)
-   rather than patching this sentinel in place; only the SSR path (`static_export.py`'s
-   `__FN__` walker) actually executes the sentinel this module emits.
+1. ROW TITLE AS A FIXED `title` COMPONENT (formerly a "VALUE-AXIS TRICK" that drew the
+   title as the yAxis tick label at y=0): that approach made `containLabel: true` grow
+   each row's `grid.left` by however much THAT row's own title text measured, so rows
+   started at a different x with a different width (measured 329..454px x, 486..599px
+   width across a real fastqc+samtools report). The yAxis is now a plain hidden `type:
+   "value"` axis spanning a fixed `[-0.5, 0.5]` (`axisLabel.show: false`, contributing
+   NOTHING to the grid's inset), purely so `renderItem`s below have a small vertical
+   coordinate range to draw the violin's thickness against. The title itself is drawn by
+   `_title_option`, ONE MORE entry in ECharts' native `title` component array (`option
+   ["title"]`, alongside the chart's own main title from `convert_layout`): `left`/`top`
+   position it at a FIXED pixel/percentage independent of any grid or axis, with
+   `textAlign: "right"`/`textVerticalAlign: "middle"` right-aligning and vertically
+   centering it (POLISH.md #1 still holds). This was tried first as a `custom` series
+   `renderItem` (reading `params.coordSys`, the grid's own pixel rect, to stay fixed
+   regardless of zoom): that rendered correctly in a live browser, but ECharts' SSR mode
+   (`static_export.py`, `ssr: true`) silently drops ANY manually-drawn `type: "text"`
+   element, whether from a `custom` series `renderItem` OR the `graphic` component,
+   because SSR has no real Canvas 2D context to measure arbitrary text with; only text
+   from ECharts' own built-in components (axis labels, `title`, `legend`, ...) survives
+   SSR, since those ship their own fallback measurement. `title` array entries are
+   exactly such a built-in component, so this is the one placement that renders
+   identically in both the browser and the MiniRacer/resvg SSR path (verified by
+   rendering the real fastqc+samtools general-stats violin through both). Every grid
+   still shares the same `left`/`right` and `containLabel: false` (see
+   `_grid_left`/`_row_axes`), so the pixel position `_title_option` computes for each row
+   lines up with that row's grid exactly, in a single column instead of staggering.
 
 2. Pre-computed polygons: `serialize()` additionally stores, per dataset, a `"violins"`
    key (`{metric: {"poly": [[x, y], ...], "range": [lo, hi]}}`) computed from ALL samples
@@ -132,10 +144,10 @@ _SCATTER_COLOR_PLAIN = "#0b79e6"
 ROW_PX = 42.0
 EXTRA_PX = 55.0  # space reserved for the chart title/subtitle above the first row
 BOTTOM_PX = 10.0  # breathing room below the last row's x-axis tick labels
-# Fraction of a row's slot handed to ECharts as the grid box (`containLabel: true` then
-# shrinks the ACTUAL drawing area within that box to make room for the row's own x-axis
-# tick labels, so this only needs to cover the tick labels plus a small gap to the next
-# row, NOT also the violin height on top of that: 34px * (1 - 0.86) ~= 4.7px handles a
+# Fraction of a row's slot handed to ECharts as the grid box (`containLabel: false`, see
+# `_row_axes`: the grid rect is exactly this box, not auto-shrunk, so the row's own
+# x-axis tick labels are drawn just BELOW it, in the remaining 1 - 0.86 of the slot, as a
+# small gap before the next row's grid starts; 34px * (1 - 0.86) ~= 4.7px handles a
 # single line of small tick-label text, verified empirically against a rendered report).
 ROW_GRID_FRACTION = 0.86
 
@@ -149,6 +161,24 @@ def _row_geometry(row_idx: int, n: int) -> Tuple[str, str]:
     top = top_pct + row_idx * row_slot_pct
     height = row_slot_pct * ROW_GRID_FRACTION
     return f"{top:.4f}%", f"{height:.4f}%"
+
+
+def _row_center_pct(row_idx: int, n: int) -> float:
+    """
+    Vertical center of grid row `row_idx` of `n`, as a float percentage of the container
+    height (same basis as `_row_geometry`'s `top`/`height`, duplicated here rather than
+    parsed back out of those formatted strings, matching this module's usual
+    cross-language-duplication style, e.g. `kde()`): the `title` component drawing that
+    row's metric label (`_title_option`) is positioned here so it stays vertically
+    centered on the row regardless of row count (POLISH.md #1).
+    """
+    total = ROW_PX * n + EXTRA_PX + BOTTOM_PX
+    top_pct = EXTRA_PX / total * 100
+    bottom_pct = BOTTOM_PX / total * 100
+    row_slot_pct = (100 - top_pct - bottom_pct) / n
+    row_top_pct = top_pct + row_idx * row_slot_pct
+    row_height_pct = row_slot_pct * ROW_GRID_FRACTION
+    return row_top_pct + row_height_pct / 2
 
 
 def _rgba(rgb: str, alpha: float) -> str:
@@ -461,44 +491,76 @@ def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: 
 
 
 # Rough average glyph width (px) for the row-title label font (fontSize 12, default
-# sans-serif), used to reserve a left margin generous enough to avoid clipping.
-_TITLE_CHAR_PX = 6.6
+# sans-serif), used to reserve a left margin generous enough to avoid clipping. Measured
+# via canvas.measureText() against real MultiQC general-stats titles (~5.3px/char for the
+# longest title in a fastqc+samtools report); 6.0 keeps a safety margin above that
+# without reserving the excessive empty space the old 6.6 did (ROW ALIGNMENT fix).
+_TITLE_CHAR_PX = 6.0
 _MIN_GRID_LEFT = 60
 _MAX_GRID_LEFT = 280
+# Gap (px) between the right-aligned title text and the row's plot area (ROW ALIGNMENT
+# fix): the title is drawn `_TITLE_GUTTER_PAD` px left of the grid's own rect (see
+# `_title_option`). Wide enough to clear the row's OWN x-axis first tick label
+# (e.g. "0%"/"0 M"/"627 bp"), which straddles that same left edge (a value axis has no
+# `boundaryGap`) and would otherwise overlap the title text now that `containLabel`/
+# `outerBoundsMode` no longer reserve room for it (measured worst case ~30px wide at
+# fontSize 10, so half its width plus a little slack comfortably fits in 24px).
+_TITLE_GUTTER_PAD = 24
+# Small slack (px) between the title text's own estimated width and where
+# `_TITLE_GUTTER_PAD` starts, absorbing `_TITLE_CHAR_PX`'s per-glyph estimation error.
+_TITLE_TEXT_SLACK = 4
+# Mirrors `theme.py`'s `_TEXT_COLOR` (the SSR theme's axisLabel/title color): the SSR
+# path always renders against the light theme (see that module's own docstring), so this
+# is a plain literal rather than a cross-module import of a private theme.py constant.
+_TITLE_TEXT_COLOR = "#333333"
 
 
 def _grid_left(titles: List[str]) -> int:
     """
-    Shared left inset (px) for every row's grid, reserved for the row title label
-    (`_row_axes`'s yAxis), sized from the LONGEST visible title so every row's plot area
-    starts at the same x (a column of labels reads better aligned than staggered).
-    `containLabel: true` can still grow this further for an unusually long title, but
-    is not trusted as the ONLY source of this margin: `containLabel`'s automatic text
-    measurement runs on real Canvas metrics in a browser (accurate) but on a crude
-    fallback estimate in the SSR path's headless MiniRacer/V8 context (no real Canvas
-    API), which can under-measure a long title enough to clip it off the left edge of
-    the exported PNG; computing this floor from the title's own character count keeps
-    the SSR and interactive paths both correct rather than only the browser one.
+    Shared left inset (px) for every row's grid, reserved for the row title text (drawn
+    by `_title_option`, not the yAxis any more, see the module docstring's point 1),
+    sized from the LONGEST visible title so every row's plot area starts at the same x (a
+    column of labels reads better aligned than staggered). Computed from the title's own
+    character count (not measured) so the SSR path's headless MiniRacer/V8 context (no
+    real Canvas API for accurate text metrics) is just as correct as the browser.
     """
     if not titles:
         return _MIN_GRID_LEFT
     max_len = max(len(t) for t in titles)
-    return int(min(_MAX_GRID_LEFT, max(_MIN_GRID_LEFT, max_len * _TITLE_CHAR_PX + 14)))
+    reserved = max_len * _TITLE_CHAR_PX + _TITLE_TEXT_SLACK + _TITLE_GUTTER_PAD
+    return int(min(_MAX_GRID_LEFT, max(_MIN_GRID_LEFT, reserved)))
 
 
 def _row_axes(
-    row_idx: int, n: int, header: ViolinColumn, lo: float, hi: float, title: str, grid_left: int
+    row_idx: int, n: int, header: ViolinColumn, lo: float, hi: float, grid_left: int
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
     """
     `(grid, xAxis, yAxis)` for one metric row: a real-valued, SI-formatted x-axis
-    (POLISH.md #6) and a hidden value y-axis whose single tick (at `y=0`, the exact
-    vertical center of the row) carries the metric title (POLISH.md #1, the VALUE-AXIS
-    TRICK described in the module docstring, now one instance per row instead of one
-    shared instance for every row). `grid_left` (see `_grid_left`) is shared across every
-    row so the plot areas all start at the same x.
+    (POLISH.md #6) and a fully hidden value y-axis (just a `[-0.5, 0.5]` coordinate range
+    for `renderItem`s to draw the violin's thickness against; the title text is drawn
+    separately, see `_title_option`). `grid_left` (see `_grid_left`) and `right`
+    are IDENTICAL for every row, and `containLabel: False` means nothing (no more visible
+    yAxis label, and x-axis tick labels are short/fixed-position) can grow one row's rect
+    differently from another's: every row's `coordinateSystem.getRect()` is therefore
+    equal in both `x` and `width` (the ROW ALIGNMENT fix; see the module docstring).
     """
     top, height = _row_geometry(row_idx, n)
-    grid = {"top": top, "height": height, "left": grid_left, "right": 16, "containLabel": True}
+    grid = {
+        "top": top,
+        "height": height,
+        "left": grid_left,
+        "right": 16,
+        "containLabel": False,
+        # ECharts 6 also auto-nudges a grid's rect inward, independently of
+        # `containLabel`, to keep axis labels from overflowing the chart's OUTER
+        # bounds (`grid.outerBoundsMode` default `"auto"`, see `GridModel.js`'s
+        # `OUTER_BOUNDS_DEFAULT`): since a row's x-axis tick label LENGTH varies by
+        # metric (e.g. "20%" vs "18.39 M"), this on its own reproduces the exact same
+        # per-row rect inequality bug `containLabel` caused, just via a different
+        # ECharts 6 feature. `"none"` disables it, verified empirically (see the ROW
+        # ALIGNMENT fix) to make every row's rect byte-for-byte identical.
+        "outerBoundsMode": "none",
+    }
 
     suffix = str(header.xaxis.ticksuffix) if header.xaxis.ticksuffix else ""
     x_axis = {
@@ -517,12 +579,7 @@ def _row_axes(
         "min": -0.5,
         "max": 0.5,
         "interval": 0.5,
-        "axisLabel": {
-            "fontSize": 12,
-            "align": "right",
-            "verticalAlign": "middle",
-            "formatter": {"__FN__": True, "body": f"return Math.abs(v) < 1e-6 ? {json.dumps(title)} : '';"},
-        },
+        "axisLabel": {"show": False},
         "axisTick": {"show": False},
         "axisLine": {"show": False},
         "splitLine": {"show": False},
@@ -530,14 +587,47 @@ def _row_axes(
     return grid, x_axis, y_axis
 
 
+def _title_option(row_idx: int, n: int, title: str, grid_left: int) -> Dict[str, Any]:
+    """
+    One entry in ECharts' native `title` component array (`option["title"]`) drawing the
+    row's metric TITLE, fixed at `grid_left - _TITLE_GUTTER_PAD` px from the container's
+    left edge and vertically centered on the row (`_row_center_pct`), right-aligned so its
+    text ends exactly there. `padding: 0`/`fontWeight: "normal"` strip the `title`
+    component's own defaults (a title normally reserves internal padding and renders
+    bold), so `left`/`top` land pixel-exact and the row title reads like a plain label,
+    not a heading.
+
+    A NATIVE ECharts component, not a `custom` series `renderItem` or `graphic` element:
+    tried both of those first, since either can read a fixed pixel position immune to
+    zoom (see the module docstring's point 1), but ECharts' SSR mode
+    (`static_export.py`) silently drops manually-drawn `type: "text"` elements from
+    EITHER of those, because it has no real Canvas 2D context to measure arbitrary text
+    with. `title` array entries are a built-in component (same family as the chart's own
+    main title, axis labels, and legend) that ships its own SSR-safe measurement
+    fallback, so this is the one placement verified to render in both the browser and the
+    MiniRacer/resvg SSR path.
+    """
+    center_pct = _row_center_pct(row_idx, n)
+    return {
+        "text": title,
+        "left": grid_left - _TITLE_GUTTER_PAD,
+        "top": f"{center_pct:.4f}%",
+        "textAlign": "right",
+        "textVerticalAlign": "middle",
+        "padding": 0,
+        "textStyle": {"fontSize": 12, "fontWeight": "normal", "color": _TITLE_TEXT_COLOR},
+    }
+
+
 def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     """
-    Full ECharts option skeleton for one violin dataset, minus the KDE/annotation/scatter
-    `series` (built by `series()` below for the SSR/get_option path). `grid`/`xAxis`/
-    `yAxis` are each a LIST with one entry per visible metric (PLOTLY-STYLE PER-ROW
-    SUBPLOTS), not the single shared grid/axis pair every other type gets from
-    `convert_layout`. See the module docstring for why the yAxis entries carry a `__FN__`
-    formatter sentinel (the VIOLIN EXCEPTION).
+    Full ECharts option skeleton for one violin dataset, minus the KDE/annotation/title/
+    scatter `series` (built by `series()` below for the SSR/get_option path). `grid`/
+    `xAxis`/`yAxis` are each a LIST with one entry per visible metric (PLOTLY-STYLE
+    PER-ROW SUBPLOTS), not the single shared grid/axis pair every other type gets from
+    `convert_layout`. See the module docstring for why the xAxis entries carry a `__FN__`
+    formatter sentinel (the VIOLIN EXCEPTION); the yAxis is a plain hidden axis (no
+    formatter, no label at all, see `_row_axes`).
     """
     option = convert_layout(plot.layout, dataset.layout)
 
@@ -553,7 +643,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
         header = dataset.header_by_metric[metric]
         values = _numeric_values(dataset, metric)
         lo, hi = _metric_range(header, values)
-        grid, x_axis, y_axis = _row_axes(row_idx, n, header, lo, hi, titles[row_idx], grid_left)
+        grid, x_axis, y_axis = _row_axes(row_idx, n, header, lo, hi, grid_left)
         grids.append(grid)
         x_axes.append(x_axis)
         y_axes.append(y_axis)
@@ -563,9 +653,17 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option["yAxis"] = y_axes
     option["tooltip"]["trigger"] = "item"
 
-    # No cross spike lines (POLISH.md #13): the y-axis in every row is still the
-    # VALUE-AXIS TRICK (module docstring), a fake symmetric thickness scale, not real
-    # data (only x is real now); a value label following the cursor on that axis would
+    # Row titles (module docstring point 1): ECharts' `title` option accepts either one
+    # component or a LIST of them, so the row titles ride alongside the chart's own main
+    # title (set by `convert_layout` above) rather than replacing it.
+    main_title = option.get("title")
+    option["title"] = ([main_title] if main_title else []) + [
+        _title_option(row_idx, n, titles[row_idx], grid_left) for row_idx in range(n)
+    ]
+
+    # No cross spike lines (POLISH.md #13): the y-axis in every row is a fake symmetric
+    # thickness scale, not real data (only x is real, see the module docstring); a value
+    # label following the cursor on that axis would
     # show numbers that mean nothing to the viewer. The crosshair mouse *cursor* (set
     # globally in JS, see echarts-plotting.js's buildCurrentOption) still applies to
     # violin like every other type; only the axis-tracking guide lines are skipped here.
@@ -584,7 +682,23 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
         "feature": {"dataZoom": {"show": True, "xAxisIndex": list(range(n)), "yAxisIndex": []}},
     }
     option["dataZoom"] = [
-        {"type": "inside", "xAxisIndex": [i], "zoomOnMouseWheel": False, "moveOnMouseWheel": False} for i in range(n)
+        {
+            "type": "inside",
+            "xAxisIndex": [i],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            # `filterMode: "none"` (default is "filter"): ECharts' default dataZoom
+            # behavior REMOVES a series' data points once their x-value falls outside the
+            # zoomed range, which for `_violin_render_series`/`_annotation_render_series`
+            # (each a dummy `data: [0]`, not a real x-coordinate; their renderItems draw
+            # from closure state, not from that data value) makes ECharts drop the whole
+            # row's polygon/annotation the moment a zoom narrows the axis so 0 falls
+            # outside it. "none" zooms the axis view without filtering any series data,
+            # fixing a pre-existing bug where zooming any row already made its violin
+            # polygon and min/max annotations vanish this way.
+            "filterMode": "none",
+        }
+        for i in range(n)
     ]
 
     return option
@@ -597,7 +711,8 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
     metric; see `_scatter_series_for_metric`), each bound to its own row's
     `xAxisIndex`/`yAxisIndex`. This is the SSR/get_option (non-toolbox) path; the
     interactive path is `EchartsViolinPlot.buildSeries()`
-    (`templates/echarts/src/js/plots/violin.js`, Task 2.2).
+    (`templates/echarts/src/js/plots/violin.js`, Task 2.2). The row TITLES are not a
+    series at all (see `_title_option`/`layout_option`), so they are not built here.
 
     `pconfig`/`is_pct` are accepted for dispatch-signature parity with `bar.series`; violin
     plots have no percentage switch, so `is_pct` is unused here.
@@ -629,8 +744,7 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
 def axis_data(dataset: Dataset, pconfig: TableConfig) -> Optional[List[Tuple[str, List[str]]]]:
     """
     Always `None`: every row's x/y axis is `type: "value"` (a real-valued x-axis, a
-    VALUE-AXIS TRICK y-axis), so there is no category `data` array for the toolbox to
-    fill in.
+    fully hidden y-axis), so there is no category `data` array for the toolbox to fill in.
     """
     return None
 

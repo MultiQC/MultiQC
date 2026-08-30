@@ -19,13 +19,21 @@
 //   recompute the KDE in JS from the visible values only (kde() below, a byte-for-byte
 //   port of violin.py::kde -- see the golden fixture comment above it).
 // - A beeswarm `scatter` series per row uses ECharts 6's native `jitter`.
-// - `grid`/`xAxis`/`yAxis` are rebuilt wholesale every render (buildSeries(), applied in
-//   applyOptionOverrides()) from the LIVE metric list, since it can differ from the
-//   Python skeleton's SSR-time list (e.g. a table column toggled after page load); each
-//   row gets a real, SI-formatted x-axis (POLISH.md #6) and a per-row `inside`/toolbox
-//   dataZoom so click+drag zoom only affects that row (POLISH.md #8); the row's metric
-//   title is drawn via the VALUE-AXIS TRICK y-axis (a single tick at y=0, the exact
-//   vertical center of the row, POLISH.md #1).
+// - `grid`/`xAxis`/`yAxis`/`title` are rebuilt wholesale every render (buildSeries(),
+//   applied in applyOptionOverrides()) from the LIVE metric list, since it can differ
+//   from the Python skeleton's SSR-time list (e.g. a table column toggled after page
+//   load); each row gets a real, SI-formatted x-axis (POLISH.md #6) and a per-row
+//   `inside`/toolbox dataZoom so click+drag zoom only affects that row (POLISH.md #8);
+//   the row's metric title is drawn by a native ECharts `title` component entry (one per
+//   row, appended to `option.title`, see makeRowTitle()), fixed at a pixel position
+//   (immune to zoom) and vertically centered (POLISH.md #1) in the left gutter (ROW
+//   ALIGNMENT fix: every row's grid now shares the same `left`/`right`/
+//   `containLabel: false`, so every row's rect is identical, see gridLeft() below). A
+//   `custom` series `renderItem` was tried first (reading `params.coordSys` to stay
+//   zoom-independent) but ECharts' SSR export (`static_export.py`) silently drops any
+//   manually-drawn `type: "text"` element -- from a `custom` series OR the `graphic`
+//   component -- since it has no real Canvas context to measure arbitrary text with;
+//   only text from built-in components (title/legend/axis labels) survives SSR.
 // - Cross-row sample highlight: hovering a beeswarm point highlights that sample's
 //   point on every other row via chart.on("mouseover")/dispatchAction("highlight").
 
@@ -125,18 +133,46 @@ function rowGeometry(rowIdx, n) {
   return [`${top}%`, `${height}%`];
 }
 
+// Mirrors violin.py::_row_center_pct: vertical center of grid row rowIdx of n, as a
+// float percentage of the container height (same basis as rowGeometry()'s top/height,
+// duplicated here rather than parsed back out of those formatted strings, same
+// cross-language-duplication style as kde()). Used to vertically center that row's
+// title (makeRowTitle() below, POLISH.md #1).
+function rowCenterPct(rowIdx, n) {
+  const total = ROW_PX * n + EXTRA_PX + BOTTOM_PX;
+  const topPct = (EXTRA_PX / total) * 100;
+  const bottomPct = (BOTTOM_PX / total) * 100;
+  const rowSlotPct = (100 - topPct - bottomPct) / n;
+  const rowTopPct = topPct + rowIdx * rowSlotPct;
+  const rowHeightPct = rowSlotPct * ROW_GRID_FRACTION;
+  return rowTopPct + rowHeightPct / 2;
+}
+
 // Mirrors violin.py::_grid_left: shared left inset (px) for every row's grid, sized from
-// the LONGEST visible title so every row's plot area starts at the same x, and computed
-// (not left purely to `containLabel`'s own auto-measurement) so it's never smaller than
-// this floor even in a context where text measurement is unreliable.
-const TITLE_CHAR_PX = 6.6;
+// the LONGEST visible title so every row's plot area starts at the same x, computed from
+// the title's own character count (not measured) so it never depends on how any one
+// row's own label happens to render.
+const TITLE_CHAR_PX = 6.0;
 const MIN_GRID_LEFT = 60;
 const MAX_GRID_LEFT = 280;
+// Gap (px) between the right-aligned title text and the row's plot area (ROW ALIGNMENT
+// fix, mirrors violin.py::_TITLE_GUTTER_PAD): wide enough to clear the row's OWN x-axis
+// first tick label (e.g. "0%"/"0 M"/"627 bp"), which straddles that same left edge (a
+// value axis has no boundaryGap) and would otherwise overlap the title text now that
+// containLabel/outerBoundsMode no longer reserve room for it (measured worst case ~30px
+// wide at fontSize 10, so half its width plus a little slack comfortably fits in 24px).
+// See makeRowTitle() below.
+const TITLE_GUTTER_PAD = 24;
+// Small slack (px) between the title text's own estimated width and where
+// TITLE_GUTTER_PAD starts, absorbing TITLE_CHAR_PX's per-glyph estimation error
+// (mirrors violin.py::_TITLE_TEXT_SLACK).
+const TITLE_TEXT_SLACK = 4;
 
 function gridLeft(titles) {
   if (titles.length === 0) return MIN_GRID_LEFT;
   const maxLen = arrMax(titles.map((t) => t.length));
-  return Math.min(MAX_GRID_LEFT, Math.max(MIN_GRID_LEFT, maxLen * TITLE_CHAR_PX + 14));
+  const reserved = maxLen * TITLE_CHAR_PX + TITLE_TEXT_SLACK + TITLE_GUTTER_PAD;
+  return Math.min(MAX_GRID_LEFT, Math.max(MIN_GRID_LEFT, reserved));
 }
 
 // Linear-interpolation quantile (mirrors multiqc/plots/echarts/box.py::_quantile, also
@@ -342,6 +378,33 @@ function makeAnnotationRenderItem(loObs, hiObs) {
   };
 }
 
+// One entry in ECharts' native `title` component array (option.title) drawing the row's
+// metric TITLE, fixed at gridLeft - TITLE_GUTTER_PAD px from the container's left edge
+// and vertically centered on the row (rowCenterPct), right-aligned so its text ends
+// exactly there. padding:0/fontWeight:"normal" strip the title component's own defaults
+// (a title normally reserves internal padding and renders bold).
+//
+// A NATIVE ECharts component, not a `custom` series renderItem or `graphic` element:
+// tried both of those first, since either can read a fixed pixel position immune to zoom
+// (see this file's header comment), but ECharts' SSR mode (static_export.py) silently
+// drops manually-drawn type:"text" elements from EITHER of those, because it has no real
+// Canvas 2D context to measure arbitrary text with. `title` array entries are a built-in
+// component (same family as the chart's own main title, axis labels, and legend) that
+// ships its own SSR-safe measurement fallback, so this is the one placement verified to
+// render in both the browser and the MiniRacer/resvg SSR path. Mirrors
+// violin.py::_title_option.
+function makeRowTitle(rowIdx, n, title, gridLeftPx, textColor) {
+  return {
+    text: title,
+    left: gridLeftPx - TITLE_GUTTER_PAD,
+    top: `${rowCenterPct(rowIdx, n)}%`,
+    textAlign: "right",
+    textVerticalAlign: "middle",
+    padding: 0,
+    textStyle: { fontSize: 12, fontWeight: "normal", color: textColor },
+  };
+}
+
 class EchartsViolinPlot extends window.Plot {
   constructor(dump) {
     super(dump);
@@ -454,9 +517,11 @@ class EchartsViolinPlot extends window.Plot {
   // n_metric min/max-annotation `custom` series, then n_metric beeswarm `scatter`
   // series -- same ordering as the SSR path (multiqc/plots/echarts/violin.py::series()),
   // which is what the sample -> [seriesIndex, dataIndex] cross-highlight map below relies
-  // on. Also (re)builds `this._grids`/`this._xAxis`/`this._yAxis`/`this._toolbox`/
-  // `this._dataZoom` from the LIVE metric list (PLOTLY-STYLE PER-ROW SUBPLOTS), applied
-  // onto the option in applyOptionOverrides() below.
+  // on. Also (re)builds `this._grids`/`this._xAxis`/`this._yAxis`/`this._titles`/
+  // `this._toolbox`/`this._dataZoom` from the LIVE metric list (PLOTLY-STYLE PER-ROW
+  // SUBPLOTS), applied onto the option in applyOptionOverrides() below. Row titles
+  // (`this._titles`) are native `title` component entries, not a series (see
+  // makeRowTitle()).
   buildSeries() {
     let [
       metrics,
@@ -497,6 +562,7 @@ class EchartsViolinPlot extends window.Plot {
       this._grids = [];
       this._xAxis = [];
       this._yAxis = [];
+      this._titles = [];
       this._rowCount = 0;
       return [];
     }
@@ -505,6 +571,7 @@ class EchartsViolinPlot extends window.Plot {
     const rowLeft = gridLeft(rows.map(({ header }) => metricTitle(header)));
     const violinSeries = [];
     const annotationSeries = [];
+    const titles = [];
     const scatterSeries = [];
     const grids = [];
     const xAxis = [];
@@ -576,6 +643,8 @@ class EchartsViolinPlot extends window.Plot {
       });
 
       const title = metricTitle(header);
+      titles.push(makeRowTitle(rowIdx, n, title, rowLeft, colors.tickcolor));
+
       const suffix = (header.xaxis && header.xaxis.ticksuffix) || "";
 
       const scatterData = [];
@@ -622,14 +691,33 @@ class EchartsViolinPlot extends window.Plot {
       });
 
       // Grid/axis geometry for this row (PLOTLY-STYLE PER-ROW SUBPLOTS): a real,
-      // SI-formatted x-axis (POLISH.md #6), and a hidden value y-axis whose single tick
-      // (at y=0, this row's exact vertical center) carries the metric title
-      // (POLISH.md #1, the VALUE-AXIS TRICK, see multiqc/plots/echarts/violin.py's
-      // module docstring), themed to match every other plot type (mirrors the
-      // buildCurrentOption theme step in echarts-plotting.js, which never runs on these
-      // axes since they're built fresh here, after that step already ran).
+      // SI-formatted x-axis (POLISH.md #6), and a FULLY HIDDEN value y-axis (just a
+      // [-0.5, 0.5] coordinate range for the renderItems above to draw the violin's
+      // thickness against; the row title is drawn separately by makeRowTitle(), not by
+      // this axis, see the ROW ALIGNMENT fix comment on gridLeft() above).
+      // `left`/`right` are IDENTICAL for every row and `containLabel: false` means
+      // nothing can grow one row's rect differently from another's, so every row's
+      // coordinateSystem.getRect() ends up equal in both x and width. Axis colors are
+      // themed to match every other plot type (mirrors the buildCurrentOption theme step
+      // in echarts-plotting.js, which never runs on these axes since they're built fresh
+      // here, after that step already ran).
       const [top, gridHeight] = rowGeometry(rowIdx, n);
-      grids.push({ top, height: gridHeight, left: rowLeft, right: 16, containLabel: true });
+      grids.push({
+        top,
+        height: gridHeight,
+        left: rowLeft,
+        right: 16,
+        containLabel: false,
+        // ECharts 6 also auto-nudges a grid's rect inward, independently of
+        // containLabel, to keep axis labels from overflowing the chart's OUTER bounds
+        // (grid.outerBoundsMode default "auto", see GridModel.js's OUTER_BOUNDS_DEFAULT):
+        // since a row's x-axis tick label LENGTH varies by metric (e.g. "20%" vs
+        // "18.39 M"), this on its own reproduces the exact same per-row rect inequality
+        // bug containLabel caused, just via a different ECharts 6 feature. "none"
+        // disables it, verified empirically to make every row's rect byte-for-byte
+        // identical (mirrors violin.py::_row_axes).
+        outerBoundsMode: "none",
+      });
       xAxis.push({
         type: "value",
         gridIndex: rowIdx,
@@ -646,13 +734,7 @@ class EchartsViolinPlot extends window.Plot {
         min: -0.5,
         max: 0.5,
         interval: 0.5,
-        axisLabel: {
-          fontSize: 12,
-          align: "right",
-          verticalAlign: "middle",
-          color: colors.tickcolor,
-          formatter: (v) => (Math.abs(v) < 1e-6 ? title : ""),
-        },
+        axisLabel: { show: false },
         axisTick: { show: false },
         axisLine: { show: false },
         splitLine: { show: false },
@@ -662,6 +744,7 @@ class EchartsViolinPlot extends window.Plot {
     this._grids = grids;
     this._xAxis = xAxis;
     this._yAxis = yAxis;
+    this._titles = titles;
     this._rowCount = n;
 
     // sample -> [[seriesIndex, dataIndex], ...] across every scatter series, for the
@@ -680,18 +763,23 @@ class EchartsViolinPlot extends window.Plot {
     return violinSeries.concat(annotationSeries, scatterSeries);
   }
 
-  // grid/xAxis/yAxis are rebuilt wholesale from the live metric list in buildSeries()
-  // (arrays, one entry per row: PLOTLY-STYLE PER-ROW SUBPLOTS), since neither the row
-  // count nor titles can live in the JSON-safe serialized skeleton, and since the live
-  // count can differ from what Python's SSR skeleton has. One toolbox dataZoom feature
-  // spanning every row's xAxisIndex plus one `inside` dataZoom per row (POLISH.md #8):
-  // a drag-select inside any row's grid zooms only THAT row's x-axis; double-click reset
-  // (wired once per chart in echarts-plotting.js's renderPlot(), generic across every
-  // plot type) resets every dataZoom component, all rows included.
+  // grid/xAxis/yAxis/title are rebuilt wholesale from the live metric list in
+  // buildSeries() (arrays, one entry per row: PLOTLY-STYLE PER-ROW SUBPLOTS), since
+  // neither the row count nor titles can live in the JSON-safe serialized skeleton, and
+  // since the live count can differ from what Python's SSR skeleton has. Row titles
+  // (this._titles) are appended after the chart's own main title (already themed by
+  // buildCurrentOption's generic step, which runs before this method, see
+  // echarts-plotting.js), not replacing it: ECharts' `title` option accepts either one
+  // component or a list of them. One toolbox dataZoom feature spanning every row's
+  // xAxisIndex plus one `inside` dataZoom per row (POLISH.md #8): a drag-select inside
+  // any row's grid zooms only THAT row's x-axis; double-click reset (wired once per chart
+  // in echarts-plotting.js's renderPlot(), generic across every plot type) resets every
+  // dataZoom component, all rows included.
   applyOptionOverrides(option) {
     option.grid = this._grids || [];
     option.xAxis = this._xAxis || [];
     option.yAxis = this._yAxis || [];
+    option.title = (option.title ? [option.title] : []).concat(this._titles || []);
     const n = this._rowCount || 0;
     option.toolbox = {
       show: true,
@@ -705,6 +793,14 @@ class EchartsViolinPlot extends window.Plot {
       xAxisIndex: [i],
       zoomOnMouseWheel: false,
       moveOnMouseWheel: false,
+      // filterMode: "none" (default is "filter"): ECharts' default dataZoom behavior
+      // REMOVES a series' data points once their x-value falls outside the zoomed range,
+      // which for the violin/annotation custom series (each a dummy data: [0], not a
+      // real x-coordinate; their renderItems draw from closure state, not from that data
+      // value) makes ECharts drop the whole row's polygon/annotation the moment a zoom
+      // narrows the axis so 0 falls outside it. "none" zooms the axis view without
+      // filtering any series data (mirrors violin.py::layout_option).
+      filterMode: "none",
     }));
 
     // FIX #3: one combined tooltip per hovered sample, listing that sample's value in
