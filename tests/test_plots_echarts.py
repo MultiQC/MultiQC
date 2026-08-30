@@ -768,12 +768,6 @@ def _is_kde_series(series_option):
     return series_option["type"] == "custom" and "polygon" in _renderitem_body(series_option)
 
 
-def _is_annotation_series(series_option):
-    # The row TITLE is not a series at all (it's a native `title` component entry, see
-    # violin.py::_title_option), so every non-KDE `custom` series here is an annotation.
-    return series_option["type"] == "custom" and "polygon" not in _renderitem_body(series_option)
-
-
 def test_interactive_plot_adds_echarts_key_for_violin_plot():
     config.plotting_engine = "echarts"
     plot = _make_violin_plot()
@@ -866,13 +860,14 @@ def test_get_option_violin_series_counts():
     assert n_metrics == 3
 
     kde_series = [s for s in option["series"] if _is_kde_series(s)]
-    annotation_series = [s for s in option["series"] if _is_annotation_series(s)]
     scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
 
     assert len(kde_series) == n_metrics
-    assert len(annotation_series) == n_metrics
     assert len(scatter_series) == n_metrics
-    assert len(option["series"]) == 3 * n_metrics
+    # No separate min/max-annotation series any more (removed: each row already has its
+    # own real-valued x-axis, so a text label repeating the same range was redundant and
+    # read as if the beeswarm dots themselves carried on-canvas labels).
+    assert len(option["series"]) == 2 * n_metrics
 
 
 def test_get_option_violin_scatter_items_shape():
@@ -1060,28 +1055,24 @@ def test_grid_left_scales_with_title_length_and_is_clamped():
 
 
 def test_get_option_violin_series_bound_to_own_row_axes():
-    """Every series (violin/annotation/scatter) must carry `xAxisIndex`/`yAxisIndex`
-    matching its row, so it draws in that row's own grid (PLOTLY-STYLE PER-ROW
-    SUBPLOTS) rather than defaulting to row 0."""
+    """Every series (violin/scatter) must carry `xAxisIndex`/`yAxisIndex` matching its
+    row, so it draws in that row's own grid (PLOTLY-STYLE PER-ROW SUBPLOTS) rather than
+    defaulting to row 0."""
     plot = _make_violin_plot()
     option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
     dataset = plot.datasets[0]
     n = len(dataset.metrics)
 
     violin_series = [s for s in option["series"] if _is_kde_series(s)]
-    annotation_series = [s for s in option["series"] if _is_annotation_series(s)]
     scatter_series = [s for s in option["series"] if s["type"] == "scatter"]
 
     for row_idx, s in enumerate(violin_series):
         assert s["xAxisIndex"] == row_idx
         assert s["yAxisIndex"] == row_idx
-    for row_idx, s in enumerate(annotation_series):
-        assert s["xAxisIndex"] == row_idx
-        assert s["yAxisIndex"] == row_idx
     for row_idx, s in enumerate(scatter_series):
         assert s["xAxisIndex"] == row_idx
         assert s["yAxisIndex"] == row_idx
-    assert len(violin_series) == len(annotation_series) == len(scatter_series) == n
+    assert len(violin_series) == len(scatter_series) == n
 
 
 def test_get_option_violin_title_array_matches_rows():

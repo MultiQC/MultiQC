@@ -6,8 +6,11 @@ it with PLOTLY-STYLE PER-ROW SUBPLOTS: one ECharts `grid` (with its own `xAxis`/
 pair) per visible metric, stacked vertically, matching `multiqc/plots/violin.py`'s own
 `Dataset.create_figure` (one Plotly subplot per metric, real x-axis values, compact
 per-row height). Each row is drawn as a hand-built KDE polygon via a `custom` series
-`renderItem`, plus a beeswarm `scatter` series with v6's native `jitter`, plus a `custom`
-series per row for the min/max text annotations.
+`renderItem`, plus a beeswarm `scatter` series with v6's native `jitter`. (An earlier
+version also drew a third `custom` series per row for min/max text labels next to the
+violin ends; removed, since each row already has its own real-valued x-axis showing that
+same range, so the labels were pure duplication and read as if the beeswarm dots
+themselves carried on-canvas text.)
 
 Per-row geometry: `_row_geometry` mirrors the same formula duplicated in
 `templates/echarts/src/js/plots/violin.js` (`rowGeometry`), so a row's grid percentage
@@ -19,7 +22,7 @@ and the interactive path (the JS renderer sets a compact, row-count-scaled CSS h
 itself; see `EchartsViolinPlot.buildSeries()`).
 
 Since each row now gets its OWN real-valued x-axis, a row's KDE polygon/box/median/
-scatter/annotation coordinates are drawn directly in REAL x (no more per-row 0..1
+scatter coordinates are drawn directly in REAL x (no more per-row 0..1
 normalization); only the y coordinate stays a small symmetric offset around 0 (the
 violin's density thickness), identical in scale to the old `ROW_HEIGHT`/`BOX_HALF_HEIGHT`/
 `MEDIAN_HALF_HEIGHT` constants, just no longer shifted by a row index.
@@ -97,14 +100,15 @@ RANGE_PAD = 0.15
 BOX_HALF_HEIGHT = 0.12
 MEDIAN_HALF_HEIGHT = 0.16
 
-# Fill opacity for the violin body (POLISH.md #10a). Matches Plotly's own dark-theme
-# violin fill opacity (see templates/default/src/js/plots/violin.js's
-# `isDarkMode ? 0.3 : 0.5`, applied client-side after Plotly renders); the SSR path here
-# has no way to detect the viewer's theme, so both this module and the interactive JS
-# path fix on the single dark-theme value for consistency (see module docstring).
-FILL_ALPHA = 0.3
-# Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
-BOX_FILL_ALPHA = 0.55
+# Fill opacity for the violin body (POLISH.md #10a). Measured directly from Plotly's own
+# rendered general-stats violin (`gsDiv.data[i].fillcolor`, live browser inspection, not
+# guessed): Plotly's light-mode fillcolor is `rgba(<header.color or #999999>, 0.5)` (see
+# `templates/default/src/js/plots/violin.js`'s client-side `isDarkMode ? 0.3 : 0.5`; the
+# report always renders in light mode there, so 0.5 is the value actually shown, not 0.3
+# as an earlier version of this comment assumed). The SSR path here always renders
+# against the light theme too (see module docstring), so both this module and the
+# interactive JS path fix on the same 0.5 value.
+FILL_ALPHA = 0.5
 
 # Default violin body color (POLISH.md #5): matches Plotly's own general-stats violin
 # default, `fillcolor="#999999"` (see `multiqc/plots/violin.py`'s `Dataset.create`), kept
@@ -113,7 +117,6 @@ BOX_FILL_ALPHA = 0.55
 # `_violin_colors` below).
 _DEFAULT_STROKE = "rgb(153,153,153)"
 _DEFAULT_FILL = f"rgba(153,153,153,{FILL_ALPHA})"
-_DEFAULT_BOX_FILL = f"rgba(153,153,153,{BOX_FILL_ALPHA})"
 
 # Beeswarm point defaults (POLISH.md #9/FIX #9): matches `multiqc/plots/violin.py`'s own
 # `Dataset.create` scatter_trace_params exactly (`marker: {size: 4, color: ..., opacity: 1}`,
@@ -340,13 +343,17 @@ def _row_quartiles(values: List[float]) -> Tuple[float, float, float]:
     return _quantile(sorted_values, 0.25), _quantile(sorted_values, 0.5), _quantile(sorted_values, 0.75)
 
 
-def _violin_colors(header: ViolinColumn) -> Tuple[str, str, str]:
-    """`[fill, stroke, box_fill]` for one metric row's violin: `fill` is the violin
-    body's own semi-transparent color (`FILL_ALPHA`), `box_fill` is the inner Q1-Q3
-    box's fill, the same stroke hue at a more solid alpha (`BOX_FILL_ALPHA`) so the box
-    reads clearly against the lighter violin body."""
+def _violin_colors(header: ViolinColumn) -> Tuple[str, str]:
+    """`[fill, stroke]` for one metric row's violin: `fill` is the violin body's own
+    semi-transparent color (`FILL_ALPHA`), used for the body AND the inner Q1-Q3 box
+    (Plotly's own violin draws its box with the exact same `fillcolor` as the body, see
+    the module docstring); `stroke` (the solid hue, no alpha) is used only for the
+    median line, never as a border (Plotly's violin outline/box/meanline all render with
+    `line.width: 0`, i.e. no border at all, measured directly from its rendered
+    `_fullData`; a bordered polygon reads far more saturated/"brighter" than Plotly's
+    soft alpha-only fill, see `_violin_render_series`)."""
     if not header.color:
-        return _DEFAULT_FILL, _DEFAULT_STROKE, _DEFAULT_BOX_FILL
+        return _DEFAULT_FILL, _DEFAULT_STROKE
     color = header.color
     # General-stats metric colors are bare "r,g,b" triples; color_to_rgb_string only
     # accepts rgb()/hex/named and would fall back to black, so wrap a bare triple first
@@ -355,8 +362,7 @@ def _violin_colors(header: ViolinColumn) -> Tuple[str, str, str]:
         color = f"rgb({color})"
     stroke = color_to_rgb_string(color)  # "rgb(r,g,b)"
     fill = _rgba(stroke, FILL_ALPHA)
-    box_fill = _rgba(stroke, BOX_FILL_ALPHA)
-    return fill, stroke, box_fill
+    return fill, stroke
 
 
 def _violin_render_series(
@@ -367,7 +373,6 @@ def _violin_render_series(
     row_idx: int,
     fill: str,
     stroke: str,
-    box_fill: str,
 ) -> Dict[str, Any]:
     """
     One `custom` series per row whose `renderItem` draws the KDE polygon computed in
@@ -377,6 +382,14 @@ def _violin_render_series(
     grid (POLISH.md #6/#8). This is the ONE place a real function needs to reach the SSR
     bundle: the `__FN__` sentinel body below is plain MultiQC-generated JS source (a
     JSON-encoded point list plus fixed numeric/color literals), never user data.
+
+    Neither the polygon nor the box has a `stroke` (matches Plotly's measured
+    `line.width: 0`, see `_violin_colors`): the box reuses the SAME `fill` as the body
+    (also matching Plotly, whose box `fillcolor` is identical to the trace's own), so it
+    reads as a slightly denser patch purely from the two semi-transparent fills
+    overlapping, not from an added border. Only the median line keeps a solid `stroke`
+    (Plotly's own `meanline.width` measures 0, i.e. invisible; MultiQC keeps a thin
+    visible tick here since a fully invisible median would be a regression, not a match).
     """
     body = (
         f"var poly = {json.dumps(poly)};"
@@ -387,12 +400,12 @@ def _violin_render_series(
         f"var mBot = api.coord([{json.dumps(median)}, {json.dumps(MEDIAN_HALF_HEIGHT)}]);"
         "return { type: 'group', children: ["
         "{ type: 'polygon', shape: { points: pts }, "
-        f"style: {{ fill: {json.dumps(fill)}, stroke: {json.dumps(stroke)}, lineWidth: 1 }} }},"
+        f"style: {{ fill: {json.dumps(fill)} }} }},"
         "{ type: 'rect', shape: { x: Math.min(bTL[0], bBR[0]), y: Math.min(bTL[1], bBR[1]), "
         "width: Math.abs(bBR[0] - bTL[0]), height: Math.abs(bBR[1] - bTL[1]) }, "
-        f"style: {{ fill: {json.dumps(box_fill)}, stroke: {json.dumps(stroke)}, lineWidth: 1 }} }},"
+        f"style: {{ fill: {json.dumps(fill)} }} }},"
         "{ type: 'line', shape: { x1: mTop[0], y1: mTop[1], x2: mBot[0], y2: mBot[1] }, "
-        f"style: {{ stroke: {json.dumps(stroke)}, lineWidth: 2.5 }} }}"
+        f"style: {{ stroke: {json.dumps(stroke)}, lineWidth: 2 }} }}"
         "] };"
     )
     return {
@@ -404,36 +417,6 @@ def _violin_render_series(
         "renderItem": {"__FN__": True, "body": body},
         "silent": True,
         "z": 1,
-    }
-
-
-def _annotation_render_series(row_idx: int, lo_obs: float, hi_obs: float) -> Dict[str, Any]:
-    """
-    One `custom` series per row drawing the observed min/max text labels at the violin's
-    actual real-valued extent (`lo_obs`/`hi_obs`), vertically at the row's center (`y=0`).
-    Plotly still shows these value labels at the violin ends even though its own axis
-    already shows real values, so they're kept here too (POLISH.md #6 note).
-    """
-    lo_label = json.dumps(f"{lo_obs:g}")
-    hi_label = json.dumps(f"{hi_obs:g}")
-    body = (
-        f"var L = api.coord([{json.dumps(lo_obs)}, 0]); var R = api.coord([{json.dumps(hi_obs)}, 0]);"
-        "return { type: 'group', children: ["
-        "{ type: 'text', style: { text: " + lo_label + ", x: L[0] - 6, y: L[1], "
-        "textAlign: 'right', textVerticalAlign: 'middle', fontSize: 10, fill: '#888' } }, "
-        "{ type: 'text', style: { text: " + hi_label + ", x: R[0] + 6, y: R[1], "
-        "textAlign: 'left', textVerticalAlign: 'middle', fontSize: 10, fill: '#888' } }"
-        "] };"
-    )
-    return {
-        "type": "custom",
-        "coordinateSystem": "cartesian2d",
-        "xAxisIndex": row_idx,
-        "yAxisIndex": row_idx,
-        "data": [0],
-        "renderItem": {"__FN__": True, "body": body},
-        "silent": True,
-        "z": 3,
     }
 
 
@@ -461,7 +444,10 @@ def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: 
     Point style (FIX #9) matches Plotly's own beeswarm marker exactly: size 4, solid
     (`opacity: 1`), no border (Plotly's `scatter_trace_params` never sets a marker line).
     `label.show: False` (FIX #2) is explicit, not just relying on ECharts' own default,
-    so no per-point text ever draws next to a dot outside the hover tooltip.
+    so no per-point text ever draws next to a dot outside the hover tooltip. `z: 3` is
+    ABOVE `_violin_render_series`'s `z: 1` (the KDE polygon/box/median), so points always
+    draw on top of the (now un-bordered, semi-transparent) violin body, never obscured by
+    it.
     """
     header = dataset.header_by_metric[metric]
     data: List[Dict[str, Any]] = []
@@ -486,7 +472,7 @@ def _scatter_series_for_metric(dataset: Dataset, metric: ColumnAnchor, row_idx: 
         "jitterOverlap": False,
         "itemStyle": {"color": base_color, "opacity": 1},
         "label": {"show": False},
-        "z": 2,
+        "z": 3,
     }
 
 
@@ -513,6 +499,14 @@ _TITLE_TEXT_SLACK = 4
 # path always renders against the light theme (see that module's own docstring), so this
 # is a plain literal rather than a cross-module import of a private theme.py constant.
 _TITLE_TEXT_COLOR = "#333333"
+
+# Per-row x-axis tick label color, measured directly from Plotly's own rendered general
+# stats violin (`gsDiv.layout.xaxis.tickfont.color`, live browser inspection): unlike
+# `_TITLE_TEXT_COLOR` (the row's own name, deliberately dark/prominent), Plotly's axis
+# tick text is a subdued mid-grey. The SSR theme's own `valueAxis.axisLabel.color`
+# (`theme.py`'s `_TEXT_COLOR`, "#333333") is darker/more prominent than this, which is
+# part of why the SSR violin's axis previously read brighter/heavier than Plotly's.
+_AXIS_LABEL_COLOR = "rgba(80,80,80,1)"
 
 
 def _grid_left(titles: List[str]) -> int:
@@ -568,9 +562,18 @@ def _row_axes(
         "gridIndex": row_idx,
         "min": lo,
         "max": hi,
-        "axisLabel": {"fontSize": 10, "formatter": {"__FN__": True, "body": _si_axis_formatter_body(suffix)}},
-        "axisLine": {"show": True},
-        "axisTick": {"show": True},
+        "axisLabel": {
+            "fontSize": 10,
+            "color": _AXIS_LABEL_COLOR,
+            "formatter": {"__FN__": True, "body": _si_axis_formatter_body(suffix)},
+        },
+        # No axis line/ticks (measured Plotly's own violin x-axis: `showline: false`,
+        # `ticks: ""`; only the tick label text is shown). A full-width axis line PLUS
+        # tick marks under every row, at any color, reads far more present/"brighter"
+        # than Plotly's bare label text, and was the main source of the axis-brightness
+        # mismatch (see the module docstring/PR notes).
+        "axisLine": {"show": False},
+        "axisTick": {"show": False},
         "splitLine": {"show": False},
     }
     y_axis = {
@@ -621,8 +624,8 @@ def _title_option(row_idx: int, n: int, title: str, grid_left: int) -> Dict[str,
 
 def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     """
-    Full ECharts option skeleton for one violin dataset, minus the KDE/annotation/title/
-    scatter `series` (built by `series()` below for the SSR/get_option path). `grid`/
+    Full ECharts option skeleton for one violin dataset, minus the KDE/title/scatter
+    `series` (built by `series()` below for the SSR/get_option path). `grid`/
     `xAxis`/`yAxis` are each a LIST with one entry per visible metric (PLOTLY-STYLE
     PER-ROW SUBPLOTS), not the single shared grid/axis pair every other type gets from
     `convert_layout`. See the module docstring for why the xAxis entries carry a `__FN__`
@@ -689,13 +692,12 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
             "moveOnMouseWheel": False,
             # `filterMode: "none"` (default is "filter"): ECharts' default dataZoom
             # behavior REMOVES a series' data points once their x-value falls outside the
-            # zoomed range, which for `_violin_render_series`/`_annotation_render_series`
-            # (each a dummy `data: [0]`, not a real x-coordinate; their renderItems draw
-            # from closure state, not from that data value) makes ECharts drop the whole
-            # row's polygon/annotation the moment a zoom narrows the axis so 0 falls
-            # outside it. "none" zooms the axis view without filtering any series data,
-            # fixing a pre-existing bug where zooming any row already made its violin
-            # polygon and min/max annotations vanish this way.
+            # zoomed range, which for `_violin_render_series` (a dummy `data: [0]`, not a
+            # real x-coordinate; its renderItem draws from closure state, not from that
+            # data value) makes ECharts drop the whole row's polygon the moment a zoom
+            # narrows the axis so 0 falls outside it. "none" zooms the axis view without
+            # filtering any series data, fixing a pre-existing bug where zooming any row
+            # already made its violin polygon vanish this way.
             "filterMode": "none",
         }
         for i in range(n)
@@ -707,12 +709,16 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
 def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[str, Any]]:
     """
     `n_metric` violin (KDE polygon + inner box + median) `custom` series, then `n_metric`
-    min/max-annotation `custom` series, then `n_metric` beeswarm `scatter` series (one per
-    metric; see `_scatter_series_for_metric`), each bound to its own row's
-    `xAxisIndex`/`yAxisIndex`. This is the SSR/get_option (non-toolbox) path; the
-    interactive path is `EchartsViolinPlot.buildSeries()`
+    beeswarm `scatter` series (one per metric; see `_scatter_series_for_metric`), each
+    bound to its own row's `xAxisIndex`/`yAxisIndex`. This is the SSR/get_option
+    (non-toolbox) path; the interactive path is `EchartsViolinPlot.buildSeries()`
     (`templates/echarts/src/js/plots/violin.js`, Task 2.2). The row TITLES are not a
     series at all (see `_title_option`/`layout_option`), so they are not built here.
+
+    There is deliberately no min/max-annotation series any more: each row already has its
+    own real-valued x-axis (POLISH.md #6), so a text label repeating the same min/max
+    values right next to the dots was pure duplication, and read as if the beeswarm points
+    themselves carried on-canvas labels (they never did; that was this now-removed series).
 
     `pconfig`/`is_pct` are accepted for dispatch-signature parity with `bar.series`; violin
     plots have no percentage switch, so `is_pct` is unused here.
@@ -721,7 +727,6 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
     base_color = _scatter_base_color(dataset)
 
     violin_series = []
-    annotation_series = []
     scatter_series = []
     for row_idx, metric in enumerate(metrics):
         header = dataset.header_by_metric[metric]
@@ -729,16 +734,13 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
         lo, hi = _metric_range(header, values)
 
         poly = _violin_polygon(values, lo, hi)
-        fill, stroke, box_fill = _violin_colors(header)
+        fill, stroke = _violin_colors(header)
         q1, median, q3 = _row_quartiles(values)
-        violin_series.append(_violin_render_series(poly, q1, median, q3, row_idx, fill, stroke, box_fill))
-
-        lo_obs, hi_obs = min(values), max(values)
-        annotation_series.append(_annotation_render_series(row_idx, lo_obs, hi_obs))
+        violin_series.append(_violin_render_series(poly, q1, median, q3, row_idx, fill, stroke))
 
         scatter_series.append(_scatter_series_for_metric(dataset, metric, row_idx, base_color))
 
-    return violin_series + annotation_series + scatter_series
+    return violin_series + scatter_series
 
 
 def axis_data(dataset: Dataset, pconfig: TableConfig) -> Optional[List[Tuple[str, List[str]]]]:

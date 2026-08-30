@@ -104,9 +104,11 @@ const BOX_HALF_HEIGHT = 0.12;
 const MEDIAN_HALF_HEIGHT = 0.16;
 
 // Fill opacity for the violin body (POLISH.md #10a); mirrors violin.py's FILL_ALPHA.
-const FILL_ALPHA = 0.3;
-// Box fill is more solid than the violin body so the Q1-Q3 range reads clearly against it.
-const BOX_FILL_ALPHA = 0.55;
+// Measured directly from Plotly's own rendered general-stats violin
+// (gsDiv.data[i].fillcolor, live browser inspection): light-mode fillcolor is
+// rgba(<color>, 0.5) (templates/default/src/js/plots/violin.js's own
+// isDarkMode ? 0.3 : 0.5, and the report always renders in light mode there).
+const FILL_ALPHA = 0.5;
 
 // --- Per-row grid geometry: the cross-language contract (mirrors
 // multiqc/plots/echarts/violin.py's `_row_geometry`/ROW_PX/EXTRA_PX/BOTTOM_PX/
@@ -285,29 +287,32 @@ function toRgba(rgb, alpha) {
 
 // Default violin body color (POLISH.md #5): matches Plotly's own general-stats violin
 // default, fillcolor="#999999" (multiqc/plots/violin.py's Dataset.create); mirrors
-// violin.py's _DEFAULT_STROKE/_DEFAULT_FILL/_DEFAULT_BOX_FILL. Only used when a metric
-// has no configured header.color; a real per-metric color always takes priority below.
+// violin.py's _DEFAULT_STROKE/_DEFAULT_FILL. Only used when a metric has no configured
+// header.color; a real per-metric color always takes priority below.
 const DEFAULT_STROKE = "rgb(153,153,153)";
 
-// Mirrors violin.py::_violin_colors: [fill, stroke, boxFill], falling back to the same
-// defaults (kept as rgb(...), not hex, so toRgba() above applies uniformly).
+// Mirrors violin.py::_violin_colors: [fill, stroke], falling back to the same defaults
+// (kept as rgb(...), not hex, so toRgba() above applies uniformly). `stroke` is used only
+// for the median line (see makeViolinRenderItem): Plotly's own violin measures
+// line.width: 0 for its outline/box/meanline (verified via its rendered _fullData), so
+// neither the polygon nor the box gets a border here.
 function violinColors(header) {
   const rgb = header.color ? normalizeColorToRGB(header.color) : null;
-  if (!rgb) return [toRgba(DEFAULT_STROKE, FILL_ALPHA), DEFAULT_STROKE, toRgba(DEFAULT_STROKE, BOX_FILL_ALPHA)];
+  if (!rgb) return [toRgba(DEFAULT_STROKE, FILL_ALPHA), DEFAULT_STROKE];
   const stroke = `rgb(${rgb})`;
-  return [toRgba(stroke, FILL_ALPHA), stroke, toRgba(stroke, BOX_FILL_ALPHA)];
-}
-
-// Min/max row label: delegates to the shared window.formatNumber (echarts-plotting.js)
-// so every echarts plot type rounds numbers the same way.
-function formatG(num) {
-  return String(window.formatNumber(num));
+  return [toRgba(stroke, FILL_ALPHA), stroke];
 }
 
 // Draws the KDE polygon plus an inner Q1-Q3 box and median line (POLISH.md #10b),
 // matching Plotly's box_visible/meanline violin config. q1/median/q3 are real values
-// (same x-space as poly). Mirrors violin.py::_violin_render_series.
-function makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill) {
+// (same x-space as poly). Mirrors violin.py::_violin_render_series: neither the polygon
+// nor the box has a stroke (matches Plotly's measured line.width: 0); the box reuses the
+// SAME fill as the body (also matching Plotly, whose box fillcolor equals the trace's
+// own), reading as a slightly denser patch purely from the two semi-transparent fills
+// overlapping. Only the median line keeps a solid stroke (Plotly's own meanline.width
+// measures 0, i.e. invisible; a fully invisible median would be a regression, not a
+// match, so it's kept here, just thin).
+function makeViolinRenderItem(poly, q1, median, q3, fill, stroke) {
   return function (params, api) {
     const pts = poly.map((p) => api.coord(p));
     const bTL = api.coord([q1, -BOX_HALF_HEIGHT]);
@@ -317,7 +322,7 @@ function makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill) {
     return {
       type: "group",
       children: [
-        { type: "polygon", shape: { points: pts }, style: { fill, stroke, lineWidth: 1 } },
+        { type: "polygon", shape: { points: pts }, style: { fill } },
         {
           type: "rect",
           shape: {
@@ -326,52 +331,12 @@ function makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill) {
             width: Math.abs(bBR[0] - bTL[0]),
             height: Math.abs(bBR[1] - bTL[1]),
           },
-          style: { fill: boxFill, stroke, lineWidth: 1 },
+          style: { fill },
         },
         {
           type: "line",
           shape: { x1: mTop[0], y1: mTop[1], x2: mBot[0], y2: mBot[1] },
-          style: { stroke, lineWidth: 2.5 },
-        },
-      ],
-    };
-  };
-}
-
-// loObs/hiObs are the violin's real observed extent; drawn at the row's vertical center
-// (y=0). Mirrors violin.py::_annotation_render_series.
-function makeAnnotationRenderItem(loObs, hiObs) {
-  const loLabel = formatG(loObs);
-  const hiLabel = formatG(hiObs);
-  return function (params, api) {
-    const L = api.coord([loObs, 0]);
-    const R = api.coord([hiObs, 0]);
-    return {
-      type: "group",
-      children: [
-        {
-          type: "text",
-          style: {
-            text: loLabel,
-            x: L[0] - 6,
-            y: L[1],
-            textAlign: "right",
-            textVerticalAlign: "middle",
-            fontSize: 10,
-            fill: "#888",
-          },
-        },
-        {
-          type: "text",
-          style: {
-            text: hiLabel,
-            x: R[0] + 6,
-            y: R[1],
-            textAlign: "left",
-            textVerticalAlign: "middle",
-            fontSize: 10,
-            fill: "#888",
-          },
+          style: { stroke, lineWidth: 2 },
         },
       ],
     };
@@ -514,10 +479,13 @@ class EchartsViolinPlot extends window.Plot {
   }
 
   // Builds: n_metric violin (KDE polygon + inner box + median) `custom` series, then
-  // n_metric min/max-annotation `custom` series, then n_metric beeswarm `scatter`
-  // series -- same ordering as the SSR path (multiqc/plots/echarts/violin.py::series()),
-  // which is what the sample -> [seriesIndex, dataIndex] cross-highlight map below relies
-  // on. Also (re)builds `this._grids`/`this._xAxis`/`this._yAxis`/`this._titles`/
+  // n_metric beeswarm `scatter` series -- same ordering as the SSR path
+  // (multiqc/plots/echarts/violin.py::series()), which is what the sample ->
+  // [seriesIndex, dataIndex] cross-highlight map below relies on. There is no min/max
+  // text-annotation series any more (removed: each row already has its own real-valued
+  // x-axis, so a text label repeating the same range read as if the beeswarm dots
+  // themselves carried on-canvas labels). Also (re)builds
+  // `this._grids`/`this._xAxis`/`this._yAxis`/`this._titles`/
   // `this._toolbox`/`this._dataZoom` from the LIVE metric list (PLOTLY-STYLE PER-ROW
   // SUBPLOTS), applied onto the option in applyOptionOverrides() below. Row titles
   // (`this._titles`) are native `title` component entries, not a series (see
@@ -570,7 +538,6 @@ class EchartsViolinPlot extends window.Plot {
     const colors = window.getEchartsThemeColors();
     const rowLeft = gridLeft(rows.map(({ header }) => metricTitle(header)));
     const violinSeries = [];
-    const annotationSeries = [];
     const titles = [];
     const scatterSeries = [];
     const grids = [];
@@ -616,30 +583,17 @@ class EchartsViolinPlot extends window.Plot {
       const q1 = quantile(sorted, 0.25);
       const median = quantile(sorted, 0.5);
       const q3 = quantile(sorted, 0.75);
-      const obsMin = arrMin(numericValues);
-      const obsMax = arrMax(numericValues);
 
-      const [fill, stroke, boxFill] = violinColors(header);
+      const [fill, stroke] = violinColors(header);
       violinSeries.push({
         type: "custom",
         coordinateSystem: "cartesian2d",
         xAxisIndex: rowIdx,
         yAxisIndex: rowIdx,
         data: [0],
-        renderItem: makeViolinRenderItem(poly, q1, median, q3, fill, stroke, boxFill),
+        renderItem: makeViolinRenderItem(poly, q1, median, q3, fill, stroke),
         silent: true,
         z: 1,
-      });
-
-      annotationSeries.push({
-        type: "custom",
-        coordinateSystem: "cartesian2d",
-        xAxisIndex: rowIdx,
-        yAxisIndex: rowIdx,
-        data: [0],
-        renderItem: makeAnnotationRenderItem(obsMin, obsMax),
-        silent: true,
-        z: 3,
       });
 
       const title = metricTitle(header);
@@ -687,7 +641,9 @@ class EchartsViolinPlot extends window.Plot {
         // FIX #2: no persistent per-point text; the sample's info only ever shows in the
         // hover tooltip (option.tooltip.formatter, applyOptionOverrides() below).
         label: { show: false },
-        z: 2,
+        // Above the violin body's z: 1 (KDE polygon/box/median), so points always draw
+        // on top of the (now un-bordered, semi-transparent) fill, never obscured by it.
+        z: 3,
       });
 
       // Grid/axis geometry for this row (PLOTLY-STYLE PER-ROW SUBPLOTS): a real,
@@ -724,8 +680,13 @@ class EchartsViolinPlot extends window.Plot {
         min: lo,
         max: hi,
         axisLabel: { fontSize: 10, color: colors.tickcolor, formatter: (v) => window.formatAxisNumber(v, suffix) },
-        axisLine: { show: true, lineStyle: { color: colors.axiscolor } },
-        axisTick: { show: true, lineStyle: { color: colors.axiscolor } },
+        // No axis line/ticks (measured Plotly's own violin x-axis via its _fullLayout:
+        // showline: false, ticks: ""; only the tick label text is shown). A full-width
+        // axis line plus tick marks under every row read far more present/"brighter"
+        // than Plotly's bare label text, and was the main source of the axis-brightness
+        // mismatch.
+        axisLine: { show: false },
+        axisTick: { show: false },
         splitLine: { show: false },
       });
       yAxis.push({
@@ -750,7 +711,7 @@ class EchartsViolinPlot extends window.Plot {
     // sample -> [[seriesIndex, dataIndex], ...] across every scatter series, for the
     // cross-row highlight wired in afterPlotCreated().
     const sampleIndexMap = {};
-    const scatterOffset = violinSeries.length + annotationSeries.length;
+    const scatterOffset = violinSeries.length;
     scatterSeries.forEach((series, si) => {
       series.data.forEach((item, di) => {
         if (!sampleIndexMap[item.name]) sampleIndexMap[item.name] = [];
@@ -760,7 +721,7 @@ class EchartsViolinPlot extends window.Plot {
     this._sampleIndexMap = sampleIndexMap;
     this._sampleTooltipData = sampleTooltipData;
 
-    return violinSeries.concat(annotationSeries, scatterSeries);
+    return violinSeries.concat(scatterSeries);
   }
 
   // grid/xAxis/yAxis/title are rebuilt wholesale from the live metric list in
@@ -795,11 +756,11 @@ class EchartsViolinPlot extends window.Plot {
       moveOnMouseWheel: false,
       // filterMode: "none" (default is "filter"): ECharts' default dataZoom behavior
       // REMOVES a series' data points once their x-value falls outside the zoomed range,
-      // which for the violin/annotation custom series (each a dummy data: [0], not a
-      // real x-coordinate; their renderItems draw from closure state, not from that data
-      // value) makes ECharts drop the whole row's polygon/annotation the moment a zoom
-      // narrows the axis so 0 falls outside it. "none" zooms the axis view without
-      // filtering any series data (mirrors violin.py::layout_option).
+      // which for the violin custom series (a dummy data: [0], not a real x-coordinate;
+      // its renderItem draws from closure state, not from that data value) makes ECharts
+      // drop the whole row's polygon the moment a zoom narrows the axis so 0 falls
+      // outside it. "none" zooms the axis view without filtering any series data
+      // (mirrors violin.py::layout_option).
       filterMode: "none",
     }));
 
