@@ -46,12 +46,23 @@ _plotly_checked = False
 
 
 def _ensure_plotly() -> None:
+    """Verify Plotly is installed and version-compatible before the Plotly path runs.
+    Raises ImportError (not sys.exit) when Plotly is absent, so callers such as
+    Plot.show() can catch it and fall back to the ECharts static renderer."""
     global _plotly_checked
-    if not _plotly_checked:
-        from multiqc.plots.utils import check_plotly_version
+    if _plotly_checked:
+        return
+    try:
+        import plotly  # noqa: F401
+    except ImportError as e:
+        raise ImportError(
+            "Plotly is not installed. Install it with: pip install 'multiqc[plotly]', "
+            "or use the default ECharts plotting engine."
+        ) from e
+    from multiqc.plots.utils import check_plotly_version
 
-        check_plotly_version()
-        _plotly_checked = True
+    check_plotly_version()
+    _plotly_checked = True
 
 
 def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
