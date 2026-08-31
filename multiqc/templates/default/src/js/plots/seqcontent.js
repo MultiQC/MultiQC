@@ -99,6 +99,15 @@ class SeqContentPlot extends Plot {
     this.layout.yaxis.tickvals = [...Array(nSamples).keys()];
     this.layout.yaxis.ticktext = sampleSettings.map((s) => s.name);
 
+    // Image traces default to an equal-aspect y axis via yaxis.scaleanchor="x" (1 data
+    // unit == 1 screen px on both axes), which on a ~34-row x ~1565-col image would
+    // render a thin unreadable strip. `false` (NOT null/undefined, which plotly.js
+    // silently ignores and re-defaults back to "x") clears that coupling, letting both
+    // axes fill their own domain independently, same as any ordinary 2-axis plot: the
+    // full view fills the container, and box-zoom/pan/reset all "just work" with a
+    // single native relayout, no follow-up correction pass needed.
+    this.layout.yaxis.scaleanchor = false;
+
     this._updateYTicks(sampleSettings);
 
     let trace = {
@@ -168,40 +177,7 @@ class SeqContentPlot extends Plot {
     return csv;
   }
 
-  // Image traces lock the y axis to an equal-aspect "1 data unit == 1 screen px in
-  // both axes" via yaxis.scaleanchor, and that coupling cannot be cleared (verified
-  // against plotly.js 3.1.2: setting scaleanchor to null/false in the layout, at
-  // creation or via a later relayout, is silently overwritten back to "x"). The
-  // supported knob to distort that forced aspect is yaxis.scaleratio, which we set
-  // to exactly the ratio that makes both axis domains fill the whole plot area, so
-  // the image stretches to fill like the old canvas instead of leaving a
-  // letterboxed strip.
-  fixAspectRatio() {
-    const gd = document.getElementById(this.anchor);
-    if (!gd || !gd._fullLayout) return;
-    const fl = gd._fullLayout;
-    if (!fl.xaxis || !fl.yaxis || !fl._size || !fl._size.w || !fl._size.h) return;
-
-    const xRange = Math.abs(fl.xaxis.range[1] - fl.xaxis.range[0]);
-    const yRange = Math.abs(fl.yaxis.range[1] - fl.yaxis.range[0]);
-    if (!xRange || !yRange) return;
-
-    const scaleratio = (fl._size.h / fl._size.w) * (xRange / yRange);
-    if (Math.abs((fl.yaxis.scaleratio ?? 1) - scaleratio) < 0.01) return;
-
-    this.layout.yaxis.scaleratio = scaleratio;
-    Plotly.relayout(this.anchor, { "yaxis.scaleratio": scaleratio });
-  }
-
   afterPlotCreated() {
-    this.fixAspectRatio();
-    if (!this._resizeListenerBound) {
-      this._resizeListenerBound = true;
-      window.addEventListener("resize", () => {
-        clearTimeout(this._resizeTimer);
-        this._resizeTimer = setTimeout(() => this.fixAspectRatio(), 100);
-      });
-    }
     this.bindDrilldownControls();
     const gd = document.getElementById(this.anchor);
     if (gd) {
@@ -259,16 +235,6 @@ class SeqContentPlot extends Plot {
           }
         });
       }
-      if (!this._relayoutListenerBound) {
-        this._relayoutListenerBound = true;
-        // Box-drag zoom and double-click-to-reset both fire plotly_relayout with new
-        // axis ranges. Recompute scaleratio for whatever range is on screen now, so
-        // the zoomed-in view (or the reset full view) stretches to fill instead of
-        // the aspect lock leaving a letterboxed strip. fixAspectRatio() is a no-op
-        // once the ratio already matches (see its threshold check), so this can't
-        // loop against the Plotly.relayout call it makes itself.
-        gd.on("plotly_relayout", () => this.fixAspectRatio());
-      }
     }
   }
 
@@ -281,7 +247,6 @@ class SeqContentPlot extends Plot {
       this._updateYTicks(this.filtSampleSettings);
     }
     super.resize(newHeight, newWidth);
-    setTimeout(() => this.fixAspectRatio(), 0);
   }
 
   // ---------------------------------------------------------------------------------
