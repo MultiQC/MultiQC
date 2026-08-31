@@ -501,6 +501,13 @@ class SeqContentPlot(Plot[Dataset, SeqContentConfig]):
         )
 
         model.layout.update(
+            xaxis=dict(
+                # Positions start at 1 (image trace x0=1, dx=1): block box-zoom/pan from
+                # showing negative x (Item 3). Unlike autorangeoptions.minallowed (which
+                # only clamps the autorange calculation), a top-level minallowed is a
+                # hard pan/zoom limit (plotly.js 2.18+).
+                minallowed=0,
+            ),
             yaxis=dict(
                 tickmode="array",
                 tickvals=list(range(n_samples)),

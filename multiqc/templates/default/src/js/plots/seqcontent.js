@@ -205,13 +205,58 @@ class SeqContentPlot extends Plot {
     this.bindDrilldownControls();
     const gd = document.getElementById(this.anchor);
     if (gd) {
+      if (!this._cursorStyleInjected) {
+        this._cursorStyleInjected = true;
+        // Item 4: this heatmap's primary interaction is click-to-drill-down, so hint
+        // that with a pointer cursor instead of Plotly's default crosshair, scoped to
+        // this plot's drag layer only (never other Plotly plots on the page).
+        const style = document.createElement("style");
+        style.textContent = `#${this.anchor} .nsewdrag { cursor: pointer !important; }`;
+        document.head.appendChild(style);
+      }
       if (!this._clickListenerBound) {
         this._clickListenerBound = true;
+        // Item 2: a plain click drills down, but a double-click fires TWO plotly_click
+        // events (one per physical click) plus a plotly_doubleclick, in no guaranteed
+        // order relative to that second plotly_click (observed: doubleclick can arrive
+        // either just before or just after it). So cancelling only "if a timer is
+        // still pending" is not enough: when plotly_doubleclick happens to fire first
+        // and clears the timer, the following plotly_click sees no timer and starts a
+        // brand new one, drilling down late anyway. Instead, track wall-clock time
+        // between clicks ourselves: any click arriving within the debounce window of
+        // the previous one is part of a double-click and is never scheduled, however
+        // the two events happened to interleave. The window is kept comfortably above
+        // Plotly's own config.doubleClickDelay (300ms default) so its double-click
+        // detection always resolves first.
+        const DRILLDOWN_DEBOUNCE_MS = 400;
         gd.on("plotly_click", (data) => {
           if (!data.points || data.points.length === 0) return;
+          const now = performance.now();
+          const isDoubleClickPair =
+            this._ddLastClickTime !== undefined && now - this._ddLastClickTime < DRILLDOWN_DEBOUNCE_MS;
+          this._ddLastClickTime = now;
+          if (isDoubleClickPair) {
+            // Second click of a double-click: cancel any pending drilldown and let
+            // Plotly's own zoom-reset happen instead.
+            if (this._ddClickTimer) {
+              clearTimeout(this._ddClickTimer);
+              this._ddClickTimer = null;
+            }
+            return;
+          }
           // go.Image traces default to y0=0, dy=1: the clicked point's y is the row
           // index (0-based) into the SAME toolbox-filtered rows buildTraces() drew.
-          this.openDrilldown(Math.round(data.points[0].y));
+          const rowIdx = Math.round(data.points[0].y);
+          this._ddClickTimer = setTimeout(() => {
+            this._ddClickTimer = null;
+            this.openDrilldown(rowIdx);
+          }, DRILLDOWN_DEBOUNCE_MS);
+        });
+        gd.on("plotly_doubleclick", () => {
+          if (this._ddClickTimer) {
+            clearTimeout(this._ddClickTimer);
+            this._ddClickTimer = null;
+          }
         });
       }
       if (!this._relayoutListenerBound) {
