@@ -84,6 +84,10 @@ import "./plots/box.js";
 // Plotly subplot per metric row, which has no ECharts equivalent (a single value-axis
 // grid is used instead). See ./plots/violin.js for the full rationale.
 import "./plots/violin.js";
+// "seqcontent" (Phase 2, Task 2.2): same extends-the-default-class strategy as
+// bar/line/scatter/box above (default seqcontent.js has no top-level Plotly handler).
+import "../../../default/src/js/plots/seqcontent.js";
+import "./plots/seqcontent.js";
 
 // AI features
 import "../../../default/src/js/ai-helpers.js";
