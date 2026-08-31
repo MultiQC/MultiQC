@@ -848,6 +848,46 @@ for line in f.splitlines():
     ...  # rest of file parsing
 ```
 
+#### Adding license and DOI information
+
+To make reports more FAIR compliant, the _Software Versions_ section can also
+show the software license and citation DOI(s) as extra columns. This
+information is hardcoded in the module, either in the module constructor (in
+which case it applies to the module's software) or per software in the
+`self.add_software_version()` call.
+
+The DOI is taken from the `doi` argument that modules already pass to the
+constructor. The license is added with the `license` and `license_url`
+arguments:
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://github.com/example/toolname",
+    info="Universal RNA-seq aligner.",
+    doi="10.1093/bioinformatics/bts635",
+    license="MIT License",
+    license_url="https://github.com/example/toolname/blob/master/LICENSE",
+)
+```
+
+When a module reports versions for several tools, the license and DOI can be
+set separately for each of them:
+
+```python
+self.add_software_version(
+    version.group(1),
+    sample=f["s_name"],
+    software_name="htslib",
+    license="MIT License",
+    doi="10.1093/gigascience/giab007",
+)
+```
+
+The License and DOI columns are only shown when at least one software provides
+that information.
+
 Even if the logs does not contain any version information, you should still
 add a superfluous `self.add_software_version()` call to the module. This
 will help maintainers to check if new modules or submodules parse any version

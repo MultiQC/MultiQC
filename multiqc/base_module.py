@@ -59,6 +59,7 @@ from multiqc.types import (
     SectionAlert,
     SectionId,
     SectionKey,
+    SoftwareVersionMetadata,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,6 +105,8 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
     ):
         validation.reset()
 
@@ -151,6 +154,17 @@ class BaseMultiqcModule:
                 self.doi = [_cust_doi]
             elif isinstance(_cust_doi, list):
                 self.doi = [str(d) for d in _cust_doi]
+
+        # Software license, shown in the Software Versions section for FAIR reporting
+        self.license: Optional[str] = license
+        _cust_license = self.mod_cust_config.get("license")
+        if _cust_license is not None:
+            self.license = str(_cust_license)
+
+        self.license_url: Optional[str] = license_url
+        _cust_license_url = self.mod_cust_config.get("license_url")
+        if _cust_license_url is not None:
+            self.license_url = str(_cust_license_url)
 
         self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
@@ -1272,8 +1286,17 @@ class BaseMultiqcModule:
         version: Optional[str] = None,
         sample: Optional[str] = None,
         software_name: Optional[str] = None,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
     ):
-        """Save software versions for module."""
+        """
+        Save software versions for module.
+
+        ``license``, ``license_url`` and ``doi`` add FAIR metadata for the software,
+        shown as extra columns in the Software Versions section. When not given, they
+        default to the module-level ``license``, ``license_url`` and ``doi`` values.
+        """
         # Don't add if version is None. This allows every module to call this function
         # even those without a version to add. This is useful to check that all modules
         # are calling this function.
@@ -1292,6 +1315,10 @@ class BaseMultiqcModule:
         if software_name is None:
             software_name = self.name
 
+        # Register FAIR metadata (license, DOI) for the software, falling back to
+        # the module-level values when not provided explicitly.
+        self._add_software_metadata(software_name, license=license, license_url=license_url, doi=doi)
+
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise, use raw string is used for version.
         # - https://peps.python.org/pep-0440/
@@ -1307,6 +1334,42 @@ class BaseMultiqcModule:
         # Update version list for report section.
         group_name = self.name
         report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
+
+    def _add_software_metadata(
+        self,
+        software_name: str,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
+    ):
+        """
+        Register FAIR metadata (license, DOI) for a software in the Software Versions
+        section. Values not passed explicitly fall back to the module-level defaults.
+        """
+        license = license if license is not None else self.license
+        license_url = license_url if license_url is not None else self.license_url
+        if doi is None:
+            dois = list(self.doi)
+        elif isinstance(doi, str):
+            dois = [doi]
+        else:
+            dois = [str(d) for d in doi]
+        dois = [d for d in dois if d]
+
+        if license is None and license_url is None and not dois:
+            return
+
+        meta = report.software_versions_metadata[self.name].get(software_name)
+        if meta is None:
+            meta = SoftwareVersionMetadata()
+            report.software_versions_metadata[self.name][software_name] = meta
+        if license is not None:
+            meta.license = license
+        if license_url is not None:
+            meta.license_url = license_url
+        for d in dois:
+            if d not in meta.doi:
+                meta.doi.append(d)
 
     def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
         """Saves raw data to a dictionary for downstream use, then redirects
