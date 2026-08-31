@@ -82,14 +82,6 @@ silently glossed over:
   and return a Plotly `go.Figure` object regardless of `config.plotting_engine`, so scripts
   or notebooks that call them will always see a Plotly figure, even when
   `--template echarts` is used elsewhere in the run.
-- **Two modules ship their own JavaScript that calls Plotly directly**: FastQC and
-  DRAGEN FastQC each have a per-base-sequence-quality heatmap cell-click popup implemented
-  as custom module JS that calls `Plotly.newPlot(...)`. Because the echarts template does
-  not load Plotly, clicking that cell throws an error instead of showing the popup. This is
-  a deliberate product decision (fixing it would mean either loading a Plotly shim just for
-  these two modules, or porting the popups to ECharts, both of which conflict with keeping
-  module changes minimal) and is called out here as a known limitation rather than fixed
-  silently.
 - **Toolbox highlight does not recolor sample axis tick labels.** Plotly colors the sample
   names on the axis itself when a highlight pattern matches; ECharts ignores the
   `tickvals`/`ticktext` styling Plotly uses for this, so axis labels stay their normal color.
@@ -121,9 +113,8 @@ silently glossed over:
   that silently does nothing, heatmap keeps its pre-existing no-zoom state. Also disabled
   outright, matching Plotly (its axes aren't real data coordinates): violin plots.
 
-None of the above are silent: PDF export logs a warning, and the notebook/module-JS
-limitations are documented here since there is nowhere sensible to log them at the point a
-user hits them.
+None of the above are silent: PDF export logs a warning, and the notebook limitation is
+documented here since there is nowhere sensible to log it at the point a user hits it.
 
 ## Rebuilding the JavaScript bundles
 

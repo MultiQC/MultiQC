@@ -4,7 +4,8 @@
 
 ### Feature updates and improvements
 
-- Plots: Add a new ECharts plotting engine as an alternative to Plotly, selected with `--template echarts`. All 7 plot types (bar, line, scatter, box, violin, heatmap, general stats) render through it, with the same toolbox, switches and export features as the default Plotly-based template; module code needs no changes to support it. Static image export under this template needs `pip install 'multiqc[echarts]'`. See the template's README and the plots development docs for the small number of known differences from Plotly (PDF export, the notebook `Plot.show()`/`Plot.save()` API, and a couple of module-specific Plotly popups).
+- Plots: Add a new ECharts plotting engine as an alternative to Plotly, selected with `--template echarts`. All 7 plot types (bar, line, scatter, box, violin, heatmap, general stats) render through it, with the same toolbox, switches and export features as the default Plotly-based template; module code needs no changes to support it. Static image export under this template needs `pip install 'multiqc[echarts]'`. See the template's README and the plots development docs for the small number of known differences from Plotly (PDF export and the notebook `Plot.show()`/`Plot.save()` API).
+- Plots: FastQC and DRAGEN-FastQC per-base sequence content is now a first-class plot type (`multiqc.plots.seqcontent`), rendering as an RGB heatmap on both the default Plotly template and the `--template echarts` template, with a native hover tooltip and click-to-drilldown into a per-sample line plot. This replaces the old hand-written canvas JavaScript shipped by those two modules, so the heatmap now works consistently under ECharts too. ([#1102](https://github.com/MultiQC/MultiQC/issues/1102))
 
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
 

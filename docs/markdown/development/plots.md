@@ -983,6 +983,47 @@ pconfig = {
 }
 ```
 
+## Sequence content
+
+Sequence content plots render a per-base-position heatmap, one row per sample, where each
+cell is coloured from the relative proportion of A/C/G/T bases at that position (red for T,
+green for A, blue for C, with G implied by the complement of the other three). This is the
+plot type used for per-base sequence content reports, such as those produced by tools like
+FastQC. It renders as an RGB image on both the default Plotly template and
+`--template echarts`, with a native hover tooltip showing the base percentages, and a
+click-to-drilldown into a line plot of the clicked sample's per-base composition.
+
+Data is a dict of sample name to a dict of position label to base percentages. Position
+labels are strings, either a single position (`"1"`) or an inclusive range (`"10-14"`), and
+values are percentages in the range 0 to 100 for each of the four bases:
+
+```python
+from multiqc.plots import seqcontent
+
+data = {
+    "sample 1": {
+        "1": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+        "2": {"a": 30.0, "c": 20.0, "g": 20.0, "t": 30.0},
+        "3-10": {"a": 24.5, "c": 25.5, "g": 25.5, "t": 24.5},
+    },
+    "sample 2": {
+        "1": {"a": 26.0, "c": 24.0, "g": 24.0, "t": 26.0},
+        "2": {"a": 28.0, "c": 22.0, "g": 22.0, "t": 28.0},
+        "3-10": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+    },
+}
+pconfig = {
+    "id": "toolname_seqcontent_plot",
+    "title": "toolname: Per Base Sequence Content",
+}
+html = seqcontent.plot(data, pconfig)
+```
+
+The function accepts the usual `id`, `title` and `height` config options common to all plot
+types, plus `xlab` (defaults to `"Position (bp)"`). There is no separate `zlab` or colour
+scale option: the RGB colouring is a fixed convention (matching FastQC's own), not a
+configurable heatmap colour axis.
+
 ## Interactive / Flat image plots
 
 Note that the all plotting functions except for `table` can generate both interactive
