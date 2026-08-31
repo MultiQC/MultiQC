@@ -28,6 +28,12 @@ jobs:
         working-directory: multiqc/templates/echarts
         run: npm ci
 
+      # echarts reuses the default template's main.scss, which imports Bootstrap
+      # from default/node_modules, so the default template's deps are needed too.
+      - name: "Install default template dependencies"
+        working-directory: multiqc/templates/default
+        run: npm ci
+
       - name: "Build vendored ECharts bundle"
         working-directory: multiqc/templates/echarts
         run: npm run build:echarts

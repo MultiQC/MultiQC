@@ -7,7 +7,7 @@ fixture in `tests/conftest.py` resets `config`/`report` after every test.
 
 import json
 import math
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 
 import multiqc
 from multiqc import config, report
@@ -213,6 +213,7 @@ def test_interactive_plot_title_strips_html():
         ["Cat1"],
         bargraph.BarPlotConfig(id="bargraph_title", title="Foo Bar<br><sup>42 things</sup>"),
     )
+    assert isinstance(plot, bargraph.BarPlot)  # narrow BarPlot | str | None for mypy
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
     dumped = report.plot_data[plot.anchor]
@@ -639,6 +640,7 @@ def _colorscale_colors_for(colstops, reverse_colors=False):
             reverse_colors=reverse_colors,
         ),
     )
+    assert isinstance(plot, heatmap.HeatmapPlot)  # narrow HeatmapPlot | str | None for mypy
     return echarts.heatmap._colorscale_colors(plot.datasets[0])
 
 
@@ -713,7 +715,7 @@ def test_get_option_heatmap_clustered_switch_uses_clustered_categories():
 # `multiqc/templates/echarts/src/js/plots/box.js`. The JS `fiveNumberSummary()`/
 # `outliers()` port must produce the same output for the same input (checked manually:
 # there is no JS unit-test runner in this repo).
-_GOLDEN_BOX_VALUES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100]
+_GOLDEN_BOX_VALUES: List[Union[int, float]] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100]
 _GOLDEN_FIVE_NUMBER_SUMMARY = [1.0, 3.5, 6.0, 8.5, 10.0]
 _GOLDEN_OUTLIERS = [100.0]
 
