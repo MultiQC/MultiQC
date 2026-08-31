@@ -6,6 +6,10 @@
 The main MultiQC report template, lovingly known to its admirers
 simply as "default"
 
+Renders plots with Apache ECharts (browserless, no extra dependencies for
+interactive or static/flat export). For interactive Plotly plots instead, use
+the 'plotly' template (`multiqc --template plotly`, requires `multiqc[plotly]`).
+
 Note, this is where most of the MultiQC report interactive functionality
 is based and will be developed. Unless you want to do some really radical
 changes, you probably don't want to replace this theme. Instead, you can
@@ -21,3 +25,6 @@ import os
 
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
+
+# Template configuration - overrides user config
+plotting_engine = "echarts"

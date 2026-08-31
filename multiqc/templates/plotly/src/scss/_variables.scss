@@ -1,0 +1,8 @@
+// Bootstrap variables that build on others
+// These won't cascade, but can use other variables
+
+$code-color: $body-secondary-color;
+$code-color-dark: $body-secondary-color-dark;
+
+// Don't use semi-transparent toast background colours
+$toast-background-color: var(--#{$prefix}body-bg);

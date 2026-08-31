@@ -297,6 +297,7 @@ xenome = "multiqc.modules.xenome:MultiqcModule"
 
 [project.entry-points."multiqc.templates.v1"]
 default = "multiqc.templates.default"
+plotly = "multiqc.templates.plotly"
 original = "multiqc.templates.original"
 sections = "multiqc.templates.sections"
 simple = "multiqc.templates.simple"

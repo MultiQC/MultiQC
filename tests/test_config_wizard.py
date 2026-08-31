@@ -243,22 +243,25 @@ def test_config_defaults_keys_are_in_schema():
     )
 
 
-def test_update_config_plotting_engine_stays_plotly_for_existing_templates():
-    """`update_config` loads the resolved template module and, if it defines a
-    `plotting_engine` attribute, applies it to `config.plotting_engine` (this is
-    the wiring the upcoming `echarts` template relies on: its `__init__.py` sets
-    `plotting_engine = "echarts"`). None of the templates that exist today
-    (`default`, `disco`, `simple`, ...) define that attribute, so `hasattr` is
-    False for all of them and `config.plotting_engine` must stay at its default
-    of `"plotly"`. This is the direct regression test for the top Phase 0 risk:
-    that the attribute is applied before plot serialization, in
-    `update_config.py`, not in `write_results.py`.
-    """
+def test_update_config_resolves_plotting_engine_from_template():
+    """`update_config` resolves `config.plotting_engine` from the selected template,
+    walking its `template_parent` chain so children inherit their parent's engine.
+    The `default` template renders ECharts; the `plotly` template and the Plotly-based
+    templates (`original` and its children, `disco`) render Plotly. This resolution must
+    happen before plot serialization, in `update_config.py` (not `write_results.py`,
+    which runs after)."""
     from multiqc.core.update_config import ClConfig, update_config
 
-    for template in ("default", "disco", "simple"):
+    expected = {
+        "default": "echarts",  # default renders ECharts
+        "echarts": "echarts",
+        "plotly": "plotly",  # explicit Plotly template
+        "disco": "plotly",  # child of `plotly`
+        "simple": "plotly",  # child of `original` (Plotly)
+        "sections": "plotly",  # child of `original`
+    }
+    for template, engine in expected.items():
         update_config(cfg=ClConfig(template=template))
-        assert config.plotting_engine == "plotly", (
-            f"config.plotting_engine became {config.plotting_engine!r} for template {template!r}, "
-            "but no template that exists yet defines a plotting_engine attribute"
+        assert config.plotting_engine == engine, (
+            f"template {template!r} resolved to engine {config.plotting_engine!r}, expected {engine!r}"
         )

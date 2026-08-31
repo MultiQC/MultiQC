@@ -1,0 +1,46 @@
+<!-- About -->
+<div class="tab-pane" id="mqc_about" role="tabpanel">
+  <h5 class="mb-3">About MultiQC</h5>
+  <p>This report was generated using MultiQC, version {{ config.version }}</p>
+  <div class="list-group mb-3">
+    <a
+      class="list-group-item list-group-item-action"
+      href="https://youtu.be/qPbIlO_KWN0?list=PLIA2-lqNuhvFGAsB92N0v7Qi5xCxCNsYM"
+      target="_blank"
+    >
+      <span class="me-2 text-red">{{ material_icon('mdi:youtube', 16) }}</span> Video: Using MultiQC Reports
+    </a>
+    <a class="list-group-item list-group-item-action" href="http://seqera.io/multiqc/?ref=mqc_report" target="_blank">
+      <span class="me-2" style="color: rgb(241, 128, 70);">{{ material_icon('mdi:home', 16) }}</span> MultiQC homepage
+    </a>
+    <a
+      class="list-group-item list-group-item-action"
+      href="http://docs.seqera.io/multiqc/?ref=mqc_report"
+      target="_blank"
+    >
+      <span class="me-2 text-info">{{ material_icon('mdi:book-open-page-variant', 16) }}</span> MultiQC documentation
+    </a>
+    <a class="list-group-item list-group-item-action" href="https://github.com/MultiQC/MultiQC" target="_blank">
+      <span class="me-2">{{ material_icon('mdi:github', 16) }}</span> Source code
+    </a>
+    <a class="list-group-item list-group-item-action" href="https://github.com/MultiQC/MultiQC/issues" target="_blank">
+      <span class="me-2 text-success">{{ material_icon('mdi:alert-circle-outline', 16) }}</span> Issue tracker
+    </a>
+  </div>
+  <p>MultiQC is published in Bioinformatics:</p>
+  <blockquote class="border-start border-2 ps-2 text-secondary">
+    <strong>MultiQC: Summarize analysis results for multiple tools and samples in a single report</strong><br />
+    <em>Philip Ewels, M&aring;ns Magnusson, Sverker Lundin and Max K&auml;ller</em><br />
+    Bioinformatics (2016)<br />
+    doi:
+    <a href="http://dx.doi.org/10.1093/bioinformatics/btw354" target="_blank">10.1093/bioinformatics/btw354</a><br />
+    PMID: <a href="http://www.ncbi.nlm.nih.gov/pubmed/27312411" target="_blank">27312411</a>
+  </blockquote>
+
+  <p>MultiQC is developed by Seqera.</p>
+  <p>
+    <a href="https://seqera.io" target="_blank" class="seqera-logo d-block text-center px-5 py-2">
+      {{ include_file('assets/img/Seqera_logo.svg') }}
+    </a>
+  </p>
+</div>

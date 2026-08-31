@@ -260,13 +260,19 @@ def test_interactive_plot_adds_echarts_key_for_line_plot():
     assert "series" not in skeleton
 
 
-def test_interactive_plot_omits_echarts_key_by_default():
-    assert config.plotting_engine == "plotly"
+def test_interactive_plot_includes_echarts_key_by_default():
+    # ECharts is the default engine now, so the serialized payload carries the echarts key.
+    assert config.plotting_engine == "echarts"
     plot = _make_bar_plot()
     plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+    assert "echarts" in report.plot_data[plot.anchor]
 
-    dumped = report.plot_data[plot.anchor]
-    assert "echarts" not in dumped
+
+def test_interactive_plot_omits_echarts_key_for_plotly_engine():
+    config.plotting_engine = "plotly"
+    plot = _make_bar_plot()
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+    assert "echarts" not in report.plot_data[plot.anchor]
 
 
 def test_get_option_series_length_matches_categories():

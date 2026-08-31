@@ -133,7 +133,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         # `cfg.template` is a `str` from click; click.Choice already
         # validated it against the available template names.
         config.template = cast(
-            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco", "echarts"],
+            Literal["default", "plotly", "original", "simple", "sections", "gathered", "geo", "disco", "echarts"],
             cfg.template,
         )
     if cfg.title is not None:
@@ -185,9 +185,19 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     # happen here, before `render_and_export_plots` serializes plots, and not in
     # `write_results.py` (where `template_dark_mode` is applied), because that runs
     # after plot serialization.
-    template_mod = config.avail_templates[config.template].load()
-    if hasattr(template_mod, "plotting_engine"):
-        config.plotting_engine = template_mod.plotting_engine
+    # Walk the template's `template_parent` chain so a child template inherits its
+    # parent's plotting engine (e.g. `sections` -> `original` -> "plotly", `disco` ->
+    # `plotly` -> "plotly"). The first template in the chain that declares
+    # `plotting_engine` wins; otherwise the config default is kept.
+    _tmpl_name: Optional[str] = config.template
+    _seen: set = set()
+    while _tmpl_name and _tmpl_name not in _seen and _tmpl_name in config.avail_templates:
+        _seen.add(_tmpl_name)
+        _mod = config.avail_templates[_tmpl_name].load()
+        if hasattr(_mod, "plotting_engine"):
+            config.plotting_engine = _mod.plotting_engine
+            break
+        _tmpl_name = getattr(_mod, "template_parent", None)
     if config.plotting_engine not in ("plotly", "echarts"):
         raise ValueError(
             f"Invalid config.plotting_engine value {config.plotting_engine!r}, expected 'plotly' or 'echarts'"
