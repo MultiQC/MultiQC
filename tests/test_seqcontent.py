@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import pytest
 
+from multiqc import report
 from multiqc.core.special_case_modules.load_multiqc_data import create_plot_input_data_only
 from multiqc.plots import seqcontent
 from multiqc.plots.seqcontent import (
@@ -10,7 +11,7 @@ from multiqc.plots.seqcontent import (
     _parse_bin_label,
     bin_rgb,
 )
-from multiqc.types import PlotType
+from multiqc.types import Anchor, PlotType
 
 
 def _fastqc_shaped_data():
@@ -177,3 +178,75 @@ def test_static_export_sets_yaxis_scaleratio_to_stretch_image():
     fig = plot.get_figure(0, flat=True)
     assert fig.layout.yaxis.scaleratio is not None
     assert fig.layout.yaxis.scaleratio > 0
+
+
+# --------------------------------------------------------------------------------------
+# T3.1: click-to-drilldown (BUILD_PLAN.md section 1.6, option B)
+# --------------------------------------------------------------------------------------
+
+
+def test_dump_contains_drilldown_anchor():
+    plot = seqcontent.plot(_fastqc_shaped_data(), {"id": "dd_dump_test", "title": "Drilldown dump test"})
+    assert isinstance(plot, SeqContentPlot)
+    assert plot.drilldown_anchor
+    dump = plot.model_dump(warnings=False)
+    assert dump["drilldown_anchor"] == plot.drilldown_anchor
+
+
+def test_add_to_report_registers_aux_lineplot_in_plot_data():
+    plot = seqcontent.plot(_fastqc_shaped_data(), {"id": "dd_report_test", "title": "Drilldown report test"})
+    assert isinstance(plot, SeqContentPlot)
+
+    plot.add_to_report(module_anchor=Anchor("mod"), section_anchor=Anchor("sec"))
+
+    assert plot.drilldown_anchor is not None
+    dd_anchor = Anchor(plot.drilldown_anchor)
+    assert dd_anchor in report.plot_data
+    dd_dump = report.plot_data[dd_anchor]
+    assert dd_dump["plot_type"] == "x/y line"
+    assert len(dd_dump["datasets"]) == 1
+    assert len(dd_dump["datasets"][0]["lines"]) == 4
+    assert [line["name"] for line in dd_dump["datasets"][0]["lines"]] == ["% T", "% C", "% A", "% G"]
+
+
+def test_aux_plot_writes_no_data_file_and_no_parquet_row(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "multiqc.plots.plot.plot_data_store.append_to_parquet",
+        lambda df: calls.append(df),
+    )
+    write_data_file_calls = []
+    monkeypatch.setattr(
+        "multiqc.report.write_data_file",
+        lambda data, uid, *args, **kwargs: write_data_file_calls.append(uid),
+    )
+
+    plot = seqcontent.plot(_fastqc_shaped_data(), {"id": "dd_nofile_test", "title": "No file test"})
+    assert isinstance(plot, SeqContentPlot)
+
+    # Only the main SeqContentPlot's input data is saved to parquet; the aux LinePlot is
+    # built via LinePlot.create() directly (not from_inputs()), so it never calls
+    # save_to_parquet() itself.
+    assert len(calls) == 1
+
+    # save_data_files() (called by write_results.py for report-registered plots only)
+    # only touches the SeqContentPlot's own datasets, never the aux plot's.
+    plot.save_data_files()
+    assert write_data_file_calls == [plot.id]
+
+
+def test_flat_mode_emits_no_drilldown_html(monkeypatch):
+    plot = seqcontent.plot(_fastqc_shaped_data(), {"id": "dd_flat_test", "title": "Flat test"})
+    assert isinstance(plot, SeqContentPlot)
+    plot.flat = True
+    # Avoid a real kaleido static-export round trip (flaky/unavailable in CI sandboxes,
+    # see test_plots.py::test_flat_plot); only add_to_report()'s drilldown-block guard is
+    # under test here, not flat_plot() itself.
+    monkeypatch.setattr(SeqContentPlot, "flat_plot", lambda self, *args, **kwargs: "<div>flat-plot</div>")
+
+    html = plot.add_to_report(module_anchor=Anchor("mod"), section_anchor=Anchor("sec"))
+
+    assert "drilldown_wrapper" not in html
+    assert "flat-plot" in html
+    assert plot.drilldown_anchor is not None
+    assert Anchor(plot.drilldown_anchor) not in report.plot_data

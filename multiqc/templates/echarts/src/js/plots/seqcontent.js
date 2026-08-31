@@ -90,8 +90,24 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
     };
   }
 
-  // No click/drilldown here (Phase 3); afterPlotCreated() left as the inherited no-op
-  // from echarts-plotting.js's Plot base class, a clean seam for T3.1 to fill in.
+  // T3.1 click-to-drilldown: bind ECharts' click event to the SAME openDrilldown()/
+  // bindDrilldownControls() shared logic defined on window.SeqContentPlot (the default
+  // template's class, our superclass here) -- no swap/show/render logic duplicated.
+  // Custom-series click data items are `[start, end, row, r, g, b]` (buildSeries()
+  // above), so params.data[2] is the row index into the SAME toolbox-filtered rows
+  // prepData() computed for this render.
+  afterPlotCreated() {
+    this.bindDrilldownControls();
+    // this.chart persists across re-renders (echarts-plotting.js's renderPlot() only
+    // creates it once), so the click listener must be bound once too, not on every
+    // afterPlotCreated() call (which would stack duplicate handlers).
+    if (this._chartClickBound) return;
+    this._chartClickBound = true;
+    this.chart.on("click", (params) => {
+      if (params.componentType !== "series" || !Array.isArray(params.data)) return;
+      this.openDrilldown(params.data[2]);
+    });
+  }
 }
 
 // Make EchartsSeqContentPlot globally available (referenced by bare

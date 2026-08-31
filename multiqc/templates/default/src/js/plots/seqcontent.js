@@ -7,6 +7,15 @@ function seqContentBinRgb(bin) {
 }
 
 class SeqContentPlot extends Plot {
+  constructor(dump) {
+    super(dump);
+    // Anchor of the auxiliary per-sample line plot built by
+    // SeqContentPlot._build_drilldown_plot() (multiqc/plots/seqcontent.py), registered
+    // in mqc_plots like any other plot. Absent (null) for flat reports: add_to_report()
+    // skips the drilldown block entirely when self.flat.
+    this.drilldownAnchor = dump["drilldown_anchor"] ?? null;
+  }
+
   activeDatasetSize() {
     if (this.datasets.length === 0) return 0; // no datasets
     return this.datasets[this.activeDatasetIdx].samples.length; // no samples
@@ -19,6 +28,10 @@ class SeqContentPlot extends Plot {
     let sampleSettings = applyToolboxSettings(dataset.samples);
     let rows = dataset.rows.filter((row, idx) => !sampleSettings[idx].hidden);
     this.filtSampleSettings = sampleSettings.filter((s) => !s.hidden);
+    // Stashed for the drilldown (row index -> sample, Prev/Next): kept in lockstep with
+    // filtSampleSettings, recomputed on every render so toolbox hide/rename/highlight
+    // changes are reflected immediately, even while the drilldown is open.
+    this._ddRows = rows;
 
     return [this.filtSampleSettings, rows];
   }
@@ -174,11 +187,103 @@ class SeqContentPlot extends Plot {
         this._resizeTimer = setTimeout(() => this.fixAspectRatio(), 100);
       });
     }
+    this.bindDrilldownControls();
+    if (!this._clickListenerBound) {
+      this._clickListenerBound = true;
+      const gd = document.getElementById(this.anchor);
+      if (gd) {
+        gd.on("plotly_click", (data) => {
+          if (!data.points || data.points.length === 0) return;
+          // go.Image traces default to y0=0, dy=1: the clicked point's y is the row
+          // index (0-based) into the SAME toolbox-filtered rows buildTraces() drew.
+          this.openDrilldown(Math.round(data.points[0].y));
+        });
+      }
+    }
   }
 
   resize(newHeight, newWidth) {
     super.resize(newHeight, newWidth);
     setTimeout(() => this.fixAspectRatio(), 0);
+  }
+
+  // ---------------------------------------------------------------------------------
+  // Click-to-drilldown (T3.1, BUILD_PLAN.md section 1.6, option B). Shared logic: this
+  // default-template class's methods are reused as-is by the echarts subclass
+  // (EchartsSeqContentPlot extends window.SeqContentPlot), which only overrides
+  // afterPlotCreated() to bind its own chart.on("click") instead of plotly_click.
+  // ---------------------------------------------------------------------------------
+
+  // jQuery wrapper for the standard `.mqc_hcplot_plotgroup` div that interactive_plot()
+  // wraps every plot in (control panel + plot + "Created with MultiQC" footer): hiding/
+  // showing this whole group is the "overview" side of the show/hide toggle.
+  _overviewGroupDiv() {
+    return $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
+  }
+
+  // Map a clicked/current row index (into the toolbox-filtered sample list) to that
+  // sample's bins, rewrite the aux line plot's pairs and title, and render it.
+  openDrilldown(rowIdx) {
+    if (!this.drilldownAnchor) return; // flat report: no drilldown wrapper in the HTML
+    if (!this.filtSampleSettings || rowIdx < 0 || rowIdx >= this.filtSampleSettings.length) return;
+    this._ddRowIdx = rowIdx;
+    this._renderDrilldown();
+  }
+
+  stepDrilldown(direction) {
+    if (!this.filtSampleSettings || this.filtSampleSettings.length === 0) return;
+    let n = this.filtSampleSettings.length;
+    this._ddRowIdx = ((((this._ddRowIdx ?? 0) + direction) % n) + n) % n;
+    this._renderDrilldown();
+  }
+
+  closeDrilldown() {
+    $("#" + this.anchor + "_drilldown_wrapper").hide();
+    this._overviewGroupDiv().show();
+  }
+
+  _renderDrilldown() {
+    let ddPlot = mqc_plots[this.drilldownAnchor];
+    if (!ddPlot) return;
+    let sampleSetting = this.filtSampleSettings[this._ddRowIdx];
+    let bins = [...this._ddRows[this._ddRowIdx]].sort((a, b) => a.start - b.start);
+
+    // Series order fixed at creation time (multiqc/plots/seqcontent.py::_DRILLDOWN_SERIES):
+    // % T, % C, % A, % G.
+    const baseKeys = ["t", "c", "a", "g"];
+    let dataset = ddPlot.datasets[0];
+    dataset.lines.forEach((line, i) => {
+      line.pairs = bins.map((b) => [b.start, b[baseKeys[i]]]);
+    });
+
+    let title = sampleSetting.name;
+    // The default (Plotly) template's renderPlot() does
+    // `updateObject(plot.layout, dataset.layout, false)` on every render, which
+    // unconditionally overwrites plot.layout.title with dataset.layout.title; both have
+    // to be updated or the dataset-level (stale) title wins.
+    ddPlot.layout.title = ddPlot.layout.title || {};
+    ddPlot.layout.title.text = title;
+    dataset.layout.title = dataset.layout.title || {};
+    dataset.layout.title.text = title;
+    // ECharts skeleton (present when config.plotting_engine == "echarts"): each
+    // dataset's option is a self-contained clone, no plot-level merge to fight.
+    if (ddPlot.echarts) {
+      let ddLayout = ddPlot.echarts.datasets[0].layout;
+      ddLayout.title = ddLayout.title || {};
+      ddLayout.title.text = title;
+    }
+
+    this._overviewGroupDiv().hide();
+    $("#" + this.anchor + "_drilldown_wrapper").show();
+    window.renderPlot(this.drilldownAnchor);
+  }
+
+  bindDrilldownControls() {
+    if (this._drilldownBound || !this.drilldownAnchor) return;
+    this._drilldownBound = true;
+    $("#" + this.anchor + "_drilldown_back").on("click", () => this.closeDrilldown());
+    $("#" + this.anchor + "_drilldown_prev").on("click", () => this.stepDrilldown(-1));
+    $("#" + this.anchor + "_drilldown_next").on("click", () => this.stepDrilldown(1));
   }
 }
 

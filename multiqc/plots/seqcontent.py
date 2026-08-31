@@ -9,9 +9,10 @@ import numpy as np
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
-from pydantic import BaseModel
+from pydantic import BaseModel, PrivateAttr
 
 from multiqc import report
+from multiqc.plots.linegraph import LinePlot, LinePlotConfig, Series
 from multiqc.plots.plot import (
     BaseDataset,
     NormalizedPlotInputData,
@@ -369,14 +370,91 @@ class Dataset(BaseDataset):
         return prompt
 
 
+# Drilldown colorway (BUILD_PLAN.md section 1.6, option B), the old canvas drilldown's
+# exact colors (multiqc_fastqc.js:433): (series name, SeqContentBin field, color).
+_DRILLDOWN_SERIES: Tuple[Tuple[str, str, str], ...] = (
+    ("% T", "t", "#dc0000"),
+    ("% C", "c", "#0000dc"),
+    ("% A", "a", "#00dc00"),
+    ("% G", "g", "#404040"),
+)
+
+
+def _build_drilldown_plot(anchor: Anchor, samples: List[str], rows: List[List[SeqContentBin]]) -> LinePlot:
+    """
+    Build the ONE auxiliary line plot shared by the click-to-drilldown feature
+    (BUILD_PLAN.md section 1.6, option B): one dataset, four series (%T/%C/%A/%G),
+    pairs seeded from the FIRST sample. The client (seqcontent.js) rewrites the
+    pairs on row click. Built via LinePlot.create() directly (NOT from_inputs), so
+    it writes no parquet plot_input row and (since it's never registered in
+    report.plot_by_id) no data file either.
+    """
+    first_bins = rows[0] if rows else []
+    lines = [
+        Series(name=name, pairs=[(b.start, getattr(b, field)) for b in first_bins], color=color)
+        for name, field, color in _DRILLDOWN_SERIES
+    ]
+    dd_anchor = Anchor(report.save_htmlid(f"{anchor}_single"))
+    pconf = LinePlotConfig(
+        id=f"{anchor}_single",
+        title=samples[0] if samples else "",
+        xlab="Position (bp)",
+        ylab="% Reads",
+        ymin=0,
+        ymax=100,
+        showlegend=True,
+        # No "N samples" subtitle noise: the title is the single sample name, rewritten
+        # by the client on every row click (see seqcontent.js).
+        series_label=False,
+    )
+    return LinePlot.create(
+        lists_of_lines=[lines],
+        pconfig=pconf,
+        anchor=dd_anchor,
+        sample_names=[SampleName(s) for s in samples],
+    )
+
+
 class SeqContentPlot(Plot[Dataset, SeqContentConfig]):
     datasets: List[Dataset]
+    # Included in model_dump() so the client JS can look up the aux plot in report.plot_data.
+    drilldown_anchor: Optional[str] = None
+    # The aux LinePlot object itself: excluded from the dump (pydantic private attrs never
+    # serialize), only used internally by add_to_report() below.
+    _drilldown_plot: Optional[LinePlot] = PrivateAttr(default=None)
 
     def sample_names(self) -> List[SampleName]:
         names: List[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(s) for s in ds.samples)
         return names
+
+    def add_to_report(
+        self,
+        module_anchor: Anchor,
+        section_anchor: Anchor,
+        plots_dir_name: Optional[str] = None,
+    ) -> str:
+        html = super().add_to_report(module_anchor, section_anchor, plots_dir_name)
+        if self.flat or self._drilldown_plot is None:
+            return html
+
+        dd_html = self._drilldown_plot.interactive_plot(module_anchor, section_anchor)
+        back_id = f"{self.anchor}_drilldown_back"
+        prev_id = f"{self.anchor}_drilldown_prev"
+        next_id = f"{self.anchor}_drilldown_next"
+        html += f"""
+<div id="{self.anchor}_drilldown_wrapper" style="display:none">
+    <div class="d-flex gap-2 mb-2 align-items-center">
+        <button type="button" class="btn btn-primary btn-sm" id="{back_id}">Back to overview heatmap</button>
+        <div class="btn-group btn-group-sm" role="group">
+            <button type="button" class="btn btn-outline-secondary" id="{prev_id}" data-action="prev">&laquo; Prev</button>
+            <button type="button" class="btn btn-outline-secondary" id="{next_id}" data-action="next">Next &raquo;</button>
+        </div>
+    </div>
+    {dd_html}
+</div>"""
+        return html
 
     @staticmethod
     def from_inputs(inputs: SeqContentNormalizedInputData) -> Union["SeqContentPlot", str, None]:
@@ -434,7 +512,11 @@ class SeqContentPlot(Plot[Dataset, SeqContentConfig]):
 
         model.datasets = [Dataset.create(model.datasets[0], samples=samples, rows=rows)]
 
-        return SeqContentPlot(**model.__dict__)
+        plot_obj = SeqContentPlot(**model.__dict__)
+        if samples:
+            plot_obj._drilldown_plot = _build_drilldown_plot(anchor, samples, rows)
+            plot_obj.drilldown_anchor = str(plot_obj._drilldown_plot.anchor)
+        return plot_obj
 
     def _plot_ai_header(self) -> str:
         result = super()._plot_ai_header()
