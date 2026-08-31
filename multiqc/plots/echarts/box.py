@@ -118,7 +118,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     """
     # xAxis is the value axis (box plots are horizontal); Plotly-style data-fitted
     # autorange instead of ECharts' forced-0 default, see `converter._convert_axis`.
-    option = convert_layout(plot.layout, dataset.layout, scale_x=True)
+    option = convert_layout(plot.layout_ir, dataset.layout, scale_x=True)
 
     option["yAxis"]["type"] = "category"
     option["yAxis"]["inverse"] = True

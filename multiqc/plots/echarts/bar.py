@@ -80,7 +80,8 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     Full ECharts option skeleton for one bar-plot dataset, minus `series` and axis
     `data` arrays (samples are toolbox-dependent; the JS renderer fills `yAxis.data`).
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    layout_ir = plot.layout_ir
+    option = convert_layout(layout_ir, dataset.layout)
 
     option["yAxis"]["type"] = "category"
     # Plotly's default (non-inverted) category axis puts the first sample at the
@@ -98,7 +99,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     option.update(zoom_option(x=True, y=False))
 
     # JS reads this to decide whether series stack (default) or sit side by side.
-    option["_mqc"] = {"barmode": plot.layout.barmode}
+    option["_mqc"] = {"barmode": layout_ir.barmode}
 
     # `y_bands`/`y_lines` would target the category (sample) axis here, which is
     # meaningless for a numeric threshold, so they are dropped (see

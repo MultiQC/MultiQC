@@ -632,7 +632,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     formatter sentinel (the VIOLIN EXCEPTION); the yAxis is a plain hidden axis (no
     formatter, no label at all, see `_row_axes`).
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    option = convert_layout(plot.layout_ir, dataset.layout)
 
     metrics = _visible_metrics(dataset)
     n = len(metrics)

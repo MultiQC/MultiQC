@@ -1,8 +1,8 @@
 """
-Shared Plotly-layout -> ECharts-option-skeleton conversion.
+Shared neutral-layout -> ECharts-option-skeleton conversion.
 
-`convert_layout` reads the existing backend-agnostic Plotly `go.Layout` metadata
-(titles, ranges, log/pct state) that every plot already builds, and produces the
+`convert_layout` reads the backend-agnostic `LayoutIR` (`multiqc/plots/layout.py`)
+metadata (titles, ranges, log/pct state) that every plot builds, and produces the
 part of an ECharts `option` dict that is common to every plot type: `animation`,
 `title`, `grid`, `xAxis`/`yAxis`, `legend`, `tooltip`. Per-type builders (e.g.
 `multiqc/plots/echarts/bar.py`) call this first, then add type-specific fields.
@@ -22,7 +22,7 @@ import json
 import re
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-import plotly.graph_objects as go  # type: ignore
+from multiqc.plots.layout import AxisIR, LayoutIR
 
 if TYPE_CHECKING:
     from multiqc.plots.plot import PConfig
@@ -52,13 +52,11 @@ def _convert_title(title_text: Optional[str]) -> Dict[str, Optional[str]]:
     return {"text": text, "subtext": subtext or None}
 
 
-def _axis_name(axis: Any) -> Optional[str]:
-    if axis.title is not None and axis.title.text:
-        return str(axis.title.text)
-    return None
+def _axis_name(axis: AxisIR) -> Optional[str]:
+    return axis.title
 
 
-def _axis_type(axis: Any) -> str:
+def _axis_type(axis: AxisIR) -> str:
     if axis.type == "log":
         return "log"
     if axis.type == "category":
@@ -101,7 +99,7 @@ def _si_axis_formatter_body(suffix: str) -> str:
 _AXIS_NAME_GAP = 30
 
 
-def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
+def _convert_axis(axis: AxisIR, *, scale: bool = False) -> Dict[str, Any]:
     """
     `scale=True` is how a caller asks for Plotly-style autorange on a value axis: by
     default ECharts widens a value axis to always include 0, where Plotly's line/
@@ -109,7 +107,7 @@ def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
     the 0 baseline, see `bar.py`, which never passes `scale=True`). Setting `scale: true`
     tells ECharts to fit the axis to the data instead of forcing in 0, matching Plotly.
     Only meaningful for a numeric axis, and only when nothing already pins the minimum
-    (an explicit Plotly `range`/`autorangeoptions` min is honored as-is below).
+    (an explicit `range`/`minallowed` on the IR is honored as-is below).
     """
     axis_option: Dict[str, Any] = {
         "type": _axis_type(axis),
@@ -120,11 +118,11 @@ def _convert_axis(axis: Any, *, scale: bool = False) -> Dict[str, Any]:
 
     minval: Optional[float] = None
     maxval: Optional[float] = None
-    if axis.range:
+    if axis.range is not None:
         minval, maxval = axis.range[0], axis.range[1]
-    elif axis.autorangeoptions is not None:
-        minval = axis.autorangeoptions.minallowed
-        maxval = axis.autorangeoptions.maxallowed
+    else:
+        minval = axis.minallowed
+        maxval = axis.maxallowed
     if minval is not None:
         axis_option["min"] = minval
     elif scale and axis_option["type"] != "category":
@@ -163,17 +161,18 @@ def _grid_inset(axis_option: Dict[str, Any]) -> int:
 
 
 def convert_layout(
-    layout: go.Layout,
+    layout: LayoutIR,
     dataset_layout: Dict[str, Any],
     *,
     scale_x: bool = False,
     scale_y: bool = False,
 ) -> Dict[str, Any]:
     """
-    Merge `dataset_layout` (a per-dataset Plotly layout fragment, `BaseDataset.layout`)
-    onto a copy of `layout` (the shared `Plot.layout`), mirroring `Plot.get_figure`'s
-    `layout.update(**dataset.layout)` (`multiqc/plots/plot.py`), then convert the result
-    into the shared part of an ECharts option skeleton.
+    Merge `dataset_layout` (a per-dataset layout fragment, `BaseDataset.layout`, a plain
+    dict) onto `layout` (the shared `Plot.layout_ir`, a neutral `LayoutIR`), mirroring
+    `Plot.get_figure`'s `layout.update(**dataset.layout)` (`multiqc/plots/plot.py`), then
+    convert the result into the shared part of an ECharts option skeleton. No Plotly here:
+    the IR carries exactly the metadata (titles, ranges, log/pct state) ECharts needs.
 
     `scale_x`/`scale_y` are forwarded to `_convert_axis` as its `scale` flag, letting a
     per-type builder opt a value axis into Plotly-style data-fitted autorange instead of
@@ -183,11 +182,10 @@ def convert_layout(
     if layout is None:
         raise ValueError("converter.convert_layout: layout must not be None")
 
-    merged = go.Layout(layout.to_plotly_json())
-    merged.update(**dataset_layout)
+    merged = layout.merged_with(LayoutIR.from_dataset_layout(dataset_layout))
 
-    title_text = merged.title.text if merged.title is not None else None
-    show_legend = bool(merged.showlegend)
+    title_text = merged.title
+    show_legend = merged.showlegend
 
     x_axis_option = _convert_axis(merged.xaxis, scale=scale_x)
     y_axis_option = _convert_axis(merged.yaxis, scale=scale_y)

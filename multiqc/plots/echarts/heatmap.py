@@ -172,7 +172,7 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
     JS renderer fills `xAxis.data`/`yAxis.data`, see `EchartsHeatmapPlot.buildSeries`/
     `applyOptionOverrides`).
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    option = convert_layout(plot.layout_ir, dataset.layout)
 
     option["xAxis"]["type"] = "category"
     option["yAxis"]["type"] = "category"
@@ -211,7 +211,7 @@ def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
     # same total figure height Plotly uses for its own colorbar length) minus the grid's
     # top margin and room below the bar for its own min-value label plus the x-axis tick
     # labels beneath the grid. Clamped so tiny plots don't get a negative/zero bar.
-    plot_height = plot.layout.height or 400
+    plot_height = plot.layout_ir.height or 400
     item_height = max(100, plot_height - 64 - 90)
     option["visualMap"] = {
         "min": vmin,

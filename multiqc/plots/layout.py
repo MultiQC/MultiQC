@@ -47,6 +47,29 @@ class LayoutIR(BaseModel):
     xaxis: AxisIR = AxisIR()
     yaxis: AxisIR = AxisIR()
 
+    @classmethod
+    def from_dataset_layout(cls, d: Dict[str, Any]) -> "LayoutIR":
+        """
+        Read the neutral slice out of a per-dataset layout fragment (`BaseDataset.layout`,
+        a plain plotly-json-shaped dict). Pure dict access, no Plotly import, so both
+        backends can consume the fragment. Only the keys actually present are set, so the
+        result overrides exactly those fields when passed to `merged_with` (unset fields
+        do not clobber the base). Plotly-only keys in the fragment (hoverformat, rangemode,
+        autorangeoptions.clipmin/clipmax, shapes) are ignored: they are not part of the IR.
+        """
+        top: Dict[str, Any] = {}
+        for key in ("height", "width", "showlegend", "barmode"):
+            if key in d:
+                top[key] = d[key]
+        if isinstance(d.get("title"), dict) and "text" in d["title"]:
+            top["title"] = d["title"]["text"]
+        for axis in ("xaxis", "yaxis"):
+            if axis in d and isinstance(d[axis], dict):
+                axis_ir = _axis_ir_from_dict(d[axis])
+                if axis_ir is not None:
+                    top[axis] = axis_ir
+        return cls(**top)
+
     def merged_with(self, override: "LayoutIR") -> "LayoutIR":
         """
         Return a copy of `self` with the explicitly-set fields of `override` applied on
@@ -57,6 +80,29 @@ class LayoutIR(BaseModel):
         merged = self.model_dump()
         _deep_update(merged, override.model_dump(exclude_unset=True))
         return LayoutIR(**merged)
+
+
+def _axis_ir_from_dict(d: Dict[str, Any]) -> Optional[AxisIR]:
+    """Neutral slice of one plotly-json axis dict, or None if it carries nothing neutral."""
+    kwargs: Dict[str, Any] = {}
+    if isinstance(d.get("title"), dict) and d["title"].get("text"):
+        kwargs["title"] = d["title"]["text"]
+    if d.get("type") in ("linear", "log", "category"):
+        kwargs["type"] = d["type"]
+    if d.get("range") is not None:
+        rng = d["range"]
+        kwargs["range"] = (rng[0], rng[1])
+    auto = d.get("autorangeoptions")
+    if isinstance(auto, dict):
+        if auto.get("minallowed") is not None:
+            kwargs["minallowed"] = auto["minallowed"]
+        if auto.get("maxallowed") is not None:
+            kwargs["maxallowed"] = auto["maxallowed"]
+    if d.get("ticksuffix"):
+        kwargs["ticksuffix"] = d["ticksuffix"]
+    if not kwargs:
+        return None
+    return AxisIR(**kwargs)
 
 
 def _deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> None:

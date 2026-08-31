@@ -91,7 +91,7 @@ def layout_option(plot: "SeqContentPlot", dataset: Dataset) -> Dict[str, Any]:
     Full ECharts option skeleton for one seqcontent dataset, minus `series` and yAxis
     `data` (the sample list, toolbox-dependent; filled in by `axis_data`/the JS renderer).
     """
-    option = convert_layout(plot.layout, dataset.layout)
+    option = convert_layout(plot.layout_ir, dataset.layout)
 
     option["xAxis"]["type"] = "value"
     option["xAxis"]["min"] = 1

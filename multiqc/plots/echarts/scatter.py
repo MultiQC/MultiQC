@@ -32,7 +32,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     # Scatter has two meaningful value axes (no category axis), so both get Plotly-style
     # data-fitted autorange instead of ECharts' forced-0 default; see
     # `converter._convert_axis`.
-    option = convert_layout(plot.layout, dataset.layout, scale_x=True, scale_y=True)
+    option = convert_layout(plot.layout_ir, dataset.layout, scale_x=True, scale_y=True)
 
     option["tooltip"]["trigger"] = "item"
     # Plotly-style click+drag box-zoom on both axes (POLISH.md #17): both axes carry

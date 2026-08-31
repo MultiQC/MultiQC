@@ -18,11 +18,10 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-import plotly.graph_objects as go  # type: ignore
-
 from multiqc import config
 from multiqc.core import tmp_dir
 from multiqc.plots.echarts import theme
+from multiqc.plots.layout import LayoutIR
 from multiqc.types import PlotType
 from multiqc.utils.util_functions import dump_json
 
@@ -161,16 +160,15 @@ def svg_to_png(svg: str) -> bytes:
 
 def _dataset_height(plot: "Plot[Any, Any]", dataset: Any) -> int:
     """
-    The pixel height for one dataset's rendered chart: `plot.layout` merged with the
+    The pixel height for one dataset's rendered chart: `plot.layout_ir` merged with the
     per-dataset `dataset.layout` fragment, same merge `Plot.get_figure` performs for the
     Plotly path. Width is not read from here: flat plots force it to 600/1100 (see
     `flat_plot_html`), matching `Plot.get_figure`'s `flat=True` branch.
     """
-    layout = go.Layout(plot.layout.to_plotly_json())
-    layout.update(**dataset.layout)
-    if layout.height is None:
+    merged = plot.layout_ir.merged_with(LayoutIR.from_dataset_layout(dataset.layout))
+    if merged.height is None:
         raise ValueError(f"Plot {plot.id!r} has no layout height set")
-    return int(layout.height)
+    return int(merged.height)
 
 
 def _write_export_formats(svg: str, file_name: str) -> Optional[bytes]:

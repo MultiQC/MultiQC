@@ -34,6 +34,7 @@ from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
+from multiqc.plots.layout import LayoutIR
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
@@ -693,6 +694,19 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if isinstance(d, dict):
             return go.Layout(**d)
         return d
+
+    @property
+    def layout_ir(self) -> LayoutIR:
+        """
+        The plot's shared layout as the neutral, backend-agnostic `LayoutIR`. This is the
+        seam the ECharts backend reads (so it never touches Plotly): the extraction from
+        the Plotly `go.Layout` happens here, on the Plotly side. Per-dataset overrides
+        (`BaseDataset.layout`) are applied by the caller via `LayoutIR.from_dataset_layout`
+        + `merged_with`, mirroring `get_figure`'s per-dataset `layout.update(...)`.
+        """
+        from multiqc.plots.plotly import layout_to_ir
+
+        return layout_to_ir(self.layout)
 
     def __init__(self, **data):
         super().__init__(**data)

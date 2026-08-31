@@ -45,7 +45,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     # yAxis is always the value axis; xAxis only is too when not categorical. Scale
     # (Plotly-style data-fitted autorange, not forced-0) doesn't apply to a category
     # axis, see `converter._convert_axis`.
-    option = convert_layout(plot.layout, dataset.layout, scale_x=not categorical, scale_y=True)
+    option = convert_layout(plot.layout_ir, dataset.layout, scale_x=not categorical, scale_y=True)
 
     option["tooltip"]["trigger"] = "axis"
     # Plotly-style click+drag box-zoom on both axes (POLISH.md #17): both x and y carry
