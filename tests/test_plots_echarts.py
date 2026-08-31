@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Union
 import multiqc
 from multiqc import config, report
 from multiqc.core.update_config import ClConfig
-from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter, table, violin
+from multiqc.plots import bargraph, box, echarts, heatmap, linegraph, scatter, seqcontent, table, violin
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor, PlotType
 
@@ -708,6 +708,89 @@ def test_get_option_heatmap_clustered_switch_uses_clustered_categories():
     option_unclustered = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
     assert option_unclustered["xAxis"]["data"] == list(dataset.xcats)
     assert option_unclustered["yAxis"]["data"] == list(dataset.ycats)
+
+
+def _make_seqcontent_plot():
+    # sample1's first bin (t=100) and sample2's bin are the golden RGB fixtures used in
+    # tests/test_seqcontent.py::test_rgb_golden_t_100/test_rgb_golden_even_split:
+    # t=100 -> rgb(255, 0, 0); a=c=g=t=25 -> rgb(64, 64, 64). sample1's second bin
+    # ("2-3", a range) also exercises a variable-width bin (max_bp == 3).
+    data_by_sample = {
+        "sample1": {
+            "1": {"a": 0.0, "c": 0.0, "g": 0.0, "t": 100.0},
+            "2-3": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+        },
+        "sample2": {
+            "1": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+        },
+    }
+    return seqcontent.plot(data_by_sample, {"id": "echarts_seqcontent", "title": "Test: Seq Content"})
+
+
+def test_interactive_plot_adds_echarts_key_for_seqcontent_plot():
+    config.plotting_engine = "echarts"
+    plot = _make_seqcontent_plot()
+    assert isinstance(plot, seqcontent.SeqContentPlot)  # narrow SeqContentPlot | str | None for mypy
+    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+
+    dumped = report.plot_data[plot.anchor]
+    assert "echarts" in dumped
+    assert dumped["echarts"]["renderer"] == "svg"
+
+    # Contract: the skeleton is JSON-safe, no live functions (those only appear via the
+    # `__FN__` sentinel in the SSR/get_option path, not the interactive dump).
+    json.dumps(dumped["echarts"])
+
+    skeleton = dumped["echarts"]["datasets"][0]["layout"]
+    assert skeleton["animation"] is False
+    assert skeleton["xAxis"]["type"] == "value"
+    assert skeleton["xAxis"]["min"] == 1
+    assert skeleton["xAxis"]["max"] == plot.datasets[0].max_bp + 1
+    assert skeleton["yAxis"]["type"] == "category"
+    assert skeleton["yAxis"]["inverse"] is True
+    assert "series" not in skeleton
+    assert "data" not in skeleton["yAxis"]
+    assert "visualMap" not in skeleton
+
+
+def test_get_option_seqcontent_builds_one_custom_series_with_golden_rgb_data():
+    plot = _make_seqcontent_plot()
+    assert isinstance(plot, seqcontent.SeqContentPlot)  # narrow SeqContentPlot | str | None for mypy
+    option = echarts.get_option(plot, ds_idx=0, is_log=False, is_pct=False)
+
+    assert option["yAxis"]["data"] == ["sample1", "sample2"]
+
+    series_list = option["series"]
+    assert len(series_list) == 1
+    series_option = series_list[0]
+    assert series_option["type"] == "custom"
+
+    render_item = series_option["renderItem"]
+    assert render_item["__FN__"] is True
+    assert isinstance(render_item["body"], str)
+    assert "rect" in render_item["body"]
+
+    # [start, end, row_idx, r, g, b], golden RGB values from bin_rgb (see
+    # tests/test_seqcontent.py::test_rgb_golden_t_100/test_rgb_golden_even_split).
+    assert series_option["data"] == [
+        [1, 1, 0, 255, 0, 0],
+        [2, 3, 0, 64, 64, 64],
+        [1, 1, 1, 64, 64, 64],
+    ]
+
+
+def test_seqcontent_axis_data_returns_yaxis_samples():
+    plot = _make_seqcontent_plot()
+    assert isinstance(plot, seqcontent.SeqContentPlot)  # narrow SeqContentPlot | str | None for mypy
+    dataset = plot.datasets[0]
+    assert echarts.seqcontent.axis_data(dataset, plot.pconfig) == [("yAxis", ["sample1", "sample2"])]
+
+
+def test_seqcontent_mark_count_equals_total_bins():
+    plot = _make_seqcontent_plot()
+    assert isinstance(plot, seqcontent.SeqContentPlot)  # narrow SeqContentPlot | str | None for mypy
+    # 2 bins for sample1 + 1 bin for sample2, not n_samples * max_bp.
+    assert echarts.seqcontent.mark_count(plot.datasets[0]) == 3
 
 
 # GOLDEN quartile test: this fixed input + expected five-number/outlier values is the
