@@ -7,10 +7,9 @@ import json
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 
 from multiqc import config, report
@@ -35,6 +34,9 @@ from multiqc.plots.table_object import (
 )
 from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
 from multiqc.utils.material_icons import get_material_icon
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -686,15 +688,17 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,
         is_pct: bool = False,
         add_scatter: bool = True,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         metrics = [m for m in self.metrics if not self.header_by_metric[m].hidden]
         if len(metrics) == 0:
             return go.Figure(layout=layout)
@@ -1023,6 +1027,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         """
         Save the plot to a file
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         if self.show_table_by_default and violin is not True or table is True:
             # Make Plotly go.Table object and save it
             data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}

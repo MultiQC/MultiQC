@@ -3,10 +3,9 @@
 import logging
 import math
 import re
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
 from pydantic import BaseModel, PrivateAttr
@@ -23,6 +22,9 @@ from multiqc.plots.plot import (
 )
 from multiqc.types import Anchor, SampleName
 from multiqc.utils.material_icons import get_material_icon
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +98,7 @@ def bin_rgb(b: "SeqContentBin") -> Tuple[int, int, int]:
     return r, g, bl
 
 
-def _static_scaleratio(layout: go.Layout, x_range: float, y_range: float) -> Optional[float]:
+def _static_scaleratio(layout: "go.Layout", x_range: float, y_range: float) -> Optional[float]:
     """
     Static-export (kaleido/flat) twin of templates/default/src/js/plots/seqcontent.js
     ::fixAspectRatio(). A go.Image trace forces an equal-aspect y axis via
@@ -318,17 +320,19 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: Optional[go.Layout] = None,
+        layout: Optional["go.Layout"] = None,
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs: Any,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset: expand the (possibly non-uniform)
         bins into a uniform (n_samples, max_bp, 4) uint8 RGBA grid. Positions never
         covered by any bin for a sample stay fully transparent (alpha 0) so the
         report background shows through instead of rendering black.
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         n_samples = len(self.samples)
         n_cols = max(self.max_bp, 1)
         arr = np.zeros((n_samples, n_cols, 4), dtype=np.uint8)

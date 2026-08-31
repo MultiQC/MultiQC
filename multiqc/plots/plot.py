@@ -12,6 +12,7 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generic,
@@ -26,24 +27,37 @@ from typing import (
     cast,
 )
 
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
 from multiqc.plots.layout import AxisIR, LayoutIR, deep_merge
-from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
+
 logger = logging.getLogger(__name__)
 
-check_plotly_version()
+# Plotly is an optional dependency: it is imported lazily, inside the functions that build
+# figures (the Plotly rendering/notebook path), never at module import. `check_plotly_version`
+# runs once on first use via `_ensure_plotly`. A default (ECharts) install has no Plotly.
+_plotly_checked = False
+
+
+def _ensure_plotly() -> None:
+    global _plotly_checked
+    if not _plotly_checked:
+        from multiqc.plots.utils import check_plotly_version
+
+        check_plotly_version()
+        _plotly_checked = True
 
 
 def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
@@ -74,6 +88,8 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
 # JavaScript in plotting.js will override colors for dark mode
 def get_multiqc_plotly_template():
     """Get the MultiQC Plotly template with runtime config values."""
+    import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
     return dict(
         layout=go.Layout(
             paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
@@ -435,11 +451,11 @@ class BaseDataset(BaseModel):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Abstract method to be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
@@ -748,6 +764,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Plotly renderer and the static/notebook figure path consume; it reproduces the
         go.Layout that modules mutated in place before the IR migration.
         """
+        _ensure_plotly()
         from multiqc.plots.plotly import ir_to_layout
 
         return ir_to_layout(self.layout, flat=flat, extra=self.plotly_layout_extra or None)
@@ -1166,7 +1183,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         is_pct: bool = False,
         flat: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Public method: create a Plotly Figure object.
         """
@@ -1641,6 +1658,8 @@ def _prepare_figure_for_export(fig):
     but exports need solid backgrounds for readability.
     """
     # Create a copy to avoid modifying the original figure used in HTML
+    import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
     fig_copy = go.Figure(fig)
 
     # Helper function to check if a color is transparent
@@ -1715,12 +1734,12 @@ plot_export_has_failed: bool = False
 
 
 # Collect plot exports for batch processing
-_plot_export_batch: List[Tuple[go.Figure, Path, Dict]] = []
+_plot_export_batch: "List[Tuple[go.Figure, Path, Dict]]" = []
 _plot_export_batch_results: Dict[int, bool] = {}  # Mapping of plot_path to success status
 
 
 def fig_to_static_html(
-    fig: go.Figure,
+    fig: "go.Figure",
     active: bool = True,
     export_plots: Optional[bool] = None,
     embed_in_html: Optional[bool] = None,

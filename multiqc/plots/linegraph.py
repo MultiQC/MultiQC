@@ -5,9 +5,23 @@ import logging
 import math
 import os
 import random
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generic,
+    List,
+    Literal,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
 from pydantic import Field
@@ -27,6 +41,9 @@ from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.util_functions import update_dict
 from multiqc.validation import ValidatedConfig, add_validation_warning
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -204,14 +221,16 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         if layout.showlegend is True:
             # Extra space for legend
             if hasattr(layout, "height") and isinstance(layout.height, int):

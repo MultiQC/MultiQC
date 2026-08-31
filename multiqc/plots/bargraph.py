@@ -5,10 +5,24 @@ import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    List,
+    Literal,
+    Mapping,
+    NewType,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    TypedDict,
+    Union,
+    cast,
+)
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -29,6 +43,9 @@ from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
 from multiqc.validation import ValidatedConfig
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -695,14 +712,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log=False,
         is_pct=False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         fig = go.Figure(layout=layout)
 
         for cat in self.cats:

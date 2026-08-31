@@ -3,9 +3,8 @@
 import copy
 import json
 import logging
-from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
 
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
 
@@ -13,6 +12,9 @@ from multiqc import config, report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -161,14 +163,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,  # noqa: ARG002
         is_pct: bool = False,  # noqa: ARG002
         **kwargs,  # noqa: ARG002
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         fig = go.Figure(layout=layout)
 
         for sname, values in zip(self.samples, self.data):

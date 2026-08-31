@@ -2,10 +2,9 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from pydantic import Field
 
@@ -22,6 +21,9 @@ from multiqc.plots.plot import (
 )
 from multiqc.types import Anchor, SampleName
 from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -420,14 +422,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: Optional[go.Layout] = None,
+        layout: Optional["go.Layout"] = None,
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         return go.Figure(
             data=go.Heatmap(
                 z=self.rows,
