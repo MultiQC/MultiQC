@@ -1,0 +1,226 @@
+{
+  "figure": {
+    "data": [
+      {
+        "boxpoints": "outliers",
+        "hoverinfo": "x",
+        "jitter": 0.5,
+        "marker": {
+          "color": "#4899e8"
+        },
+        "name": "Sample2",
+        "orientation": "h",
+        "type": "box",
+        "x": [4, 5, 6]
+      },
+      {
+        "boxpoints": "outliers",
+        "hoverinfo": "x",
+        "jitter": 0.5,
+        "marker": {
+          "color": "#4899e8"
+        },
+        "name": "Sample1",
+        "orientation": "h",
+        "type": "box",
+        "x": [1, 2, 3]
+      }
+    ],
+    "layout": {
+      "autosize": true,
+      "boxgap": 0.2,
+      "boxgroupgap": 0.1,
+      "colorway": [],
+      "height": 300,
+      "hoverlabel": {
+        "bgcolor": "white",
+        "font": {
+          "color": "rgba(60,60,60,1)"
+        },
+        "namelength": -1
+      },
+      "hovermode": "y",
+      "margin": {
+        "b": 65,
+        "l": 60,
+        "pad": 5,
+        "r": 15,
+        "t": 50
+      },
+      "showlegend": false,
+      "template": {
+        "layout": {
+          "colorway": [
+            "#7cb5ec",
+            "#434348",
+            "#90ed7d",
+            "#f7a35c",
+            "#8085e9",
+            "#f15c80",
+            "#e4d354",
+            "#2b908f",
+            "#f45b5b",
+            "#91e8e1"
+          ],
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+          },
+          "legend": {
+            "font": {
+              "color": "rgba(60,60,60,1)"
+            }
+          },
+          "modebar": {
+            "activecolor": "rgba(80, 80, 80, 1)",
+            "bgcolor": "rgba(0, 0, 0, 0)",
+            "color": "rgba(100, 100, 100, 0.5)"
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "title": {
+            "font": {
+              "color": "rgba(60,60,60,1)",
+              "size": 20
+            }
+          },
+          "xaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          },
+          "yaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          }
+        }
+      },
+      "title": {
+        "text": "Box<br><sup>2 boxes</sup>",
+        "x": 0.5,
+        "xanchor": "center"
+      },
+      "xaxis": {
+        "automargin": true,
+        "rangemode": "normal",
+        "ticksuffix": ""
+      },
+      "yaxis": {
+        "automargin": true,
+        "categoryorder": "trace",
+        "rangemode": "normal",
+        "ticksuffix": "",
+        "type": "category"
+      }
+    }
+  },
+  "interactive_layout": {
+    "autosize": true,
+    "boxgap": 0.2,
+    "boxgroupgap": 0.1,
+    "colorway": [],
+    "height": 300,
+    "hoverlabel": {
+      "bgcolor": "white",
+      "font": {
+        "color": "rgba(60,60,60,1)"
+      },
+      "namelength": -1
+    },
+    "hovermode": "y",
+    "margin": {
+      "b": 65,
+      "l": 60,
+      "pad": 5,
+      "r": 15,
+      "t": 50
+    },
+    "showlegend": false,
+    "template": {
+      "layout": {
+        "colorway": [
+          "#7cb5ec",
+          "#434348",
+          "#90ed7d",
+          "#f7a35c",
+          "#8085e9",
+          "#f15c80",
+          "#e4d354",
+          "#2b908f",
+          "#f45b5b",
+          "#91e8e1"
+        ],
+        "font": {
+          "color": "rgba(60,60,60,1)",
+          "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+        },
+        "legend": {
+          "font": {
+            "color": "rgba(60,60,60,1)"
+          }
+        },
+        "modebar": {
+          "activecolor": "rgba(80, 80, 80, 1)",
+          "bgcolor": "rgba(0, 0, 0, 0)",
+          "color": "rgba(100, 100, 100, 0.5)"
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "title": {
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "size": 20
+          }
+        },
+        "xaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        },
+        "yaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        }
+      }
+    },
+    "title": {
+      "text": "Box",
+      "x": 0.5,
+      "xanchor": "center"
+    },
+    "xaxis": {
+      "automargin": true
+    },
+    "yaxis": {
+      "automargin": true,
+      "categoryorder": "trace",
+      "type": "category"
+    }
+  }
+}
