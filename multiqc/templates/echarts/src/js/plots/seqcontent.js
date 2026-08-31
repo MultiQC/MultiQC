@@ -26,6 +26,18 @@ function seqContentBinRgb(bin) {
 // renderer's solid per-pixel fill never showed gaps; no stroke is ever set, so there is
 // no border to remove either. `opacity` is the toolbox-highlight dim factor computed by
 // buildSeries() below.
+//
+// CLIPPING: with `filterMode: "none"` (seqcontent.py's `layout_option`), dataZoom only
+// moves the axis view range and never removes out-of-range items from `data`, so a bin
+// straddling the zoomed edge still reaches renderItem with its untouched geometry. The
+// SVG renderer does not auto-clip custom series to the grid the way it clips built-in
+// series (bar/line/etc), so an unclipped rect paints straight over the y-axis sample
+// labels and the plot title. Rather than depend on a global `echarts.graphic.clipRectByRect`
+// (the Python twin's SSR path cannot assume that's in scope: static_export.py executes its
+// copy of this body via MiniRacer against a fresh V8 context), the rect is intersected
+// against `params.coordSys` (the cartesian grid's pixel rect: `{x, y, width, height}`) by
+// hand: shrink to the overlap, or draw nothing (`return;`, i.e. `undefined`, which ECharts
+// treats as "no element for this data item") when the rect falls fully outside the grid.
 function seqContentRenderItem(params, api) {
   var start = api.value(0);
   var end = api.value(1);
@@ -38,9 +50,23 @@ function seqContentRenderItem(params, api) {
   var p1 = api.coord([end + 1, row]);
   var height = api.size([0, 1])[1] + 1;
   var width = p1[0] - p0[0] + 1;
+  var rx0 = p0[0];
+  var ry0 = p0[1] - height / 2;
+  var rx1 = rx0 + width;
+  var ry1 = ry0 + height;
+  var grid = params.coordSys;
+  var gx0 = grid.x;
+  var gy0 = grid.y;
+  var gx1 = gx0 + grid.width;
+  var gy1 = gy0 + grid.height;
+  var cx0 = Math.max(rx0, gx0);
+  var cy0 = Math.max(ry0, gy0);
+  var cx1 = Math.min(rx1, gx1);
+  var cy1 = Math.min(ry1, gy1);
+  if (cx1 <= cx0 || cy1 <= cy0) return;
   return {
     type: "rect",
-    shape: { x: p0[0], y: p0[1] - height / 2, width: width, height: height },
+    shape: { x: cx0, y: cy0, width: cx1 - cx0, height: cy1 - cy0 },
     style: { fill: "rgb(" + r + "," + g + "," + b + ")", opacity: opacity },
   };
 }

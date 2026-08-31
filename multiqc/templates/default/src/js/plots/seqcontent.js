@@ -185,9 +185,12 @@ class SeqContentPlot extends Plot {
         this._cursorStyleInjected = true;
         // Item 4: this heatmap's primary interaction is click-to-drill-down, so hint
         // that with a pointer cursor instead of Plotly's default crosshair, scoped to
-        // this plot's drag layer only (never other Plotly plots on the page).
+        // this plot's drag layer only (never other Plotly plots on the page). The
+        // go.Image trace renders as an <image> inside Plotly's .imagelayer group, which
+        // sits ABOVE .nsewdrag and doesn't inherit its cursor, so it needs its own rule
+        // too (verified in-browser: .nsewdrag alone left the default arrow over cells).
         const style = document.createElement("style");
-        style.textContent = `#${this.anchor} .nsewdrag { cursor: pointer !important; }`;
+        style.textContent = `#${this.anchor} .imagelayer, #${this.anchor} .imagelayer image, #${this.anchor} .nsewdrag { cursor: pointer !important; }`;
         document.head.appendChild(style);
       }
       if (!this._clickListenerBound) {
