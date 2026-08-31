@@ -468,7 +468,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         model._set_y_bands_and_range(pconfig)
 
         # Make a tooltip always show on hover over nearest point on plot
-        model.layout.hoverdistance = -1
+        model.set_plotly_layout(hoverdistance=-1)
 
         return ScatterPlot(**model.__dict__)
 

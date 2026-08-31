@@ -910,13 +910,14 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         uses_multicategory = any(ds.group_labels for ds in model.datasets)
 
         # Configure yaxis based on whether we're using multicategory
+        yaxis_config: Dict[str, Any]
         if uses_multicategory:
             yaxis_config = dict(
                 showgrid=False,
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+                hoverformat=None,
+                ticksuffix=None,
                 # For multicategory, don't set type or categoryorder - let Plotly auto-detect
             )
         else:
@@ -925,25 +926,25 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 categoryorder="trace",  # keep sample order
                 automargin=True,  # to make sure there is enough space for ticks labels
                 title=None,
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+                hoverformat=None,
+                ticksuffix=None,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             )
 
-        model.layout.update(
+        model.set_plotly_layout(
             height=height,
             barmode=barmode,
             bargroupgap=0,
             bargap=0.2,
             yaxis=yaxis_config,
             xaxis=dict(
-                title=dict(text=model.layout.yaxis.title.text),
-                hoverformat=model.layout.yaxis.hoverformat,
-                ticksuffix=model.layout.yaxis.ticksuffix,
+                title=dict(text=model.layout.yaxis.title),
+                hoverformat=None,
+                ticksuffix=None,
             ),
             # Re-initiate legend to reset to default legend location on the top right
-            legend=go.layout.Legend(
+            legend=dict(
                 # We use legend groups with subplots to simulate standard legend interactivity
                 # like we had a standard bar graph without subplots. We need to remove the space
                 # between the legend groups to make it look like a single legend.
@@ -962,8 +963,8 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         )
 
         if getattr(config, "barplot_legend_on_bottom", False):
-            model.layout.update(
-                legend=go.layout.Legend(
+            model.set_plotly_layout(
+                legend=dict(
                     orientation="h",
                     x=0.5,
                     xanchor="center",
@@ -1085,7 +1086,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             for dataset in model.datasets:
                 dataset.cats.sort(key=lambda cat: sum(cat.data))
                 # But reversing the legend so the largest bars are still on the top
-                model.layout.legend.traceorder = "reversed"
+                model.set_plotly_layout(legend=dict(traceorder="reversed"))
 
         return BarPlot(
             **model.__dict__,

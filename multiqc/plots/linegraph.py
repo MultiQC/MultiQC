@@ -638,7 +638,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
         model.datasets = [Dataset.create(d, lines, pconfig) for d, lines in zip(model.datasets, lists_of_lines)]
 
         # Make a tooltip always show on hover over any point on plot
-        model.layout.hoverdistance = -1
+        model.set_plotly_layout(hoverdistance=-1)
 
         return LinePlot(**model.__dict__, sample_names=sample_names)
 

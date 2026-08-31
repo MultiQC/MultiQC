@@ -901,7 +901,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         model.datasets = [Dataset.create(model.datasets[0], dt, show_table_by_default)]
 
         # Violin-specific layout parameters
-        model.layout.update(
+        model.set_plotly_layout(
             margin=dict(
                 pad=0,
                 b=40,
@@ -1051,7 +1051,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
                         cells=dict(values=values),
                     )
                 ],
-                layout=self.layout,
+                layout=self.to_plotly_layout(),
             )
             filename, flat = self._proc_save_args(filename, flat)
             if flat:

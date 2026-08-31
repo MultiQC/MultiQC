@@ -78,7 +78,7 @@ class LayoutIR(BaseModel):
         set on `override` win; unset fields keep `self`'s value.
         """
         merged = self.model_dump()
-        _deep_update(merged, override.model_dump(exclude_unset=True))
+        deep_merge(merged, override.model_dump(exclude_unset=True))
         return LayoutIR(**merged)
 
 
@@ -105,9 +105,10 @@ def _axis_ir_from_dict(d: Dict[str, Any]) -> Optional[AxisIR]:
     return AxisIR(**kwargs)
 
 
-def _deep_update(base: Dict[str, Any], override: Dict[str, Any]) -> None:
+def deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> None:
+    """Recursively merge `override` into `base` in place (override wins on leaves)."""
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(base.get(key), dict):
-            _deep_update(base[key], value)
+            deep_merge(base[key], value)
         else:
             base[key] = value

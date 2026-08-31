@@ -467,7 +467,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
         max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
         height: int = determine_barplot_height(max_n_samples)
 
-        model.layout.update(
+        model.set_plotly_layout(
             height=height,
             showlegend=False,
             boxgroupgap=0.1,
@@ -476,15 +476,15 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
-                hoverformat=getattr(model.layout.xaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.xaxis, "ticksuffix", None),
+                hoverformat=None,
+                ticksuffix=None,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=getattr(getattr(model.layout.yaxis, "title", None), "text", None)),
-                hoverformat=getattr(model.layout.yaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.yaxis, "ticksuffix", None),
+                title=dict(text=model.layout.yaxis.title),
+                hoverformat=None,
+                ticksuffix=None,
             ),
             hovermode="y",
             hoverlabel=dict(

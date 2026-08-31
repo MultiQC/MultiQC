@@ -36,13 +36,13 @@ def _base_plot(**pconfig_kwargs) -> Plot:
     ],
 )
 def test_base_layout_roundtrips(pconfig_kwargs):
-    base = _base_plot(**pconfig_kwargs).layout
-    rebuilt = ir_to_layout(layout_to_ir(base), flat=False)
-    assert rebuilt.to_plotly_json() == base.to_plotly_json()
+    # Plot.layout is now the neutral IR; IR -> go.Layout -> IR is identity on the slice.
+    base_ir = _base_plot(**pconfig_kwargs).layout
+    assert layout_to_ir(ir_to_layout(base_ir)) == base_ir
 
 
 def test_ir_captures_the_semantic_slice():
-    ir = layout_to_ir(_base_plot(height=650, ylog=True).layout)
+    ir = _base_plot(height=650, ylog=True).layout
     assert ir.title == "IR Test"
     assert ir.height == 650
     assert ir.yaxis.type == "log"

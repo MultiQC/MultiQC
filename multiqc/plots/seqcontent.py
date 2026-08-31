@@ -500,7 +500,7 @@ class SeqContentPlot(Plot[Dataset, SeqContentConfig]):
             defer_render_if_large=False,
         )
 
-        model.layout.update(
+        model.set_plotly_layout(
             xaxis=dict(
                 # Positions start at 1 (image trace x0=1, dx=1): block box-zoom/pan from
                 # showing negative x (Item 3). Unlike autorangeoptions.minallowed (which

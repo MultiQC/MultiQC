@@ -88,7 +88,9 @@ def test_plotly_layout_golden(name):
     plot = _build(name)
     got = _normalize(
         {
-            "interactive_layout": plot.model_dump(warnings=False)["layout"],
+            # The browser Plotly payload (interactive_plot now reassembles this via
+            # to_plotly_layout; pre-migration it was self.layout.to_plotly_json()).
+            "interactive_layout": plot.to_plotly_layout(flat=plot.flat).to_plotly_json(),
             "figure": plot.get_figure(0).to_plotly_json(),
         }
     )

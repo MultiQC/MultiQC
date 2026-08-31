@@ -34,7 +34,7 @@ from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
 from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.layout import LayoutIR
+from multiqc.plots.layout import AxisIR, LayoutIR, deep_merge
 from multiqc.plots.utils import check_plotly_version
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
@@ -662,7 +662,12 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     id: str
     anchor: Anchor  # unlike id, has to be unique
     plot_type: PlotType
-    layout: go.Layout
+    layout: LayoutIR
+    # Plotly-only layout keys a module contributes on top of the neutral IR (hover styling,
+    # legend geometry, tick arrays, gridlines): a plain plotly-json dict, so building it needs
+    # no Plotly import. `to_plotly_layout` replays it onto `ir_to_layout(self.layout)`, exactly
+    # reproducing the go.Layout modules used to mutate. ECharts ignores it (reads only the IR).
+    plotly_layout_extra: Dict[str, Any] = Field(default_factory=dict)
     datasets: List[DatasetT]
     pconfig: PConfigT
     add_log_tab: bool
@@ -683,30 +688,69 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         use_enum_values=True,
     )
 
-    @field_serializer("layout")
-    def serialize_dt(self, layout: go.Layout, _info):
-        return layout.to_plotly_json()
-
     # noinspection PyNestedDecorators
     @field_validator("layout", mode="before")
     @classmethod
     def parse_layout(cls, d: Any):
         if isinstance(d, dict):
-            return go.Layout(**d)
+            return LayoutIR(**d)
         return d
 
     @property
     def layout_ir(self) -> LayoutIR:
         """
-        The plot's shared layout as the neutral, backend-agnostic `LayoutIR`. This is the
-        seam the ECharts backend reads (so it never touches Plotly): the extraction from
-        the Plotly `go.Layout` happens here, on the Plotly side. Per-dataset overrides
-        (`BaseDataset.layout`) are applied by the caller via `LayoutIR.from_dataset_layout`
-        + `merged_with`, mirroring `get_figure`'s per-dataset `layout.update(...)`.
+        The plot's shared layout as the neutral, backend-agnostic `LayoutIR`, the seam the
+        ECharts backend reads. `Plot.layout` is already a `LayoutIR`; this alias keeps the
+        ECharts call sites stable. Per-dataset overrides (`BaseDataset.layout`) are applied
+        by the caller via `LayoutIR.from_dataset_layout` + `merged_with`.
         """
-        from multiqc.plots.plotly import layout_to_ir
+        return self.layout
 
-        return layout_to_ir(self.layout)
+    _IR_TOP_FIELDS = ("height", "width", "showlegend", "barmode")
+
+    def set_plotly_layout(self, **kwargs: Any) -> None:
+        """
+        Record a module's layout contribution. Every key is stored verbatim in
+        `plotly_layout_extra` (the plotly-json a module used to `layout.update(...)`), so
+        `to_plotly_layout` reproduces the old `go.Layout` byte-for-byte. The neutral fields
+        the ECharts backend reads from the shared layout (height/width/showlegend/barmode
+        and the per-axis title/type/ticksuffix/range) are additionally mirrored onto the IR.
+        """
+        for key, value in kwargs.items():
+            if key in self._IR_TOP_FIELDS:
+                setattr(self.layout, key, value)
+            elif key in ("xaxis", "yaxis") and isinstance(value, dict):
+                self._mirror_axis(getattr(self.layout, key), value)
+            deep_merge(self.plotly_layout_extra, {key: value})
+
+    @staticmethod
+    def _mirror_axis(axis_ir: "AxisIR", d: Dict[str, Any]) -> None:
+        if "title" in d:
+            title = d["title"]
+            axis_ir.title = title.get("text") if isinstance(title, dict) else title
+        if d.get("type") in ("linear", "log", "category"):
+            axis_ir.type = d["type"]
+        if "ticksuffix" in d and d["ticksuffix"] is not None:
+            axis_ir.ticksuffix = d["ticksuffix"]
+        if d.get("range") is not None:
+            axis_ir.range = (d["range"][0], d["range"][1])
+        auto = d.get("autorangeoptions")
+        if isinstance(auto, dict):
+            if auto.get("minallowed") is not None:
+                axis_ir.minallowed = auto["minallowed"]
+            if auto.get("maxallowed") is not None:
+                axis_ir.maxallowed = auto["maxallowed"]
+
+    def to_plotly_layout(self, *, flat: bool = False) -> "go.Layout":
+        """
+        Reassemble the Plotly `go.Layout`: the neutral base from `ir_to_layout(self.layout)`
+        with the module's `plotly_layout_extra` replayed on top. This is what the browser
+        Plotly renderer and the static/notebook figure path consume; it reproduces the
+        go.Layout that modules mutated in place before the IR migration.
+        """
+        from multiqc.plots.plotly import ir_to_layout
+
+        return ir_to_layout(self.layout, flat=flat, extra=self.plotly_layout_extra or None)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -790,45 +834,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        # Use the MultiQC template with runtime config values
-        template = go.layout.Template(get_multiqc_plotly_template())
-
-        layout: go.Layout = go.Layout(
-            template=template,
-            title=go.layout.Title(
-                text=pconfig.title,
-                xanchor="center",
-                x=0.5,
-            ),
-            xaxis=go.layout.XAxis(
-                automargin=True,  # auto-expand axis to fit the tick labels
-            ),
-            yaxis=go.layout.YAxis(
-                automargin=True,  # auto-expand axis to fit the tick labels
-            ),
+        # The neutral base layout. The fixed Plotly styling (template, margins, hover label,
+        # automargined axes, flat-legend) is owned by the Plotly backend's `ir_to_layout`;
+        # per-module Plotly extras are recorded via `Plot.set_plotly_layout` in each module.
+        layout = LayoutIR(
+            title=pconfig.title,
             height=height,
             width=width,
-            autosize=True,
-            margin=go.layout.Margin(
-                pad=5,  # pad sample names in a bar graph a bit
-                t=50,  # more compact title
-                r=15,  # remove excessive whitespace on the right
-                b=65,  # remove excessive whitespace on the bottom
-                l=60,  # remove excessive whitespace on the left
-            ),
-            hoverlabel=go.layout.Hoverlabel(
-                namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
             showlegend=showlegend,
-            legend=go.layout.Legend(
-                orientation="h",
-                yanchor="top",
-                y=-0.15,
-                xanchor="center",
-                x=0.5,
-            )
-            if flat
-            else None,
         )
 
         # Layout update for the counts/percentage switch
@@ -839,16 +852,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         axis_controlled_by_switches = axis_controlled_by_switches or []
         if pconfig.xlog:
-            _set_axis_log_scale(layout.xaxis)
+            layout.xaxis.type = "log"
             if "xaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("xaxis")
         if pconfig.ylog:
-            _set_axis_log_scale(layout.yaxis)
+            layout.yaxis.type = "log"
             if "yaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("yaxis")
         if add_log_tab and l_active:
             for axis in axis_controlled_by_switches:
-                layout[axis].type = "log"
+                getattr(layout, axis).type = "log"
 
         datasets = []
         for idx, n_series in enumerate(n_series_per_dataset):
@@ -1167,7 +1180,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         else:
             dataset = self.datasets[dataset_id]
 
-        layout = go.Layout(self.layout.to_plotly_json())  # make a copy
+        layout = self.to_plotly_layout(flat=flat)  # reassemble go.Layout from the neutral IR
         layout.update(**dataset.layout)
         if flat:
             if config.simple_output:
@@ -1294,6 +1307,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             from multiqc.plots import echarts  # lazy: avoids a circular import, see multiqc/plots/echarts/__init__.py
 
             dump["echarts"] = echarts.serialize(self)
+        else:
+            # The Plotly-JS renderer consumes dump["layout"] as a full plotly-json layout;
+            # model_dump serialized the neutral IR, so reassemble the go.Layout here.
+            dump["layout"] = self.to_plotly_layout(flat=self.flat).to_plotly_json()
         report.plot_data[self.anchor] = dump
         return html
 

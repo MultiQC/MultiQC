@@ -40,9 +40,11 @@ def _axis_ir_to_dict(axis: AxisIR) -> Dict[str, Any]:
     return d
 
 
-def ir_to_layout(ir: LayoutIR, *, flat: bool = False) -> go.Layout:
+def ir_to_layout(ir: LayoutIR, *, flat: bool = False, extra: Optional[Dict[str, Any]] = None) -> go.Layout:
     """Build the base MultiQC `go.Layout` from the neutral IR. `flat` adds the horizontal
-    bottom legend the static/flat path uses (interactive reports get no `legend` block)."""
+    bottom legend the static/flat path uses (interactive reports get no `legend` block).
+    `extra` is a per-plot plotly-json fragment (`Plot.plotly_layout_extra`) replayed on top
+    with `go.Layout.update`, reproducing the layout modules used to mutate directly."""
     # Lazy import: the MultiQC Plotly template lives in plot.py, which imports this package.
     from multiqc.plots.plot import get_multiqc_plotly_template
 
@@ -61,7 +63,10 @@ def ir_to_layout(ir: LayoutIR, *, flat: bool = False) -> go.Layout:
     )
     if ir.barmode is not None:
         kwargs["barmode"] = ir.barmode
-    return go.Layout(**kwargs)
+    layout = go.Layout(**kwargs)
+    if extra:
+        layout.update(**extra)
+    return layout
 
 
 def _axis_dict_to_ir(axis: Any) -> AxisIR:
