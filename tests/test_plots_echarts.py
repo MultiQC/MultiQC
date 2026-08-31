@@ -585,8 +585,11 @@ def test_interactive_plot_adds_echarts_key_for_heatmap_plot():
     assert "data" not in skeleton["xAxis"]
     assert "data" not in skeleton["yAxis"]
 
-    # visualMap: converted from the Plotly colorscale stop list (BUILD_PLAN.md "Colorscale
-    # conversion" risk: stop positions are dropped, only the ordered color list survives).
+    # visualMap: converted from the Plotly colorscale stop list, resampled into an evenly
+    # spaced colour list ECharts' own even-spacing-only visualMap can consume (see
+    # `test_colorscale_colors_resamples_uneven_stops_to_exact_positions` for the resample
+    # itself, which is what makes this reproduce Plotly's positions rather than just its
+    # ordered colours).
     visual_map = skeleton["visualMap"]
     assert visual_map["calculable"] is True
     assert isinstance(visual_map["inRange"]["color"], list)
@@ -622,6 +625,70 @@ def test_get_option_heatmap_cell_labels_when_display_values_enabled():
         assert item["label"]["show"] is True
         _xi, _yi, val = item["value"]
         assert item["label"]["formatter"] == f"{val:.2f}"
+
+
+def _colorscale_colors_for(colstops, reverse_colors=False):
+    plot = heatmap.plot(
+        data=[[0]],
+        xcats=["Cat1"],
+        ycats=["Sample1"],
+        pconfig=heatmap.HeatmapConfig(
+            id="echarts_heatmap_colorscale",
+            title="Test: Heatmap Colorscale",
+            colstops=colstops,
+            reverse_colors=reverse_colors,
+        ),
+    )
+    return echarts.heatmap._colorscale_colors(plot.datasets[0])
+
+
+def test_colorscale_colors_resamples_uneven_stops_to_exact_positions():
+    # FastQC's Status Checks heatmap uses stops that are NOT evenly spaced
+    # (0, 0.25, 0.5, 1): naively spreading the raw 4-colour list evenly across [0, 1]
+    # (the pre-fix behaviour) put the 0.25/0.5 colours in the wrong place. The resample
+    # must reproduce Plotly's own piecewise-linear colorscale lookup at each stop.
+    colors = _colorscale_colors_for([[0, "#ffffff00"], [0.25, "#d9534f"], [0.5, "#fee391"], [1, "#5cb85c"]])
+    n = len(colors)
+
+    def at(pos):
+        return colors[round(pos * (n - 1))]
+
+    assert at(0) == "rgba(255, 255, 255, 0.0)"  # not-run: transparent white
+    assert at(0.25) == "rgba(217, 83, 79, 1.0)"  # fail: matches Plotly's #d9534f exactly
+    assert at(0.5) == "rgba(254, 227, 145, 1.0)"  # warn: matches Plotly's #fee391 exactly
+    assert at(1) == "rgba(92, 184, 92, 1.0)"  # pass: matches Plotly's #5cb85c exactly
+
+
+def test_colorscale_colors_hard_step_is_not_blended():
+    # Duplicate/adjacent stop positions are a deliberate hard colour boundary (e.g. a
+    # 2-band scale); the resample must reproduce the same sharp jump, not a blend
+    # across the two colours flanking it.
+    colors = _colorscale_colors_for([[0, "#ff0000"], [0.5, "#ff0000"], [0.5, "#0000ff"], [1, "#0000ff"]])
+    n = len(colors)
+
+    def at(pos):
+        return colors[round(pos * (n - 1))]
+
+    assert at(0.49) == "rgba(255, 0, 0, 1.0)"
+    assert at(0.51) == "rgba(0, 0, 255, 1.0)"
+
+
+def test_colorscale_colors_reversescale_mirrors_stop_positions():
+    # Plotly's own `reversescale` mirrors stop positions (`1 - pos`), not just the
+    # colour order; verified against actual `plotly` rendered pixels for this exact,
+    # non-symmetric colorscale (see the module docstring in `echarts/heatmap.py`).
+    colors = _colorscale_colors_for(
+        [[0, "#ffffff"], [0.25, "#d9534f"], [0.5, "#fee391"], [1, "#5cb85c"]],
+        reverse_colors=True,
+    )
+    n = len(colors)
+
+    def at(pos):
+        return colors[round(pos * (n - 1))]
+
+    assert at(0) == "rgba(92, 184, 92, 1.0)"
+    assert at(0.5) == "rgba(254, 227, 145, 1.0)"
+    assert at(1) == "rgba(255, 255, 255, 1.0)"
 
 
 def test_get_option_heatmap_clustered_switch_uses_clustered_categories():

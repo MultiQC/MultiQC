@@ -8,21 +8,118 @@ axis/data field (`dataset.rows_clustered`/`xcats_clustered`/`ycats_clustered`, t
 `templates/echarts/src/js/plots/heatmap.js` for the interactive (toolbox-aware) JS
 counterpart of `series()`/`axis_data()` below.
 
-Colorscale conversion (documented risk, `multiqc-echarts-exploration/BUILD_PLAN.md`
-section 4 "Colorscale conversion"): Plotly's `colorscale` is a list of
-`(stop_position_0_to_1, color)` pairs, interpolated at arbitrary stop positions. ECharts'
-`visualMap.inRange.color` only accepts a flat color list, linearly interpolated at EVENLY
-spaced stops across [min, max]. We drop the stop positions and keep only the ordered color
-list. For the default 11-stop MultiQC colorscale (evenly spaced at 0.0, 0.1, ..., 1.0) this
-is an exact match; for a user-supplied `pconfig.colstops` with uneven stop spacing, the
-ECharts rendering will be close but not pixel-identical to Plotly. Accepted per the build
-plan ("get sign-off on 'close enough'").
+Colorscale conversion: Plotly's `colorscale` is a list of `(stop_position_0_to_1, color)`
+pairs, interpolated at arbitrary stop positions. ECharts' `visualMap.inRange.color` only
+accepts a flat color list, linearly interpolated at EVENLY spaced stops across [min, max].
+To reproduce Plotly's mapping exactly (including uneven stop spacing, e.g. FastQC's
+pass/warn/fail status heatmap, and hard colour steps from duplicate/adjacent stop
+positions), `_colorscale_colors` below RESAMPLES the colorscale into a fine, evenly spaced
+list of colours (`_RESAMPLE_STEPS`), piecewise-linearly interpolated in RGBA at each of
+those even steps. Feeding that fine, even list to `visualMap.inRange.color` makes ECharts'
+own even-spacing interpolation reproduce Plotly's uneven one to within the resample
+resolution.
 """
 
+import re
 from typing import Any, Dict, List, Tuple
 
 from multiqc.plots.echarts.converter import convert_layout
 from multiqc.plots.heatmap import Dataset, HeatmapConfig, HeatmapPlot
+
+# Number of evenly spaced colours ECharts' visualMap is fed: 256 resample intervals (257
+# points), so binary-fraction stop positions (0.25, 0.5, 0.125, ...), the common case for
+# hand-picked colorscales like FastQC's pass/warn/fail bands, land exactly on a resample
+# point instead of being split across two, and any other spacing is still visually
+# indistinguishable from Plotly's own continuous interpolation.
+_RESAMPLE_STEPS = 257
+
+_HEX_RE = re.compile(r"^#([0-9a-fA-F]{3,8})$")
+_RGB_RE = re.compile(r"^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$", re.IGNORECASE)
+# ponytail: only the CSS keywords MultiQC colorscales are known to use in practice
+# (`multiqc/modules/*/`.py`s `colstops` are otherwise all `#hex`/`rgba()`); extend this
+# table if a colorscale ever needs an uncommon named colour.
+_NAMED_COLORS: Dict[str, str] = {
+    "white": "#ffffff",
+    "black": "#000000",
+    "red": "#ff0000",
+    "green": "#008000",
+    "blue": "#0000ff",
+    "yellow": "#ffff00",
+    "cyan": "#00ffff",
+    "aqua": "#00ffff",
+    "magenta": "#ff00ff",
+    "fuchsia": "#ff00ff",
+    "gray": "#808080",
+    "grey": "#808080",
+    "orange": "#ffa500",
+    "purple": "#800080",
+    "navy": "#000080",
+    "lime": "#00ff00",
+    "maroon": "#800000",
+    "olive": "#808000",
+    "teal": "#008080",
+    "silver": "#c0c0c0",
+    "transparent": "rgba(0, 0, 0, 0)",
+}
+
+RGBA = Tuple[float, float, float, float]
+
+
+def _parse_color(color: str) -> RGBA:
+    """Parse a `#hex` (3/4/6/8 digit), `rgb()`/`rgba()`, or CSS-named colour string into
+    `(r, g, b, a)` with r/g/b in 0..255 and a in 0..1."""
+    color = _NAMED_COLORS.get(color.strip().lower(), color.strip())
+
+    m = _RGB_RE.match(color)
+    if m:
+        r, g, b = (float(m.group(i)) for i in (1, 2, 3))
+        a = float(m.group(4)) if m.group(4) is not None else 1.0
+        return r, g, b, a
+
+    m = _HEX_RE.match(color)
+    if m:
+        digits = m.group(1)
+        if len(digits) in (3, 4):
+            digits = "".join(c * 2 for c in digits)
+        if len(digits) == 6:
+            digits += "ff"
+        if len(digits) == 8:
+            r, g, b, a = (int(digits[i : i + 2], 16) for i in (0, 2, 4, 6))
+            return float(r), float(g), float(b), a / 255.0
+
+    raise ValueError(f"Unrecognised heatmap colorscale colour: {color!r}")
+
+
+def _format_rgba(rgba: RGBA) -> str:
+    r, g, b, a = rgba
+    return f"rgba({round(r)}, {round(g)}, {round(b)}, {round(a, 3)})"
+
+
+def _interp(c0: RGBA, c1: RGBA, frac: float) -> RGBA:
+    return (
+        c0[0] + (c1[0] - c0[0]) * frac,
+        c0[1] + (c1[1] - c0[1]) * frac,
+        c0[2] + (c1[2] - c0[2]) * frac,
+        c0[3] + (c1[3] - c0[3]) * frac,
+    )
+
+
+def _color_at(stops: List[Tuple[float, RGBA]], t: float) -> RGBA:
+    """Piecewise-linear interpolation at `t`, matching Plotly's own colorscale lookup."""
+    if t <= stops[0][0]:
+        return stops[0][1]
+    if t >= stops[-1][0]:
+        return stops[-1][1]
+    for (p0, c0), (p1, c1) in zip(stops, stops[1:]):
+        if t > p1:
+            continue
+        if p1 == p0:
+            # Duplicate/adjacent stop positions: a hard colour step in the source
+            # colorscale. Jump straight to the colour after the step instead of
+            # blending (a blend would require dividing by a zero-width span).
+            return c1
+        return _interp(c0, c1, (t - p0) / (p1 - p0))
+    return stops[-1][1]  # pragma: no cover (unreachable: covered by the bounds checks above)
 
 
 def _active_rows_and_cats(dataset: Dataset, cluster_active: bool) -> Tuple[List[List[Any]], List[str], List[str]]:
@@ -43,11 +140,29 @@ def _active_rows_and_cats(dataset: Dataset, cluster_active: bool) -> Tuple[List[
 
 
 def _colorscale_colors(dataset: Dataset) -> List[str]:
+    """
+    Resample `dataset.trace_params["colorscale"]` (Plotly's `[(stop_position, color), ...]`,
+    positions in 0..1) into `_RESAMPLE_STEPS` evenly spaced colours, so ECharts'
+    even-spacing-only `visualMap.inRange.color` reproduces Plotly's piecewise-linear,
+    possibly-uneven-stop mapping. See the module docstring.
+    """
     colorscale = dataset.trace_params.get("colorscale") or []
-    colors = [str(color) for _, color in colorscale]
+    if not colorscale:
+        return []
+
+    stops = sorted(((float(pos), _parse_color(str(color))) for pos, color in colorscale), key=lambda s: s[0])
+
     if dataset.trace_params.get("reversescale"):
-        colors = list(reversed(colors))
-    return colors
+        # Plotly's own `reversescale` mirrors stop positions (`1 - pos`), not just the
+        # colour order (verified against `plotly`'s rendered output for an uneven,
+        # non-symmetric colorscale): reversing only the colour order at the original
+        # positions is exact solely when the stops happen to be symmetric (e.g. the
+        # default evenly spaced scale), which is why that simpler approach used to work.
+        stops = sorted(((1.0 - pos, color) for pos, color in stops), key=lambda s: s[0])
+
+    lo, hi = stops[0][0], stops[-1][0]
+    span = hi - lo or 1.0
+    return [_format_rgba(_color_at(stops, lo + span * i / (_RESAMPLE_STEPS - 1))) for i in range(_RESAMPLE_STEPS)]
 
 
 def layout_option(plot: "HeatmapPlot", dataset: Dataset) -> Dict[str, Any]:
