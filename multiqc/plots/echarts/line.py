@@ -2,7 +2,7 @@
 ECharts option builder for `PlotType.LINE` (`multiqc/plots/linegraph.py`).
 
 See `templates/default/src/js/plots/line.js` for the Plotly-JS equivalent this mirrors,
-and `templates/echarts/src/js/plots/line.js` for the interactive (toolbox-aware) JS
+and `templates/default/src/js/plots-echarts/line.js` for the interactive (toolbox-aware) JS
 counterpart of `series()` below.
 """
 
@@ -74,7 +74,7 @@ def series(dataset: Dataset, pconfig: LinePlotConfig, is_pct: bool) -> List[Dict
     One `{"type": "line"}` series per `dataset.lines[i]`, plus (if configured) a trailing
     silent series carrying the static bands/lines markArea/markLine from
     `trailing_bands_lines_series`. This is the SSR/get_option (non-toolbox) path; the
-    interactive path is `EchartsLinePlot.buildSeries()` (`templates/echarts/src/js/plots/line.js`).
+    interactive path is `EchartsLinePlot.buildSeries()` (`templates/default/src/js/plots-echarts/line.js`).
 
     `is_pct` is accepted for dispatch-signature parity with `bar.series`; line plots
     never enable the percentage switch (`Plot.initialize` only sets `add_pct_tab` for

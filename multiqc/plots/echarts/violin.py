@@ -13,7 +13,7 @@ same range, so the labels were pure duplication and read as if the beeswarm dots
 themselves carried on-canvas text.)
 
 Per-row geometry: `_row_geometry` mirrors the same formula duplicated in
-`templates/echarts/src/js/plots/violin.js` (`rowGeometry`), so a row's grid percentage
+`templates/default/src/js/plots-echarts/violin.js` (`rowGeometry`), so a row's grid percentage
 split is identical whether computed here (SSR/`get_option`) or in the browser
 (interactive). Because grid percentages are resolved against whatever pixel height the
 chart is actually given, this self-scales correctly for both the SSR/flat path (container
@@ -135,7 +135,7 @@ _SCATTER_COLOR_PLAIN = "#0b79e6"
 # --- Per-row grid geometry: the cross-language contract --------------------------------
 #
 # GOLDEN CROSS-LANGUAGE CONTRACT: kept in lockstep with `rowGeometry()` in
-# `templates/echarts/src/js/plots/violin.js` (same duplication pattern as `kde()`).
+# `templates/default/src/js/plots-echarts/violin.js` (same duplication pattern as `kde()`).
 # `ROW_PX`/`EXTRA_PX`/`BOTTOM_PX` describe an IDEAL container height (`ROW_PX * n +
 # EXTRA_PX + BOTTOM_PX`) that the interactive JS renderer actually builds (via a CSS
 # height it sets itself, giving Plotly-comparable compact rows, POLISH.md #4); this
@@ -193,7 +193,7 @@ def _rgba(rgb: str, alpha: float) -> str:
 #
 # GOLDEN VALUES (mirrored verbatim in `tests/test_plots_echarts.py::test_kde_golden_values`
 # and, in Task 2.2, in a comment block at the top of
-# `templates/echarts/src/js/plots/violin.js`). Any change to this formula must update both.
+# `templates/default/src/js/plots-echarts/violin.js`). Any change to this formula must update both.
 #
 #   values = [1.0, 2.0, 3.0, 4.0, 5.0]
 #   xs     = [1.0, 3.0, 5.0]
@@ -712,7 +712,7 @@ def series(dataset: Dataset, pconfig: TableConfig, is_pct: bool) -> List[Dict[st
     beeswarm `scatter` series (one per metric; see `_scatter_series_for_metric`), each
     bound to its own row's `xAxisIndex`/`yAxisIndex`. This is the SSR/get_option
     (non-toolbox) path; the interactive path is `EchartsViolinPlot.buildSeries()`
-    (`templates/echarts/src/js/plots/violin.js`, Task 2.2). The row TITLES are not a
+    (`templates/default/src/js/plots-echarts/violin.js`, Task 2.2). The row TITLES are not a
     series at all (see `_title_option`/`layout_option`), so they are not built here.
 
     There is deliberately no min/max-annotation series any more: each row already has its

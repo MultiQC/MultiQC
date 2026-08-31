@@ -2,7 +2,7 @@
 ECharts option builder for `PlotType.BOX` (`multiqc/plots/box.py`).
 
 MultiQC box plots are horizontal: samples on the (inverted) category axis (y), values
-on the value axis (x), mirroring bar.py. See `templates/echarts/src/js/plots/box.js` for
+on the value axis (x), mirroring bar.py. See `templates/default/src/js/plots-echarts/box.js` for
 the interactive (toolbox-aware) JS counterpart of `series()`/`axis_data()` below.
 
 ECharts' native `boxplot` series type takes a PRECOMPUTED five-number summary
@@ -21,7 +21,7 @@ five-number summary below are NOT the sample's absolute min/max, but the whisker
 values outside the fence are outliers.
 
 This is the SAME formula ported verbatim to JS in
-`templates/echarts/src/js/plots/box.js` (`quantile`/`fiveNumberSummary`/`outliers`); the
+`templates/default/src/js/plots-echarts/box.js` (`quantile`/`fiveNumberSummary`/`outliers`); the
 cross-language contract is pinned by one golden fixed-input/expected-output test in
 `tests/test_plots_echarts.py` (`test_box_five_number_summary_golden_values` /
 `test_box_outliers_golden_values`), whose exact input and expected values are mirrored
@@ -169,7 +169,7 @@ def series(dataset: Dataset, pconfig: BoxPlotConfig, is_pct: bool) -> List[Dict[
     `{"type": "scatter"}` series of outlier points (or every point, when
     `boxpoints == "all"`). This is the SSR/get_option (non-toolbox) path; the
     interactive path is `EchartsBoxPlot.buildSeries()`
-    (`templates/echarts/src/js/plots/box.js`).
+    (`templates/default/src/js/plots-echarts/box.js`).
 
     `pconfig`/`is_pct` are accepted for dispatch-signature parity with `bar.series`; box
     plots never enable the percentage switch, so they are unused here.

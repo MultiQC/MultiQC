@@ -5,7 +5,7 @@ Unlike bar/line/scatter, a heatmap dataset can have BOTH axes carry toolbox-depe
 sample names (`pconfig.xcats_samples`/`ycats_samples`) and a "clustered" variant of every
 axis/data field (`dataset.rows_clustered`/`xcats_clustered`/`ycats_clustered`, toggled by
 `pconfig.cluster_switch_clustered_active`); see
-`templates/echarts/src/js/plots/heatmap.js` for the interactive (toolbox-aware) JS
+`templates/default/src/js/plots-echarts/heatmap.js` for the interactive (toolbox-aware) JS
 counterpart of `series()`/`axis_data()` below.
 
 Colorscale conversion: Plotly's `colorscale` is a list of `(stop_position_0_to_1, color)`
@@ -242,7 +242,7 @@ def series(dataset: Dataset, pconfig: HeatmapConfig, is_pct: bool) -> List[Dict[
     """
     One `{"type": "heatmap"}` series with `data: [[xi, yi, val], ...]`. This is the
     SSR/get_option (non-toolbox) path; the interactive path is
-    `EchartsHeatmapPlot.buildSeries()` (`templates/echarts/src/js/plots/heatmap.js`).
+    `EchartsHeatmapPlot.buildSeries()` (`templates/default/src/js/plots-echarts/heatmap.js`).
 
     `is_pct` is accepted for dispatch-signature parity with `bar.series`; heatmaps never
     enable the percentage switch, so it is unused here.

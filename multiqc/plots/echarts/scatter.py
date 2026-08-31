@@ -67,7 +67,7 @@ def series(dataset: Dataset, pconfig: ScatterConfig, is_pct: bool) -> List[Dict[
     One `{"type": "scatter"}` series holding every point in `dataset.points`, each with
     its own per-item style. This is the SSR/get_option (non-toolbox) path; the
     interactive path is `EchartsScatterPlot.buildSeries()`
-    (`templates/echarts/src/js/plots/scatter.js`).
+    (`templates/default/src/js/plots-echarts/scatter.js`).
 
     `is_pct` is accepted for dispatch-signature parity with `bar.series`/`line.series`;
     scatter plots never enable the percentage switch (`Plot.initialize` only sets

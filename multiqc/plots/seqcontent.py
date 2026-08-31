@@ -89,7 +89,7 @@ def bin_rgb(b: "SeqContentBin") -> Tuple[int, int, int]:
     """
     Golden RGB contract, must stay identical to its JS twins in
     templates/default/src/js/plots/seqcontent.js and
-    templates/echarts/src/js/plots/seqcontent.js / plots/echarts/seqcontent.py:
+    templates/default/src/js/plots-echarts/seqcontent.js / plots/echarts/seqcontent.py:
     R = %T, G = %A, B = %C (%G implied by the complement of the other three).
     """
     r = round(b.t / 100 * 255)

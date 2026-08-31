@@ -15,7 +15,7 @@ side has highlight state).
 `RENDER_ITEM_BODY` (the `__FN__` sentinel body executed by `static_export.py`'s walker,
 verified to already support `series[].renderItem` with args `["params", "api"]`) is the
 GOLDEN CONTRACT for its JS twin, the LIVE `renderItem` function built by
-`EchartsSeqContentPlot.buildSeries()` in `templates/echarts/src/js/plots/seqcontent.js`
+`EchartsSeqContentPlot.buildSeries()` in `templates/default/src/js/plots-echarts/seqcontent.js`
 (Task 2.2): both must map a `[start, end, row, r, g, b, opacity]` item to the same rect
 geometry, fill color, and opacity.
 """
@@ -26,7 +26,7 @@ from multiqc.plots.echarts.converter import convert_layout, zoom_option
 from multiqc.plots.seqcontent import Dataset, SeqContentConfig, SeqContentPlot, bin_rgb
 
 # GOLDEN CONTRACT: kept in lockstep with the live `renderItem` in
-# `templates/echarts/src/js/plots/seqcontent.js` (Task 2.2). A bin covers columns
+# `templates/default/src/js/plots-echarts/seqcontent.js` (Task 2.2). A bin covers columns
 # `start..end` inclusive (1-based, matching `Dataset.create_figure`'s Plotly-side pixel
 # fill), so its rect spans the data-space interval `[start, end + 1)` on the value xAxis;
 # the yAxis is a category axis, one row per sample, so `row` is used as-is. The rect is
@@ -135,7 +135,7 @@ def series(dataset: Dataset, pconfig: SeqContentConfig, is_pct: bool) -> List[Di
     """
     One `{"type": "custom"}` series, one rect per bin. This is the SSR/get_option
     (non-toolbox) path; the interactive path is `EchartsSeqContentPlot.buildSeries()`
-    (`templates/echarts/src/js/plots/seqcontent.js`).
+    (`templates/default/src/js/plots-echarts/seqcontent.js`).
 
     `is_pct` is accepted for dispatch-signature parity with `bar.series`; seqcontent has
     no percentage switch, so it is unused here.

@@ -73,7 +73,7 @@ def _si_axis_formatter_body(suffix: str) -> str:
     (e.g. a coverage "x" unit).
 
     GOLDEN CROSS-LANGUAGE CONTRACT: this algorithm must stay identical to
-    `formatAxisNumber()` in `multiqc/templates/echarts/src/js/echarts-plotting.js` (same
+    `formatAxisNumber()` in `multiqc/templates/default/src/js/echarts-plotting.js` (same
     duplication pattern as `violin.py`'s `kde()`/JS `kde()` pair) since only the SSR path
     (`static_export.py`) ever executes this body; the interactive JS renderer always
     overwrites this sentinel with its own live `formatAxisNumber` call before
@@ -340,7 +340,7 @@ def zoom_option(*, x: bool = True, y: bool = True) -> Dict[str, Any]:
     """
     Plotly-style click+drag box-zoom (POLISH.md #17). ECharts' rubber-band box-zoom lives
     behind the toolbox `dataZoom` feature; the interactive JS renderer
-    (`templates/echarts/src/js/echarts-plotting.js`) activates its cursor mode
+    (`templates/default/src/js/echarts-plotting.js`) activates its cursor mode
     automatically after every render via `takeGlobalCursor`, so the user never has to
     click a toolbar button first, matching Plotly's default click-drag-to-zoom. The
     toolbox icon row itself is pushed off-canvas (`top: "150%"`): MultiQC already has its
@@ -397,7 +397,7 @@ def trailing_bands_lines_series(
     scatter.py so it shows up in the SSR/get_option (non-toolbox) path. The interactive
     JS path carries the same `bands_and_lines` payload separately, via `layout_option`
     stashing it under `option["_mqc"]["bandsLines"]` for `Plot.bandsLinesSeries()`
-    (`templates/echarts/src/js/echarts-plotting.js`) to read.
+    (`templates/default/src/js/echarts-plotting.js`) to read.
     """
     bands_lines = bands_and_lines(pconfig, include_x=include_x, include_y=include_y)
     if not bands_lines:
