@@ -752,6 +752,28 @@ def test_interactive_plot_adds_echarts_key_for_seqcontent_plot():
     assert "data" not in skeleton["yAxis"]
     assert "visualMap" not in skeleton
 
+    # BUG FIX: a bin only partially inside the zoomed window must still be drawn (its
+    # visible portion clipped by the grid), not dropped by dataZoom's default "filter"
+    # behavior (see seqcontent.py::layout_option). Both the "inside" dataZoom entries
+    # and the toolbox box-select dataZoom feature must carry the override.
+    assert skeleton["dataZoom"] == [
+        {
+            "type": "inside",
+            "xAxisIndex": [0],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            "filterMode": "none",
+        },
+        {
+            "type": "inside",
+            "yAxisIndex": [0],
+            "zoomOnMouseWheel": False,
+            "moveOnMouseWheel": False,
+            "filterMode": "none",
+        },
+    ]
+    assert skeleton["toolbox"]["feature"]["dataZoom"]["filterMode"] == "none"
+
 
 def test_get_option_seqcontent_builds_one_custom_series_with_golden_rgb_data():
     plot = _make_seqcontent_plot()

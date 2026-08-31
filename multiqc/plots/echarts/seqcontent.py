@@ -79,7 +79,23 @@ def layout_option(plot: "SeqContentPlot", dataset: Dataset) -> Dict[str, Any]:
     # filter by the right item dimensions (x: [start, end], y: row); without it, the y
     # dataZoom silently dropped any bin whose `end` value exceeded the sample count
     # (Item 1's regression).
-    option.update(zoom_option(x=True, y=True))
+    zoom = zoom_option(x=True, y=True)
+    # BUG FIX: default dataZoom `filterMode` ("filter") REMOVES any data item not fully
+    # within the zoomed window from the series before renderItem runs, so a bin only
+    # partially covered by the zoom window (e.g. positions 50-100 zoomed to 30-60)
+    # vanished entirely instead of showing its visible portion (Plotly has no such bug,
+    # since its heatmap is a raster image, not per-bin marks). "none" makes dataZoom only
+    # change the axis view range and leaves the series' `data` untouched, so renderItem
+    # still draws every bin and the grid clips whatever falls outside the visible range
+    # (same fix as violin.py/violin.js's dataZoom, for the same underlying ECharts
+    # behavior). Scoped to THIS plot's dataZoom entries only, not `zoom_option`'s shared
+    # default, since other plot types' series rely on the default "filter" behavior.
+    # Both the "inside" dataZoom entries AND the toolbox box-select `dataZoom` feature
+    # (which independently creates its own dataZoom instance on drag) need the override.
+    for dz in zoom["dataZoom"]:
+        dz["filterMode"] = "none"
+    zoom["toolbox"]["feature"]["dataZoom"]["filterMode"] = "none"
+    option.update(zoom)
     # Item 3: positions start at 1, xAxis.min above already fixes the axis's own scale
     # extent there, and an "inside" dataZoom's start/end window can never exceed the
     # axis's configured min/max, so pan/zoom can't show x < 1 (let alone < 0).
