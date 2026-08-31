@@ -75,7 +75,14 @@ def layout_option(plot: "SeqContentPlot", dataset: Dataset) -> Dict[str, Any]:
     # Unlike heatmap.py (a `heatmap`-type series, where the toolbox box-select brush was
     # confirmed empirically to never engage), this is a `custom` series with a real
     # numeric x-axis (bp position), so both axes get click+drag box-zoom like line/scatter.
+    # Both axes' "inside" dataZoom rely on the series' `encode` (see series() below) to
+    # filter by the right item dimensions (x: [start, end], y: row); without it, the y
+    # dataZoom silently dropped any bin whose `end` value exceeded the sample count
+    # (Item 1's regression).
     option.update(zoom_option(x=True, y=True))
+    # Item 3: positions start at 1, xAxis.min above already fixes the axis's own scale
+    # extent there, and an "inside" dataZoom's start/end window can never exceed the
+    # axis's configured min/max, so pan/zoom can't show x < 1 (let alone < 0).
 
     return option
 
@@ -105,6 +112,30 @@ def series(dataset: Dataset, pconfig: SeqContentConfig, is_pct: bool) -> List[Di
             "coordinateSystem": "cartesian2d",
             "renderItem": {"__FN__": True, "body": RENDER_ITEM_BODY},
             "data": data,
+            # REGRESSION FIX (Item 1): without an explicit `encode`, ECharts defaults a
+            # cartesian custom series' dimension-to-axis mapping to dim0 -> x, dim1 -> y
+            # (positional inference), i.e. it would treat `end` (item index 1) as the
+            # Y VALUE. That's invisible for renderItem itself (it reads api.value(0..6)
+            # directly, unaffected by encode), but `zoom_option`'s "inside" dataZoom on
+            # the yAxis uses this inferred encoding to decide which items are "in range"
+            # (filterMode "filter"): any bin whose `end` exceeded the sample count (e.g.
+            # end=49 on a report with 34 samples/category indices 0..33) was silently
+            # dropped from the whole series, even with no zoom applied (the dataZoom's
+            # default range is the full 0..100%, but it still filters by this bogus
+            # per-item comparison). That's why long-read samples' wide bins (position
+            # >= n_samples) vanished after `zoom_option(y=True)` was added: this encode
+            # makes the y dataZoom filter by `row` (item index 2, the real sample axis
+            # value) instead, and the x dataZoom filter by the [start, end] pair, so a
+            # bin is kept whenever start OR end falls in the zoomed window (no gaps at
+            # the window edges when a bin straddles the boundary).
+            "encode": {"x": [0, 1], "y": 2},
+            # Item 4: this heatmap's primary interaction is click-to-drill-down (see
+            # afterPlotCreated()/openDrilldown() in the JS twin), so a pointer cursor is
+            # the correct affordance over the rects, not ECharts' default zoom/crosshair
+            # cursor. `cursor` is a top-level series option (drawn from every rect this
+            # series renders), so this only affects the seqcontent plot's own series,
+            # never other echarts plot types.
+            "cursor": "pointer",
         }
     ]
 

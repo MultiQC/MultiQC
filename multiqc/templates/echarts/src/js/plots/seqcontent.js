@@ -79,6 +79,18 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
         coordinateSystem: "cartesian2d",
         renderItem: seqContentRenderItem,
         data: data,
+        // REGRESSION FIX (Item 1): see the matching comment on the `encode` field of
+        // the SSR twin's series() in multiqc/plots/echarts/seqcontent.py -- without it,
+        // ECharts infers dim0 -> x, dim1 -> y for a cartesian custom series, so the
+        // `zoom_option` yAxis dataZoom filtered items by `end` (item index 1) against
+        // the sample-count range instead of by `row` (item index 2), silently dropping
+        // every bin whose `end` exceeded the sample count. This encode fixes that.
+        encode: { x: [0, 1], y: 2 },
+        // Item 4: pointer cursor over this heatmap's rects (its primary interaction is
+        // click-to-drill-down, see afterPlotCreated() below), not ECharts' default
+        // zoom/crosshair cursor. `cursor` is a series-level option, so it only affects
+        // this series, never other echarts plot types.
+        cursor: "pointer",
       },
     ];
   }
@@ -118,6 +130,22 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
   // prepData() computed for this render.
   afterPlotCreated() {
     this.bindDrilldownControls();
+    if (!this._cursorStyleInjected) {
+      this._cursorStyleInjected = true;
+      // Item 4: the series-level `cursor: "pointer"` set in buildSeries() above only
+      // covers the rendered rects themselves; ECharts' box-zoom "dataZoomSelect" cursor
+      // mode (activated globally by echarts-plotting.js's renderPlot() whenever
+      // `toolbox.feature.dataZoom` is present, which it is here, see zoom_option) sets
+      // an inline `cursor: crosshair` on the chart's own wrapping div on every render,
+      // which otherwise wins over empty space between rects (and, since it's inline,
+      // over any plain CSS rule without `!important`). Scoped by this plot's own
+      // anchor id (never touches other echarts plots), `!important` beats that inline
+      // style the same way the default template's Item 4 fix beats Plotly's
+      // `.nsewdrag` inline cursor.
+      const style = document.createElement("style");
+      style.textContent = `#${this.anchor} div { cursor: pointer !important; }`;
+      document.head.appendChild(style);
+    }
     // this.chart persists across re-renders (echarts-plotting.js's renderPlot() only
     // creates it once), so the click listener must be bound once too, not on every
     // afterPlotCreated() call (which would stack duplicate handlers).
