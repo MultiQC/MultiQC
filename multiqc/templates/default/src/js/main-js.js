@@ -40,6 +40,7 @@ import "./plots/line.js";
 import "./plots/scatter.js";
 import "./plots/heatmap.js";
 import "./plots/violin.js";
+import "./plots/seqcontent.js";
 
 // AI features
 import "./ai-helpers.js";

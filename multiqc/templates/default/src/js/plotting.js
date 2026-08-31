@@ -157,6 +157,7 @@ function initPlot(dump) {
   if (dump["plot_type"] === "scatter plot") return new ScatterPlot(dump);
   if (dump["plot_type"] === "violin plot") return new ViolinPlot(dump);
   if (dump["plot_type"] === "heatmap") return new HeatmapPlot(dump);
+  if (dump["plot_type"] === "seqcontent") return new SeqContentPlot(dump);
   console.log("Did not recognise plot type: " + dump["plot_type"]);
   return null;
 }
