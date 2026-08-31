@@ -3,25 +3,18 @@
  echarts
 ========
 
-A child theme of 'default' that renders plots with Apache ECharts instead of
-Plotly. Selected via `multiqc --template echarts`.
-
+Back-compat alias for `multiqc --template echarts`. The main `default` template now
+renders with Apache ECharts, so this is a thin child of `default` that inherits all of
+its files (includes.html, compiled JS/CSS, the vendored ECharts bundle). Kept so existing
+`--template echarts` invocations keep working; new reports should just use `default`.
 """
 
-import importlib
 import os
 
 template_parent = "default"
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
 
-# Template configuration - overrides user config
+# Inherited from `default` anyway; set explicitly so the engine resolves even if the
+# parent chain changes.
 plotting_engine = "echarts"
-
-# Import template functions from parent
-try:
-    parent_mod = importlib.import_module(f"multiqc.templates.{template_parent}")
-    if hasattr(parent_mod, "template_functions"):
-        template_functions = parent_mod.template_functions
-except ImportError:
-    pass

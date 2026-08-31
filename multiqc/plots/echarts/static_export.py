@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_BUNDLE_PACKAGE = "multiqc.templates.echarts"
+_BUNDLE_PACKAGE = "multiqc.templates.default"
 _BUNDLE_RESOURCE = "assets/js/packages/echarts-6.1.0.custom.min.js"
 _FONT_PACKAGE = "multiqc.plots.echarts"
 _FONT_RESOURCE = "fonts/DejaVuSans.ttf"
