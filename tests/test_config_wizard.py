@@ -257,7 +257,7 @@ def test_update_config_resolves_plotting_engine_from_template():
         "echarts": "echarts",
         "plotly": "plotly",  # explicit Plotly template
         "disco": "plotly",  # child of `plotly`
-        "simple": "plotly",  # child of `original` (Plotly)
+        "simple": "echarts",  # flat/static output via ECharts SSR (also used by --pdf)
         "sections": "plotly",  # child of `original`
     }
     for template, engine in expected.items():
