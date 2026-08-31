@@ -1,4 +1,4 @@
-import plotly.graph_objects as go
+import plotly.graph_objects as go  # type: ignore
 import pytest
 
 from multiqc import report
