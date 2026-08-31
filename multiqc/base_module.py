@@ -105,9 +105,8 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
-        *,
-        license: Optional[str],
-        license_url: Optional[str],
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
     ):
         validation.reset()
 
@@ -232,6 +231,17 @@ class BaseMultiqcModule:
                 )
             doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
+        license_html = ""
+        if self.license:
+            if self.license_url:
+                license_link = (
+                    f' <a class="module-license text-muted" href="{self.license_url}"'
+                    f' target="_blank">{self.license}</a>'
+                )
+            else:
+                license_link = f" {self.license}"
+            license_html = f'<span class="text-muted small ms-2">License:{license_link}</span>'
+
         url_link = ""
         if len(self.href) > 0:
             url_links: List[str] = []
@@ -239,7 +249,7 @@ class BaseMultiqcModule:
                 url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
             url_link = "; ".join(url_links)
 
-        info_html = f"{self.info}{url_link}{doi_html}"
+        info_html = f"{self.info}{url_link}{doi_html}{license_html}"
         if not info_html.startswith("<"):  # Assume markdown, convert to HTML
             info_html = markdown.markdown(info_html)
 
@@ -1362,7 +1372,7 @@ class BaseMultiqcModule:
 
         meta = report.software_versions_metadata[self.name].get(software_name)
         if meta is None:
-            meta = SoftwareVersionMetadata(license=None, license_url=None)
+            meta = SoftwareVersionMetadata()
             report.software_versions_metadata[self.name][software_name] = meta
         if license is not None:
             meta.license = license

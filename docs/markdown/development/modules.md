@@ -327,8 +327,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 ```
 
-The `license` and `license_url` arguments are **required**: every module must
-declare the license of the tool it wraps (see
+Like `doi`, the `license` and `license_url` arguments are optional but expected
+for every module. The CI linter (`code_checks.py`) checks that both are present
+in each module, so declare the license of the tool the module wraps (see
 [Adding license and DOI information](#adding-license-and-doi-information)
 below). If the license is genuinely unknown or the tool is proprietary, pass
 `license=None` and `license_url=None` with a short code comment explaining why.
@@ -363,8 +364,8 @@ The available arguments when initialising a module as follows:
 - `href` - Link(s) to the homepage for the tool
 - `info` - Very short description text about the tool. Supports markdown formatting when `autoformat=True` and `autoformat_type="markdown"` (default). Can include **bold** text, *italic* text, [links](https://example.com), lists, and other markdown features.
 - `doi` - One or more publication DOIs (can be a string or a list)
-- `license` - **Required.** Human readable name of the tool's software license (e.g. `"MIT License"`), or `None` if unknown or proprietary.
-- `license_url` - **Required.** URL to the license text, or `None`.
+- `license` - Human readable name of the tool's software license (e.g. `"MIT License"`), or `None` if unknown or proprietary. Checked by CI, like `doi`.
+- `license_url` - URL to the license text, or `None`.
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
@@ -862,16 +863,17 @@ for line in f.splitlines():
 
 #### Adding license and DOI information
 
-To make reports more FAIR compliant, the _Software Versions_ section shows the
-software license and citation DOI(s) as extra columns. This information is
-hardcoded in the module, either in the module constructor (in which case it
-applies to the module's software) or per software in the
+To make reports more FAIR compliant, the module header shows the software
+license (a linked name, just after the DOI), and the _Software Versions_
+section shows the license and citation DOI(s) as extra columns. This
+information is hardcoded in the module, either in the module constructor (in
+which case it applies to the module's software) or per software in the
 `self.add_software_version()` call.
 
-Declaring the license is **mandatory**: `license` and `license_url` are
-required arguments of the module constructor, so a module that omits them will
-fail to load. The DOI is taken from the `doi` argument that modules already
-pass to the constructor.
+Like `doi`, `license` and `license_url` are optional constructor arguments, but
+the CI linter (`code_checks.py`) checks that both are present in every module,
+so they should always be set. The DOI is taken from the `doi` argument that
+modules already pass to the constructor.
 
 ```python
 super().__init__(

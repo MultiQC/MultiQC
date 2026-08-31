@@ -72,8 +72,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://example.com/toolname",
             info="Brief description starting with capital letter.",
             doi="10.xxxx/journal.xxxxx",
-            # license/license_url are required. Use the tool's license, or
-            # None (with a comment) if unknown or proprietary.
+            # license/license_url: checked by CI (like doi). Use the tool's
+            # license, or None (with a comment) if unknown or proprietary.
             license="MIT License",
             license_url="https://opensource.org/license/mit",
         )
@@ -201,8 +201,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://example.com/toolname",
             info="Toolkit for [description].",
             doi="10.xxxx/journal.xxxxx",
-            # license/license_url are required. Use the tool's license, or
-            # None (with a comment) if unknown or proprietary.
+            # license/license_url: checked by CI (like doi). Use the tool's
+            # license, or None (with a comment) if unknown or proprietary.
             license="MIT License",
             license_url="https://opensource.org/license/mit",
         )

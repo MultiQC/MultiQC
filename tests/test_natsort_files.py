@@ -26,7 +26,7 @@ def test_files_natsorted_by_clean_sample_name():
     # Mock report.files
     with patch("multiqc.report.files", {ModuleId("test"): mock_files}):
         # Create a test module
-        test_module = BaseMultiqcModule(name="Test Module", anchor="test", license=None, license_url=None)
+        test_module = BaseMultiqcModule(name="Test Module", anchor="test")
 
         # Get sorted files
         sorted_files = []
@@ -54,7 +54,7 @@ def test_files_natsorted_with_complex_sample_names():
     # Mock report.files
     with patch("multiqc.report.files", {ModuleId("test"): mock_files}):
         # Create a test module
-        test_module = BaseMultiqcModule(name="Test Module", anchor="test", license=None, license_url=None)
+        test_module = BaseMultiqcModule(name="Test Module", anchor="test")
 
         # Get sorted files
         sorted_files = []

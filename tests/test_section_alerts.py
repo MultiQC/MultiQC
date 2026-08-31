@@ -6,7 +6,7 @@ from multiqc.types import SectionAlert
 
 
 def test_add_section_formats_alert_markdown_and_samples():
-    module = BaseMultiqcModule(name="Test", anchor="test", license=None, license_url=None)
+    module = BaseMultiqcModule(name="Test", anchor="test")
 
     module.add_section(
         name="Only alert",
@@ -25,7 +25,7 @@ def test_add_section_formats_alert_markdown_and_samples():
 
 
 def test_add_section_accepts_plain_string_alert():
-    module = BaseMultiqcModule(name="Test", anchor="test", license=None, license_url=None)
+    module = BaseMultiqcModule(name="Test", anchor="test")
 
     module.add_section(name="String alert", alerts="Plain **markdown** alert.")
 
@@ -46,7 +46,7 @@ def test_section_alert_rejects_non_bootstrap_level():
 
 
 def test_add_section_skips_empty_alert_message_with_samples():
-    module = BaseMultiqcModule(name="Test", anchor="test", license=None, license_url=None)
+    module = BaseMultiqcModule(name="Test", anchor="test")
 
     module.add_section(
         name="Empty alert",

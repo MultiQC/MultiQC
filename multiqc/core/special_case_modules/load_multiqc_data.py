@@ -122,9 +122,6 @@ class LoadMultiqcData(BaseMultiqcModule):
             name="MultiQC Data",
             anchor=Anchor("multiqc_data"),
             info="loads multiqc data",
-            # Internal MultiQC section, not an external tool: no license to declare
-            license=None,
-            license_url=None,
         )
 
         # Dictionary to collect all software versions from all parquet files

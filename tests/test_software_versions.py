@@ -18,7 +18,7 @@ def test_sorting():
     """
     Versions should be sorted by component
     """
-    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
+    mod = multiqc.BaseMultiqcModule()
 
     mod.add_software_version("1.10.1")
     mod.add_software_version("1.2.3")
@@ -36,7 +36,7 @@ def test_with_software_name():
     """
     Versions should be sorted by component
     """
-    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
+    mod = multiqc.BaseMultiqcModule()
 
     mod.add_software_version("1.10.1", software_name="tool1")
     mod.add_software_version("1.2.3", software_name="tool2")
@@ -54,7 +54,7 @@ def test_parsing_and_sorting():
     """
     Versions should be parsed for sorting, but represented originally
     """
-    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
+    mod = multiqc.BaseMultiqcModule()
     versions = [
         "v1.1.1-r505",
         "v2.r505",
@@ -156,7 +156,7 @@ def test_software_metadata_explicit_per_software():
     """
     Metadata can be provided per software, overriding the module-level values.
     """
-    mod = multiqc.BaseMultiqcModule(name="mymodule", license="GPL-3.0", license_url=None)
+    mod = multiqc.BaseMultiqcModule(name="mymodule", license="GPL-3.0")
     mod.add_software_version("1.0.0", software_name="tool1")
     mod.add_software_version("2.0.0", software_name="tool2", license="MIT", doi="10.1000/xyz")
 
@@ -170,7 +170,7 @@ def test_software_metadata_absent_when_not_provided():
     """
     Modules that don't declare any metadata don't register empty entries.
     """
-    mod = multiqc.BaseMultiqcModule(name="plain", license=None, license_url=None)
+    mod = multiqc.BaseMultiqcModule(name="plain")
     mod.add_software_version("1.0.0")
 
     assert "plain" not in report.software_versions_metadata
@@ -198,11 +198,39 @@ def test_software_versions_html_license_and_doi_columns():
     )
 
 
+def test_license_shown_in_module_header():
+    """
+    The license is rendered as a linked name in the module header, just after the DOI.
+    """
+    mod = multiqc.BaseMultiqcModule(
+        name="STAR",
+        href="https://github.com/alexdobin/STAR",
+        info="Universal RNA-seq aligner.",
+        doi="10.1093/bioinformatics/bts635",
+        license="MIT License",
+        license_url="https://opensource.org/license/mit",
+    )
+    intro = mod.intro
+    assert "License:" in intro
+    assert '<a class="module-license text-muted" href="https://opensource.org/license/mit"' in intro
+    assert ">MIT License</a>" in intro
+    # License comes after the DOI
+    assert intro.index("DOI:") < intro.index("License:")
+
+
+def test_license_absent_from_header_when_not_set():
+    """
+    Modules without a license don't render a License entry in the header.
+    """
+    mod = multiqc.BaseMultiqcModule(name="Plain", info="A tool.", doi="10.1/x")
+    assert "License:" not in mod.intro
+
+
 def test_software_versions_html_no_extra_columns_without_metadata():
     """
     Without any metadata, the optional columns are not rendered.
     """
-    mod = multiqc.BaseMultiqcModule(name="plain", license=None, license_url=None)
+    mod = multiqc.BaseMultiqcModule(name="plain")
     mod.add_software_version("1.0.0")
 
     html = MultiqcModule._make_versions_html(report.software_versions)

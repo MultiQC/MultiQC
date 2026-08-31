@@ -69,7 +69,7 @@ def test_parse_logs_ignore_samples(data_dir):
 
 
 def test_custom_module(tmp_path):
-    module = multiqc.BaseMultiqcModule(name="my-module", anchor=Anchor("custom_data"), license=None, license_url=None)
+    module = multiqc.BaseMultiqcModule(name="my-module", anchor=Anchor("custom_data"))
     module.add_section(
         name="Custom Section",
         description="Custom description",
@@ -97,7 +97,7 @@ def test_parse_parquet(tmp_path):
     multiqc.parse_logs(tmp_path, run_modules=["custom_content"])
 
     # Create a simple custom section with a plot
-    module = multiqc.BaseMultiqcModule(name="test-module", anchor=Anchor("test_module"), license=None, license_url=None)
+    module = multiqc.BaseMultiqcModule(name="test-module", anchor=Anchor("test_module"))
     module.add_section(
         name="Test Plot Section",
         plot=table.plot(

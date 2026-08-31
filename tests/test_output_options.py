@@ -10,7 +10,7 @@ def stub_modules():
     """
     Set stub modules to make write_report work
     """
-    report.modules = [BaseMultiqcModule(license=None, license_url=None)]
+    report.modules = [BaseMultiqcModule()]
 
 
 @pytest.mark.parametrize(

@@ -7,7 +7,7 @@ from multiqc.base_module import BaseMultiqcModule
 
 @pytest.fixture
 def base_module():
-    return BaseMultiqcModule(license=None, license_url=None)
+    return BaseMultiqcModule()
 
 
 @pytest.fixture(autouse=True)

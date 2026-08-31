@@ -27,9 +27,6 @@ class MultiqcModule(BaseMultiqcModule):
             name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
             anchor=Anchor("multiqc_runtime"),
             info=info,
-            # Internal MultiQC section, not an external tool: no license to declare
-            license=None,
-            license_url=None,
         )
 
         self.alert = ""

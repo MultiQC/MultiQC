@@ -50,10 +50,11 @@ When writing modules, the following are mandatory:
   `UserWarning`**.
 - Call `self.add_software_version()` even if version is unknown — it's
   required by linting.
-- Pass `license` and `license_url` to `super().__init__()` — they are
-  required arguments. Use the tool's software license (e.g.
-  `license="MIT License"`), or `None` with a code comment if the license
-  is unknown or the tool is proprietary.
+- Pass `license` and `license_url` to `super().__init__()` — like `doi`
+  they are optional arguments, but CI linting checks that both are
+  present. Use the tool's software license (e.g. `license="MIT License"`),
+  or `None` with a code comment if the license is unknown or the tool is
+  proprietary.
 - Call `self.write_data_file()` at the **very end** of the module, after
   all sections are added.
 - Register the module via the entry point in `pyproject.toml` (ignore

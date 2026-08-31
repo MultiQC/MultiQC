@@ -351,9 +351,6 @@ def add_custom_content_section(
         anchor=Anchor(f"{anchor}-module"),
         info=description,
         comment=comment,
-        # User-defined section, not an external tool: no license to declare
-        license=None,
-        license_url=None,
     )
     module.add_section(
         name=name,
