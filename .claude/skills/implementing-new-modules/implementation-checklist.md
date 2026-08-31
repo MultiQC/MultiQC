@@ -230,7 +230,9 @@ mypy multiqc/modules/toolname/
 ```
 
 `code_checks.py` verifies `add_data_source`, `write_data_file`, `doi=`,
-and `add_software_version` are present.
+`license=`, `license_url=`, and `add_software_version` are present.
+`license` and `license_url` are required constructor arguments; pass the
+tool's license, or `None` (with a comment) if unknown or proprietary.
 
 ## Docstring and PR
 

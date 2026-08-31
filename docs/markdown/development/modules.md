@@ -322,8 +322,16 @@ class MultiqcModule(BaseMultiqcModule):
           href="https://www.awesome_bioinfo.com/mymodule",
           info="Example analysis module used for writing documentation.",
           doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
+          license="MIT License",
+          license_url="https://opensource.org/license/mit",
         )
 ```
+
+The `license` and `license_url` arguments are **required**: every module must
+declare the license of the tool it wraps (see
+[Adding license and DOI information](#adding-license-and-doi-information)
+below). If the license is genuinely unknown or the tool is proprietary, pass
+`license=None` and `license_url=None` with a short code comment explaining why.
 
 The `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
@@ -344,6 +352,8 @@ super().__init__(
          "- *Fast* processing\n\n"
          "See the [documentation](https://www.awesome_bioinfo.com/docs) for more details.",
     doi="01.2345/journal/abc123",
+    license="MIT License",
+    license_url="https://opensource.org/license/mit",
 )
 
 The available arguments when initialising a module as follows:
@@ -353,6 +363,8 @@ The available arguments when initialising a module as follows:
 - `href` - Link(s) to the homepage for the tool
 - `info` - Very short description text about the tool. Supports markdown formatting when `autoformat=True` and `autoformat_type="markdown"` (default). Can include **bold** text, *italic* text, [links](https://example.com), lists, and other markdown features.
 - `doi` - One or more publication DOIs (can be a string or a list)
+- `license` - **Required.** Human readable name of the tool's software license (e.g. `"MIT License"`), or `None` if unknown or proprietary.
+- `license_url` - **Required.** URL to the license text, or `None`.
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
@@ -850,15 +862,16 @@ for line in f.splitlines():
 
 #### Adding license and DOI information
 
-To make reports more FAIR compliant, the _Software Versions_ section can also
-show the software license and citation DOI(s) as extra columns. This
-information is hardcoded in the module, either in the module constructor (in
-which case it applies to the module's software) or per software in the
+To make reports more FAIR compliant, the _Software Versions_ section shows the
+software license and citation DOI(s) as extra columns. This information is
+hardcoded in the module, either in the module constructor (in which case it
+applies to the module's software) or per software in the
 `self.add_software_version()` call.
 
-The DOI is taken from the `doi` argument that modules already pass to the
-constructor. The license is added with the `license` and `license_url`
-arguments:
+Declaring the license is **mandatory**: `license` and `license_url` are
+required arguments of the module constructor, so a module that omits them will
+fail to load. The DOI is taken from the `doi` argument that modules already
+pass to the constructor.
 
 ```python
 super().__init__(
@@ -868,7 +881,22 @@ super().__init__(
     info="Universal RNA-seq aligner.",
     doi="10.1093/bioinformatics/bts635",
     license="MIT License",
-    license_url="https://github.com/example/toolname/blob/master/LICENSE",
+    license_url="https://opensource.org/license/mit",
+)
+```
+
+If the license is genuinely unknown or the tool is proprietary, pass `None` for
+both and add a short code comment explaining why, rather than guessing:
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://example.com/toolname",
+    info="Proprietary sequencing analysis tool.",
+    # License could not be determined
+    license=None,
+    license_url=None,
 )
 ```
 
@@ -1494,6 +1522,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/bioinformatics-centre/qualalyser/",
             info="Reports read quality and length from sequencing data",
             doi="10.21105/joss.02991",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any Qualalyser reports
