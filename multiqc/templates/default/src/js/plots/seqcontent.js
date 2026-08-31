@@ -67,8 +67,9 @@ class SeqContentPlot extends Plot {
     let nSamples = rows.length;
 
     // Expand the (possibly non-uniform) bins into a uniform per-sample pixel row.
-    // Positions never covered by any bin for a sample stay black, same as the old
-    // canvas simply not painting past a sample's last bin.
+    // Positions never covered by any bin for a sample stay fully transparent (alpha
+    // 0), same as the old canvas simply not painting past a sample's last bin, but
+    // without leaving a black block over the report background.
     let z = new Array(nSamples);
     let customdata = new Array(nSamples);
     for (let i = 0; i < nSamples; i++) {
@@ -76,14 +77,14 @@ class SeqContentPlot extends Plot {
       let zRow = new Array(maxBp);
       let cdRow = new Array(maxBp);
       for (let pos = 0; pos < maxBp; pos++) {
-        zRow[pos] = [0, 0, 0];
+        zRow[pos] = [0, 0, 0, 0];
         cdRow[pos] = [0, 0, 0, 0, `${pos + 1} bp`, sampleName];
       }
       for (let bin of rows[i]) {
         let [r, g, b] = seqContentBinRgb(bin);
         let label = bin.start === bin.end ? `${bin.start} bp` : `${bin.start}-${bin.end} bp`;
         for (let pos = bin.start; pos <= bin.end; pos++) {
-          zRow[pos - 1] = [r, g, b];
+          zRow[pos - 1] = [r, g, b, 255];
           cdRow[pos - 1] = [bin.t, bin.c, bin.a, bin.g, label, sampleName];
         }
       }
@@ -98,6 +99,35 @@ class SeqContentPlot extends Plot {
     this.layout.yaxis.tickvals = [...Array(nSamples).keys()];
     this.layout.yaxis.ticktext = sampleSettings.map((s) => s.name);
 
+    this._updateYTicks(sampleSettings);
+
+    let trace = {
+      ...(dataset["trace_params"] ?? {}),
+      type: "image",
+      z: z,
+      x0: 1,
+      dx: 1,
+      colormodel: "rgba",
+      customdata: customdata,
+      // Colored square emoji swatches map each %base line back to its heatmap
+      // channel: T=red, C=blue, A=green, G=dark/gray (bin_rgb: R=%T, G=%A, B=%C).
+      // Plotly hovertemplate can't render arbitrary HTML/CSS color, so emoji is the
+      // portable stand-in.
+      hovertemplate:
+        "<b>%{customdata[5]}</b><br>%{customdata[4]}<br>" +
+        "🟥 %T: %{customdata[0]}%<br>🟦 %C: %{customdata[1]}%<br>🟩 %A: %{customdata[2]}%<br>⬛ %G: %{customdata[3]}%" +
+        "<extra></extra>",
+    };
+    return [trace];
+  }
+
+  // Recompute y tick density (array vs. auto, which sample names show) from the
+  // CURRENT this.layout.height, and store it on this.layout.yaxis. Called both from
+  // buildTraces() (initial render / toolbox re-render) and resize() (height-drag
+  // handle), so more sample names appear as soon as the plot gets taller instead of
+  // only after some other repaint recomputes it (T3 tick-repaint fix).
+  _updateYTicks(sampleSettings) {
+    let nSamples = sampleSettings.length;
     const maxYTicks = (this.layout.height - 200) / 12;
     this.recalculateTicks(sampleSettings, this.layout.yaxis, maxYTicks);
     if (this.layout.yaxis.tickvals) {
@@ -123,21 +153,6 @@ class SeqContentPlot extends Plot {
       this.layout.yaxis.tickvals = idxs;
       this.layout.yaxis.ticktext = idxs.map((i) => sampleSettings[i].name);
     }
-
-    let trace = {
-      ...(dataset["trace_params"] ?? {}),
-      type: "image",
-      z: z,
-      x0: 1,
-      dx: 1,
-      colormodel: "rgb",
-      customdata: customdata,
-      hovertemplate:
-        "<b>%{customdata[5]}</b><br>%{customdata[4]}<br>" +
-        "%T: %{customdata[0]}%<br>%C: %{customdata[1]}%<br>%A: %{customdata[2]}%<br>%G: %{customdata[3]}%" +
-        "<extra></extra>",
-    };
-    return [trace];
   }
 
   exportData(format) {
@@ -188,10 +203,10 @@ class SeqContentPlot extends Plot {
       });
     }
     this.bindDrilldownControls();
-    if (!this._clickListenerBound) {
-      this._clickListenerBound = true;
-      const gd = document.getElementById(this.anchor);
-      if (gd) {
+    const gd = document.getElementById(this.anchor);
+    if (gd) {
+      if (!this._clickListenerBound) {
+        this._clickListenerBound = true;
         gd.on("plotly_click", (data) => {
           if (!data.points || data.points.length === 0) return;
           // go.Image traces default to y0=0, dy=1: the clicked point's y is the row
@@ -199,10 +214,27 @@ class SeqContentPlot extends Plot {
           this.openDrilldown(Math.round(data.points[0].y));
         });
       }
+      if (!this._relayoutListenerBound) {
+        this._relayoutListenerBound = true;
+        // Box-drag zoom and double-click-to-reset both fire plotly_relayout with new
+        // axis ranges. Recompute scaleratio for whatever range is on screen now, so
+        // the zoomed-in view (or the reset full view) stretches to fill instead of
+        // the aspect lock leaving a letterboxed strip. fixAspectRatio() is a no-op
+        // once the ratio already matches (see its threshold check), so this can't
+        // loop against the Plotly.relayout call it makes itself.
+        gd.on("plotly_relayout", () => this.fixAspectRatio());
+      }
     }
   }
 
   resize(newHeight, newWidth) {
+    this.layout.height = newHeight;
+    // Tick density is a function of the live pixel height, not computed once: redo it
+    // here so dragging the plot taller shows more sample names immediately, using the
+    // last render's filtered sample list (buildTraces() always populates this first).
+    if (this.filtSampleSettings && this.filtSampleSettings.length > 0) {
+      this._updateYTicks(this.filtSampleSettings);
+    }
     super.resize(newHeight, newWidth);
     setTimeout(() => this.fixAspectRatio(), 0);
   }

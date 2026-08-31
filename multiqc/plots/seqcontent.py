@@ -22,6 +22,7 @@ from multiqc.plots.plot import (
     plot_anchor,
 )
 from multiqc.types import Anchor, SampleName
+from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
 
@@ -324,12 +325,13 @@ class Dataset(BaseDataset):
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset: expand the (possibly non-uniform)
-        bins into a uniform (n_samples, max_bp, 3) uint8 RGB grid. Positions never
-        covered by any bin for a sample stay black.
+        bins into a uniform (n_samples, max_bp, 4) uint8 RGBA grid. Positions never
+        covered by any bin for a sample stay fully transparent (alpha 0) so the
+        report background shows through instead of rendering black.
         """
         n_samples = len(self.samples)
         n_cols = max(self.max_bp, 1)
-        arr = np.zeros((n_samples, n_cols, 3), dtype=np.uint8)
+        arr = np.zeros((n_samples, n_cols, 4), dtype=np.uint8)
         for row_idx, bins in enumerate(self.rows):
             for b in bins:
                 r, g, bl = bin_rgb(b)
@@ -337,6 +339,7 @@ class Dataset(BaseDataset):
                 arr[row_idx, b.start - 1 : b.end, 0] = r
                 arr[row_idx, b.start - 1 : b.end, 1] = g
                 arr[row_idx, b.start - 1 : b.end, 2] = bl
+                arr[row_idx, b.start - 1 : b.end, 3] = 255
 
         # Copy, never mutate the shared layout: this figure feeds only the
         # static/kaleido export path (see plot.py Plot.get_figure -> create_figure),
@@ -347,7 +350,7 @@ class Dataset(BaseDataset):
             fig_layout.yaxis.scaleratio = scaleratio
 
         return go.Figure(
-            data=go.Image(z=arr, x0=1, dx=1, colormodel="rgb", **self.trace_params),
+            data=go.Image(z=arr, x0=1, dx=1, colormodel="rgba", **self.trace_params),
             layout=fig_layout,
         )
 
@@ -436,7 +439,19 @@ class SeqContentPlot(Plot[Dataset, SeqContentConfig]):
         plots_dir_name: Optional[str] = None,
     ) -> str:
         html = super().add_to_report(module_anchor, section_anchor, plots_dir_name)
-        if self.flat or self._drilldown_plot is None:
+        if self.flat:
+            return html
+
+        # Restored from the old canvas drilldown (BUILD_PLAN.md section 1.6): a hint
+        # above the heatmap explaining the click-to-drilldown interaction. Interactive
+        # path only, flat reports have no drilldown to hint at.
+        hint_html = (
+            f'<div class="alert alert-info">{get_material_icon("mdi:information", 16)} '
+            "Click a sample row to see a line plot for that dataset.</div>"
+        )
+        html = hint_html + html
+
+        if self._drilldown_plot is None:
             return html
 
         dd_html = self._drilldown_plot.interactive_plot(module_anchor, section_anchor)

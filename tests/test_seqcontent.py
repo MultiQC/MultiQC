@@ -157,9 +157,17 @@ def test_create_figure_returns_single_image_trace():
     assert len(fig.data) == 1
     trace = fig.data[0]
     assert isinstance(trace, go.Image)
+    assert trace.colormodel == "rgba"
     n_samples = len(plot.datasets[0].samples)
     max_bp = plot.datasets[0].max_bp
-    assert trace.z.shape == (n_samples, max_bp, 3)
+    assert trace.z.shape == (n_samples, max_bp, 4)
+
+    # sample_1 (natsorted first) only has a bin for position 1: positions 2 and 3 are
+    # never covered and must be fully transparent, not black (Item 5).
+    sample_idx = plot.datasets[0].samples.index("sample_1")
+    assert trace.z[sample_idx, 0, 3] == 255
+    assert trace.z[sample_idx, 1, 3] == 0
+    assert trace.z[sample_idx, 2, 3] == 0
 
 
 def test_static_export_sets_yaxis_scaleratio_to_stretch_image():
@@ -250,3 +258,20 @@ def test_flat_mode_emits_no_drilldown_html(monkeypatch):
     assert "flat-plot" in html
     assert plot.drilldown_anchor is not None
     assert Anchor(plot.drilldown_anchor) not in report.plot_data
+    # Flat reports have no drilldown, so no hint pointing at one either (Item 7).
+    assert "alert-info" not in html
+
+
+def test_add_to_report_interactive_includes_drilldown_hint():
+    """
+    Item 7: the old canvas drilldown showed a hint above the heatmap ("Click a sample
+    row..."); the interactive (non-flat) path must restore it as a Bootstrap
+    alert-info box.
+    """
+    plot = seqcontent.plot(_fastqc_shaped_data(), {"id": "dd_hint_test", "title": "Hint test"})
+    assert isinstance(plot, SeqContentPlot)
+
+    html = plot.add_to_report(module_anchor=Anchor("mod"), section_anchor=Anchor("sec"))
+
+    assert "alert-info" in html
+    assert "Click a sample row" in html
