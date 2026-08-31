@@ -94,6 +94,29 @@ def bin_rgb(b: "SeqContentBin") -> Tuple[int, int, int]:
     return r, g, bl
 
 
+def _static_scaleratio(layout: go.Layout, x_range: float, y_range: float) -> Optional[float]:
+    """
+    Static-export (kaleido/flat) twin of templates/default/src/js/plots/seqcontent.js
+    ::fixAspectRatio(). A go.Image trace forces an equal-aspect y axis via
+    yaxis.scaleanchor, which cannot be cleared; yaxis.scaleratio is the supported
+    knob to distort that forced aspect so the image stretches to fill the plot area
+    instead of collapsing to a thin strip. The JS twin computes this from the live
+    rendered size (_fullLayout._size); here, ahead of render, we compute the
+    equivalent from the export's configured height/width minus its margins, using
+    the same formula: scaleratio = (plot_area_h / plot_area_w) * (x_range / y_range).
+    """
+    height = layout.height
+    width = layout.width
+    if not height or not width or not x_range or not y_range:
+        return None
+    margin = layout.margin
+    plot_area_h = height - (margin.t or 0) - (margin.b or 0)
+    plot_area_w = width - (margin.l or 0) - (margin.r or 0)
+    if plot_area_h <= 0 or plot_area_w <= 0:
+        return None
+    return (plot_area_h / plot_area_w) * (x_range / y_range)
+
+
 class SeqContentConfig(PConfig):
     """Configuration for a per-base sequence content plot"""
 
@@ -314,9 +337,17 @@ class Dataset(BaseDataset):
                 arr[row_idx, b.start - 1 : b.end, 1] = g
                 arr[row_idx, b.start - 1 : b.end, 2] = bl
 
+        # Copy, never mutate the shared layout: this figure feeds only the
+        # static/kaleido export path (see plot.py Plot.get_figure -> create_figure),
+        # the interactive report dumps self.layout as-is via model_dump().
+        fig_layout = go.Layout(layout if layout is not None else self.layout)
+        scaleratio = _static_scaleratio(fig_layout, x_range=n_cols, y_range=n_samples)
+        if scaleratio is not None:
+            fig_layout.yaxis.scaleratio = scaleratio
+
         return go.Figure(
             data=go.Image(z=arr, x0=1, dx=1, colormodel="rgb", **self.trace_params),
-            layout=layout or self.layout,
+            layout=fig_layout,
         )
 
     def save_data_file(self) -> None:

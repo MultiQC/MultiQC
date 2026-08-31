@@ -159,3 +159,21 @@ def test_create_figure_returns_single_image_trace():
     n_samples = len(plot.datasets[0].samples)
     max_bp = plot.datasets[0].max_bp
     assert trace.z.shape == (n_samples, max_bp, 3)
+
+
+def test_static_export_sets_yaxis_scaleratio_to_stretch_image():
+    """
+    go.Image traces force an equal-aspect y axis (yaxis.scaleanchor) that kaleido
+    cannot clear, collapsing the heatmap to a thin strip unless yaxis.scaleratio is
+    set (see seqcontent.py::_static_scaleratio, twin of
+    seqcontent.js::fixAspectRatio). The flat/static figure must set it to a
+    positive value for a multi-sample dataset.
+    """
+    plot = seqcontent.plot(
+        _fastqc_shaped_data(),
+        {"id": "scaleratio_test", "title": "Scaleratio test"},
+    )
+    assert isinstance(plot, SeqContentPlot)
+    fig = plot.get_figure(0, flat=True)
+    assert fig.layout.yaxis.scaleratio is not None
+    assert fig.layout.yaxis.scaleratio > 0
