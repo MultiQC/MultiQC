@@ -18,8 +18,7 @@ template_parent = "original"
 
 # Render flat/static images via the ECharts SSR engine (browserless): the simple
 # template emits no interactive JS, so its plots are always static images, and ECharts
-# owns static export now that kaleido is gone. This also fixes `--pdf` (which forces the
-# simple template).
+# owns all static image export. This also fixes `--pdf` (which forces the simple template).
 plotting_engine = "echarts"
 
 config.plots_force_flat = True
