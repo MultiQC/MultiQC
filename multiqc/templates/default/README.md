@@ -72,7 +72,7 @@ Assets are automatically built when:
 The Plotly bundle is created by cloning the Plotly repository and running the following:
 
 ```bash
-npm run custom-bundle -- --traces bar,scatter,table,violin,heatmap,box
+npm run custom-bundle -- --traces bar,scatter,table,violin,heatmap,box,image
 ```
 
 This generates a minified JavaScript file using [Custom Bundling](https://github.com/plotly/plotly.js/blob/master/CUSTOM_BUNDLE.md).
