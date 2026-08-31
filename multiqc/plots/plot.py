@@ -61,6 +61,7 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
         PlotType.BOX: "boxes",
         PlotType.SCATTER: "points",
         PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.SEQCONTENT: "samples",  # seqcontent heatmap rows are samples
         PlotType.VIOLIN: "samples",  # violins keep the default "samples"
     }
 

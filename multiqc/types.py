@@ -46,6 +46,7 @@ class PlotType(Enum):
     VIOLIN = "violin plot"
     TABLE = "table"
     HEATMAP = "heatmap"
+    SEQCONTENT = "seqcontent"
     HTML = "html"
     IMAGE = "image"
     GENERALSTATS = "generalstats"
@@ -78,6 +79,8 @@ class PlotType(Enum):
             return PlotType.VIOLIN
         elif val in ["heatmap"]:
             return PlotType.HEATMAP
+        elif val in ["seqcontent", "seq_content", "seq content"]:
+            return PlotType.SEQCONTENT
         elif val in ["table"]:
             return PlotType.TABLE
         elif val in ["html"]:
