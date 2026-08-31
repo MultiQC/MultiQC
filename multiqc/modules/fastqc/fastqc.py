@@ -5,9 +5,7 @@
 #### Have a look at Kallisto for a simpler example.     ####
 ############################################################
 import dataclasses
-import json
 import logging
-import math
 import os
 import re
 import zipfile
@@ -17,11 +15,10 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, TypedDict, Un
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
-from multiqc.plots import bargraph, heatmap, linegraph, table
+from multiqc.plots import bargraph, heatmap, linegraph, seqcontent, table
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.table_object import ColumnKey, InputRow, SampleName
 from multiqc.types import Anchor, LoadedFileDict, SectionAlert
-from multiqc.utils.material_icons import get_material_icon
 
 log = logging.getLogger(__name__)
 
@@ -289,9 +286,6 @@ class MultiqcModule(BaseMultiqcModule):
             "assets/css/multiqc_fastqc.css": os.path.join(
                 os.path.dirname(__file__), "assets", "css", "multiqc_fastqc.css"
             )
-        }
-        self.js = {
-            "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
         }
 
         # Colours to be used for plotting lines
@@ -739,55 +733,26 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def sequence_content_plot(self):
-        """Create the epic HTML for the FastQC sequence content heatmap"""
+        """Create the FastQC sequence content heatmap"""
 
-        data_by_sample: Dict[str, Dict[int, Dict[str, int]]] = dict()
+        data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = dict()
         for s_name in sorted(self.fastqc_data.keys()):
             if self.fastqc_data[s_name].get("per_base_sequence_content") is None:
                 continue
 
-            data_by_sample[s_name] = {
-                int(_range_bp_to_num(d["base"], method="start")): d
-                for d in self.fastqc_data[s_name]["per_base_sequence_content"]
-            }
-
-            # Replace NaN with 0
-            for b in data_by_sample[s_name]:
-                for base in ["a", "c", "t", "g"]:
-                    if math.isnan(float(data_by_sample[s_name][b][base])):
-                        data_by_sample[s_name][b][base] = 0
-                    else:
-                        data_by_sample[s_name][b][base] = round(data_by_sample[s_name][b][base], 2)
+            bins: Dict[str, Dict[str, float]] = {}
+            for d in self.fastqc_data[s_name]["per_base_sequence_content"]:
+                # The generic report parser auto-casts single-position bases (e.g. "7")
+                # to float (7.0), while ranges (e.g. "10-14") fail that cast and stay
+                # str. Normalize both back to the "7" / "10-14" label format.
+                base = d["base"]
+                label = str(int(base)) if isinstance(base, float) else str(base)
+                bins[label] = {"a": d["a"], "c": d["c"], "g": d["g"], "t": d["t"]}
+            data_by_sample[s_name] = bins
 
         if len(data_by_sample) == 0:
             log.debug("sequence_content not found in FastQC reports")
             return None
-
-        # Generate unique plot ID, needed in mqc_export_selectplots
-        anchor = report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot")
-        dump = json.dumps([self.anchor, data_by_sample])
-        html = f"""<div id="fastqc_per_base_sequence_content_plot_div">
-            <div class="alert alert-info">
-               ${get_material_icon("mdi:hand-pointing-up", 16)}
-               Click a sample row to see a line plot for that dataset.
-            </div>
-            <h5><span class="s_name text-primary">Rollover for sample name</span></h5>
-            <div class="fastqc_seq_heatmap_key">
-                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
-                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
-            </div>
-            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{anchor}" class="fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
-                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
-                </div>
-            </div>
-            <div class="clearfix"></div>
-        </div>
-        <script type="application/json" class="fastqc_seq_content">{dump}</script>
-        """
 
         self.add_section(
             name="Per Base Sequence Content",
@@ -822,7 +787,13 @@ class MultiqcModule(BaseMultiqcModule):
             by trimming and in most cases doesn't seem to adversely affect the downstream
             analysis._
             """,
-            content=html,
+            plot=seqcontent.plot(
+                data_by_sample,
+                {
+                    "id": f"{self.anchor}_per_base_sequence_content_plot",
+                    "title": "FastQC: Per Base Sequence Content",
+                },
+            ),
         )
 
     def gc_content_plot(self, section_statuses: Dict[SampleName, str]):
