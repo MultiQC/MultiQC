@@ -2235,7 +2235,7 @@
         }
       ],
       "default": null,
-      "description": "Plotting library used to render report plots. The echarts report template sets this to echarts; plotly is the default engine.",
+      "description": "Plotting library used to render report plots. The default is 'echarts' (Apache ECharts, no extra dependencies); the 'plotly' template sets this to 'plotly' for interactive Plotly plots (requires the optional plotly extra).",
       "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plotting Engine"
@@ -2266,7 +2266,7 @@
         }
       ],
       "default": null,
-      "description": "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+      "description": "Render plots as static images instead of interactive plots. Useful for very large reports.",
       "group": "Rendering mode",
       "section": "Plot Settings",
       "title": "Plots Force Flat"

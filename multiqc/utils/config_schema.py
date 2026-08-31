@@ -607,8 +607,9 @@ class MultiQCConfig(BaseModel):
     with section("Plot Settings"):
         with group("Rendering mode"):
             plotting_engine: Optional[str] = cfg(
-                "Plotting library used to render report plots. The echarts report template "
-                "sets this to echarts; plotly is the default engine.",
+                "Plotting library used to render report plots. The default is 'echarts' "
+                "(Apache ECharts, no extra dependencies); the 'plotly' template sets this to "
+                "'plotly' for interactive Plotly plots (requires the optional plotly extra).",
             )
             echarts_canvas_threshold: Optional[int] = cfg(
                 "Number of individual marks (points, bars, heatmap cells) above which an "
@@ -616,7 +617,7 @@ class MultiQCConfig(BaseModel):
                 gt=0,
             )
             plots_force_flat: Optional[bool] = cfg(
-                "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+                "Render plots as static images instead of interactive plots. Useful for very large reports.",
             )
             plots_force_interactive: Optional[bool] = cfg(
                 "Force interactive plots even when MultiQC would normally fall back to flat images.",

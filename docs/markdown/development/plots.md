@@ -59,10 +59,12 @@ a filename when exporting plots, and all plots should have a title when exported
 Plot titles should use the format _Module name: Plot name_ (this is partly for
 ease of use within MegaQC and other downstream tools).
 
-### Plotly themes
+### Plot themes
 
-MultiQC plots use Plotly for visualization. You can customize the appearance of all plots by setting a Plotly theme using the `plot_theme` configuration option. This option accepts any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
-name as a string.
+The `plot_theme` configuration option customises the appearance of Plotly plots. It accepts
+any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
+name as a string and only applies when a report is rendered with the Plotly engine (the
+`plotly` template).
 
 ```yaml
 plot_theme: "plotly_dark"
@@ -70,16 +72,15 @@ plot_theme: "plotly_dark"
 
 ### Plotting engines
 
-Reports are rendered with Plotly by default. MultiQC also has an alternative plotting
-engine based on [Apache ECharts](https://echarts.apache.org/), used when a report is built
-with `--template echarts`. Nothing changes on the module author's side: you call
-`bargraph.plot()`, `linegraph.plot()`, `scatter.plot()`, `heatmap.plot()`, `box.plot()` and
-`violin.plot()` exactly as documented below regardless of which engine ends up rendering the
-plot, since both engines consume the same `pconfig` options and data structures. The choice
-of engine is made purely by which report template is selected, not by module code. See
-[Writing new templates](templates.md#alternative-plotting-engines) and
-`multiqc/templates/echarts/README.md` for details on the ECharts template, including a list
-of the small number of Plotly behaviours it does not (yet) replicate exactly.
+Reports are rendered with [Apache ECharts](https://echarts.apache.org/) by default. MultiQC
+also has an alternative plotting engine based on [Plotly](https://plotly.com/python/), used
+when a report is built with `--template plotly` (which requires the optional `plotly`
+dependency, `pip install 'multiqc[plotly]'`). Nothing changes on the module author's side:
+you call `bargraph.plot()`, `linegraph.plot()`, `scatter.plot()`, `heatmap.plot()`,
+`box.plot()` and `violin.plot()` exactly as documented below regardless of which engine ends
+up rendering the plot, since both engines consume the same `pconfig` options and data
+structures. The choice of engine is made purely by which report template is selected, not by
+module code. See [Writing new templates](templates.md#plotting-engines) for details.
 
 ## Bar graphs
 
@@ -989,8 +990,8 @@ Sequence content plots render a per-base-position heatmap, one row per sample, w
 cell is coloured from the relative proportion of A/C/G/T bases at that position (red for T,
 green for A, blue for C, with G implied by the complement of the other three). This is the
 plot type used for per-base sequence content reports, such as those produced by tools like
-FastQC. It renders as an RGB image on both the default Plotly template and
-`--template echarts`, with a native hover tooltip showing the base percentages, and a
+FastQC. It renders as an RGB image on both the default ECharts template and
+`--template plotly`, with a native hover tooltip showing the base percentages, and a
 click-to-drilldown into a line plot of the clicked sample's per-base composition.
 
 Data is a dict of sample name to a dict of position label to base percentages. Position

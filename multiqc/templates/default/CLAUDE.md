@@ -4,13 +4,13 @@ This file provides guidance for working with the MultiQC default template fronte
 
 ## Overview
 
-The default template is the main HTML report template for MultiQC. It uses Bootstrap 5.3.7 for styling and layout, with custom JavaScript for interactive features like plot rendering, sample filtering, and toolbox controls.
+The default template is the main HTML report template for MultiQC. It uses Bootstrap 5.3.7 for styling and layout, with custom JavaScript for interactive features like plot rendering (Apache ECharts), sample filtering, and toolbox controls.
 
 ## Directory Structure
 
 ```
 multiqc/templates/default/
-├── assets/           # Third-party libraries (jQuery, Plotly.js, Bootstrap icons)
+├── assets/           # Third-party libraries (jQuery, the ECharts bundle, Bootstrap icons)
 ├── compiled/         # ⚠️ AUTO-GENERATED - Do not edit directly!
 │   ├── css/         # Bundled CSS output from Vite
 │   └── js/          # Bundled JS output from Vite
@@ -60,7 +60,7 @@ Main files:
 
 - **`multiqc.js`**: Entry point, imports all other modules
 - **`toolbox.js`**: Toolbar controls (export buttons, highlighting, filtering)
-- **`plots.js`**: Plotly.js plot decompression and rendering
+- **`echarts-plotting.js`**: ECharts plot base class, initPlot/renderPlot, decompression and rendering
 - **`table.js`**: DataTables initialization and configuration
 - **`highlight.js`**: Sample name highlighting/filtering across plots and tables
 
@@ -70,14 +70,14 @@ Main files:
 - **`variables.scss`**: Bootstrap variable overrides (colors, spacing, etc.)
 - **`custom.scss`**: Custom styles for MultiQC-specific components
 
-The SCSS imports Bootstrap 5.3.7 from npm and applies custom variables and styles.
+The SCSS imports Bootstrap from npm and applies custom variables and styles.
 
 ## Assets
 
 Third-party libraries in `assets/` are kept separate and base64-encoded directly into the final HTML report:
 
-- jQuery 3.7.1
-- Plotly.js (basic bundle)
+- jQuery
+- Apache ECharts (custom bundle)
 - Bootstrap Icons
 - DataTables
 
