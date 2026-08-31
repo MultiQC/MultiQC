@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/nservant/HiC-Pro",
             info="Pipeline for Hi-C data processing",
             doi="10.1186/s13059-015-0831-x",
+            license="BSD 3-Clause License",
+            license_url="https://opensource.org/license/bsd-3-clause",
         )
 
         # Find and load any HiC-Pro summary reports

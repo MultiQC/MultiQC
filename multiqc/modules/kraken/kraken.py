@@ -68,6 +68,8 @@ class MultiqcModule(BaseMultiqcModule):
             href=href,
             info=info,
             doi=doi,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         total_cnt_by_sample: Dict[str, int] = dict()

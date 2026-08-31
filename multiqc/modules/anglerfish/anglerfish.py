@@ -17,6 +17,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells",
             extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any anglerfish reports

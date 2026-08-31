@@ -40,6 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/sagc-bioinformatics/mgikit",
             info="Demultiplexes FASTQ files from an MGI sequencing instrument",
             doi="https://doi.org/10.1101/2024.01.09.574938",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         for f in self.find_log_files("mgikit"):

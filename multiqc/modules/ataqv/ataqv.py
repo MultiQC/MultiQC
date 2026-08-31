@@ -17,6 +17,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ParkerLab/ataqv/",
             info="Toolkit for quality control and visualization of ATAC-seq data",
             doi="10.1093/bioinformatics/btx865",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and parse JSON files

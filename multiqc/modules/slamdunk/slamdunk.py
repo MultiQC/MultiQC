@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://t-neumann.github.io/slamdunk/",
             info="Tool to analyze SLAM-Seq data.",
             doi="10.1186/s12859-019-2849-7",
+            license="GNU Affero General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/agpl-3.0.html",
         )
 
         num_reports = 0

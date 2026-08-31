@@ -23,6 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             Consensus Sequencing workflow in SMRT Link.
             """,
             # Can't find a DOI // doi=
+            license="BSD 3-Clause Clear License",
+            license_url="https://spdx.org/licenses/BSD-3-Clause-Clear.html",
         )
 
         # To store the mod data

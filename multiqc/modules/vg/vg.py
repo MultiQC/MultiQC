@@ -56,6 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/vgteam/vg",
             info="Toolkit to manipulate and analyze graphical genomes, including read alignment",
             doi="10.1038/nbt.4227",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Parse vg stats data

@@ -22,6 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and "
             "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load reports

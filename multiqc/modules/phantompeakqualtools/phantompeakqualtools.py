@@ -19,6 +19,9 @@ class MultiqcModule(BaseMultiqcModule):
             measure of library complexity. PBC is the ratio of (non-redundant, uniquely mappable reads)/(uniquely mappable reads).
             """,
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Parse logs

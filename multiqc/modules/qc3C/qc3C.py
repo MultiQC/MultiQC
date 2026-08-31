@@ -145,6 +145,9 @@ class MultiqcModule(BaseMultiqcModule):
             their experimental aims.
             """,
             doi="10.1371/journal.pcbi.1008839",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         self.qc3c_data: Dict[str, Dict] = defaultdict(dict)

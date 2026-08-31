@@ -33,6 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Determines the effect of variants on genes, transcripts and protein sequences, "
             "as well as regulatory regions.",
             doi="10.1186/s13059-016-0974-4",
+            license="Apache License 2.0",
+            license_url="https://www.apache.org/licenses/LICENSE-2.0",
         )
 
         self.vep_data = dict()

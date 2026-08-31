@@ -105,8 +105,9 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
-        license: Optional[str] = None,
-        license_url: Optional[str] = None,
+        *,
+        license: Optional[str],
+        license_url: Optional[str],
     ):
         validation.reset()
 
@@ -1361,7 +1362,7 @@ class BaseMultiqcModule:
 
         meta = report.software_versions_metadata[self.name].get(software_name)
         if meta is None:
-            meta = SoftwareVersionMetadata()
+            meta = SoftwareVersionMetadata(license=None, license_url=None)
             report.software_versions_metadata[self.name][software_name] = meta
         if license is not None:
             meta.license = license

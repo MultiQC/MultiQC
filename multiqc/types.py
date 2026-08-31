@@ -23,10 +23,14 @@ class SoftwareVersionMetadata:
     FAIR metadata about a software tool, shown alongside its version(s) in the
     Software Versions section of the report: the software license and its
     citation DOI(s).
+
+    ``license`` and ``license_url`` are required (they may be ``None`` when the
+    license is genuinely unknown), so that every module is forced to declare
+    them explicitly rather than silently omitting the information.
     """
 
-    license: Optional[str] = None
-    license_url: Optional[str] = None
+    license: Optional[str]
+    license_url: Optional[str]
     doi: List[str] = dataclasses.field(default_factory=list)
 
 

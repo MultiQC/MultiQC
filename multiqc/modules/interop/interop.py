@@ -34,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
             of a subset of the original data (collapsed quality scores).
             """,
             # No publication / DOI // doi=
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         log = logging.getLogger(__name__)

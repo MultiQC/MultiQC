@@ -36,6 +36,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://telatin.github.io/seqfu2",
             info="Manipulate FASTA/FASTQ files.",
             doi="10.3390/bioengineering8050059",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         n = dict()

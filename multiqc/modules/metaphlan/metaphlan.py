@@ -46,6 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
             href=href,
             info=info,
             doi=doi,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
         # Custom options from user config that can overwrite base module values
         self.t_ranks = {

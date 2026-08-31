@@ -15,6 +15,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
             info="DNA damage pattern retrieval for ancient DNA analysis",
             doi="10.1093/bioinformatics/btab190",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Init empty dictionaries

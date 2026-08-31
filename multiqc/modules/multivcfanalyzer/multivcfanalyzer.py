@@ -17,6 +17,9 @@ class MultiqcModule(BaseMultiqcModule):
             extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
             "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any MultiVCFAnalyzer reports

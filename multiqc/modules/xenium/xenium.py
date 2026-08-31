@@ -47,6 +47,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.10xgenomics.com/platforms/xenium",
             info="Spatial transcriptomics platform from 10x Genomics that provides subcellular resolution.",
             # doi=,
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         data_by_sample = {}

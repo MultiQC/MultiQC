@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/tseemann/snippy",
             info="Rapid haploid variant calling and core genome alignment.",
             # Can't find a DOI // doi=
+            license="GNU General Public License v2.0",
+            license_url="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
         )
 
         data_by_sample: Dict[str, Dict] = {}

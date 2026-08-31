@@ -39,6 +39,9 @@ class MultiqcModule(BaseMultiqcModule):
             name="Software Versions",
             anchor=Anchor("multiqc_software_versions"),
             info="lists versions of software tools extracted from file contents.",
+            # Internal MultiQC section, not an external tool: no license to declare
+            license=None,
+            license_url=None,
         )
 
         self.report_software_versions()

@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/voutcn/megahit",
             info="NGS read assembler",
             doi="10.1093/bioinformatics/btv033",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         data = dict()

@@ -18,7 +18,7 @@ def test_sorting():
     """
     Versions should be sorted by component
     """
-    mod = multiqc.BaseMultiqcModule()
+    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
 
     mod.add_software_version("1.10.1")
     mod.add_software_version("1.2.3")
@@ -36,7 +36,7 @@ def test_with_software_name():
     """
     Versions should be sorted by component
     """
-    mod = multiqc.BaseMultiqcModule()
+    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
 
     mod.add_software_version("1.10.1", software_name="tool1")
     mod.add_software_version("1.2.3", software_name="tool2")
@@ -54,7 +54,7 @@ def test_parsing_and_sorting():
     """
     Versions should be parsed for sorting, but represented originally
     """
-    mod = multiqc.BaseMultiqcModule()
+    mod = multiqc.BaseMultiqcModule(license=None, license_url=None)
     versions = [
         "v1.1.1-r505",
         "v2.r505",
@@ -156,7 +156,7 @@ def test_software_metadata_explicit_per_software():
     """
     Metadata can be provided per software, overriding the module-level values.
     """
-    mod = multiqc.BaseMultiqcModule(name="mymodule", license="GPL-3.0")
+    mod = multiqc.BaseMultiqcModule(name="mymodule", license="GPL-3.0", license_url=None)
     mod.add_software_version("1.0.0", software_name="tool1")
     mod.add_software_version("2.0.0", software_name="tool2", license="MIT", doi="10.1000/xyz")
 
@@ -170,7 +170,7 @@ def test_software_metadata_absent_when_not_provided():
     """
     Modules that don't declare any metadata don't register empty entries.
     """
-    mod = multiqc.BaseMultiqcModule(name="plain")
+    mod = multiqc.BaseMultiqcModule(name="plain", license=None, license_url=None)
     mod.add_software_version("1.0.0")
 
     assert "plain" not in report.software_versions_metadata
@@ -192,14 +192,17 @@ def test_software_versions_html_license_and_doi_columns():
     assert "<th>License</th>" in html
     assert "<th>DOI</th>" in html
     assert '<a href="https://github.com/alexdobin/STAR/blob/master/LICENSE" target="_blank">MIT License</a>' in html
-    assert '<a href="https://doi.org/10.1093/bioinformatics/bts635" target="_blank">10.1093/bioinformatics/bts635</a>' in html
+    assert (
+        '<a href="https://doi.org/10.1093/bioinformatics/bts635" target="_blank">10.1093/bioinformatics/bts635</a>'
+        in html
+    )
 
 
 def test_software_versions_html_no_extra_columns_without_metadata():
     """
     Without any metadata, the optional columns are not rendered.
     """
-    mod = multiqc.BaseMultiqcModule(name="plain")
+    mod = multiqc.BaseMultiqcModule(name="plain", license=None, license_url=None)
     mod.add_software_version("1.0.0")
 
     html = MultiqcModule._make_versions_html(report.software_versions)

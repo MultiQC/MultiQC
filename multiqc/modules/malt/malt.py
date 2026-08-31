@@ -27,6 +27,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="Aligns of metagenomic reads to a database of reference sequences "
             "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load Malt reports

@@ -105,7 +105,10 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         # Must just be configuration for a separate custom-content class
         mod_cust_config[cc_id] = config_custom_data_item
 
-    bm: BaseMultiqcModule = BaseMultiqcModule(name="Custom content", anchor=Anchor("custom_content"))
+    # Internal aggregator module, not an external tool: no license to declare
+    bm: BaseMultiqcModule = BaseMultiqcModule(
+        name="Custom content", anchor=Anchor("custom_content"), license=None, license_url=None
+    )
 
     # Now go through each of the file search patterns
     for config_custom_data_id in search_pattern_keys:
@@ -457,6 +460,8 @@ class MultiqcModule(BaseMultiqcModule):
             info=mod_info,
             extra=cc_dict.config.get("extra"),
             doi=cc_dict.config.get("doi"),
+            license=cc_dict.config.get("license"),
+            license_url=cc_dict.config.get("license_url"),
         )
         self.id = id
 

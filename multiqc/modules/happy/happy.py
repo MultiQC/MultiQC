@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Illumina/hap.py",
             info="Benchmarks variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
+            license="BSD 2-Clause License",
+            license_url="https://opensource.org/license/bsd-2-clause",
         )
 
         self.happy_raw_sample_names = set()

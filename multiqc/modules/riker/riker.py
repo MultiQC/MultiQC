@@ -51,6 +51,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/fulcrumgenomics/riker",
             info="Fast Rust toolkit that ports key sequencing QC tools from Picard.",
             # No DOI to cite // doi=
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         self.samples_parsed_by_tool: dict = {}

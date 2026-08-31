@@ -24,6 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/imgag/ngs-bits",
             info="Calculating statistics from FASTQ, BAM, and VCF",
             doi="10.1093/bioinformatics/btx032",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Call submodule functions

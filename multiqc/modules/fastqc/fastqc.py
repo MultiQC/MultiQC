@@ -198,6 +198,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/fastqc/",
             info="Quality control tool for high throughput sequencing data",
             # No publication / DOI // doi=
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         self.fastqc_data: Dict[SampleName, Any] = dict()

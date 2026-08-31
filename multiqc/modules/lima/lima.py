@@ -36,6 +36,9 @@ class MultiqcModule(BaseMultiqcModule):
             "sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the "
             "tool that powers the Demultiplex Barcodes GUI-based analysis application.",
             # No publication / DOI // doi=
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # To store the summary data

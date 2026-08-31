@@ -25,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://pachterlab.github.io/kallisto/",
             info="Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data",
             doi="10.1038/nbt.3519",
+            license="BSD 2-Clause License",
+            license_url="https://opensource.org/license/bsd-2-clause",
         )
 
         # Find and load any Kallisto reports

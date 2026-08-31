@@ -16,6 +16,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="Calculates relative coverage of X and Y chromosomes and their associated error bars from "
             "the depth of coverage at specified SNPs.",
             doi="10.1038/s41467-018-07483-5",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any DeDup reports

@@ -30,6 +30,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/getzlab/rnaseqc",
             info="RNA-Seq metrics for quality control and process optimization",
             doi=["10.1093/bioinformatics/btab135", "10.1093/bioinformatics/bts196"],
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Parse metrics from RNA-SeQC v1

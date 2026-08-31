@@ -16,6 +16,9 @@ class MultiqcModule(BaseMultiqcModule):
             extra="Useful for tumor-normal studies. Performs concordance verification (= samples coming from the same "
             "individual), and cross-individual contamination level estimation in WGS and WES sequencing experiments",
             doi="bioinformatics/btw389",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         self.conpair_data = dict()

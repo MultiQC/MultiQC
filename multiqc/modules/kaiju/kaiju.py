@@ -25,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://kaiju.binf.ku.dk/",
             info="Taxonomic classification for metagenomics.",
             doi="10.1038/ncomms11257",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Set up data structures

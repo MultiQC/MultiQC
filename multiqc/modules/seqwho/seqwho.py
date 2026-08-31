@@ -22,6 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="Determines FASTQ(A) sequencing file source protocol and the species of origin, "
             "to check that the composition of the library is expected.",
             # doi=""
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any SeqWho reports

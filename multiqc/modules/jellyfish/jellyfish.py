@@ -34,6 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
             increase parallelism.
             """,
             doi="10.1093/bioinformatics/btr011",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         self.jellyfish_data = dict()

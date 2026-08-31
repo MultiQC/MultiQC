@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             "alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, "
             "and deduplication.",
             doi=["10.5281/zenodo.1490830", "10.1101/2023.02.13.528389"],
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Superfluous function call to confirm that it is used in this module

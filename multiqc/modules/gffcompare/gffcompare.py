@@ -35,6 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/stringtie/gffcompare.shtml",
             info="Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.",
             doi="10.12688/f1000research.23297.1",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Parse stats file

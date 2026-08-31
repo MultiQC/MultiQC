@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/andersen-lab/ivar",
             info="Functions for viral amplicon-based sequencing.",
             doi="10.1101/383513",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Find and load iVar trim results

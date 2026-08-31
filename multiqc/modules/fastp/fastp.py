@@ -46,6 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
             variety of parameters including quality scores, length, as well as the presence of adapters, polyG,
             or polyX tailing.""",
             doi="10.1093/bioinformatics/bty560",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         data_by_sample = dict()

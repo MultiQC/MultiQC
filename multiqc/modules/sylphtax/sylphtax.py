@@ -45,6 +45,8 @@ class MultiqcModule(BaseMultiqcModule):
             href=href,
             info=info,
             doi=doi,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
         # Taxonomic ranks: include Sylph’s domain/realm/strain if desired
         self.t_ranks = {

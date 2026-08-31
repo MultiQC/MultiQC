@@ -23,6 +23,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/OpenGene/AfterQC",
             info="Automatic filtering, trimming, error removing, and quality control for FastQ data.",
             doi="10.1186/s12859-017-1469-3",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any Afterqc reports

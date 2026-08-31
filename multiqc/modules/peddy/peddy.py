@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             "the relatedness calculation and to make ancestry predictions.\n\n"
             "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any Peddy reports

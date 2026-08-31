@@ -40,6 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/CGATOxford/UMI-tools",
             info="Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.",
             doi="10.1101/gr.209601.116",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         dedup_data_by_sample = dict()

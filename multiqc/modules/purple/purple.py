@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             load and burden, clonality and the whole genome duplication status.
             """,
             doi="10.1038/s41586-019-1689-y",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         data_by_sample = defaultdict(dict)

@@ -117,6 +117,9 @@ class MultiqcModule(BaseMultiqcModule):
             FASTQ and uBAM inputs.
             """,
             doi="10.1093/bioadv/vbaf010",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         versions = set()

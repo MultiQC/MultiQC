@@ -109,7 +109,7 @@ def test_write_data_file(monkeypatch, tmp_path, config_options, expected_to_writ
     (tmp_path / "multiqc_tmp").mkdir()
     monkeypatch.setattr(tempfile, "mkdtemp", lambda: tmp_path / "multiqc_tmp")
     config.update(config_options)
-    module = BaseMultiqcModule()
+    module = BaseMultiqcModule(license=None, license_url=None)
     module.write_data_file({"Sample": {"key": "value"}}, "multiqc_mymodule")
 
     expected_path = tmp_path / "multiqc_tmp" / "multiqc_data" / "multiqc_mymodule.txt"

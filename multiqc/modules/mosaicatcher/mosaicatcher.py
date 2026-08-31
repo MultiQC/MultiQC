@@ -17,6 +17,9 @@ class MultiqcModule(BaseMultiqcModule):
                 "of each chromosome in each cell using a Hidden Markov Model."
             ),
             doi="10.1038/s41587-019-0366-x",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         data_by_sample = dict()

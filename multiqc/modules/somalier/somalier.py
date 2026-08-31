@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             to be used for general QC.
             """,
             doi="10.1186/s13073-020-00761-2",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any somalier reports

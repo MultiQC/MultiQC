@@ -64,6 +64,9 @@ class MultiqcModule(BaseMultiqcModule):
             info="Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads",
             # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Init data dict

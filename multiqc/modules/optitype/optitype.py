@@ -18,6 +18,8 @@ class MultiqcModule(BaseMultiqcModule):
             HLA genotyping predictions from NGS data by simultaneously selecting all major and minor HLA Class I alleles.
             """,
             doi="10.1093/bioinformatics/btu548",
+            license="BSD 3-Clause License",
+            license_url="https://opensource.org/license/bsd-3-clause",
         )
 
         # Find and load any optitype reports

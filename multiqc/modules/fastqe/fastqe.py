@@ -35,6 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/fastqe/fastqe",
             info="Uses emoji to represent FASTQ sequence quality scores.",
             # doi="",  # No DOI
+            license="BSD 3-Clause License",
+            license_url="https://opensource.org/license/bsd-3-clause",
         )
 
         fastqe_data: Dict[str, Dict[str, str]] = {}

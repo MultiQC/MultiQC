@@ -46,6 +46,9 @@ class MultiqcModule(
             href="https://sincei.readthedocs.io",
             info="Toolkit for processing and analyzing single-cell (epi)genomics data.",
             doi="10.5281/zenodo.7853375",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         samples = dict()

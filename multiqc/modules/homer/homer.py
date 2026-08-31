@@ -35,6 +35,9 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
             href="http://homer.ucsd.edu/homer/",
             info="Motif discovery and next-gen sequencing analysis.",
             doi="10.1016/j.molcel.2010.05.004",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Set up class objects to hold parsed data

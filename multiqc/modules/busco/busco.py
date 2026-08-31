@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
             evolutionarily-informed expectations of gene content from near-universal
             single-copy orthologs selected from OrthoDB.""",
             doi="10.1093/bioinformatics/btv351",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Keys and strings, used for parsing and for plot

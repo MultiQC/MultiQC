@@ -17,6 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/relipmoc/skewer",
             info="Adapter trimming tool for NGS paired-end sequences.",
             doi="10.1186/1471-2105-15-182",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         self.skewer_data = dict()

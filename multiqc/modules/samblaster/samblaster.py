@@ -18,6 +18,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/GregoryFaust/samblaster",
             info="Marks duplicates and extracts discordant and split reads from sam files.",
             doi="10.1093/bioinformatics/btu314",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         self.samblaster_data = dict()

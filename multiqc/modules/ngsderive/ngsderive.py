@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             should be considered with that understanding. Please see the documentation for more information.
             """,
             # Can't find a DOI // doi=
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         self.strandedness = {}

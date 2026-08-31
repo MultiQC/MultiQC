@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://hicexplorer.readthedocs.io",
             info="Hi-C analysis from processing to visualization.",
             doi=["10.1093/nar/gky504", "10.1093/nar/gkaa220"],
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         self.hicexplorer_data = dict()

@@ -16,6 +16,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.bioinformatics.babraham.ac.uk/projects/hicup/",
             info="Mapping and quality control on Hi-C data.",
             doi="10.12688/f1000research.7334.1",
+            license="GNU Lesser General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/lgpl-3.0.html",
         )
 
         # Find and load any HiCUP summary reports

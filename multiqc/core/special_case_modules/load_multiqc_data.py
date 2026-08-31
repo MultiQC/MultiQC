@@ -122,6 +122,9 @@ class LoadMultiqcData(BaseMultiqcModule):
             name="MultiQC Data",
             anchor=Anchor("multiqc_data"),
             info="loads multiqc data",
+            # Internal MultiQC section, not an external tool: no license to declare
+            license=None,
+            license_url=None,
         )
 
         # Dictionary to collect all software versions from all parquet files
@@ -219,7 +222,8 @@ class LoadMultiqcData(BaseMultiqcModule):
                         continue  # Skip adding this module to report.modules
 
                     # Create module
-                    mod = BaseMultiqcModule(name=name, anchor=Anchor(anchor), info=info)
+                    # Reconstructed from a previous run; license metadata is restored separately
+                    mod = BaseMultiqcModule(name=name, anchor=Anchor(anchor), info=info, license=None, license_url=None)
                     mod.sections = sections
                     mod.versions = versions
                     mod.intro = intro

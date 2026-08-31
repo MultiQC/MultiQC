@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://combine-lab.github.io/salmon/",
             info="Quantifies expression of transcripts using RNA-seq data.",
             doi="10.1038/nmeth.4197",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Parse meta information. JSON win!

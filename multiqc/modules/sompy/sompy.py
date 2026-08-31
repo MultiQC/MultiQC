@@ -16,6 +16,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Illumina/hap.py/blob/master/doc/sompy.md",
             info=("Benchmarks somatic variant calls against gold standard truth datasets."),
             # No publication / DOI // doi=
+            license="BSD 2-Clause License",
+            license_url="https://opensource.org/license/bsd-2-clause",
         )
 
         self.add_software_version(None)

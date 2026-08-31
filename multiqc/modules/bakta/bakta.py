@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/oschwengers/bakta",
             info="Rapid & standardized annotation of bacterial genomes, MAGs & plasmids",
             doi="10.1099/mgen.0.000685",
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Parse logs (txt files)

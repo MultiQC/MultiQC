@@ -24,6 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             Gopeaks uses a binomial distribution to model the read counts in sliding windows across 
             the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # data vars ---------------------------------------------------------------------

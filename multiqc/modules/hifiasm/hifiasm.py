@@ -17,6 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/chhylp123/hifiasm",
             info="Haplotype-resolved assembler for accurate Hifi reads",
             doi="10.1038/s41592-020-01056-5",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # To store the mod data

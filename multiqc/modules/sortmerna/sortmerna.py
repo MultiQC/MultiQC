@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             "of nucleotide sequences. The main application of SortMeRNA is filtering ribosomal RNA from "
             "metatranscriptomic data.",
             doi="10.1093/bioinformatics/bts611",
+            license="GNU Lesser General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/lgpl-3.0.html",
         )
 
         # Parse logs

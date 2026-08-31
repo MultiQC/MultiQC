@@ -22,6 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
             purposes. This tool is intended to be a pipeline component to replace costly alignment steps.
             """,
             doi="10.1093/bioinformatics/btu558",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any BioBloom Tools reports

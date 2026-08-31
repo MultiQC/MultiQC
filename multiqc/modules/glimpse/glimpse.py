@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             the different concordance metrics.
             """,
             doi="10.1101/2022.11.28.518213 ",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Call submodule functions

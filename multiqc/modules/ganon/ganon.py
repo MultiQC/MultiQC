@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://pirovc.github.io/ganon/",
             info="Metagenomics classification: quickly assigns sequence fragments to their closest reference among thousands of references via Interleaved Bloom Filters of k-mer/minimizers.",
             doi="10.1093/bioinformatics/btaa458",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         data_by_sample: Dict[str, Dict[str, Union[str, int, float, None]]] = dict()

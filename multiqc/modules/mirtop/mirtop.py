@@ -26,6 +26,9 @@ class MultiqcModule(BaseMultiqcModule):
             isomiR-SEA, sRNAbench, Prost! as well as BAM files.
             """,
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any mirtop reports

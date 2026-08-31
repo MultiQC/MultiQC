@@ -27,6 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ACEnglish/truvari",
             info="Benchmarking, merging, and annotating structural variants",
             doi="https://doi.org/10.1101/2022.02.21.481353",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         n = dict()

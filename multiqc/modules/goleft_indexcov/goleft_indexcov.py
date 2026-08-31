@@ -42,6 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution",
             extra="This is useful as a quick QC to get coverage values across the genome.",
             doi="10.1093/gigascience/gix090",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Parse ROC data

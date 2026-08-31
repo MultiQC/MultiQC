@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             the samples by performing several quality control checks on the input sequences.
             """,
             doi="10.21105/joss.03773",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Parse logs

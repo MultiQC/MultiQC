@@ -289,6 +289,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=anchor,
             href=href,
             info=info,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Set up class objects to hold parsed data
