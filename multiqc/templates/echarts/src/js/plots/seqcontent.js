@@ -16,7 +16,7 @@ function seqContentBinRgb(bin) {
 
 // GOLDEN CONTRACT: this is the LIVE JS twin of `RENDER_ITEM_BODY` in
 // multiqc/plots/echarts/seqcontent.py (the `__FN__` sentinel body executed by
-// static_export.py's SSR walker for the flat/kaleido-free export path). Both must map a
+// static_export.py's SSR walker for the flat export path). Both must map a
 // `[start, end, row, r, g, b, opacity]` data item to the same rect geometry, fill color,
 // and opacity; a bin covers columns `start..end` inclusive (1-based), so its rect spans
 // the data-space interval `[start, end + 1)` on the value xAxis, and `row` (a

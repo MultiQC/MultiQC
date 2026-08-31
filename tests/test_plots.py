@@ -9,7 +9,7 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
-from multiqc.plots.plot import Plot, process_batch_exports
+from multiqc.plots.plot import Plot
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
@@ -779,57 +779,32 @@ def test_linegraph_multiple_datasets():
     assert len(report.plot_data[plot.anchor]["datasets"]) == 2
 
 
-@pytest.mark.parametrize(
-    "development,export_plots,export_plot_formats",
-    [
-        (False, False, None),  # default mode - embed, no export
-        (False, True, None),  # embed + export all formats
-        (True, True, ["pdf"]),  # link png + export pdf (should also export png for html)
-        (True, False, None),  # link png + no export (should only export png)
-    ],
-)
-@pytest.mark.filterwarnings("ignore:setDaemon")
-@pytest.mark.skip(reason="Fails on CI")
-def test_flat_plot(tmp_path, monkeypatch, development, export_plot_formats, export_plots):
-    monkeypatch.setattr(tempfile, "mkdtemp", lambda *args, **kwargs: tmp_path)
+def test_flat_plot_plotly_engine_falls_back_to_interactive(reset):
+    """
+    The Plotly engine renders interactive plots only: static/flat export was kaleido-based
+    and kaleido has been removed (ECharts owns flat export, covered by
+    tests/test_echarts_static_export.py). When a flat plot is requested under the Plotly
+    engine, add_to_report logs an error and falls back to the interactive plot; under strict
+    mode it raises instead. (This test replaces the old kaleido-based flat-export test.)
+    """
+    config.plotting_engine = "plotly"
 
-    plot_id = "test_plot"
-    plot = linegraph.plot(
-        {"Sample1": {0: 1, 1: 1}},
-        {"id": plot_id, "title": "Line Graph"},
-    )
+    plot = linegraph.plot({"Sample1": {0: 1, 1: 1}}, {"id": "flat_fallback", "title": "Line Graph"})
     assert isinstance(plot, Plot)
-
     plot.flat = True
-    config.development = development
-    config.export_plots = export_plots
-    if export_plot_formats:
-        config.export_plot_formats = export_plot_formats
-
-    html = plot.add_to_report(
-        module_anchor=Anchor("test"), section_anchor=Anchor("test"), plots_dir_name=config.plots_dir_name
-    )
-    # Process any batched exports
-    process_batch_exports()
-
-    assert len(report.plot_data) == 0
+    html = plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
+    # Fell back to the interactive plot: it got serialized into the report.
     assert html is not None
-    if not development:
-        assert f'<div class="mqc_mplplot" style="" id="{plot_id}"><img src="data:image/png;base64' in html
-        if not export_plots:
-            for fmt in ["png", "pdf", "svg"]:
-                assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
-    else:
-        assert f'<div class="mqc_mplplot" style="" id="{plot_id}"><img src="multiqc_plots/png/{plot_id}.png' in html
-        assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").is_file()
-        assert (tmp_path / f"multiqc_plots/png/{plot_id}.png").stat().st_size > 0
-        if not export_plots:
-            for fmt in ["pdf", "svg"]:
-                assert not (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
-    if export_plots:
-        for fmt in export_plot_formats or ["png", "pdf", "svg"]:
-            assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").is_file()
-            assert (tmp_path / f"multiqc_plots/{fmt}/{plot_id}.{fmt}").stat().st_size > 0
+    assert len(report.plot_data) == 1
+    assert plot.id in report.plot_data
+
+    # Under strict mode the same request raises instead of falling back.
+    report.reset()
+    config.strict = True
+    plot2 = linegraph.plot({"Sample1": {0: 1, 1: 1}}, {"id": "flat_strict", "title": "Line Graph"})
+    plot2.flat = True
+    with pytest.raises(ValueError):
+        plot2.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
 
 
 def test_missing_pconfig(reset):

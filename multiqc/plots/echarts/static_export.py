@@ -4,8 +4,8 @@ Server-side static image export for the ECharts plotting engine.
 Renders ECharts options to SVG in-process, via a MiniRacer (V8) context running the
 SAME committed browser bundle used by the interactive template, then rasterises to PNG
 via resvg. No subprocess/batch machinery: mini-racer is in-process and fast (tens of
-milliseconds per plot), unlike the kaleido batch-export workarounds used by the Plotly
-backend, which exist only to work around kaleido's own instability.
+milliseconds per plot), unlike the batch-export workarounds the old Plotly static path
+needed to work around its export engine's instability.
 
 See "Static export path (SSR)" in `multiqc-echarts-exploration/BUILD_PLAN.md` for the
 contract this module implements.
@@ -254,7 +254,7 @@ def flat_plot_html(plot: "Plot[Any, Any]", embed_in_html: bool, plots_dir_name: 
     Mirrors the `figures_to_export` loop of `Plot.flat_plot`: per dataset, the same
     `-cnt` / `-pct` / `-log` / `-pct-log` variants, with identical div ids and active-flag
     logic (the flat-toggle JS in `src/js/flat.js` keys on those ids), each rendered via SSR
-    instead of kaleido.
+    instead of the old Plotly static exporter.
 
     Plot types the ECharts backend does not support yet render the same visible
     placeholder as the interactive path (`echarts-plotting.js::renderPlot`) instead of

@@ -100,7 +100,7 @@ def bin_rgb(b: "SeqContentBin") -> Tuple[int, int, int]:
 
 def _static_scaleratio(layout: "go.Layout", x_range: float, y_range: float) -> Optional[float]:
     """
-    Static-export (kaleido/flat) twin of templates/default/src/js/plots/seqcontent.js
+    Static-export (flat) twin of templates/default/src/js/plots/seqcontent.js
     ::fixAspectRatio(). A go.Image trace forces an equal-aspect y axis via
     yaxis.scaleanchor, which cannot be cleared; yaxis.scaleratio is the supported
     knob to distort that forced aspect so the image stretches to fill the plot area
@@ -346,7 +346,7 @@ class Dataset(BaseDataset):
                 arr[row_idx, b.start - 1 : b.end, 3] = 255
 
         # Copy, never mutate the shared layout: this figure feeds only the
-        # static/kaleido export path (see plot.py Plot.get_figure -> create_figure),
+        # static export path (see plot.py Plot.get_figure -> create_figure),
         # the interactive report dumps self.layout as-is via model_dump().
         fig_layout = go.Layout(layout if layout is not None else self.layout)
         scaleratio = _static_scaleratio(fig_layout, x_range=n_cols, y_range=n_samples)
