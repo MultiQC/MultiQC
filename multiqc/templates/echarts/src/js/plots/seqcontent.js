@@ -17,9 +17,15 @@ function seqContentBinRgb(bin) {
 // GOLDEN CONTRACT: this is the LIVE JS twin of `RENDER_ITEM_BODY` in
 // multiqc/plots/echarts/seqcontent.py (the `__FN__` sentinel body executed by
 // static_export.py's SSR walker for the flat/kaleido-free export path). Both must map a
-// `[start, end, row, r, g, b]` data item to the same rect geometry and fill color; a bin
-// covers columns `start..end` inclusive (1-based), so its rect spans the data-space interval
-// `[start, end + 1)` on the value xAxis, and `row` (a category-axis index) is used as-is.
+// `[start, end, row, r, g, b, opacity]` data item to the same rect geometry, fill color,
+// and opacity; a bin covers columns `start..end` inclusive (1-based), so its rect spans
+// the data-space interval `[start, end + 1)` on the value xAxis, and `row` (a
+// category-axis index) is used as-is. The rect is padded 1px past its true data-space
+// edges on both axes (width/height +1, height still centered on the row) so neighbouring
+// bins overlap by ~1px instead of leaving a hairline seam, the way the old canvas
+// renderer's solid per-pixel fill never showed gaps; no stroke is ever set, so there is
+// no border to remove either. `opacity` is the toolbox-highlight dim factor computed by
+// buildSeries() below.
 function seqContentRenderItem(params, api) {
   var start = api.value(0);
   var end = api.value(1);
@@ -27,13 +33,15 @@ function seqContentRenderItem(params, api) {
   var r = api.value(3);
   var g = api.value(4);
   var b = api.value(5);
+  var opacity = api.value(6);
   var p0 = api.coord([start, row]);
   var p1 = api.coord([end + 1, row]);
-  var height = api.size([0, 1])[1];
+  var height = api.size([0, 1])[1] + 1;
+  var width = p1[0] - p0[0] + 1;
   return {
     type: "rect",
-    shape: { x: p0[0], y: p0[1] - height / 2, width: p1[0] - p0[0], height: height },
-    style: { fill: "rgb(" + r + "," + g + "," + b + ")" },
+    shape: { x: p0[0], y: p0[1] - height / 2, width: width, height: height },
+    style: { fill: "rgb(" + r + "," + g + "," + b + ")", opacity: opacity },
   };
 }
 
@@ -50,11 +58,18 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
     this._axisData = { axis: "yAxis", data: sampleSettings.map((s) => s.name) };
     this._rows = rows;
 
+    // Highlight (POLISH item 6): when any sample is highlighted via the toolbox, dim
+    // every non-highlighted row's rects instead of leaving the plot unchanged, same
+    // dim-non-highlighted rule as bar.js's alpha handling. Re-runs on every render, so
+    // it stays current with the toolbox's `mqc_highlights` event (plotting-shared.js
+    // already calls window.renderPlot() for every plot on that event).
+    let highlighted = sampleSettings.filter((s) => s.highlight);
     let data = [];
     for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
+      let opacity = highlighted.length > 0 && !sampleSettings[rowIdx].highlight ? 0.25 : 1;
       for (let bin of rows[rowIdx]) {
         let [r, g, b] = seqContentBinRgb(bin);
-        data.push([bin.start, bin.end, rowIdx, r, g, b]);
+        data.push([bin.start, bin.end, rowIdx, r, g, b, opacity]);
       }
     }
 
@@ -77,6 +92,10 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
     if (!option.tooltip) return;
     let axisData = this._axisData ? this._axisData.data : [];
     let rows = this._rows ?? [];
+    // Colored swatch before each base's readout (POLISH item 2), same T/C/A/G ->
+    // color mapping the Plotly template's tooltip uses.
+    let swatch = (color) =>
+      `<span style="display:inline-block;width:10px;height:10px;background:${color};margin-right:4px;"></span>`;
     option.tooltip.formatter = (params) => {
       let [start, end, rowIdx] = params.value;
       let bin = (rows[rowIdx] ?? []).find((b) => b.start === start && b.end === end);
@@ -85,7 +104,8 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
       let posLabel = start === end ? `${start} bp` : `${start}-${end} bp`;
       return (
         `<b>${sampleName}</b><br/>${posLabel}<br/>` +
-        `%T: ${bin.t}%<br/>%C: ${bin.c}%<br/>%A: ${bin.a}%<br/>%G: ${bin.g}%`
+        `${swatch("#dc0000")}%T: ${bin.t}%<br/>${swatch("#0000dc")}%C: ${bin.c}%<br/>` +
+        `${swatch("#00dc00")}%A: ${bin.a}%<br/>${swatch("#404040")}%G: ${bin.g}%`
       );
     };
   }
@@ -93,8 +113,8 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
   // T3.1 click-to-drilldown: bind ECharts' click event to the SAME openDrilldown()/
   // bindDrilldownControls() shared logic defined on window.SeqContentPlot (the default
   // template's class, our superclass here) -- no swap/show/render logic duplicated.
-  // Custom-series click data items are `[start, end, row, r, g, b]` (buildSeries()
-  // above), so params.data[2] is the row index into the SAME toolbox-filtered rows
+  // Custom-series click data items are `[start, end, row, r, g, b, opacity]`
+  // (buildSeries() above), so params.data[2] is the row index into the SAME toolbox-filtered rows
   // prepData() computed for this render.
   afterPlotCreated() {
     this.bindDrilldownControls();

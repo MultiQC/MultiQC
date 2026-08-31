@@ -770,12 +770,13 @@ def test_get_option_seqcontent_builds_one_custom_series_with_golden_rgb_data():
     assert isinstance(render_item["body"], str)
     assert "rect" in render_item["body"]
 
-    # [start, end, row_idx, r, g, b], golden RGB values from bin_rgb (see
-    # tests/test_seqcontent.py::test_rgb_golden_t_100/test_rgb_golden_even_split).
+    # [start, end, row_idx, r, g, b, opacity], golden RGB values from bin_rgb (see
+    # tests/test_seqcontent.py::test_rgb_golden_t_100/test_rgb_golden_even_split); opacity
+    # is always 1 in the SSR/get_option path (no toolbox highlight state server-side).
     assert series_option["data"] == [
-        [1, 1, 0, 255, 0, 0],
-        [2, 3, 0, 64, 64, 64],
-        [1, 1, 1, 64, 64, 64],
+        [1, 1, 0, 255, 0, 0, 1],
+        [2, 3, 0, 64, 64, 64, 1],
+        [1, 1, 1, 64, 64, 64, 1],
     ]
 
 
