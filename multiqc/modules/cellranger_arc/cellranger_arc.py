@@ -43,8 +43,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.10xgenomics.com/support/software/cell-ranger-arc/latest",
             info="Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.",
             doi="10.1038/ncomms14049",
-            # Proprietary (10x Genomics); license could not be determined
-            license=None,
+            # 10x Genomics License; no public source repo for this product
+            license="10x Genomics License",
             license_url=None,
         )
         data_by_sample: Dict[str, Dict] = dict()

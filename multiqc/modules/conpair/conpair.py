@@ -16,9 +16,8 @@ class MultiqcModule(BaseMultiqcModule):
             extra="Useful for tumor-normal studies. Performs concordance verification (= samples coming from the same "
             "individual), and cross-individual contamination level estimation in WGS and WES sequencing experiments",
             doi="bioinformatics/btw389",
-            # Custom New York Genome Center software license (not OSI-approved)
-            license=None,
-            license_url=None,
+            license="NYGC academic/non-profit license",
+            license_url="https://github.com/nygenome/Conpair/blob/master/LICENSE.txt",
         )
 
         self.conpair_data = dict()

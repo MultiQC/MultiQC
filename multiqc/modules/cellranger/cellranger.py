@@ -35,9 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger",
             info="Analyzes single cell expression or VDJ data produced by 10X Genomics.",
             doi="10.1038/ncomms14049",
-            # Proprietary (10x Genomics); license could not be determined
-            license=None,
-            license_url=None,
+            license="10x Genomics License",
+            license_url="https://github.com/10XGenomics/cellranger/blob/main/LICENSE",
         )
 
         # Set up class objects to hold parsed data

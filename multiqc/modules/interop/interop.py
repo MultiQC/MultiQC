@@ -34,9 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
             of a subset of the original data (collapsed quality scores).
             """,
             # No publication / DOI // doi=
-            # PolyForm Strict License 1.0.0 (source-available, not OSI-approved)
-            license=None,
-            license_url=None,
+            license="PolyForm Strict License 1.0.0",
+            license_url="https://github.com/Illumina/interop/blob/master/LICENSE",
         )
 
         log = logging.getLogger(__name__)
