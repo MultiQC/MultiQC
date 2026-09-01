@@ -1219,10 +1219,15 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         filename, flat = self._proc_save_args(filename, flat)
 
         if flat:
-            # Static images are rendered by the ECharts SSR engine.
-            fmt = "svg" if isinstance(filename, (Path, str)) and Path(filename).suffix.lower() == ".svg" else "png"
+            # Static images are rendered by the ECharts SSR engine. `filename` may be a
+            # writeable object (matching the interactive branch below); infer the format
+            # from its `.name` when it has one, else default to PNG.
+            name = getattr(filename, "name", "") if hasattr(filename, "write") else filename
+            fmt = "svg" if Path(name).suffix.lower() == ".svg" else "png"
             image = self._echarts_static_image(dataset_id, fmt=fmt)
-            if fmt == "svg":
+            if hasattr(filename, "write"):
+                filename.write(image)
+            elif fmt == "svg":
                 Path(filename).write_text(cast(str, image))
             else:
                 Path(filename).write_bytes(cast(bytes, image))

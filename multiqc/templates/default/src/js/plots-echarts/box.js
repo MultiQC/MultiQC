@@ -91,6 +91,9 @@ class EchartsBoxPlot extends window.BoxPlot {
   // (hide/rename/highlight) via the inherited prepData().
   buildSeries() {
     let [data, samples] = this.prepData();
+    // prepData() filters hidden samples out of `samples`; show the "N samples hidden"
+    // banner (base Plot class) before any early return blanks the plot.
+    this._updateHiddenSamplesWarning(this.datasets[this.activeDatasetIdx]["samples"].length, samples.length);
     if (data.length === 0 || samples.length === 0) return [];
 
     let dataset = this.datasets[this.activeDatasetIdx];

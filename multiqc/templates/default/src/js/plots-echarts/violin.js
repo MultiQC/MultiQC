@@ -754,7 +754,14 @@ class EchartsViolinPlot extends window.Plot {
     option.grid = this._grids || [];
     option.xAxis = this._xAxis || [];
     option.yAxis = this._yAxis || [];
-    option.title = (option.title ? [option.title] : []).concat(this._titles || []);
+    // The skeleton's `title` is the ARRAY violin.py builds: [mainTitle, ...pythonRowTitles].
+    // We rebuild the row titles from the live metric list (this._titles), so keep ONLY the
+    // main title (index 0) from the skeleton, then append our rows. Wrapping the whole array
+    // in `[option.title]` would bury the main title inside a nested array element, which
+    // ECharts reads as an empty default title and drops (main chart title vanishes).
+    const skeletonTitle = option.title;
+    const mainTitle = Array.isArray(skeletonTitle) ? skeletonTitle[0] : skeletonTitle;
+    option.title = (mainTitle ? [mainTitle] : []).concat(this._titles || []);
     const n = this._rowCount || 0;
     option.toolbox = {
       show: true,

@@ -136,7 +136,15 @@ def _build(dataset: Dataset) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]
     Shared computation for `series()` and `mark_count()`, so the two can never disagree
     on how many marks are actually drawn: the boxplot five-number data (one entry per
     sample, in `dataset.samples` order) and the companion outlier/point scatter data.
+
+    Cached on the dataset: `series()` (get_option/static export) and `mark_count()`
+    (serialize/canvas threshold) both call this, each sorting every sample for quartiles
+    and outliers; a report that renders both paths would otherwise do that work twice.
     """
+    cached = getattr(dataset, "_echarts_box_build", None)
+    if cached is not None:
+        return cached
+
     boxpoints = dataset.trace_params.get("boxpoints", "outliers")
     base_color = dataset.trace_params.get("marker", {}).get("color") or _DEFAULT_COLOR
     item_style = _box_item_style(base_color)
@@ -157,8 +165,15 @@ def _build(dataset: Dataset) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]
         if boxpoints is False:
             continue
         shown = sorted(float(v) for v in raw_values) if boxpoints == "all" else outliers(raw_values)
-        scatter_data.extend({"name": sample, "value": [value, yi]} for value in shown)
+        # Colour each point to match its box, mirroring the interactive box.js
+        # (`itemStyle: { color }`). Without this, the scatter series (index 1) inherits
+        # ECharts' theme palette[1] (dark grey), so the exported/flat image disagrees
+        # with the on-screen chart.
+        scatter_data.extend(
+            {"name": sample, "value": [value, yi], "itemStyle": {"color": base_color}} for value in shown
+        )
 
+    dataset._echarts_box_build = (box_data, scatter_data)
     return box_data, scatter_data
 
 

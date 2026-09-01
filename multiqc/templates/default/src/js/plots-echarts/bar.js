@@ -226,27 +226,8 @@ class EchartsBarPlot extends window.BarPlot {
     };
   }
 
-  // See the comment at the buildSeries() call site above.
-  _updateHiddenSamplesWarning(total, visible, label = "samples") {
-    let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
-    groupDiv.parent().find(".samples-hidden-warning").remove();
-
-    if (visible === 0 && total > 0) {
-      groupDiv.hide();
-      return;
-    }
-    groupDiv.show();
-
-    let nHidden = total - visible;
-    if (nHidden > 0) {
-      const alert = `
-      <div class="samples-hidden-warning alert alert-warning">
-        ⚠ <strong>Warning:</strong> ${nHidden} ${label} hidden.
-        <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
-      </div>`;
-      groupDiv.before(alert);
-    }
-  }
+  // _updateHiddenSamplesWarning lives on the base Plot class (echarts-plotting.js); bar
+  // passes label "groups" for its grouped-bar view.
 }
 
 // Make EchartsBarPlot globally available (referenced by bare window.EchartsBarPlot in

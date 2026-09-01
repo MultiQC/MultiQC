@@ -18,6 +18,9 @@ class EchartsLinePlot extends window.LinePlot {
     let mode = dataset["trace_params"]?.["mode"] || "";
 
     let [samples, lines] = this.prepData();
+    // prepData() returns all sample names but only the non-hidden lines, so show the
+    // "N samples hidden" banner (base Plot class) before any early return blanks the plot.
+    this._updateHiddenSamplesWarning(samples.length, lines.length);
 
     if (lines.length === 0 || samples.length === 0) return [];
 

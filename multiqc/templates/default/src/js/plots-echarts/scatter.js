@@ -126,30 +126,6 @@ class EchartsScatterPlot extends window.ScatterPlot {
     }));
   }
 
-  // See EchartsBarPlot._updateHiddenSamplesWarning (plots-echarts/bar.js) for the full
-  // rationale; copied here (kept minimal) since ScatterPlot and BarPlot don't share a
-  // common ECharts base beyond window.Plot.
-  _updateHiddenSamplesWarning(total, visible) {
-    let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
-    groupDiv.parent().find(".samples-hidden-warning").remove();
-
-    if (visible === 0 && total > 0) {
-      groupDiv.hide();
-      return;
-    }
-    groupDiv.show();
-
-    let nHidden = total - visible;
-    if (nHidden > 0) {
-      const alert = `
-      <div class="samples-hidden-warning alert alert-warning">
-        ⚠ <strong>Warning:</strong> ${nHidden} samples hidden.
-        <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
-      </div>`;
-      groupDiv.before(alert);
-    }
-  }
-
   // Tooltip formatter can't live in the JSON-safe serialized skeleton, so it's attached
   // here to the fully-assembled option (see Plot.applyOptionOverrides in
   // echarts-plotting.js).

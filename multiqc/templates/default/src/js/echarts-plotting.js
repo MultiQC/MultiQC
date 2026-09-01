@@ -253,6 +253,31 @@ class Plot {
   // after series (and any type-specific axis data) are in place.
   applyOptionOverrides(option) {}
 
+  // Insert/refresh the "N samples hidden" banner above the plot (or hide the plot group
+  // entirely when everything is hidden). Called from each plot type's buildSeries() with
+  // the total vs. visible counts. Lives on the base class so every ECharts plot type
+  // (bar, line, box, scatter) gives the same feedback. `label` lets bar.js say "groups".
+  _updateHiddenSamplesWarning(total, visible, label = "samples") {
+    let groupDiv = $("#" + this.anchor).closest(".mqc_hcplot_plotgroup");
+    groupDiv.parent().find(".samples-hidden-warning").remove();
+
+    if (visible === 0 && total > 0) {
+      groupDiv.hide();
+      return;
+    }
+    groupDiv.show();
+
+    let nHidden = total - visible;
+    if (nHidden > 0) {
+      const alert = `
+      <div class="samples-hidden-warning alert alert-warning">
+        ⚠ <strong>Warning:</strong> ${nHidden} ${label} hidden.
+        <a href="#mqc_hidesamples" class="alert-link" onclick="mqc_toolbox_openclose('#mqc_hidesamples', true); return false;">See toolbox.</a>
+      </div>`;
+      groupDiv.before(alert);
+    }
+  }
+
   plotAiHeader(view) {
     let prompt = "Plot type: " + this.plotType + "\n";
     return prompt;
@@ -490,7 +515,12 @@ function buildCurrentOption(plot) {
   const colors = getEchartsThemeColors();
   option.backgroundColor = colors.paper_bgcolor;
   if (option.title) {
-    option.title.textStyle = { ...option.title.textStyle, color: colors.textcolor };
+    // `title` may be a single component or an array of them (violin.py ships a LIST:
+    // the chart's main title at index 0, plus one row-title component per metric), so
+    // theme each entry rather than stamping textStyle onto the array object itself.
+    (Array.isArray(option.title) ? option.title : [option.title]).forEach((t) => {
+      t.textStyle = { ...t.textStyle, color: colors.textcolor };
+    });
   }
   if (option.legend) {
     option.legend.textStyle = { ...option.legend.textStyle, color: colors.textcolor };

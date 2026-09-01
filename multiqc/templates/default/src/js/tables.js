@@ -498,14 +498,15 @@ $(function () {
           tableScatterChart = null;
         }
         plotDiv.empty();
-        tableScatterChart = echarts.init(document.getElementById(target), null, { renderer: "svg" });
-        tableScatterChart.setOption(option, { notMerge: true });
-
-        if (!tableScatterChart) {
+        // echarts.init() returns a truthy instance or throws, so a truthiness check on it
+        // can never fail; catch the throw instead so the error message is actually reachable.
+        try {
+          tableScatterChart = echarts.init(document.getElementById(target), null, { renderer: "svg" });
+          tableScatterChart.setOption(option, { notMerge: true });
+          plotDiv.removeClass("not_rendered");
+        } catch (err) {
           plotDiv.html("<small>Error: Something went wrong when plotting the scatter plot.</small>");
           plotDiv.addClass("not_rendered");
-        } else {
-          plotDiv.removeClass("not_rendered");
         }
       } else {
         plotDiv.html("<small>Error: No data pairs found for these columns.</small>");
