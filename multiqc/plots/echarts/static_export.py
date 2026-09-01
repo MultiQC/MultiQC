@@ -23,7 +23,6 @@ from multiqc import config
 from multiqc.core import tmp_dir
 from multiqc.plots.echarts import theme
 from multiqc.plots.layout import LayoutIR
-from multiqc.types import PlotType
 from multiqc.utils.util_functions import dump_json
 
 if TYPE_CHECKING:
@@ -37,11 +36,6 @@ _FONT_PACKAGE = "multiqc.plots.echarts"
 _FONT_RESOURCE = "fonts/DejaVuSans.ttf"
 
 _INSTALL_MSG = "Static ECharts export requires mini-racer and resvg-py: pip install 'multiqc[echarts]'"
-
-_UNSUPPORTED_HTML = (
-    '<div class="alert alert-secondary">The ECharts plotting engine does not yet support '
-    "{plot_type} plots. Switch to the default template to view this plot.</div>"
-)
 
 # `__FN__` sentinels (`{"__FN__": True, "body": "<js source>"}`) are the only way a real JS
 # function crosses the Python/JS bridge (only the violin builder emits them, Phase 2). The
@@ -257,17 +251,9 @@ def flat_plot_html(plot: "Plot[Any, Any]", embed_in_html: bool, plots_dir_name: 
     logic (the flat-toggle JS in `src/js/flat.js` keys on those ids), each rendered via SSR
     instead of the old Plotly static exporter.
 
-    Plot types the ECharts backend does not support yet render the same visible
-    placeholder as the interactive path (`echarts-plotting.js::renderPlot`) instead of
-    raising, so a single unported type in a mixed `--flat` report does not crash the run.
+    Every plot type is supported; an unknown one raises `NotImplementedError` (via
+    `echarts.get_option` in `_render_variant`) rather than rendering a placeholder.
     """
-    plot_type = PlotType(plot.plot_type)
-    from multiqc.plots import echarts as echarts_pkg  # lazy: avoids a circular import
-
-    if plot_type not in echarts_pkg._BUILDERS:
-        logger.warning(f"ECharts static export does not support {plot_type.value} plots yet: {plot.id}")
-        return _UNSUPPORTED_HTML.format(plot_type=plot_type.value)
-
     if not embed_in_html and plots_dir_name is None:
         raise ValueError("plots_dir_name is required for non-embedded plots")
 

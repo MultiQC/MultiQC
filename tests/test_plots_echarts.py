@@ -9,6 +9,8 @@ import json
 import math
 from typing import Any, Dict, List, Union
 
+import pytest
+
 import multiqc
 from multiqc import config, report
 from multiqc.core.update_config import ClConfig
@@ -222,17 +224,16 @@ def test_interactive_plot_title_strips_html():
     assert skeleton["title"]["subtext"] == "42 things"
 
 
-def test_interactive_plot_unsupported_plot_type_does_not_raise(monkeypatch):
-    # All PlotTypes with a figure are ported now (bar/line/scatter/heatmap/box/violin);
-    # exercise the generic "unsupported" fallback path directly instead, by pretending
-    # box plots aren't ported, so a single unported type still can't crash the report.
+def test_interactive_plot_unknown_plot_type_raises(monkeypatch):
+    # All PlotTypes with a figure are ported (bar/line/scatter/heatmap/box/violin/
+    # seqcontent). There is no "unsupported" placeholder any more: a plot type missing
+    # from the builder registry is a bug, so serialize raises loudly rather than emitting
+    # a placeholder card. Simulate that by pretending box plots aren't ported.
     monkeypatch.delitem(echarts._BUILDERS, PlotType.BOX)
     config.plotting_engine = "echarts"
     plot = _make_box_plot()
-    plot.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
-
-    dumped = report.plot_data[plot.anchor]
-    assert dumped["echarts"] == {"unsupported": "box plot"}
+    with pytest.raises(NotImplementedError):
+        echarts.serialize(plot)
 
 
 def test_interactive_plot_adds_echarts_key_for_line_plot():
