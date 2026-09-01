@@ -7,11 +7,25 @@
 // `$(function () {...})` handler calling Plotly directly, so it's safe to import and extend,
 // same strategy as bar/line/scatter/box.
 
+// Round half to even (banker's rounding), matching Python's built-in round() used by
+// bin_rgb() in multiqc/plots/seqcontent.py. JS Math.round rounds a half UP, so on an
+// exact half value (e.g. 0.5 * 255 = 127.5) the two engines could disagree by 1/255 per
+// channel, making the interactive render and the flat SSR export a shade apart. This keeps
+// them pixel-identical. Only the exact-half case differs from Math.round; every other
+// value already rounds to the same nearest integer.
+function roundHalfEven(x) {
+  const floor = Math.floor(x);
+  const frac = x - floor;
+  if (frac < 0.5) return floor;
+  if (frac > 0.5) return floor + 1;
+  return floor % 2 === 0 ? floor : floor + 1;
+}
+
 // GOLDEN CONTRACT: kept in lockstep with `bin_rgb()` in multiqc/plots/seqcontent.py and
 // `seqContentBinRgb()` in templates/default/src/js/plots/seqcontent.js:
 // R = %T, G = %A, B = %C (%G implied by the complement of the other three).
 function seqContentBinRgb(bin) {
-  return [Math.round((bin.t / 100) * 255), Math.round((bin.a / 100) * 255), Math.round((bin.c / 100) * 255)];
+  return [roundHalfEven((bin.t / 100) * 255), roundHalfEven((bin.a / 100) * 255), roundHalfEven((bin.c / 100) * 255)];
 }
 
 // GOLDEN CONTRACT: this is the LIVE JS twin of `RENDER_ITEM_BODY` in
@@ -84,18 +98,26 @@ class EchartsSeqContentPlot extends window.SeqContentPlot {
     this._axisData = { axis: "yAxis", data: sampleSettings.map((s) => s.name) };
     this._rows = rows;
 
-    // Highlight (POLISH item 6): when any sample is highlighted via the toolbox, dim
-    // every non-highlighted row's rects instead of leaving the plot unchanged, same
-    // dim-non-highlighted rule as bar.js's alpha handling. Re-runs on every render, so
-    // it stays current with the toolbox's `mqc_highlights` event (plotting-shared.js
-    // already calls window.renderPlot() for every plot on that event).
-    let highlighted = sampleSettings.filter((s) => s.highlight);
+    // Highlight (POLISH item 6): when a highlight is active via the toolbox, dim every
+    // non-highlighted row's rects. Keyed off the GLOBAL highlight flag
+    // (window.mqc_highlight_f_texts), so a plot with none of the highlighted samples dims
+    // too, matching the cross-plot rule used by the other plot types.
     let data = [];
+    let maxBp = this.datasets[this.activeDatasetIdx].max_bp;
     for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
-      let opacity = highlighted.length > 0 && !sampleSettings[rowIdx].highlight ? 0.25 : 1;
+      let opacity = window.mqc_highlight_f_texts.length > 0 && !sampleSettings[rowIdx].highlight ? 0.25 : 1;
+      let lastEnd = 0;
       for (let bin of rows[rowIdx]) {
         let [r, g, b] = seqContentBinRgb(bin);
         data.push([bin.start, bin.end, rowIdx, r, g, b, opacity]);
+        if (bin.end > lastEnd) lastEnd = bin.end;
+      }
+      // Short-read tail: mirror Plotly's go.Image, which paints the missing tail (from
+      // this sample's last position out to the report-wide max_bp) black. Without it the
+      // ECharts row just ends early; the black fill keeps a mixed read-length report
+      // looking identical across the interactive and flat engines.
+      if (rows[rowIdx].length > 0 && lastEnd < maxBp) {
+        data.push([lastEnd + 1, maxBp, rowIdx, 0, 0, 0, opacity]);
       }
     }
 

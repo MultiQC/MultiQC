@@ -149,6 +149,15 @@ def series(dataset: Dataset, pconfig: SeqContentConfig, is_pct: bool) -> List[Di
         for b in bins:
             r, g, bl = bin_rgb(b)
             data.append([b.start, b.end, row_idx, r, g, bl, 1])
+        # Short-read tail: mirror Plotly's `go.Image`, which paints the missing tail (from
+        # this sample's last position out to the report-wide `max_bp`) black. Without it the
+        # ECharts row just ends early; the black fill keeps a mixed read-length report
+        # looking identical across engines. Kept in lockstep with the JS twin's `buildSeries`
+        # (templates/default/src/js/plots-echarts/seqcontent.js).
+        if bins:
+            last_end = max(b.end for b in bins)
+            if last_end < dataset.max_bp:
+                data.append([last_end + 1, dataset.max_bp, row_idx, 0, 0, 0, 1])
 
     return [
         {

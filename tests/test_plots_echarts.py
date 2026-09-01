@@ -802,10 +802,13 @@ def test_get_option_seqcontent_builds_one_custom_series_with_golden_rgb_data():
     # [start, end, row_idx, r, g, b, opacity], golden RGB values from bin_rgb (see
     # tests/test_seqcontent.py::test_rgb_golden_t_100/test_rgb_golden_even_split); opacity
     # is always 1 in the SSR/get_option path (no toolbox highlight state server-side).
+    # sample2's reads end at position 1 but the report-wide max_bp is 3, so its short-read
+    # tail (positions 2..3) is painted black [.., 0, 0, 0, ..], mirroring Plotly's go.Image.
     assert series_option["data"] == [
         [1, 1, 0, 255, 0, 0, 1],
         [2, 3, 0, 64, 64, 64, 1],
         [1, 1, 1, 64, 64, 64, 1],
+        [2, 3, 1, 0, 0, 0, 1],
     ]
 
 
