@@ -1,0 +1,59 @@
+name: "Template builds"
+on:
+  push:
+    branches: [main]
+    paths:
+      - "multiqc/templates/default/**"
+      - "multiqc/templates/plotly/**"
+  pull_request:
+    paths:
+      - "multiqc/templates/default/**"
+      - "multiqc/templates/plotly/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_check_drift:
+    name: "Build default + plotly templates and check for compiled drift"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      # --- default template (ECharts engine) ---
+      - name: "Install default template dependencies"
+        working-directory: multiqc/templates/default
+        run: npm ci
+
+      - name: "Build vendored ECharts bundle"
+        working-directory: multiqc/templates/default
+        run: npm run build:echarts
+
+      - name: "Build default template assets"
+        working-directory: multiqc/templates/default
+        run: npm run build
+
+      # --- plotly template (Plotly engine) ---
+      # A thin child of default: it inherits the shared HTML and only builds its own
+      # renderer bundle. The vendored Plotly bundle is committed (no build script), so it
+      # is not rebuilt here, only the compiled output is drift-checked.
+      - name: "Install plotly template dependencies"
+        working-directory: multiqc/templates/plotly
+        run: npm ci
+
+      - name: "Build plotly template assets"
+        working-directory: multiqc/templates/plotly
+        run: npm run build
+
+      - name: "Fail if committed build outputs are stale"
+        run: |
+          git diff --exit-code -- \
+            multiqc/templates/default/compiled \
+            multiqc/templates/default/assets/js/packages \
+            multiqc/templates/plotly/compiled
