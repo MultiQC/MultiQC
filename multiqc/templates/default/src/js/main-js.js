@@ -6,11 +6,11 @@ import * as bootstrap from "bootstrap";
 window.bootstrap = bootstrap;
 
 // Import MultiQC JavaScript modules in the correct order.
-// This mirrors multiqc/templates/default/src/js/main-js.js exactly, with the
-// Plotly-specific plotting.js swapped for our echarts-plotting.js, and (for
-// Phase 0) only the bar plot type ported. Order matters: render.js must be
-// last, and echarts-plotting.js (which defines window.initPlot/window.renderPlot
-// and window.Plot) must run before any plots/*.js that extend window.Plot.
+// This mirrors the Plotly template's import order, with the Plotly-specific plotting.js
+// swapped for our echarts-plotting.js and every plot type routed through a plots-echarts/
+// builder. Order matters: render.js must be last, and echarts-plotting.js (which defines
+// window.initPlot/window.renderPlot and window.Plot) must run before any plots/*.js that
+// extend window.Plot.
 
 // Core functionality first (engine-neutral, reused from the default template)
 import "./decompress.js";
@@ -49,12 +49,9 @@ import "./toolbox/citations.js";
 import "./toolbox/help.js";
 import "./toolbox.js";
 
-// Plot types.
-// "bar" (Phase 0), "line" (Phase 1, Task 1.1), "scatter" (Phase 1, Task 1.2),
-// "heatmap" (Phase 1, Task 1.3) and "box" (Phase 1, Task 1.4) are ported; other types
-// are not imported here (their
-// window.initPlot falls back to a placeholder Plot that renders an "unsupported"
-// message, per echarts-plotting.js).
+// Plot types. All seven (bar, line, scatter, heatmap, box, violin, seqcontent) are ported
+// and imported below; an unknown type raises loudly in window.initPlot rather than
+// rendering a placeholder (see echarts-plotting.js).
 // Default's plots/*.js define `class XPlot extends Plot` using the bare global `Plot`
 // identifier: because echarts-plotting.js (imported above) runs first and does
 // `window.Plot = Plot`, that bare reference resolves to OUR echarts Plot base class,
