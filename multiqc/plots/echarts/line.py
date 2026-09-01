@@ -56,7 +56,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     if categorical:
         option["xAxis"]["data"] = _categories(dataset)
 
-    bands_lines = bands_and_lines(plot.pconfig)
+    bands_lines = bands_and_lines(plot.pconfig, dataset.dconfig)
     if bands_lines:
         option["_mqc"] = {"bandsLines": bands_lines}
 
@@ -100,7 +100,7 @@ def series(dataset: Dataset, pconfig: LinePlotConfig, is_pct: bool) -> List[Dict
             }
         )
 
-    trailing = trailing_bands_lines_series(pconfig)
+    trailing = trailing_bands_lines_series(pconfig, dataset.dconfig)
     if trailing:
         result.append(trailing)
 

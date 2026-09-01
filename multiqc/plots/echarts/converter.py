@@ -93,6 +93,56 @@ def _si_axis_formatter_body(suffix: str) -> str:
     )
 
 
+# d3-format specifier subset this converts (POLISH.md #9): an optional leading `,`
+# (thousands grouping), an optional `.N` precision, then a one-letter type. A grep of
+# `multiqc/` (modules, plot.py, layout.py, tests) for "tickformat" turns up zero hits
+# today -- no module sets a Plotly axis `tickformat`, and `AxisIR` (multiqc/plots/layout.py)
+# has no field for one -- so this is scoped to the handful of specifiers Plotly axes
+# commonly use elsewhere in the ecosystem (",.0f", ".1%", ".2s", etc.), not a full
+# d3-format reimplementation; anything outside that raises rather than guessing.
+_TICKFORMAT_RE = re.compile(r"^(?P<comma>,)?(?:\.(?P<prec>\d+))?(?P<type>[a-zA-Z%]?)$")
+
+
+def _tickformat_axis_formatter_body(spec: str, suffix: str) -> str:
+    """
+    `__FN__` sentinel body (see `_si_axis_formatter_body`) for a value/log axis tick
+    label driven by a Plotly `tickformat` (a d3-format spec, e.g. ",.0f" / ".1%" / ".2s"),
+    used instead of the default SI-abbreviation body when one is configured. Supports:
+    - `,` (bare thousands grouping, e.g. "," -> "1,234")
+    - `.Nf` / bare `f` (fixed N decimals, comma-grouped if `,` is also present; d3's own
+      default precision of 6 applies when N is omitted, matching d3-format)
+    - `.N%` (value * 100, N decimals, "%" appended; 0 decimals when N is omitted)
+    - `.Ns` (SI-abbreviated; delegates to `_si_axis_formatter_body`, which already
+      3-sig-fig SI-abbreviates, since implementing d3's own N-significant-digit SI
+      rounding is out of scope for a spec with no live callers, see `_TICKFORMAT_RE`)
+    Any other specifier raises `ValueError` (crash loudly, no silently-wrong tick labels).
+    """
+    match = _TICKFORMAT_RE.match(spec)
+    if match is None:
+        raise ValueError(f"Unsupported tickformat spec {spec!r}: only ',', '.Nf', '.N%', '.Ns' are implemented")
+    comma = match.group("comma")
+    prec = int(match.group("prec")) if match.group("prec") is not None else None
+    type_ = match.group("type")
+
+    if type_ == "s":
+        return _si_axis_formatter_body(suffix)
+    if type_ == "%":
+        decimals = prec if prec is not None else 0
+        return (
+            "if (typeof v !== 'number' || !isFinite(v)) return String(v);"
+            f"return (v * 100).toFixed({decimals}) + '%' + " + json.dumps(suffix) + ";"
+        )
+    if type_ in ("f", ""):
+        decimals = prec if prec is not None else 6
+        grouping = "true" if comma else "false"
+        options = f"{{minimumFractionDigits: {decimals}, maximumFractionDigits: {decimals}, useGrouping: {grouping}}}"
+        return (
+            "if (typeof v !== 'number' || !isFinite(v)) return String(v);"
+            f"return v.toLocaleString('en-US', {options}) + " + json.dumps(suffix) + ";"
+        )
+    raise ValueError(f"Unsupported tickformat spec {spec!r}: only ',', '.Nf', '.N%', '.Ns' are implemented")
+
+
 # Gap (px) ECharts leaves between an axis's tick labels and its `name` (title), when
 # the axis has one. Reused below (`_grid_inset`) so the grid's left/bottom inset can
 # reserve exactly this much extra room, rather than the two numbers drifting apart.
@@ -131,10 +181,30 @@ def _convert_axis(axis: AxisIR, *, scale: bool = False) -> Dict[str, Any]:
         axis_option["max"] = maxval
 
     if axis_option["type"] in ("value", "log"):
-        # SI-abbreviate large tick labels (POLISH.md #12), matching Plotly's default axis
-        # style. A category axis (sample names) is never numeric, so it's left untouched.
+        # SI-abbreviate large tick labels by default (POLISH.md #12), matching Plotly's
+        # default axis style; a configured d3-format `tickformat` (POLISH.md #9) overrides
+        # that default when present. A category axis (sample names) is never numeric, so
+        # it's left untouched either way.
+        #
+        # `getattr(..., None)`, not `axis.tickformat`: `AxisIR` (multiqc/plots/layout.py)
+        # has no `tickformat` field today (nothing in multiqc/ sets a Plotly `tickformat`,
+        # see `_TICKFORMAT_RE`'s comment), so this is always `None` until a follow-up adds
+        # that field to the IR; written this way so `_tickformat_axis_formatter_body` is
+        # ready to be picked up the moment it does, with zero behavior change until then.
+        #
+        # KNOWN GAP even once wired: the interactive JS renderer's `buildCurrentOption`
+        # (`multiqc/templates/default/src/js/echarts-plotting.js`, step "3c") unconditionally
+        # overwrites every non-category axis's `axisLabel.formatter` with the plain SI
+        # `formatAxisNumber`, regardless of what this skeleton sets. So a `tickformat` body
+        # from here would only ever take effect on the SSR/static-export path (the only path
+        # that executes a `__FN__` sentinel body at all, see `_si_axis_formatter_body`), not
+        # in the interactive browser view. Making the JS side conditional on a `tickformat`
+        # skeleton flag is a needed follow-up there; flagged here rather than silently left
+        # half-working, since it cannot be fixed from this file.
         suffix = str(axis.ticksuffix) if axis.ticksuffix else ""
-        axis_option["axisLabel"] = {"formatter": {"__FN__": True, "body": _si_axis_formatter_body(suffix)}}
+        tickformat = getattr(axis, "tickformat", None)
+        body = _tickformat_axis_formatter_body(tickformat, suffix) if tickformat else _si_axis_formatter_body(suffix)
+        axis_option["axisLabel"] = {"formatter": {"__FN__": True, "body": body}}
 
     return axis_option
 
@@ -261,19 +331,46 @@ def echarts_dash(dash: Optional[str]) -> str:
     return _DASH_MAP.get(dash, "solid")
 
 
+def _field(obj: Any, name: str) -> Any:
+    """
+    Read one field off a `LineBand`/`FlatLine` model instance OR the plain dict a
+    `model_dump()` round-trip turns it into (see `bands_and_lines`'s docstring for why
+    both shapes reach it). Field names never differ from dict keys for these two models
+    (no aliasing), so a plain lookup works either way.
+    """
+    return obj[name] if isinstance(obj, dict) else getattr(obj, name)
+
+
 def bands_and_lines(
     pconfig: "PConfig",
+    dl: Dict[str, Any],
     *,
     include_x: bool = True,
     include_y: bool = True,
 ) -> Dict[str, Any]:
     """
-    Static markArea/markLine payload for `pconfig.x_bands`/`y_bands`/`x_lines`/`y_lines`
-    (e.g. the fastqc per-base-quality green/yellow/red zones), mirroring the Plotly
-    `shapes` built by `Plot._set_x_bands_and_range`/`_set_y_bands_and_range`
-    (`multiqc/plots/plot.py`). These are static (independent of toolbox state), so this
-    is computed once and reused by both `layout_option` (stashed in the skeleton under
+    Static markArea/markLine payload for `pconfig.x_bands`/`y_bands`/`x_lines`/`y_lines`,
+    with the active dataset's `data_labels` entry (`dl`, `BaseDataset.dconfig`) overriding
+    each of the four per-dataset (e.g. the fastqc per-base-quality green/yellow/red
+    zones), mirroring the Plotly `shapes` built by `Plot._set_x_bands_and_range`/
+    `_set_y_bands_and_range` (`multiqc/plots/plot.py`, `dl.get("x_bands", pconfig.x_bands)`
+    and friends). These are static (independent of toolbox state), so this is computed
+    once and reused by both `layout_option` (stashed in the skeleton under
     `_mqc.bandsLines` for the interactive JS path) and `series` (the SSR/get_option path).
+
+    `dl` is `BaseDataset.dconfig`: the same per-dataset override dict `Plot._dataset_overrides`
+    reads from `pconfig.data_labels[ds_idx]` (`dataset.dconfig` is assigned from that exact
+    dict in `Plot.initialize`), so indexing is guaranteed to match the Plotly reference
+    without a caller having to re-derive the dataset index. One wrinkle: by the time `dl`
+    reaches here, `Dataset.create` (linegraph.py/bargraph.py) has round-tripped the base
+    dataset through `model_dump()`, which serializes any `LineBand`/`FlatLine` objects
+    nested under `dl["x_bands"]`/etc into plain dicts (scatter.py's `Dataset.create`
+    instead copies `__dict__` verbatim, so its `dl` entries stay model instances); `pconfig`'s
+    own top-level `x_bands`/`y_bands`/`x_lines`/`y_lines` are always model instances
+    (validated once at `PConfig` construction). So a `dl` override and the `pconfig`
+    fallback can each be either shape; `_field` below reads both the same way rather than
+    re-validating the dict back into a model (round-tripping through `FlatLine.__init__`
+    a second time mishandles its already-`None`d deprecated `dashStyle` field).
 
     `include_x`/`include_y` let a caller drop a dimension that has no meaningful target
     axis. Bar plots are horizontal (samples on a category `yAxis`, values on `xAxis`,
@@ -285,46 +382,61 @@ def bands_and_lines(
     `xAxis` here; `y_bands` land on the category axis and render uselessly there.
     Line and scatter plots use both axes as meaningful value axes, so both default to
     `True`.
-
-    Per-dataset `data_labels` overrides of bands/lines are not supported yet (parity gap,
-    same class of gap as bar's sample-groups gap); only the top-level `pconfig` fields
-    are read.
     """
+    y_bands = dl.get("y_bands", pconfig.y_bands)
+    x_bands = dl.get("x_bands", pconfig.x_bands)
+    y_lines = dl.get("y_lines", pconfig.y_lines)
+    x_lines = dl.get("x_lines", pconfig.x_lines)
+
     mark_area_data: List[List[Dict[str, Any]]] = []
     if include_y:
-        for band in pconfig.y_bands or []:
+        for band in y_bands or []:
             mark_area_data.append(
                 [
-                    {"yAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
-                    {"yAxis": band.to},
+                    {
+                        "yAxis": _field(band, "from_"),
+                        "itemStyle": {"color": _field(band, "color"), "opacity": _field(band, "opacity")},
+                    },
+                    {"yAxis": _field(band, "to")},
                 ]
             )
     if include_x:
-        for band in pconfig.x_bands or []:
+        for band in x_bands or []:
             mark_area_data.append(
                 [
-                    {"xAxis": band.from_, "itemStyle": {"color": band.color, "opacity": band.opacity}},
-                    {"xAxis": band.to},
+                    {
+                        "xAxis": _field(band, "from_"),
+                        "itemStyle": {"color": _field(band, "color"), "opacity": _field(band, "opacity")},
+                    },
+                    {"xAxis": _field(band, "to")},
                 ]
             )
 
     mark_line_data: List[Dict[str, Any]] = []
     if include_y:
-        for line in pconfig.y_lines or []:
+        for line in y_lines or []:
             mark_line_data.append(
                 {
-                    "yAxis": line.value,
-                    "lineStyle": {"color": line.color, "width": line.width, "type": echarts_dash(line.dash)},
-                    "label": {"formatter": line.label or ""},
+                    "yAxis": _field(line, "value"),
+                    "lineStyle": {
+                        "color": _field(line, "color"),
+                        "width": _field(line, "width"),
+                        "type": echarts_dash(_field(line, "dash")),
+                    },
+                    "label": {"formatter": _field(line, "label") or ""},
                 }
             )
     if include_x:
-        for line in pconfig.x_lines or []:
+        for line in x_lines or []:
             mark_line_data.append(
                 {
-                    "xAxis": line.value,
-                    "lineStyle": {"color": line.color, "width": line.width, "type": echarts_dash(line.dash)},
-                    "label": {"formatter": line.label or ""},
+                    "xAxis": _field(line, "value"),
+                    "lineStyle": {
+                        "color": _field(line, "color"),
+                        "width": _field(line, "width"),
+                        "type": echarts_dash(_field(line, "dash")),
+                    },
+                    "label": {"formatter": _field(line, "label") or ""},
                 }
             )
 
@@ -387,19 +499,23 @@ def zoom_option(*, x: bool = True, y: bool = True) -> Dict[str, Any]:
 
 def trailing_bands_lines_series(
     pconfig: "PConfig",
+    dl: Dict[str, Any],
     *,
     include_x: bool = True,
     include_y: bool = True,
 ) -> Optional[Dict[str, Any]]:
     """
     `bands_and_lines` wrapped as a trailing, invisible `{"type": "line"}` series (or
-    `None` if `pconfig` has no bands/lines): appended to `series()` in line.py/bar.py/
-    scatter.py so it shows up in the SSR/get_option (non-toolbox) path. The interactive
-    JS path carries the same `bands_and_lines` payload separately, via `layout_option`
-    stashing it under `option["_mqc"]["bandsLines"]` for `Plot.bandsLinesSeries()`
-    (`templates/default/src/js/echarts-plotting.js`) to read.
+    `None` if the resolved bands/lines are empty): appended to `series()` in line.py/
+    bar.py/scatter.py so it shows up in the SSR/get_option (non-toolbox) path. The
+    interactive JS path carries the same `bands_and_lines` payload separately, via
+    `layout_option` stashing it under `option["_mqc"]["bandsLines"]` for
+    `Plot.bandsLinesSeries()` (`templates/default/src/js/echarts-plotting.js`) to read.
+
+    `dl` is `BaseDataset.dconfig` (see `bands_and_lines`), so the trailing series for a
+    given dataset uses that same dataset's per-tab band/line overrides, not the plot's.
     """
-    bands_lines = bands_and_lines(pconfig, include_x=include_x, include_y=include_y)
+    bands_lines = bands_and_lines(pconfig, dl, include_x=include_x, include_y=include_y)
     if not bands_lines:
         return None
     return {

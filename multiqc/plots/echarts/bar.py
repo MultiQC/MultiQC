@@ -104,7 +104,7 @@ def layout_option(plot: "Plot[Any, Any]", dataset: Dataset) -> Dict[str, Any]:
     # `y_bands`/`y_lines` would target the category (sample) axis here, which is
     # meaningless for a numeric threshold, so they are dropped (see
     # `converter.bands_and_lines` docstring for the empirical Plotly evidence).
-    bands_lines = bands_and_lines(plot.pconfig, include_y=False)
+    bands_lines = bands_and_lines(plot.pconfig, dataset.dconfig, include_y=False)
     if bands_lines:
         option["_mqc"]["bandsLines"] = bands_lines
 
@@ -144,7 +144,7 @@ def series(dataset: Dataset, pconfig: BarPlotConfig, is_pct: bool) -> List[Dict[
 
     # See the `include_y=False` comment in `layout_option`: bar's category axis makes
     # y_bands/y_lines meaningless, so they are dropped here too.
-    trailing = trailing_bands_lines_series(pconfig, include_y=False)
+    trailing = trailing_bands_lines_series(pconfig, dataset.dconfig, include_y=False)
     if trailing:
         result.append(trailing)
 
