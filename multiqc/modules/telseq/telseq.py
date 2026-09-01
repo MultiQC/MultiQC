@@ -17,9 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             TelSeq measures average telomere length from whole genome or exome shotgun sequence data.
             """,
             doi="10.1093/nar/gku181",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Find and load any telseq reports

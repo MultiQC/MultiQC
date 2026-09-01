@@ -31,9 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             - Somatic copy number alterations (CNAs) in tumor-normal exome data.
             """,
             doi=["10.1101/gr.129684.111", "10.1093/bioinformatics/btp373"],
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="Non-Profit Open Software License 3.0",
+            license_url="https://opensource.org/license/NPOSL-3.0",
         )
 
         # Find and load VarScan2 reports - there are 3 different ones, but all with identical content (differentiated by header)

@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger",
             info="Tool to analyze 10x Genomics spatial transcriptomics data.",
             doi=[],
-            # License could not be determined
+            # Proprietary (10x Genomics); license could not be determined
             license=None,
             license_url=None,
         )

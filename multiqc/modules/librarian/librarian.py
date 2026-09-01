@@ -42,9 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
             compositions are extracted and compared against previously published data sets from mouse and human.
             """,
             doi="10.12688/f1000research.125325.1",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # To store the summary data

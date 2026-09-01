@@ -46,9 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
             to achieve "nearly complete coverage", defined as ≥95% or ≥99% average coverage.
             """,
             doi="10.1093/bioinformatics/btt584",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="Artistic License 2.0",
+            license_url="https://opensource.org/license/artistic-2-0",
         )
         # Config options
         self.plot_colours = getattr(config, "nonpareil", {}).get("plot_colours", "Paired")

@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/data61/gossamer/blob/master/docs/xenome.md",
             info="Classifies reads from xenograft sources.",
             doi="doi.org/10.1093/bioinformatics/bts236",
-            # License could not be determined
+            # CSIRO Open Source Software License Agreement (BSD/MIT variant); non-standard
             license=None,
             license_url=None,
         )

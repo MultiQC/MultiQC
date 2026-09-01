@@ -29,9 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             multiple flowcells
             """,
             doi="10.1093/bioinformatics/bty654",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any minionqc reports

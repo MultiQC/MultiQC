@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://docs.elembio.io/docs/cells2stats/introduction/",
             info="Generate output files and statistics from Element Biosciences Teton cytoprofiling assays",
             doi="",
-            # License could not be determined
+            # Proprietary (Element Biosciences); license could not be determined
             license=None,
             license_url=None,
         )

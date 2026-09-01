@@ -117,9 +117,8 @@ class MultiqcModule(BaseMultiqcModule):
             FASTQ and uBAM inputs.
             """,
             doi="10.1093/bioadv/vbaf010",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU Affero General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/agpl-3.0.html",
         )
 
         versions = set()

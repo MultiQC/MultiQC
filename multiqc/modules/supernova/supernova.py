@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.10xgenomics.com/",
             info="De novo genome assembler of 10X Genomics linked-reads.",
             doi="10.1101/gr.214874.116",
-            # License could not be determined
+            # Proprietary (10x Genomics); license could not be determined
             license=None,
             license_url=None,
         )

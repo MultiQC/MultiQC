@@ -36,9 +36,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Parse logs

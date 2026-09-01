@@ -21,9 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             can be used for any dataset.
             """,
             doi="10.1093/nar/gku699",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Find and load any leeHom reports

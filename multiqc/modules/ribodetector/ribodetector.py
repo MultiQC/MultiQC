@@ -29,9 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/hzi-bifo/RiboDetector",
             info="Accurate and rapid ribosomal RNA detection based on deep learning.",
             doi="10.1093/nar/gkac112",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Find and parse log files

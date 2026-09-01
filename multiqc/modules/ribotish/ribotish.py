@@ -29,9 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/zhpn1024/ribotish",
             info="Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.",
             doi="10.1186/s13059-017-1316-1",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v3.0",
+            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
         )
 
         # Store parsed data

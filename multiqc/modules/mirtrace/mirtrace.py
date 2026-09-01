@@ -28,9 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             e.g. parasitic RNAs.
             """,
             doi="10.1186/s13059-018-1588-9",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="GNU General Public License v2.0",
+            license_url="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
         )
 
         # Find and load miRTrace summary statistics table

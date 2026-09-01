@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
             href=ELEMBIO_DOCS_URL,
             info="Demultiplexes and converts Element AVITI base calls into FASTQ files",
             doi="10.1038/s41587-023-01750-7",
-            # License could not be determined
+            # Proprietary (Element Biosciences); license could not be determined
             license=None,
             license_url=None,
         )

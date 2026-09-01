@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://support.illumina.com/sequencing/sequencing_software/bcl-convert.html",
             info="Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
-            # License could not be determined
+            # Proprietary (Illumina BCL Convert); license could not be determined
             license=None,
             license_url=None,
         )

@@ -15,9 +15,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="Separates mixed-species RNA-seq reads according to their species of origin.",
             doi="10.1038/s41596-018-0029-2",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any Sargasso reports

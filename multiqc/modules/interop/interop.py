@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             of a subset of the original data (collapsed quality scores).
             """,
             # No publication / DOI // doi=
-            # License could not be determined
+            # PolyForm Strict License 1.0.0 (source-available, not OSI-approved)
             license=None,
             license_url=None,
         )

@@ -19,9 +19,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ginolhac/mapDamage",
             info="Tracks and quantifies damage patterns in ancient DNA sequences.",
             doi="https://doi.org/10.1093/bioinformatics/btt193",
-            # License could not be determined
-            license=None,
-            license_url=None,
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Init empty dictionaries

@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
             license="MIT License",
-            license_url="https://github.com/alexdobin/STAR/blob/master/LICENSE",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any STAR reports

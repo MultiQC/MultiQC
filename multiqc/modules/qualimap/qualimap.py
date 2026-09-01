@@ -54,8 +54,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://qualimap.bioinfo.cipf.es/",
             info="Quality control of alignment data and its derivatives like feature counts.",
             doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
-            license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license="GNU General Public License v2.0",
+            license_url="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
         )
 
         # Initialise the submodules
