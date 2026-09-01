@@ -54,7 +54,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Merges paired-end reads from next-generation sequencing experiments.",
             doi="10.1093/bioinformatics/btr507",
             license="GNU General Public License v3.0",
-            license_url=None,
+            license_url="https://sourceforge.net/projects/flashpage/",
         )
 
         flash_results = self.parse_flash()

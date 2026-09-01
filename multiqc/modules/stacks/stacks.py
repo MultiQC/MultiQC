@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Analyzes restriction enzyme-based data (e.g. RAD-seq).",
             doi="10.1111/mec.12354",
             license="GNU General Public License v3.0",
-            license_url=None,
+            license_url="https://catchenlab.life.illinois.edu/stacks/",
         )
 
         gsheaders = {
