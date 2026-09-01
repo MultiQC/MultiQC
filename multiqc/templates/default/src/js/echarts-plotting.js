@@ -539,19 +539,27 @@ function buildCurrentOption(plot) {
     option.textStyle = { ...option.textStyle, fontFamily: window.mqc_config.plot_font_family };
   }
 
-  // 3c. SI-abbreviate value/log axis tick labels (POLISH.md #12), replacing the
-  // JSON-safe `__FN__` sentinel the skeleton carries for these axes (converter.py's
-  // `_convert_axis`) with a real live function; category axes (sample names) are left
-  // alone. Runs before the log/pct switch below so a percent axis's "{value}%" formatter
-  // (set unconditionally there) always wins over SI abbreviation.
+  // 3c. Format value/log axis tick labels, replacing the JSON-safe `__FN__` sentinel the
+  // skeleton carries for these axes (converter.py's `_convert_axis`) with a real live
+  // function; category axes (sample names) are left alone. Default is SI abbreviation
+  // (POLISH.md #12); when the axis carries a configured d3-format `tickformat` (marked by
+  // `axisLabel._mqc_tickformat` in the skeleton, POLISH.md #9), honour that instead, via
+  // the same `formatWithHoverformat` helper the tooltips use so a tick and its tooltip
+  // agree. Runs before the log/pct switch below so a percent axis's "{value}%" formatter
+  // (set unconditionally there) always wins.
   [
     ["xAxis", "xaxis"],
     ["yAxis", "yaxis"],
   ].forEach(([echartsAxisName, plotlyAxisName]) => {
     let axis = option[echartsAxisName];
     if (!axis || axis.type === "category") return;
-    let suffix = plot.layout?.[plotlyAxisName]?.ticksuffix || "";
-    axis.axisLabel = { ...axis.axisLabel, formatter: (v) => formatAxisNumber(v, suffix) };
+    let tickformat = axis.axisLabel?._mqc_tickformat;
+    if (tickformat) {
+      axis.axisLabel = { ...axis.axisLabel, formatter: (v) => formatWithHoverformat(v, tickformat) };
+    } else {
+      let suffix = plot.layout?.[plotlyAxisName]?.ticksuffix || "";
+      axis.axisLabel = { ...axis.axisLabel, formatter: (v) => formatAxisNumber(v, suffix) };
+    }
   });
 
   // 4. Apply log/pct toggle states over the axes controlled by the plot's switches.

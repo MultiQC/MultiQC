@@ -753,6 +753,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             axis_ir.type = d["type"]
         if "ticksuffix" in d and d["ticksuffix"] is not None:
             axis_ir.ticksuffix = d["ticksuffix"]
+        if d.get("tickformat") is not None:
+            axis_ir.tickformat = d["tickformat"]
         if d.get("range") is not None:
             axis_ir.range = (d["range"][0], d["range"][1])
         auto = d.get("autorangeoptions")

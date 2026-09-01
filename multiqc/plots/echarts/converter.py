@@ -184,27 +184,22 @@ def _convert_axis(axis: AxisIR, *, scale: bool = False) -> Dict[str, Any]:
         # SI-abbreviate large tick labels by default (POLISH.md #12), matching Plotly's
         # default axis style; a configured d3-format `tickformat` (POLISH.md #9) overrides
         # that default when present. A category axis (sample names) is never numeric, so
-        # it's left untouched either way.
-        #
-        # `getattr(..., None)`, not `axis.tickformat`: `AxisIR` (multiqc/plots/layout.py)
-        # has no `tickformat` field today (nothing in multiqc/ sets a Plotly `tickformat`,
-        # see `_TICKFORMAT_RE`'s comment), so this is always `None` until a follow-up adds
-        # that field to the IR; written this way so `_tickformat_axis_formatter_body` is
-        # ready to be picked up the moment it does, with zero behavior change until then.
-        #
-        # KNOWN GAP even once wired: the interactive JS renderer's `buildCurrentOption`
-        # (`multiqc/templates/default/src/js/echarts-plotting.js`, step "3c") unconditionally
-        # overwrites every non-category axis's `axisLabel.formatter` with the plain SI
-        # `formatAxisNumber`, regardless of what this skeleton sets. So a `tickformat` body
-        # from here would only ever take effect on the SSR/static-export path (the only path
-        # that executes a `__FN__` sentinel body at all, see `_si_axis_formatter_body`), not
-        # in the interactive browser view. Making the JS side conditional on a `tickformat`
-        # skeleton flag is a needed follow-up there; flagged here rather than silently left
-        # half-working, since it cannot be fixed from this file.
+        # it's left untouched either way. No module sets a `tickformat` today, so the SI
+        # branch is the one that runs in practice; the tickformat branch exists so a
+        # configured one carries through faithfully.
         suffix = str(axis.ticksuffix) if axis.ticksuffix else ""
-        tickformat = getattr(axis, "tickformat", None)
-        body = _tickformat_axis_formatter_body(tickformat, suffix) if tickformat else _si_axis_formatter_body(suffix)
-        axis_option["axisLabel"] = {"formatter": {"__FN__": True, "body": body}}
+        axis_label: Dict[str, Any] = {}
+        if axis.tickformat:
+            axis_label["formatter"] = {"__FN__": True, "body": _tickformat_axis_formatter_body(axis.tickformat, suffix)}
+            # Marker for the interactive JS (`echarts-plotting.js` buildCurrentOption step
+            # "3c"), which replaces the JSON `__FN__` sentinel with a live function before
+            # setOption: on a tickformat axis it must use the d3-format helper
+            # (`formatWithHoverformat`), not the default SI `formatAxisNumber`. ECharts
+            # ignores this extra key.
+            axis_label["_mqc_tickformat"] = axis.tickformat
+        else:
+            axis_label["formatter"] = {"__FN__": True, "body": _si_axis_formatter_body(suffix)}
+        axis_option["axisLabel"] = axis_label
 
     return axis_option
 

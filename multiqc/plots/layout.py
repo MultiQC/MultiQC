@@ -34,6 +34,10 @@ class AxisIR(BaseModel):
     minallowed: Optional[float] = None
     maxallowed: Optional[float] = None
     ticksuffix: str = ""
+    # d3-format tick-label spec (Plotly `tickformat`, e.g. ",.0f"). Converted to an ECharts
+    # axisLabel formatter by `converter._convert_axis`. No module sets one today, so this is
+    # usually None; it exists so a configured tickformat carries through to the ECharts axis.
+    tickformat: Optional[str] = None
 
 
 class LayoutIR(BaseModel):
@@ -100,6 +104,8 @@ def _axis_ir_from_dict(d: Dict[str, Any]) -> Optional[AxisIR]:
             kwargs["maxallowed"] = auto["maxallowed"]
     if d.get("ticksuffix"):
         kwargs["ticksuffix"] = d["ticksuffix"]
+    if d.get("tickformat"):
+        kwargs["tickformat"] = d["tickformat"]
     if not kwargs:
         return None
     return AxisIR(**kwargs)
