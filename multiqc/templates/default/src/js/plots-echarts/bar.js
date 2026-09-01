@@ -128,7 +128,19 @@ class EchartsBarPlot extends window.BarPlot {
         groupAxis.push(label);
       }
     });
-    this._axisData = { axis: "yAxis", data: groupAxis };
+    // Highlight tick labels (item B): a grouped bar has no per-sample axis tick (samples
+    // are side-by-side stacks); its highlightable axis IS the group-label axis, and the
+    // toolbox highlights BY GROUP (groupSettingsMap). So color the group tick labels the
+    // same way the simple path colors sample ticks, reusing Plot.sampleAxisLabel(). Build
+    // one settings entry per axis label ({name, highlight}) from groupSettingsMap, keyed
+    // by display name so it lines up with groupAxis (which carries the renamed labels).
+    let groupByName = {};
+    Object.values(this.groupSettingsMap || {}).forEach((g) => {
+      groupByName[g.name] = g;
+    });
+    let groupSettings = groupAxis.map((label) => groupByName[label] || { name: label, highlight: null });
+    let maxTicks = (this.layout.height - 140) / 12;
+    this._axisData = { axis: "yAxis", data: groupAxis, axisLabel: this.sampleAxisLabel(groupSettings, maxTicks) };
 
     // Rows sharing the same (row-level) sample name belong to the same stack, e.g.
     // riboWaltz's "sample1_28nt"/"sample1_29nt" rows both display as "sample1" and
