@@ -97,9 +97,16 @@ class EchartsBoxPlot extends window.BoxPlot {
     let traceParams = dataset["trace_params"] || {};
     let boxpoints = "boxpoints" in traceParams ? traceParams["boxpoints"] : "outliers";
     let baseColor = (traceParams["marker"] && traceParams["marker"]["color"]) || "#4899e8";
-    let highlighted = this.filteredSettings.filter((s) => s.highlight);
 
-    this._axisData = { axis: "yAxis", data: this.filteredSettings.map((s) => s.name) };
+    // axisLabel (item B): colors the sample-name axis tick labels, mirroring Plotly's
+    // recalculateTicks(); see Plot.sampleAxisLabel() in echarts-plotting.js. maxTicks
+    // mirrors the Plotly box plot's own formula (templates/plotly/src/js/plots/box.js).
+    let maxTicks = (this.layout.height - 140) / 12;
+    this._axisData = {
+      axis: "yAxis",
+      data: this.filteredSettings.map((s) => s.name),
+      axisLabel: this.sampleAxisLabel(this.filteredSettings, maxTicks),
+    };
 
     let boxData = [];
     let scatterData = [];
@@ -107,8 +114,9 @@ class EchartsBoxPlot extends window.BoxPlot {
     this.filteredSettings.forEach((sample, i) => {
       // Same highlight rule as default box.js's Plotly buildTraces(): recolor the
       // highlighted sample to its highlight color, every other sample to grey, once
-      // any sample is highlighted.
-      let color = highlighted.length > 0 ? (sample.highlight ?? "grey") : baseColor;
+      // ANY highlight is active anywhere (item A: global flag, not the local
+      // `highlighted.length` count, so this plot greys out fully even with zero matches).
+      let color = window.mqc_highlight_f_texts.length > 0 ? (sample.highlight ?? "grey") : baseColor;
       let values = data[i];
 
       if (this.isStatsData) {

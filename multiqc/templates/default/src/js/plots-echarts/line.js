@@ -30,7 +30,10 @@ class EchartsLinePlot extends window.LinePlot {
       // Same highlight rule as default plots/line.js: recolor non-highlighted lines to
       // gray once any line is highlighted, rather than bar's alpha-dimming (lines
       // overlap far more than stacked bars, so a flat gray reads better than alpha).
-      let color = highlighted.length > 0 ? (line.highlight ?? "#cccccc") : line.color;
+      // Item A: gated on the GLOBAL highlight flag, not this plot's local `highlighted`
+      // count, so a plot with zero matching samples still greys out every line once a
+      // highlight is active anywhere (matches Plotly's intended cross-plot behavior).
+      let color = window.mqc_highlight_f_texts.length > 0 ? (line.highlight ?? "#cccccc") : line.color;
       return {
         type: "line",
         name: line.name,

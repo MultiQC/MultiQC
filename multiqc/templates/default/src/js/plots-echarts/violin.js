@@ -501,7 +501,10 @@ class EchartsViolinPlot extends window.Plot {
     ] = this.prepData();
 
     const someHidden = sampleSettings.some((s) => s.hidden);
-    const highlightingEnabled = sampleSettings.some((s) => s.highlight !== null);
+    // Item A: gated on the GLOBAL highlight flag, not this plot's local sampleSettings
+    // matches, so a violin with zero matching samples still greys/dims out every point
+    // once a highlight is active anywhere (matches Plotly's intended cross-plot behavior).
+    const highlightingEnabled = window.mqc_highlight_f_texts.length > 0;
 
     const echartsDs = this.echarts.datasets[this.activeDatasetIdx];
     const violinsFromPython = echartsDs.violins || {};

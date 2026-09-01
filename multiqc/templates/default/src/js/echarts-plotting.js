@@ -104,6 +104,43 @@ function formatAxisNumber(v, suffix) {
 // any per-type buildSeries()/applyOptionOverrides() that needs the same axis formatting).
 window.formatAxisNumber = formatAxisNumber;
 
+// Take ~`num` samples from values evenly, always include `start`. If `roundBin` is true,
+// the bins will be rounded to the nearest integer, so the ticks will be evenly
+// distributed, but the total number of ticks may be less than `num`.
+// Lifted to module scope (was nested inside Plot.recalculateTicks) so both
+// recalculateTicks() and Plot.sampleAxisLabel() below can share one implementation
+// (DRY -- ticket asked for exactly one shared subsample, not a per-caller copy).
+function subsample(values, num, start = 0, roundBin = true) {
+  if (values.length <= num) return values;
+  if (values.length <= 1) return values;
+  if (num === 0) return [];
+  if (num === 1) return [values[start]];
+
+  let binSize = (values.length - 1) / (num - 1);
+  if (roundBin) binSize = Math.ceil(binSize);
+
+  // Split into two halves: before and after pivot, including pivot into both. This way
+  // we want to make sure pivot is always included in the result.
+  let indices = Array.from({ length: values.length }, (_, i) => i);
+  let after = indices.slice(start);
+  let before = indices.slice(0, start + 1); // including the pivot
+
+  // Stepping forward `binsize` steps, starting from the pivot
+  after = Array.from({ length: after.length }, (_, i) => Math.ceil(binSize * i))
+    .filter((index) => index < after.length)
+    .map((index) => after[index]);
+
+  before.reverse(); // Stepping back starting from the pivot
+  before = Array.from({ length: before.length }, (_, i) => Math.ceil(binSize * i))
+    .filter((index) => index < before.length)
+    .map((index) => before[index]);
+  before.reverse();
+  before = before.slice(0, before.length - 1); // remove the pivot
+
+  indices = before.concat(after);
+  return indices.map((i) => values[i]);
+}
+
 class Plot {
   constructor(dump) {
     this.anchor = dump["anchor"];
@@ -203,42 +240,6 @@ class Plot {
     // based on the desired number of ticks and the sample toolbox settings.
     // Kept from the Plotly implementation verbatim: it only mutates the (Plotly-shaped)
     // layout object passed in, which ECharts ignores, so it's harmless to inherit.
-    function subsample(values, num, start = 0, roundBin = true) {
-      // Take ~`num` samples from values evenly, always include `start`.
-      // If `roundBin` is true, the bins will be rounded to the nearest integer,
-      // so the ticks will be evenly distributed, but the total number of ticks
-      // may be less than `num`.
-
-      if (values.length <= num) return values;
-      if (values.length <= 1) return values;
-      if (num === 0) return [];
-      if (num === 1) return [values[start]];
-
-      let binSize = (values.length - 1) / (num - 1);
-      if (roundBin) binSize = Math.ceil(binSize);
-
-      // Split into two halves: before and after pivot, including pivot into both. This way
-      // we want to make sure pivot is always included in the result.
-      let indices = Array.from({ length: values.length }, (_, i) => i);
-      let after = indices.slice(start);
-      let before = indices.slice(0, start + 1); // including the pivot
-
-      // Stepping forward `binsize` steps, starting from the pivot
-      after = Array.from({ length: after.length }, (_, i) => Math.ceil(binSize * i))
-        .filter((index) => index < after.length)
-        .map((index) => after[index]);
-
-      before.reverse(); // Stepping back starting from the pivot
-      before = Array.from({ length: before.length }, (_, i) => Math.ceil(binSize * i))
-        .filter((index) => index < before.length)
-        .map((index) => before[index]);
-      before.reverse();
-      before = before.slice(0, before.length - 1); // remove the pivot
-
-      indices = before.concat(after);
-      return indices.map((i) => values[i]);
-    }
-
     let highlighted = filteredSettings.filter((s) => s.highlight);
     let firstHighlightedSample = this.firstHighlightedSample(filteredSettings);
 
@@ -257,6 +258,42 @@ class Plot {
       axis.tickvals = selected.map((s) => s.name);
       axis.ticktext = selected.map((s) => "<span style='color:" + (s.highlight ?? "#ccc") + "'>" + s.name + "</span>");
     }
+  }
+
+  // ECharts equivalent of recalculateTicks() above: ECharts axisLabel ignores Plotly's
+  // tickvals/ticktext, so highlight -> tick-label colouring here is instead a rich-text
+  // `axisLabel.formatter` plus a `rich` style map keyed per sample. Returns undefined
+  // when no highlight is active ANYWHERE (global flag, matching the dim/grey rule used
+  // everywhere else, item A of the toolbox-highlight parity work) so the caller can leave
+  // the axis's normal theme-colored axisLabel completely untouched. Shared by bar.js/
+  // box.js (one sample axis, applied via Plot._axisData.axisLabel in
+  // buildCurrentOption() below) and heatmap.js (two sample axes, applied directly since
+  // heatmap needs both at once).
+  sampleAxisLabel(filteredSettings, maxTicks) {
+    if (window.mqc_highlight_f_texts.length === 0) return undefined;
+
+    let firstHighlightedSample = this.firstHighlightedSample(filteredSettings);
+    let selected = subsample(filteredSettings, maxTicks, firstHighlightedSample);
+    let selectedNames = new Set(selected.map((s) => s.name));
+
+    // Rich-text style keys must be simple identifiers, not raw sample names (which can
+    // contain spaces/punctuation ECharts' rich-text mini-language can't parse as a style
+    // key), so index them instead of keying by name directly.
+    let rich = {};
+    let keyByName = {};
+    filteredSettings.forEach((s, i) => {
+      let key = "s" + i;
+      rich[key] = { color: s.highlight ?? "#ccc" };
+      keyByName[s.name] = key;
+    });
+
+    let formatter = (value) => {
+      if (!selectedNames.has(value)) return ""; // subsampled out, same as Plotly
+      let key = keyByName[value];
+      return key === undefined ? value : "{" + key + "|" + value + "}";
+    };
+
+    return { formatter, rich };
   }
 
   firstHighlightedSample(sampleSettings) {
@@ -519,6 +556,16 @@ function buildCurrentOption(plot) {
   // at runtime (bar: always yAxis; line: xAxis, only for `pconfig.categories` plots).
   if (plot._axisData && option[plot._axisData.axis]) {
     option[plot._axisData.axis].data = plot._axisData.data;
+    // Highlight -> tick-label colouring (item B): sampleAxisLabel() returns undefined
+    // when no highlight is active, so the axis's normal theme-colored axisLabel (set
+    // above in step 3) is left alone; otherwise its formatter/rich win over the flat
+    // theme color, since rich-text per-sample colors are more specific.
+    if (plot._axisData.axisLabel) {
+      option[plot._axisData.axis].axisLabel = {
+        ...option[plot._axisData.axis].axisLabel,
+        ...plot._axisData.axisLabel,
+      };
+    }
   }
 
   plot.applyOptionOverrides(option);

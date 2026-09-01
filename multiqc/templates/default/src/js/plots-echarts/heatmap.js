@@ -165,6 +165,25 @@ class EchartsHeatmapPlot extends window.Plot {
   applyOptionOverrides(option) {
     if (option.yAxis && this._yAxisData) option.yAxis.data = this._yAxisData;
 
+    // Items B/D: highlight -> tick-label colouring on BOTH axes (whichever carry sample
+    // names). This is a heatmap's ONLY highlight effect in Plotly (no cell-fill change),
+    // so this alone is what makes highlighting visible here at all. maxTicks formulas
+    // mirror the Plotly heatmap plot's own (templates/plotly/src/js/plots/heatmap.js):
+    // yaxis derives from plot height, xaxis from plot width (falling back to the
+    // rendered container width when layout.width isn't set, e.g. a non-square heatmap).
+    if (option.yAxis && this.yCatsAreSamples) {
+      let maxYTicks = (this.layout.height - 200) / 12;
+      let axisLabel = this.sampleAxisLabel(this.filtYCatsSettings, maxYTicks);
+      if (axisLabel) option.yAxis.axisLabel = { ...option.yAxis.axisLabel, ...axisLabel };
+    }
+    if (option.xAxis && this.xCatsAreSamples) {
+      let el = document.getElementById(this.anchor);
+      let width = this.layout.width || (el ? el.clientWidth : 800);
+      let maxXTicks = (width - 250) / 18;
+      let axisLabel = this.sampleAxisLabel(this.filtXCatsSettings, maxXTicks);
+      if (axisLabel) option.xAxis.axisLabel = { ...option.xAxis.axisLabel, ...axisLabel };
+    }
+
     if (option.tooltip) {
       let xlab = this.pconfig.xlab || "x";
       let ylab = this.pconfig.ylab || "y";

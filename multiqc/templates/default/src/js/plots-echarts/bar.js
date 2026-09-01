@@ -47,30 +47,39 @@ class EchartsBarPlot extends window.BarPlot {
 
     // Stashed here for renderPlot() to assign to option.yAxis.data (samples are
     // toolbox-dependent, so the skeleton from Python never contains them).
-    this._axisData = { axis: "yAxis", data: this.filteredSettings.map((s) => s.name) };
+    // axisLabel (item B): colors the sample-name axis tick labels to match Plotly's
+    // recalculateTicks() (ticktext HTML spans); see Plot.sampleAxisLabel() in
+    // echarts-plotting.js. maxTicks mirrors the Plotly bar plot's own formula
+    // (templates/plotly/src/js/plots/bar.js), which derives it from the plot height.
+    let maxTicks = (this.layout.height - 140) / 12;
+    this._axisData = {
+      axis: "yAxis",
+      data: this.filteredSettings.map((s) => s.name),
+      axisLabel: this.sampleAxisLabel(this.filteredSettings, maxTicks),
+    };
 
-    let highlighted = this.filteredSettings.filter((s) => s.highlight);
     let barmode = this.echarts.datasets[this.activeDatasetIdx].layout["_mqc"]?.barmode;
     let isGroup = barmode === "group";
 
-    // parity gap (Phase 3): the Plotly bar plot also colors the sample-name axis TICK
-    // LABELS for highlighted samples (recalculateTicks() writing tickvals/ticktext HTML
-    // spans, templates/default/src/js/plots/bar.js). ECharts ignores tickvals/ticktext;
-    // an equivalent would need yAxis.axisLabel.formatter + a `rich` style map keyed per
-    // sample. Bar dimming below is the primary highlight signal and matches Plotly;
-    // tick-label coloring is deferred.
+    // Highlight, item A/C: dim every non-highlighted sample once ANY highlight is
+    // active anywhere (global flag, not just matches on this plot -- matches Plotly's
+    // intended cross-plot behavior), and outline a highlighted sample's own bar segments
+    // in its group color (Highcharts-era behavior, item C).
     let series = cats.map((cat) => {
       let s = {
         type: "bar",
         name: cat.name,
         barCategoryGap: "30%",
         data: this.filteredSettings.map((sample, sampleIdx) => {
-          // Dim non-highlighted samples to 0.1 alpha when any highlight is active,
-          // same rule as default plots/bar.js.
-          let alpha = highlighted.length > 0 && sample.highlight === null ? 0.1 : 1;
+          let alpha = window.mqc_highlight_f_texts.length > 0 && sample.highlight === null ? 0.1 : 1;
+          let itemStyle = { color: colorWithAlpha(cat.color, alpha) };
+          if (sample.highlight) {
+            itemStyle.borderColor = sample.highlight;
+            itemStyle.borderWidth = 2;
+          }
           return {
             value: cat.data[sampleIdx],
-            itemStyle: { color: colorWithAlpha(cat.color, alpha) },
+            itemStyle,
           };
         }),
       };
@@ -130,8 +139,6 @@ class EchartsBarPlot extends window.BarPlot {
       rowsBySample[row.name].push(rowIdx);
     });
 
-    let anyGroupHighlight = Object.values(this.groupSettingsMap || {}).some((g) => g.highlight);
-
     let series = [];
     Object.keys(rowsBySample).forEach((sampleName) => {
       let rowIndices = rowsBySample[sampleName];
@@ -142,11 +149,20 @@ class EchartsBarPlot extends window.BarPlot {
         rowIndices.forEach((rowIdx) => {
           let originalGroupLabel = this.originalGroupLabels[rowIdx];
           let groupHighlight = this.groupSettingsMap?.[originalGroupLabel]?.highlight;
-          let alpha = anyGroupHighlight && !groupHighlight ? 0.1 : 1;
+          // Item A: dim gate keyed off the GLOBAL highlight flag, not the local
+          // (this plot's) anyGroupHighlight -- once any highlight is active anywhere,
+          // every non-matching group dims here too, matching Plotly's intended
+          // cross-plot behavior.
+          let alpha = window.mqc_highlight_f_texts.length > 0 && !groupHighlight ? 0.1 : 1;
+          let itemStyle = { color: colorWithAlpha(cat.color, alpha) };
+          if (groupHighlight) {
+            itemStyle.borderColor = groupHighlight;
+            itemStyle.borderWidth = 2;
+          }
           data[groupIndex[this.filteredGroupLabels[rowIdx]]] = {
             value: cat.data[rowIdx],
             name: sampleName, // read by the tooltip formatter to disambiguate the stack
-            itemStyle: { color: colorWithAlpha(cat.color, alpha) },
+            itemStyle,
           };
         });
         series.push({
