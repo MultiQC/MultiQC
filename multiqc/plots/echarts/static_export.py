@@ -38,10 +38,11 @@ _FONT_RESOURCE = "fonts/DejaVuSans.ttf"
 _INSTALL_MSG = "Static ECharts export requires mini-racer and resvg-py: pip install 'multiqc[echarts]'"
 
 # `__FN__` sentinels (`{"__FN__": True, "body": "<js source>"}`) are the only way a real JS
-# function crosses the Python/JS bridge (only the violin builder emits them, Phase 2). The
+# function crosses the Python/JS bridge: the violin and seqcontent builders emit them for a
+# series `renderItem`, and every value/log axis emits one for its `axisLabel.formatter`. The
 # bodies are MultiQC-generated string constants, never user data, so `new Function(...)` on
-# them is safe; this walker generalizes the pattern from `scripts/06_violin_final.py:20-43`
-# to every series' `renderItem` and every axis' `axisLabel.formatter`.
+# them is safe; this walker revives them on every series' `renderItem` and every axis'
+# `axisLabel.formatter`.
 _FN_WALKER_JS = """
 function __mqcToFn(sentinel, argNames) {
     return Function.apply(null, argNames.concat([sentinel.body]));

@@ -91,9 +91,9 @@ function formatAxisNumber(v, suffix) {
   ];
   for (const [threshold, unitSuffix] of units) {
     if (abs >= threshold) {
-      // ponytail: no rollover guard for a value that rounds up into the next unit
-      // (e.g. 999.6k -> "1000k" not "1M"); axis ticks are always the round numbers
-      // ECharts itself chooses, so this boundary never occurs in practice.
+      // No rollover guard for a value that rounds up into the next unit (e.g. 999.6k ->
+      // "1000k" not "1M"): axis ticks are always the round numbers ECharts itself chooses,
+      // so this boundary never occurs in practice, and Plotly's SI axis labels do the same.
       return sign + Number((abs / threshold).toPrecision(3)) + unitSuffix + suffix;
     }
   }

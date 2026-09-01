@@ -574,7 +574,8 @@ class EchartsViolinPlot extends window.Plot {
         poly = pre.poly;
       } else {
         // Slow path: samples are hidden, so the polygon must be recomputed from the
-        // currently-visible values only (see the perf note in BUILD_PLAN.md Phase 2 risks).
+        // currently-visible values only (the KDE is the expensive part; recomputed here
+        // only when the visible set changes).
         [lo, hi] = metricRange(header, numericValues);
         poly = violinPolygon(numericValues, lo, hi);
       }

@@ -38,7 +38,7 @@ def _builder(plot_type: PlotType) -> ModuleType:
     # stores the raw string value at runtime; `PlotType(...)` normalizes either form.
     plot_type = PlotType(plot_type)
     if plot_type not in _BUILDERS:
-        raise NotImplementedError(f"ECharts backend does not support {plot_type} yet")
+        raise NotImplementedError(f"ECharts backend has no builder for plot type {plot_type!r}")
     return _BUILDERS[plot_type]
 
 

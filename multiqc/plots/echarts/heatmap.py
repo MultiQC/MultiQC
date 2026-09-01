@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Tuple
 
 from multiqc.plots.echarts.converter import convert_layout
 from multiqc.plots.heatmap import Dataset, HeatmapConfig, HeatmapPlot
+from multiqc.utils.mqc_colour import mqc_colour_scale
 
 # Number of evenly spaced colours ECharts' visualMap is fed: 256 resample intervals (257
 # points), so binary-fraction stop positions (0.25, 0.5, 0.125, ...), the common case for
@@ -35,40 +36,18 @@ _RESAMPLE_STEPS = 257
 
 _HEX_RE = re.compile(r"^#([0-9a-fA-F]{3,8})$")
 _RGB_RE = re.compile(r"^rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)$", re.IGNORECASE)
-# ponytail: only the CSS keywords MultiQC colorscales are known to use in practice
-# (`multiqc/modules/*/`.py`s `colstops` are otherwise all `#hex`/`rgba()`); extend this
-# table if a colorscale ever needs an uncommon named colour.
-_NAMED_COLORS: Dict[str, str] = {
-    "white": "#ffffff",
-    "black": "#000000",
-    "red": "#ff0000",
-    "green": "#008000",
-    "blue": "#0000ff",
-    "yellow": "#ffff00",
-    "cyan": "#00ffff",
-    "aqua": "#00ffff",
-    "magenta": "#ff00ff",
-    "fuchsia": "#ff00ff",
-    "gray": "#808080",
-    "grey": "#808080",
-    "orange": "#ffa500",
-    "purple": "#800080",
-    "navy": "#000080",
-    "lime": "#00ff00",
-    "maroon": "#800000",
-    "olive": "#808000",
-    "teal": "#008080",
-    "silver": "#c0c0c0",
-    "transparent": "rgba(0, 0, 0, 0)",
-}
-
 RGBA = Tuple[float, float, float, float]
 
 
 def _parse_color(color: str) -> RGBA:
     """Parse a `#hex` (3/4/6/8 digit), `rgb()`/`rgba()`, or CSS-named colour string into
-    `(r, g, b, a)` with r/g/b in 0..255 and a in 0..1."""
-    color = _NAMED_COLORS.get(color.strip().lower(), color.strip())
+    `(r, g, b, a)` with r/g/b in 0..255 and a in 0..1. CSS named colours are resolved via
+    the full table in `mqc_colour_scale.html_colors` (the same names Plotly accepts), so any
+    named colour a colorscale uses maps identically across engines."""
+    key = color.strip().lower()
+    if key == "transparent":
+        return 0.0, 0.0, 0.0, 0.0
+    color = mqc_colour_scale.html_colors.get(key, color.strip())
 
     m = _RGB_RE.match(color)
     if m:
