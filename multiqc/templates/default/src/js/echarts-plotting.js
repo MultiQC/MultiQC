@@ -104,6 +104,53 @@ function formatAxisNumber(v, suffix) {
 // any per-type buildSeries()/applyOptionOverrides() that needs the same axis formatting).
 window.formatAxisNumber = formatAxisNumber;
 
+// d3-format specifier subset this understands (same subset as `_TICKFORMAT_RE` in
+// multiqc/plots/echarts/converter.py::_tickformat_axis_formatter_body, kept in lockstep
+// with that Python regex so a tooltip and its axis tick honour the same spec): an
+// optional leading `,` (thousands grouping), an optional `.N` precision, then a single
+// type letter (`f`/`%`/`s`, or bare).
+const _HOVERFORMAT_RE = /^(,)?(?:\.(\d+))?([a-zA-Z%]?)$/;
+
+// Formats `value` per `spec` (a Plotly/d3-format `hoverformat` string, e.g. ",.0f" /
+// ".1%" / ".2s"), mirroring how the Plotly template's per-type tooltip formatters read
+// `layout.xaxis.hoverformat`/`layout.yaxis.hoverformat` (see e.g.
+// templates/plotly/src/js/plots/bar.js). Falls back to the existing formatNumber()
+// heuristic when `spec` is falsy OR unsupported/malformed -- a bad or missing hoverformat
+// must never break a tooltip, so this never throws.
+function formatWithHoverformat(value, spec) {
+  if (typeof value !== "number" || !Number.isFinite(value)) return value;
+  if (!spec) return formatNumber(value);
+  try {
+    let m = _HOVERFORMAT_RE.exec(spec);
+    if (!m) return formatNumber(value);
+    let comma = m[1];
+    let prec = m[2] !== undefined ? parseInt(m[2], 10) : null;
+    let type = m[3];
+
+    if (type === "s") return formatAxisNumber(value, "");
+    if (type === "%") {
+      let decimals = prec !== null ? prec : 0;
+      return (value * 100).toFixed(decimals) + "%";
+    }
+    if (type === "f" || type === "") {
+      let decimals = prec !== null ? prec : 6;
+      return value.toLocaleString("en-US", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+        useGrouping: !!comma,
+      });
+    }
+    return formatNumber(value);
+  } catch (e) {
+    return formatNumber(value);
+  }
+}
+
+// Make formatWithHoverformat globally available, reused by every plots-echarts/*.js
+// tooltip formatter that has an axis (or, for violin, a per-metric header) hoverformat
+// to honour.
+window.formatWithHoverformat = formatWithHoverformat;
+
 // Take ~`num` samples from values evenly, always include `start`. If `roundBin` is true,
 // the bins will be rounded to the nearest integer, so the ticks will be evenly
 // distributed, but the total number of ticks may be less than `num`.

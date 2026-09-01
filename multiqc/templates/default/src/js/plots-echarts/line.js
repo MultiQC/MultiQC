@@ -58,6 +58,14 @@ class EchartsLinePlot extends window.LinePlot {
   // echarts-plotting.js).
   applyOptionOverrides(option) {
     if (!option.tooltip) return;
+    // Line's plotted value is y (x is the axis label shown as-is, never run through
+    // formatNumber today, so there's nothing to switch there); matches the Plotly
+    // reference, whose native hovertemplate applies `layout.yaxis.hoverformat` to `%{y}`.
+    // NOTE: read off the active dataset's raw layout dict, not `this.layout` -- the
+    // neutral `AxisIR` behind `this.layout` deliberately drops `hoverformat` (a
+    // Plotly-only key, see layout.py's `from_dataset_layout` docstring); only the raw
+    // per-dataset layout (`BaseDataset.layout`) still carries it.
+    let hoverformat = this.datasets[this.activeDatasetIdx]?.layout?.yaxis?.hoverformat;
     option.tooltip.formatter = (params) => {
       let list = Array.isArray(params) ? params : [params];
       if (list.length === 0) return "";
@@ -65,7 +73,7 @@ class EchartsLinePlot extends window.LinePlot {
       let rows = list
         .map((p) => {
           let y = Array.isArray(p.value) ? p.value[1] : p.value;
-          return `${p.marker}${p.seriesName}: <b>${window.formatNumber(y)}</b>`;
+          return `${p.marker}${p.seriesName}: <b>${window.formatWithHoverformat(y, hoverformat)}</b>`;
         })
         .join("<br/>");
       return `${xLabel}<br/>${rows}`;

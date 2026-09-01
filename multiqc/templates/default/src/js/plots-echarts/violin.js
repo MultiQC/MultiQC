@@ -603,6 +603,16 @@ class EchartsViolinPlot extends window.Plot {
       titles.push(makeRowTitle(rowIdx, n, title, rowLeft, colors.tickcolor));
 
       const suffix = (header.xaxis && header.xaxis.ticksuffix) || "";
+      // Per-metric hoverformat (Plotly reference: violin.js sets
+      // `layout["xaxis" + (metricIdx+1)]["hoverformat"] = header["hoverformat"]` when the
+      // column configures one, e.g. from tt_decimals); falls back to the base dataset's
+      // own xaxis hoverformat when this metric has none of its own. `header.hoverformat`
+      // is a plain `MetricColumn` field (always serialized, unrelated to the layout IR
+      // issue below), but the fallback has to read the active dataset's RAW layout dict,
+      // not `this.layout`: the neutral `AxisIR` behind the plot-level `this.layout`
+      // deliberately drops `hoverformat`, a Plotly-only key (see layout.py's
+      // `from_dataset_layout` docstring; same fix as plots-echarts/bar.js).
+      const rowHoverformat = header.hoverformat || this.datasets[this.activeDatasetIdx]?.layout?.xaxis?.hoverformat;
 
       const scatterData = [];
       if (header.show_points) {
@@ -629,7 +639,7 @@ class EchartsViolinPlot extends window.Plot {
           });
           // FIX #3: this row's contribution to the sample's combined cross-row tooltip.
           if (!sampleTooltipData[name]) sampleTooltipData[name] = [];
-          sampleTooltipData[name].push({ title, value, suffix });
+          sampleTooltipData[name].push({ title, value, suffix, hoverformat: rowHoverformat });
         });
       }
       scatterSeries.push({
@@ -783,7 +793,7 @@ class EchartsViolinPlot extends window.Plot {
           let real = Array.isArray(params.value) ? params.value[0] : params.value;
           return `<b>${params.name}</b>: ${window.formatNumber(real)}`;
         }
-        const lines = rows.map((r) => `${r.title}: ${window.formatNumber(r.value)}${r.suffix}`);
+        const lines = rows.map((r) => `${r.title}: ${window.formatWithHoverformat(r.value, r.hoverformat)}${r.suffix}`);
         return `<b>${params.name}</b><br>${lines.join("<br>")}`;
       };
     }

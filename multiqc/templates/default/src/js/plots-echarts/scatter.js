@@ -157,9 +157,17 @@ class EchartsScatterPlot extends window.ScatterPlot {
     if (!option.tooltip) return;
     let xsuffix = this.layout?.xaxis?.ticksuffix ?? "";
     let ysuffix = this.layout?.yaxis?.ticksuffix ?? "";
+    // Matches the Plotly reference's native hovertemplate, which applies
+    // `layout.xaxis.hoverformat`/`layout.yaxis.hoverformat` to `%{x}`/`%{y}` respectively.
+    // NOTE: read off the active dataset's raw layout dict, not `this.layout` (see
+    // bar.js's matching comment): the neutral `AxisIR` behind `this.layout` drops
+    // `hoverformat`, a Plotly-only key.
+    let dsLayout = this.datasets[this.activeDatasetIdx]?.layout;
+    let xFormat = dsLayout?.xaxis?.hoverformat;
+    let yFormat = dsLayout?.yaxis?.hoverformat;
     option.tooltip.formatter = (params) => {
       let [x, y] = params.value;
-      return `<b>${params.name}</b><br/>X: ${window.formatNumber(x)}${xsuffix}<br/>Y: ${window.formatNumber(y)}${ysuffix}`;
+      return `<b>${params.name}</b><br/>X: ${window.formatWithHoverformat(x, xFormat)}${xsuffix}<br/>Y: ${window.formatWithHoverformat(y, yFormat)}${ysuffix}`;
     };
   }
 }

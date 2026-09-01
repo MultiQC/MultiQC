@@ -196,6 +196,15 @@ class EchartsBarPlot extends window.BarPlot {
   // values (no rounding).
   applyOptionOverrides(option) {
     if (!option.tooltip) return;
+    // Bar's value axis is xAxis (bars are horizontal, samples on the category yAxis),
+    // matching the Plotly reference (templates/plotly/src/js/plots/bar.js's
+    // `this.layout.xaxis?.hoverformat`). NOTE: unlike `ticksuffix`, `hoverformat` is a
+    // Plotly-only key the neutral `AxisIR` deliberately drops (see layout.py's
+    // `from_dataset_layout` docstring), so it never reaches the plot-level `this.layout`
+    // for the echarts engine; it only survives on the raw per-dataset layout dict
+    // (`BaseDataset.layout`, set by e.g. bargraph.py's `_dataset_layout`), which is what
+    // `this.datasets[...]` exposes here.
+    let hoverformat = this.datasets[this.activeDatasetIdx]?.layout?.xaxis?.hoverformat;
     option.tooltip.formatter = (params) => {
       let list = Array.isArray(params) ? params : [params];
       // Grouped bars (buildGroupedSeries) fill unused axis slots with null so a
@@ -210,7 +219,7 @@ class EchartsBarPlot extends window.BarPlot {
           // to disambiguate which stack a row belongs to, since several samples' series
           // share the same seriesName (the category name).
           let stackLabel = p.data && p.data.name ? `${p.data.name} - ` : "";
-          return `${p.marker}${stackLabel}${p.seriesName}: <b>${window.formatNumber(p.value)}</b>`;
+          return `${p.marker}${stackLabel}${p.seriesName}: <b>${window.formatWithHoverformat(p.value, hoverformat)}</b>`;
         })
         .join("<br/>");
       return `${sampleLabel}<br/>${rows}`;

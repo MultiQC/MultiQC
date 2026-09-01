@@ -150,12 +150,21 @@ class EchartsBoxPlot extends window.BoxPlot {
   applyOptionOverrides(option) {
     if (!option.tooltip) return;
     let suffix = this.layout?.xaxis?.ticksuffix ?? "";
+    // Box's value axis is xAxis (boxes are horizontal, samples on the category yAxis),
+    // matching the Plotly reference (bar.js's own `layout.xaxis?.hoverformat` read applies
+    // equally here since box.py also lays out horizontally). NOTE: read off the active
+    // dataset's raw layout dict, not `this.layout` (see plots-echarts/bar.js's matching
+    // comment): the neutral `AxisIR` behind `this.layout` drops `hoverformat`, a
+    // Plotly-only key.
+    let hoverformat = this.datasets[this.activeDatasetIdx]?.layout?.xaxis?.hoverformat;
     option.tooltip.formatter = (params) => {
       if (params.seriesType === "boxplot") {
         // ECharts prepends the category axis value/index to `value` for a boxplot on a
         // category axis (6 elements: [axisValue, min, q1, median, q3, max]), unlike the
         // plain 5-element five-number array in option.series[0].data; drop it here.
-        let [minV, q1, median, q3, maxV] = params.value.slice(-5).map(window.formatNumber);
+        let [minV, q1, median, q3, maxV] = params.value
+          .slice(-5)
+          .map((v) => window.formatWithHoverformat(v, hoverformat));
         return (
           `<b>${params.name}</b><br/>` +
           `Max: ${maxV}${suffix}<br/>Q3: ${q3}${suffix}<br/>Median: ${median}${suffix}<br/>` +
@@ -163,7 +172,7 @@ class EchartsBoxPlot extends window.BoxPlot {
         );
       }
       let value = Array.isArray(params.value) ? params.value[0] : params.value;
-      return `<b>${params.name}</b>: ${window.formatNumber(value)}${suffix}`;
+      return `<b>${params.name}</b>: ${window.formatWithHoverformat(value, hoverformat)}${suffix}`;
     };
   }
 }
