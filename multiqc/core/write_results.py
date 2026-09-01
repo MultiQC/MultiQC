@@ -523,28 +523,29 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
 
     plugin_hooks.mqc_trigger("before_template")
     template_mod = config.avail_templates[config.template].load()
-    # Load in parent template files first if a child theme
-    parent_template = None
-    try:
-        parent_template = config.avail_templates[template_mod.template_parent].load()
-    except AttributeError:
-        pass  # Not a child theme
-    else:
+    # Walk the FULL `template_parent` chain (e.g. disco -> plotly -> default) and copy from
+    # the root ancestor down to the active template, so each level overrides the one above
+    # it (`dirs_exist_ok`). This lets a template be a thin child that overrides only a few
+    # files: e.g. the `plotly` template overrides just its renderer JS/assets and inherits
+    # every shared HTML file from `default`. (Previously only one parent level was copied,
+    # so a two-level child like disco relied on its immediate parent shipping full HTML.)
+    template_chain = [template_mod]
+    _seen_tmpl = {config.template}
+    _cur = template_mod
+    while (_parent_name := getattr(_cur, "template_parent", None)) and _parent_name not in _seen_tmpl:
+        if _parent_name not in config.avail_templates:
+            break
+        _seen_tmpl.add(_parent_name)
+        _cur = config.avail_templates[_parent_name].load()
+        template_chain.append(_cur)
+    # Root ancestor first, active template last, so children override parents.
+    for _tmpl in reversed(template_chain):
         shutil.copytree(
-            parent_template.template_dir,
+            _tmpl.template_dir,
             tmp_dir.get_tmp_dir(),
             dirs_exist_ok=True,
             ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
         )
-
-    # Copy the template files to the tmp directory (`dirs_exist_ok` makes sure
-    # parent template files are overwritten)
-    shutil.copytree(
-        template_mod.template_dir,
-        tmp_dir.get_tmp_dir(),
-        dirs_exist_ok=True,
-        ignore=shutil.ignore_patterns("*.pyc", "node_modules"),
-    )
 
     # Function to include file contents in Jinja template
     def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
@@ -554,14 +555,14 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             _path: str = os.path.join(fdir, name)
 
             if config.development:
-                if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
-                    fdir = template_mod.template_dir
-                    name = dev_path
-                    _path = dev_path
-                elif parent_template and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
-                    fdir = template_mod.template_dir
-                    name = dev_path
-                    _path = dev_path
+                # Resolve against the template chain (active template first, then each
+                # ancestor), so a thin child inherits a parent's source file in dev mode.
+                for _tmpl in template_chain:
+                    if os.path.exists(dev_path := os.path.join(_tmpl.template_dir, name)):
+                        fdir = template_mod.template_dir
+                        name = dev_path
+                        _path = dev_path
+                        break
 
                 if re.match(r".*\.min\.(js|css)$", name):
                     unminimized_name = re.sub(r"\.min\.", ".", name)

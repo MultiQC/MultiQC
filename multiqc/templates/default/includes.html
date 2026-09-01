@@ -59,7 +59,11 @@ it prints the contents of these files into the report.
   {{ include_file("assets/js/packages/jszip.min.js") }}
 </script>
 <script type="text/javascript">
+  {% if config.plotting_engine == "plotly" %}
+  {{ include_file("assets/js/packages/plotly-3.1.2.custom.min.js") }}
+  {% else %}
   {{ include_file("assets/js/packages/echarts-6.1.0.custom.min.js") }}
+  {% endif %}
 </script>
 <script type="text/javascript">
   {{ include_file("assets/js/packages/pako_inflate.min.js") }}
