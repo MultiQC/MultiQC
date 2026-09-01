@@ -15,7 +15,6 @@ dependencies = [
     "numpy",
     "packaging",
     "requests",
-    "Pillow>=10",         # to add a logo into flat plots
     # ECharts is the default engine and owns all static/flat image export, via a
     # browserless SSR path (mini-racer runs the ECharts bundle, resvg rasterises).
     "mini-racer>=0.12.4",
@@ -88,7 +87,6 @@ dev = [
     "types-requests",
     "types-Markdown",
     "types-beautifulsoup4",
-    "types-Pillow",
     "types-jsonschema",
     "types-boto3",
     "beautifulsoup4",

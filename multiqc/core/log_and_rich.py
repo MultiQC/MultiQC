@@ -53,8 +53,7 @@ def init_log(log_to_file: bool = False):
     if config.quiet:
         log_level = "WARNING"
 
-    # Remove DEBUG level for the PIL.PngImagePlugin and other third-party dependency loggers
-    logging.getLogger("PIL").setLevel(logging.INFO)
+    # Remove DEBUG level for httpcore and other third-party dependency loggers
     logging.getLogger("httpcore").setLevel(logging.INFO)
     if not config.verbose:  # to suppress log messages inside rich.progress.Progress
         logging.getLogger("httpx").setLevel(logging.WARNING)
