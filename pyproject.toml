@@ -102,6 +102,12 @@ echarts = [
     "mini-racer>=0.12.4",
     "resvg-py>=0.3.2",
 ]
+# Vector PDF static export (multiqc -p pdf): pure-Python SVG to vector PDF, no system
+# libraries. Optional because most users only need png/svg (the defaults).
+pdf = [
+    "svglib>=2.2.0",
+    "reportlab>=4.0",
+]
 
 [project.urls]
 Homepage = "https://multiqc.info"

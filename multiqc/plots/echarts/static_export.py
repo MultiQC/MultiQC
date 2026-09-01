@@ -78,7 +78,8 @@ function render(optionJson, w, h) {
 """
 
 _racer_instance: Optional[Any] = None
-_pdf_warning_logged = False
+
+_PDF_INSTALL_MSG = "PDF export requires the pdf extra: pip install 'multiqc[pdf]'"
 
 
 def _racer() -> Any:
@@ -153,6 +154,35 @@ def svg_to_png(svg: str) -> bytes:
     return bytes(png)
 
 
+def _svg_to_pdf(svg: str) -> bytes:
+    """
+    Convert a rendered SVG to a VECTOR PDF via svglib + reportlab (both pure-Python, no
+    system libraries). Lazily imported: the converters ship only as the optional `pdf`
+    extra, so PDF requested without them installed raises a clear, actionable error rather
+    than failing obscurely.
+
+    One known limitation: reportlab renders a many-stop linear gradient with only its end
+    stops, so a heatmap's `visualMap` colour-bar legend degrades to a two-tone bar. The
+    heatmap cells and their printed values are unaffected (they carry solid per-cell
+    colours), and every other plot type is faithful. SVG export (also vector) keeps the
+    full gradient if that legend matters.
+    """
+    try:
+        import io
+
+        from reportlab.graphics import renderPDF  # type: ignore[import-untyped]
+        from svglib.svglib import svg2rlg  # type: ignore[import-untyped]
+    except ImportError as e:
+        raise RuntimeError(_PDF_INSTALL_MSG) from e
+
+    drawing = svg2rlg(io.BytesIO(svg.encode("utf-8")))
+    if drawing is None:
+        raise RuntimeError("svglib could not parse the rendered plot SVG for PDF export")
+    buf = io.BytesIO()
+    renderPDF.drawToFile(drawing, buf, showBoundary=0)
+    return buf.getvalue()
+
+
 def _dataset_height(plot: "Plot[Any, Any]", dataset: Any) -> int:
     """
     The pixel height for one dataset's rendered chart: `plot.layout_ir` merged with the
@@ -172,17 +202,12 @@ def _write_export_formats(svg: str, file_name: str) -> Optional[bytes]:
     `tmp_dir.plots_tmp_dir()`. Returns the rendered PNG bytes if a PNG was produced (so
     callers embedding a PNG in the HTML can reuse it instead of re-rendering).
     """
-    global _pdf_warning_logged
-
     png_bytes: Optional[bytes] = None
     for file_ext in config.export_plot_formats:
         if file_ext == "pdf":
-            if not _pdf_warning_logged:
-                logger.warning("PDF export is not supported by the ECharts engine, skipping")
-                _pdf_warning_logged = True
-            continue
+            content: bytes = _svg_to_pdf(svg)
         elif file_ext == "svg":
-            content: bytes = svg.encode("utf-8")
+            content = svg.encode("utf-8")
         elif file_ext == "png":
             png_bytes = svg_to_png(svg)
             content = png_bytes
