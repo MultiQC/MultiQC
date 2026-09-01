@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.",
             doi="10.1186/s13059-019-1903-0",
             license="GNU General Public License v3.0",
-            license_url=None,
+            license_url="https://github.com/rhuebler/HOPS/blob/external/LICENSE",
         )
 
         # Find and load any HOPS post-processing JSONs

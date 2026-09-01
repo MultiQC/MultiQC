@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Simple and flexible bioinformatics pipeline tool.",
             doi="10.12688/f1000research.10335.2",
             license="GNU General Public License v3.0",
-            license_url=None,
+            license_url="https://github.com/ewels/clusterflow/blob/master/license.txt",
         )
 
         # Find and load any Cluster Flow reports
