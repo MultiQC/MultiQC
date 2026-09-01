@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Quantifies expression of transcripts using RNA-seq data.",
             doi="10.1038/nmeth.4197",
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/COMBINE-lab/salmon/blob/master/LICENSE",
         )
 
         # Parse meta information. JSON win!

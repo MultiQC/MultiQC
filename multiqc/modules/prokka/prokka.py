@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/tseemann/prokka/blob/master/LICENSE",
         )
 
         # Parse logs

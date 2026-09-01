@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Filters and trims adapter sequences from HiFi reads using BLAST.",
             # doi="",  # No DOI available
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/sanger-tol/hifi-trimmer/blob/main/LICENSE",
         )
 
         self.hifi_trimmer_data = {}

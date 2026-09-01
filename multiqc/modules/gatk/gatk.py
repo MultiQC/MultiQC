@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Wide variety of tools with a primary focus on variant discovery and genotyping.",
             doi=["10.1101/201178", "10.1002/0471250953.bi1110s43", "10.1038/ng.806", "10.1101/gr.107524.110"],
             license="Apache License 2.0",
-            license_url="https://www.apache.org/licenses/LICENSE-2.0",
+            license_url="https://github.com/broadinstitute/gatk/blob/master/LICENSE.TXT",
         )
 
         # Set up class objects to hold parsed data

@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1038/s41586-022-05049-6",
             license="BSD 2-Clause License",
-            license_url="https://opensource.org/license/bsd-2-clause",
+            license_url="https://github.com/andersen-lab/Freyja/blob/main/LICENSE",
         )
 
         # To store the summary data

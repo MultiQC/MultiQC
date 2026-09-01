@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Computes statistics on genome annotation.",
             doi="10.5281/zenodo.31631",
             license="BSD 2-Clause License",
-            license_url="https://opensource.org/license/bsd-2-clause",
+            license_url="https://github.com/tanghaibao/jcvi/blob/master/LICENSE",
         )
 
         # Parse logs

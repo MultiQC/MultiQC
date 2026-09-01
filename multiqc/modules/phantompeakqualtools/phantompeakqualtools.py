@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/kundajelab/phantompeakqualtools/blob/master/LICENSE",
         )
 
         # Parse logs

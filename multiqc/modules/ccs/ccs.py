@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             # Can't find a DOI // doi=
             license="BSD 3-Clause Clear License",
-            license_url="https://spdx.org/licenses/BSD-3-Clause-Clear.html",
+            license_url="https://github.com/PacificBiosciences/ccs/blob/master/LICENSE",
         )
 
         # To store the mod data

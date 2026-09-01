@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             "SNP coverage statistics in such databases.",
             # No publication / DOI // doi=
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/TCLamnidis/EigenStratDatabaseTools/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports

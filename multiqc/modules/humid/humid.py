@@ -16,7 +16,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.",
             # No publication / DOI // doi=
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/jfjlaros/HUMID/blob/master/LICENSE.md",
         )
         self.stats = None
         self.neighbours = None

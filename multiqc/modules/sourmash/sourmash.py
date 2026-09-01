@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
             info="Quickly searches, compares, and analyzes genomic and metagenomic data sets.",
             doi="10.21105/joss.00027",
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/sourmash-bio/sourmash/blob/master/LICENSE",
         )
 
         n = dict()

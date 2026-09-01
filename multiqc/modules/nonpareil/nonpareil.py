@@ -47,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/bioinformatics/btt584",
             license="Artistic License 2.0",
-            license_url="https://opensource.org/license/artistic-2-0",
+            license_url="https://github.com/lmrodriguezr/nonpareil/blob/main/LICENSE.txt",
         )
         # Config options
         self.plot_colours = getattr(config, "nonpareil", {}).get("plot_colours", "Paired")

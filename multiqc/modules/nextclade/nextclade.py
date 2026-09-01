@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.21105/joss.03773",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/nextstrain/nextclade/blob/master/LICENSE",
         )
 
         # Parse logs

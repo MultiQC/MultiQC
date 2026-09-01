@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/remiolsen/anglerfish/blob/master/LICENSE",
         )
 
         # Find and load any anglerfish reports

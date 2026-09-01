@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).",
             doi="10.1038/s41467-019-08844-4",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/motu-tool/mOTUs/blob/master/LICENSE",
         )
 
         # Define the main motus multiqc data object

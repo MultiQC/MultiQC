@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Evaluates high throughput RNA-seq data.",
             doi="10.1093/bioinformatics/bts356",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url=None,
         )
 
         # Get the list of submodules (can be customised)

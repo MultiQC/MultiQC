@@ -47,7 +47,7 @@ class MultiqcModule(
             info="Toolkit for processing and analyzing single-cell (epi)genomics data.",
             doi="10.5281/zenodo.7853375",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url=None,
         )
 
         samples = dict()

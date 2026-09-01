@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1038/s41592-021-01101-x",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/bbuchfink/diamond/blob/master/LICENSE",
         )
 
         # Find and load any DIAMOND reports

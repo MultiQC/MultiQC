@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)",
             doi="10.1101/085050",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/whatshap/whatshap/blob/master/LICENSE",
         )
 
         # Store the whatshap stats results

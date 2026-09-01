@@ -39,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Estimates sequencing saturation for reduced-representation bisulfite sequencing (RRBS) data.",
             # doi="",  # No DOI available
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/VIBTOBIlab/methurator/blob/main/LICENSE",
         )
 
         # Store parsed data

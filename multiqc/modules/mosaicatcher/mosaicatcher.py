@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             doi="10.1038/s41587-019-0366-x",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/friendsofstrandseq/mosaicatcher/blob/master/LICENSE.md",
         )
 
         data_by_sample = dict()

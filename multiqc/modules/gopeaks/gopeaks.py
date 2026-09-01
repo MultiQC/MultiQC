@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/maxsonBraunLab/gopeaks/blob/main/LICENSE",
         )
 
         # data vars ---------------------------------------------------------------------

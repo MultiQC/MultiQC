@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/brentp/peddy/blob/master/LICENSE",
         )
 
         # Find and load any Peddy reports

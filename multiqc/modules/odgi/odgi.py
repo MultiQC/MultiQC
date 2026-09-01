@@ -84,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Analysis and manipulation of pangenome graphs structured in the variation graph model.",
             # Can't find a DOI // doi=
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/pangenome/odgi/blob/master/LICENSE",
         )
 
         # Parse odgi stats data

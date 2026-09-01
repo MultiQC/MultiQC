@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             evaluate the significance of enriched ChIP regions.""",
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/macs3-project/MACS/blob/master/LICENSE",
         )
 
         # Parse logs

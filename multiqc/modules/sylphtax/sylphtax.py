@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             info=info,
             doi=doi,
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/bluenote-1577/sylph-tax/blob/main/LICENSE",
         )
         # Taxonomic ranks: include Sylph’s domain/realm/strain if desired
         self.t_ranks = {

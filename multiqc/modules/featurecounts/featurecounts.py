@@ -53,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             "genomic bins and chromosomal locations.",
             doi="10.1093/bioinformatics/btt656",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url=None,
         )
 
         data_by_sample: Dict[str, Dict[str, List[int]]] = dict()

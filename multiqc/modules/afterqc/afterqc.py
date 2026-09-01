@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Automatic filtering, trimming, error removing, and quality control for FastQ data.",
             doi="10.1186/s12859-017-1469-3",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/OpenGene/AfterQC/blob/master/LICENSE",
         )
 
         # Find and load any Afterqc reports

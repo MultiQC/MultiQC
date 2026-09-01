@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/usadellab/Trimmomatic/blob/master/LICENSE",
         )
 
         # Parse logs

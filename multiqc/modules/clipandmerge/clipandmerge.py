@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/apeltzer/ClipAndMerge/blob/master/LICENSE",
         )
 
         # Find and load any ClipAndMerge reports

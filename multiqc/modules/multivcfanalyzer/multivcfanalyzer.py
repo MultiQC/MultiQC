@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/alexherbig/MultiVCFAnalyzer/blob/master/LICENSE",
         )
 
         # Find and load any MultiVCFAnalyzer reports

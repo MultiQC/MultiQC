@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/bioinformatics/btx330",
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/seqan/flexbar/blob/master/LICENSE.md",
         )
 
         # Parse logs

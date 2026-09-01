@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1101/2022.11.28.518213 ",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/odelaneau/GLIMPSE/blob/master/LICENSE",
         )
 
         # Call submodule functions

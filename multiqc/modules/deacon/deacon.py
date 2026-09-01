@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/bede/deacon",
             doi="https://doi.org/10.1101/2025.06.09.658732",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/bede/deacon/blob/main/LICENSE",
         )
 
         self.deacon_data: Dict[str, Dict] = {}

@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Tools for early stage alignment file processing",
             doi="10.1186/1751-0473-9-13",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://gitlab.com/german.tischler/biobambam2/-/blob/master/COPYING",
         )
 
         n = dict()

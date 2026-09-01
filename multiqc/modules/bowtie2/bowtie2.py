@@ -51,7 +51,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.",
             doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/BenLangmead/bowtie2/blob/master/LICENSE",
         )
 
         # Find and load any Bowtie 2 reports

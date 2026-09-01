@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             # One publication, but only for the merge tool:
             # doi="10.1371/journal.pone.0185056",
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/bbushnell/BBTools/blob/master/license.txt",
         )
 
         # Define the main bbduk multiqc data object

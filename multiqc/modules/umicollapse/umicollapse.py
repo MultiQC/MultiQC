@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Algorithms for efficiently collapsing reads with Unique Molecular Identifiers",
             doi="10.7717/peerj.8275",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/Daniel-Liu-c0deb0t/UMICollapse/blob/master/LICENSE",
         )
 
         data_by_sample = dict()

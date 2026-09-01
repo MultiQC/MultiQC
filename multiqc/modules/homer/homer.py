@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
             info="Motif discovery and next-gen sequencing analysis.",
             doi="10.1016/j.molcel.2010.05.004",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url=None,
         )
 
         # Set up class objects to hold parsed data

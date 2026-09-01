@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             "the development of modular workflows for data processing.",
             doi="10.1093/bioinformatics/btz279",
             license="BSD 2-Clause License",
-            license_url="https://opensource.org/license/bsd-2-clause",
+            license_url="https://github.com/BUStools/bustools/blob/master/LICENSE",
         )
 
         self.prepare_data()

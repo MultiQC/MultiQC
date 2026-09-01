@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             "and deduplication.",
             doi=["10.5281/zenodo.1490830", "10.1101/2023.02.13.528389"],
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/mirnylab/pairtools/blob/master/LICENSE",
         )
 
         # Superfluous function call to confirm that it is used in this module

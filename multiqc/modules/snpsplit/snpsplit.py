@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions",
             doi="10.12688/f1000research.9037.2",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/FelixKrueger/SNPsplit/blob/master/LICENSE",
         )
 
         self.snpsplit_data = dict()

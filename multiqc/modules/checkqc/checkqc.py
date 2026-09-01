@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             comment="Samples are only shown in the report if they fail a check",
             doi="10.21105/joss.00556",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/Molmed/checkQC/blob/master/LICENSE",
         )
 
         self.checkqc_data = dict()

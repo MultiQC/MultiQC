@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Hi-C pipeline that generates contact maps from sequencing reads.",
             doi="10.5281/zenodo.4066363",
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/koszullab/hicstuff/blob/master/LICENSE",
         )
 
         self.hicstuff_data = {}

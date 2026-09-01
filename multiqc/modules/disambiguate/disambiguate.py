@@ -17,7 +17,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Disambiguate reads aligned to two different species (e.g. human and mouse)",
             doi="10.12688/f1000research.10082.1",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/AstraZeneca-NGS/disambiguate/blob/master/LICENSE.txt",
         )
 
         self.data = {}

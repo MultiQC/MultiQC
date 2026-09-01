@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/bioinformatics/btu558",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/bcgsc/biobloom/blob/master/LICENSE",
         )
 
         # Find and load any BioBloom Tools reports

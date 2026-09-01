@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.",
             doi=["10.1101/gr.256545.119"],
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/genepi/haplocheck/blob/master/LICENSE",
         )
         haplocheck_data: Dict = dict()
 

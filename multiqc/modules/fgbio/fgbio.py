@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Processing and evaluating data containing UMIs",
             # No publication / DOI // doi=
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/fulcrumgenomics/fgbio/blob/master/LICENSE",
         )
 
         # GroupReadsByUmi

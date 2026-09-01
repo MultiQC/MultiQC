@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             "as well as regulatory regions.",
             doi="10.1186/s13059-016-0974-4",
             license="Apache License 2.0",
-            license_url="https://www.apache.org/licenses/LICENSE-2.0",
+            license_url="https://github.com/Ensembl/ensembl-vep/blob/main/LICENSE",
         )
 
         self.vep_data = dict()

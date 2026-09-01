@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
             doi="10.5281/zenodo.5127898",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/FelixKrueger/TrimGalore/blob/master/LICENSE",
         )
 
         data_by_sample: Dict[str, Dict[str, Any]] = {}

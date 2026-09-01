@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             # doi="",  # No DOI available
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/rrwick/Porechop/blob/master/LICENSE",
         )
 
         # Find and load reports

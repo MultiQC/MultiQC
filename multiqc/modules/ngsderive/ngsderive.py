@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             # Can't find a DOI // doi=
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/stjudecloud/ngsderive/blob/master/LICENSE.md",
         )
 
         self.strandedness = {}

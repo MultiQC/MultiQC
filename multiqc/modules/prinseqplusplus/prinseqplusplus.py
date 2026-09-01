@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
             license="GNU General Public License v2.0",
-            license_url="https://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
+            license_url="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus/blob/master/LICENSE",
         )
 
         # Find and load reports

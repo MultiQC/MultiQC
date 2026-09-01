@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             extra="This is useful as a quick QC to get coverage values across the genome.",
             doi="10.1093/gigascience/gix090",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/brentp/goleft/blob/master/LICENSE",
         )
 
         # Parse ROC data

@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Part of the HTSeq package: counts reads covering specified genomic features",
             doi="10.1093/bioinformatics/btu638",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/htseq/htseq/blob/master/LICENSE",
         )
 
         # Find and load any HTSeq Count reports

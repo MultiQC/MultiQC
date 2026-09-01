@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1038/s41586-019-1689-y",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/hartwigmedical/hmftools/blob/master/LICENSE",
         )
 
         data_by_sample = defaultdict(dict)

@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/nar/gku699",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/grenaud/leeHom/blob/master/LICENSE",
         )
 
         # Find and load any leeHom reports

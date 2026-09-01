@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Maps bisulfite converted sequence reads and determine cytosine methylation states.",
             doi="10.1093/bioinformatics/btr167",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/FelixKrueger/Bismark/blob/master/license.txt",
         )
 
         # Set up data structures

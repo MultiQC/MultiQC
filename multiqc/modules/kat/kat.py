@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Analyses sequencing data via its k-mer spectra.",
             doi="10.1093/bioinformatics/btw663",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/TGAC/KAT/blob/master/COPYING",
         )
 
         # Find and load any KAT dist analysis reports

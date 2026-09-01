@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/bioinformatics/bty654",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/roblanf/minion_qc/blob/master/LICENSE",
         )
 
         # Find and load any minionqc reports

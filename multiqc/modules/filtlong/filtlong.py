@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             "(longer is better) and read identity (higher is better) when choosing which reads pass the filter.",
             # doi="", # No DOI
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/rrwick/Filtlong/blob/main/LICENSE",
         )
 
         # Find and load reports

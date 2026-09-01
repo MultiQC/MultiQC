@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data",
             doi="10.21105/joss.01236",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/tleonardi/pycoQC/blob/master/LICENSE",
         )
 
         self.pycoqc_data = {}

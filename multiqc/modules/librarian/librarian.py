@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.12688/f1000research.125325.1",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/DesmondWillowbrook/Librarian/blob/master/COPYING",
         )
 
         # To store the summary data

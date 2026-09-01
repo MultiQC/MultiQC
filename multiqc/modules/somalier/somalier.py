@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1186/s13073-020-00761-2",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/brentp/somalier/blob/master/LICENSE",
         )
 
         # Find and load any somalier reports

@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             single-copy orthologs selected from OrthoDB.""",
             doi="10.1093/bioinformatics/btv351",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://gitlab.com/ezlab/busco/-/blob/master/LICENSE",
         )
 
         # Keys and strings, used for parsing and for plot

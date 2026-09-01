@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]",
             doi="10.1093/bioinformatics/btad728",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/bede/hostile/blob/main/LICENSE",
         )
 
         data_by_sample = dict()

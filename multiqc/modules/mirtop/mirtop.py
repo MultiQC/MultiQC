@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/miRTop/mirtop/blob/master/LICENSE",
         )
 
         # Find and load any mirtop reports

@@ -46,7 +46,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="A one-liner tool for quality control of your single-cell atlases.",
             # Can't find a DOI // doi=
             license="BSD 3-Clause License",
-            license_url="https://opensource.org/license/bsd-3-clause",
+            license_url="https://github.com/becavin-lab/checkatlas/blob/main/LICENSE",
         )
 
         self.data_summary: dict[str, dict[str, Coerced]] = {}

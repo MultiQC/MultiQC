@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             doi="10.1093/nar/gku181",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url="https://github.com/zd1/telseq/blob/master/LICENSE",
         )
 
         # Find and load any telseq reports

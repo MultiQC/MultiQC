@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tool that powers the Demultiplex Barcodes GUI-based analysis application.",
             # No publication / DOI // doi=
             license="BSD 3-Clause Clear License",
-            license_url="https://spdx.org/licenses/BSD-3-Clause-Clear.html",
+            license_url="https://github.com/PacificBiosciences/barcoding/blob/master/LICENSE",
         )
 
         # To store the summary data

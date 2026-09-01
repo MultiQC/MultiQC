@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
             info="Annotates and predicts the effects of variants on genes (such as amino acid changes). ",
             doi="10.4161/fly.19695",
             license="MIT License",
-            license_url="https://opensource.org/license/mit",
+            license_url="https://github.com/pcingola/SnpEff/blob/master/LICENSE.md",
         )
 
         self.snpeff_data = dict()

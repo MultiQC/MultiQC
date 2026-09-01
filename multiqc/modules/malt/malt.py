@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
             license="GNU General Public License v3.0",
-            license_url="https://www.gnu.org/licenses/gpl-3.0.html",
+            license_url=None,
         )
 
         # Find and load Malt reports
