@@ -113,9 +113,9 @@ decide whether to build an ECharts option object or a Plotly figure for each plo
 templates inherit their parent's engine by walking the `template_parent` chain (for example
 `disco` renders Plotly via the `plotly` template, and `simple` renders ECharts static
 images). The `default` template loads the ECharts JavaScript bundle and ships the ECharts
-plot renderers; the `plotly` template does the same for Plotly. `--template echarts` remains
-as a back-compat alias for `default`. Both engines are driven by the same `bargraph.plot()`,
-`linegraph.plot()`, etc. calls, so no module code changes when the engine changes.
+plot renderers; the `plotly` template does the same for Plotly. Both engines are driven by
+the same `bargraph.plot()`, `linegraph.plot()`, etc. calls, so no module code changes when
+the engine changes.
 
 ## Extra init variables
 

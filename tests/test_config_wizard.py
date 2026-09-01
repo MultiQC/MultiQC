@@ -254,7 +254,6 @@ def test_update_config_resolves_plotting_engine_from_template():
 
     expected = {
         "default": "echarts",  # default renders ECharts
-        "echarts": "echarts",
         "plotly": "plotly",  # explicit Plotly template
         "disco": "plotly",  # child of `plotly`
         "simple": "echarts",  # flat/static output via ECharts SSR (also used by --pdf)

@@ -362,7 +362,7 @@ def test_si_axis_formatter_body_golden_values():
     """
     GOLDEN cross-language contract (POLISH.md #12): `_si_axis_formatter_body`'s JS source
     must stay in lockstep with `formatAxisNumber()` in
-    `multiqc/templates/echarts/src/js/echarts-plotting.js` (same duplication pattern as
+    `multiqc/templates/default/src/js/echarts-plotting.js` (same duplication pattern as
     violin.py's kde()/JS kde() pair). Executed here in a real JS engine (MiniRacer,
     already a project dependency via `static_export.py`) to assert it SI-abbreviates the
     way Plotly's own axis ticks do: ~3 significant figures, trailing zeros trimmed.
@@ -824,7 +824,7 @@ def test_seqcontent_mark_count_equals_total_bins():
 
 # GOLDEN quartile test: this fixed input + expected five-number/outlier values is the
 # cross-language contract asserted here AND mirrored in a comment block at the top of
-# `multiqc/templates/echarts/src/js/plots/box.js`. The JS `fiveNumberSummary()`/
+# `multiqc/templates/default/src/js/plots-echarts/box.js`. The JS `fiveNumberSummary()`/
 # `outliers()` port must produce the same output for the same input (checked manually:
 # there is no JS unit-test runner in this repo).
 _GOLDEN_BOX_VALUES: List[Union[int, float]] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100]
@@ -930,7 +930,7 @@ def test_box_mark_count_is_samples_plus_outliers():
 
 # GOLDEN kde() test: this fixed input + expected output is the cross-language contract
 # asserted here AND mirrored in a comment block at the top of `multiqc/plots/echarts/violin.py`
-# (and, in Task 2.2, at the top of `templates/echarts/src/js/plots/violin.js`). The JS
+# (and, in Task 2.2, at the top of `templates/default/src/js/plots-echarts/violin.js`). The JS
 # `kde()` port must reproduce these same values for the same input.
 _GOLDEN_KDE_VALUES = [1.0, 2.0, 3.0, 4.0, 5.0]
 _GOLDEN_KDE_XS = [1.0, 3.0, 5.0]
@@ -1342,7 +1342,7 @@ def test_box_sort_by_median_produces_median_sorted_series():
     D3 (`multiqc-echarts-exploration/PARITY.md`): the sort-by-median toggle is wired up
     only on the JS side (the inherited, engine-neutral `prepData()` swaps in
     `dataset.data_sorted`/`samples_sorted` when the sort switch is active,
-    `templates/echarts/src/js/plots/box.js`); no shipped module sets `sort_by_median=True`
+    `templates/default/src/js/plots-echarts/box.js`); no shipped module sets `sort_by_median=True`
     and nothing exercises that sorted path. `Dataset.create` (`multiqc/plots/box.py`)
     always keeps `dataset.data`/`samples` as the alphabetical order and stashes the
     ascending-by-median order separately in `data_sorted`/`samples_sorted`. Simulate
@@ -1386,14 +1386,14 @@ def test_box_sort_by_median_produces_median_sorted_series():
 def test_echarts_template_end_to_end_interactive(data_dir, tmp_path):
     result = multiqc.run(
         data_dir / "modules" / "fastp" / "SAMPLE.json",
-        cfg=ClConfig(run_modules=["fastp"], template="echarts", output_dir=tmp_path),
+        cfg=ClConfig(run_modules=["fastp"], template="default", output_dir=tmp_path),
         return_html=True,
     )
 
     assert result.sys_exit_code == 0
     assert result.html_content is not None
-    # The echarts template's footer credit (multiqc/templates/echarts/footer.html):
-    # proves the echarts bundle/template was actually used, not just the default one.
+    # The default template's footer credits Apache ECharts, proving the ECharts bundle
+    # was actually used (default renders ECharts).
     assert "Apache ECharts" in result.html_content
 
     assert len(report.plot_data) > 0
@@ -1405,7 +1405,7 @@ def test_echarts_template_end_to_end_interactive(data_dir, tmp_path):
 def test_echarts_template_end_to_end_flat(data_dir, tmp_path):
     result = multiqc.run(
         data_dir / "modules" / "fastp" / "SAMPLE.json",
-        cfg=ClConfig(run_modules=["fastp"], template="echarts", plots_force_flat=True, output_dir=tmp_path),
+        cfg=ClConfig(run_modules=["fastp"], template="default", plots_force_flat=True, output_dir=tmp_path),
         return_html=True,
     )
 

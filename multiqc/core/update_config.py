@@ -133,7 +133,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         # `cfg.template` is a `str` from click; click.Choice already
         # validated it against the available template names.
         config.template = cast(
-            Literal["default", "plotly", "original", "simple", "sections", "gathered", "geo", "disco", "echarts"],
+            Literal["default", "plotly", "original", "simple", "sections", "gathered", "geo", "disco"],
             cfg.template,
         )
     if cfg.title is not None:
