@@ -1134,18 +1134,41 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         svg = static_export.render_svg(option, width, height)
         return svg if fmt == "svg" else static_export.svg_to_png(svg)
 
+    def _echarts_interactive_html(self, dataset_id: Union[int, str]) -> str:
+        """
+        Build a self-contained interactive ECharts HTML fragment for one dataset: the same
+        engine (option + browser bundle) the report itself renders when
+        `config.plotting_engine == "echarts"`. Used by `show()`/`save()` so a notebook
+        matches the report engine instead of always rendering Plotly.
+        """
+        from multiqc.plots.echarts import static_export
+
+        ds_idx = self._dataset_index(dataset_id)
+        return static_export.interactive_html(self, ds_idx)
+
     def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 
-        With Plotly installed and `flat=False`, returns a live Plotly figure. With `flat=True`,
-        or when Plotly is not installed, returns a static image rendered by the ECharts SSR
-        engine.
+        With `flat=False`, the interactive figure matches the engine the report itself uses
+        (`config.plotting_engine`): a live ECharts chart when the engine is "echarts" (the
+        default), or a live Plotly figure when it is "plotly" (falling back to a static
+        ECharts image below if Plotly is not installed). With `flat=True`, always returns a
+        static image rendered by the ECharts SSR engine, regardless of `config.plotting_engine`.
 
         @param dataset_id: index of the dataset to plot
         @param flat: whether to show a flat image or an interactive plot
         """
         if not flat:
+            if config.plotting_engine == "echarts":
+                try:
+                    from IPython.core.display import HTML  # type: ignore
+                except ImportError:
+                    raise ImportError(
+                        "IPython is required to show plot. The function is expected to be run in an interactive "
+                        "environment, such as Jupyter notebook. To save plot to file, use Plot.save method"
+                    )
+                return HTML(self._echarts_interactive_html(dataset_id))
             try:
                 return self.get_figure(dataset_id=dataset_id, **kwargs)
             except ImportError:
@@ -1181,6 +1204,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
 
+        The interactive HTML matches the engine the report itself uses
+        (`config.plotting_engine`): a self-contained ECharts chart when the engine is
+        "echarts" (the default), or a Plotly figure when it is "plotly".
+
         @param filename: a string representing a local file path or a writeable object
         (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
         an interactive plot will be saved, otherwise a flat image.
@@ -1197,8 +1224,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 Path(filename).write_text(cast(str, image))
             else:
                 Path(filename).write_bytes(cast(bytes, image))
+        elif config.plotting_engine == "echarts":
+            html = self._echarts_interactive_html(dataset_id)
+            if hasattr(filename, "write"):
+                filename.write(html)
+            else:
+                Path(filename).write_text(html, encoding="utf-8")
         else:
-            # Interactive HTML still goes through Plotly (requires the optional dependency).
+            # Interactive HTML goes through Plotly (requires the optional dependency).
             fig = self.get_figure(dataset_id=dataset_id, flat=False, **kwargs)
             fig.write_html(
                 filename,

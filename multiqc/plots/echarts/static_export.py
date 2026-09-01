@@ -15,6 +15,7 @@ import base64
 import importlib.resources
 import json
 import logging
+import uuid
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
@@ -307,3 +308,45 @@ def flat_plot_html(plot: "Plot[Any, Any]", embed_in_html: bool, plots_dir_name: 
         )
         for ds_idx, is_pct, is_log, active, file_name in variants
     )
+
+
+def interactive_html(plot: "Plot[Any, Any]", ds_idx: int) -> str:
+    """
+    Build a self-contained interactive ECharts `<div>` + `<script>` HTML fragment for one
+    dataset: the same option (`echarts.get_option`) and browser bundle the report's own
+    ECharts template renders, so `Plot.show()`/`Plot.save()` in a notebook match the
+    report when `config.plotting_engine == "echarts"`.
+
+    Unlike the report, this fragment carries the ECharts bundle and the `__FN__` sentinel
+    revival inline, so it works standalone in a notebook cell or a bare saved HTML file
+    with no surrounding report scaffolding. The bundle is guarded behind
+    `typeof echarts === "undefined"` so several plots rendered in one notebook do not each
+    re-register the theme/bundle redundantly, though each still inlines its own copy of the
+    script (unavoidable without a shared asset server).
+    """
+    from multiqc.plots import echarts as echarts_pkg  # lazy: avoids a circular import
+
+    dataset = plot.datasets[ds_idx]
+    width = 600 if config.simple_output else 1100
+    height = _dataset_height(plot, dataset)
+    option = echarts_pkg.get_option(plot, ds_idx, is_log=plot.l_active, is_pct=plot.p_active)
+
+    bundle_js = importlib.resources.files(_BUNDLE_PACKAGE).joinpath(_BUNDLE_RESOURCE).read_text(encoding="utf-8")
+    div_id = f"mqc-nb-{plot.id}-{uuid.uuid4().hex[:8]}"
+
+    script = "\n".join(
+        [
+            f'<script id="{div_id}-script">',
+            'if (typeof echarts === "undefined") {',
+            bundle_js,
+            "}",
+            f'echarts.registerTheme("multiqc-light", {json.dumps(theme.LIGHT_THEME)});',
+            _FN_WALKER_JS,
+            f"var __mqcOption = JSON.parse({json.dumps(dump_json(option))});",
+            "__mqcApplySentinels(__mqcOption);",
+            f'echarts.init(document.getElementById("{div_id}"), "multiqc-light", '
+            f"{{width: {width}, height: {height}}}).setOption(__mqcOption);",
+            "</script>",
+        ]
+    )
+    return f'<div id="{div_id}" style="width:{width}px;height:{height}px;"></div>\n{script}'
