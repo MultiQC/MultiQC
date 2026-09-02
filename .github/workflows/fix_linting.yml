@@ -19,29 +19,33 @@ jobs:
 
     steps:
       # issue_comment is a privileged trigger and this job runs the PR's own
-      # prek hooks with a write token, so only let maintainers trigger it.
-      - name: Require maintainer access
+      # prek hooks, so gate it on write access. Pin the head commit here too:
+      # resolving it later would let a push land after the maintainer looked
+      # at the PR but before the hooks run.
+      - name: Require maintainer access and pin the PR head
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           ACTOR: ${{ github.event.comment.user.login }}
+          PR: ${{ github.event.issue.number }}
         run: |
           PERM=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" -q '.permission')
           echo "${ACTOR} has permission: $PERM"
           [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
+          gh pr view "$PR" --repo "$REPO" \
+            --json headRefOid,headRefName,headRepository,headRepositoryOwner \
+            -q '"sha=\(.headRefOid)", "branch=\(.headRefName)", "repo=\(.headRepositoryOwner.login)/\(.headRepository.name)"' \
+            | tee -a "$GITHUB_OUTPUT"
 
-      # Intentionally persists credentials: the job runs prek then
-      # `git push`es the result back to the PR.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
+      # persist-credentials: false is deliberate. The next step runs hook
+      # definitions supplied by the PR, which must not be able to read a
+      # token from the workspace: the push at the end authenticates itself.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          token: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
-
-      # Action runs on the issue comment, so we don't get the PR by default.
-      # Use the GitHub CLI to check out the PR:
-      - name: Checkout Pull Request
-        env:
-          GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
-        run: gh pr checkout ${{ github.event.issue.number }}
+          repository: ${{ steps.pr.outputs.repo }}
+          ref: ${{ steps.pr.outputs.sha }}
+          persist-credentials: false
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
@@ -59,15 +63,21 @@ jobs:
 
       - name: Check if any files changed
         run: |
-          git diff --exit-code || echo "changed=YES" | tee -a $GITHUB_ENV
+          git diff --exit-code || echo "changed=YES" | tee -a "$GITHUB_ENV"
 
+      # Pushing from the pinned SHA, so this fails rather than clobbering if
+      # the branch moved while the hooks were running.
       - name: Commit and push changes
         if: env.changed == 'YES'
+        env:
+          GITHUB_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+          HEAD_REPO: ${{ steps.pr.outputs.repo }}
+          HEAD_BRANCH: ${{ steps.pr.outputs.branch }}
         run: |
           git config user.name 'MultiQC Bot'
           git config user.email 'multiqc-bot@seqera.io'
-          git config push.default upstream
           git add .
           git status
           git commit -m "[automated] Fix code linting"
-          git push
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${HEAD_REPO}.git" \
+            "HEAD:refs/heads/${HEAD_BRANCH}"
