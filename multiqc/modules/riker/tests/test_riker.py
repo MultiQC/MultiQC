@@ -181,6 +181,34 @@ def test_hybcap_metrics(run_riker_module):
     _assert_one_sample_for_tool(module, "hybcap", "HG00240")
 
 
+def test_hybcap_metrics_tolerates_empty_field(run_riker_module):
+    """An undefined metric (e.g. hs_library_size) is left blank by riker; the row
+    must be retained with that field missing, not dropped wholesale."""
+    from multiqc import config
+
+    # Blank out the hs_library_size cell, as riker does when the estimate is undefined.
+    assert "\t246041533\t" in HYBCAP_METRICS_TSV
+    content = HYBCAP_METRICS_TSV.replace("\t246041533\t", "\t\t")
+
+    original = config.preserve_module_raw_data
+    config.preserve_module_raw_data = True
+    try:
+        module = run_riker_module("HG00240.hybcap-metrics.txt", content)
+    finally:
+        config.preserve_module_raw_data = original
+
+    _assert_one_sample_for_tool(module, "hybcap", "HG00240")
+
+    saved = module.saved_raw_data
+    assert saved is not None
+    data = saved.get("multiqc_riker_hybcap")
+    assert data and "HG00240" in data, "hybcap row was dropped for the empty cell"
+    row = data["HG00240"]
+    # The empty cell becomes missing; every other numeric field is untouched.
+    assert row["hs_library_size"] is None
+    assert row["mean_target_coverage"] == 83.13
+
+
 def test_isize_metrics(run_riker_module):
     module = run_riker_module("HG00240.isize-metrics.txt", ISIZE_METRICS_TSV)
     _assert_one_sample_for_tool(module, "isize", "HG00240")
