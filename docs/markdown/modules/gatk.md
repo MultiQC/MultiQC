@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/gatk/gatk.py
 Wide variety of tools with a primary focus on variant discovery and genotyping.
 
 [https://www.broadinstitute.org/gatk/](https://www.broadinstitute.org/gatk/)
+
+DOI: [10.1101/201178](https://doi.org/10.1101/201178), [10.1002/0471250953.bi1110s43](https://doi.org/10.1002/0471250953.bi1110s43), [10.1038/ng.806](https://doi.org/10.1038/ng.806), [10.1101/gr.107524.110](https://doi.org/10.1101/gr.107524.110)
+
+[Apache License 2.0](https://github.com/broadinstitute/gatk/blob/master/LICENSE.TXT)
 :::
 
 Supported tools:

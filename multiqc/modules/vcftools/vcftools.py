@@ -59,6 +59,8 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
             href="https://vcftools.github.io",
             info="Program to analyse and reporting on VCF files.",
             doi="10.1093/bioinformatics/btr330",
+            license="GNU Lesser General Public License v3.0",
+            license_url="https://github.com/vcftools/vcftools/blob/master/LICENSE",
         )
 
         n = dict()

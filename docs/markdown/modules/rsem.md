@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/rsem/rsem.py
 Estimates gene and isoform expression levels from RNA-Seq data.
 
 [https://deweylab.github.io/RSEM/](https://deweylab.github.io/RSEM/)
+
+DOI: [10.1186/1471-2105-12-323](https://doi.org/10.1186/1471-2105-12-323)
+
+[GNU General Public License v3.0](https://github.com/deweylab/RSEM/blob/master/COPYING)
 :::
 
 Supported scripts:

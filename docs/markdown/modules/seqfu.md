@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/seqfu/seqfu.py
 Manipulate FASTA/FASTQ files.
 
 [https://telatin.github.io/seqfu2](https://telatin.github.io/seqfu2)
+
+DOI: [10.3390/bioengineering8050059](https://doi.org/10.3390/bioengineering8050059)
+
+[GNU General Public License v3.0](https://github.com/telatin/seqfu2/blob/master/LICENSE)
 :::
 
 Supported commands:

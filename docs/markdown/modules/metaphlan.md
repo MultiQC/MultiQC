@@ -17,14 +17,18 @@ File path for the source of this content: multiqc/modules/metaphlan/metaphlan.py
 Profiles the composition of microbial communities from metagenomic shotgun sequencing data.
 
 [https://github.com/biobakery/MetaPhlAn](https://github.com/biobakery/MetaPhlAn)
+
+DOI: [10.1038/s41587-023-01688-w](https://doi.org/10.1038/s41587-023-01688-w)
+
+[MIT License](https://github.com/biobakery/MetaPhlAn/blob/master/license.txt)
 :::
 
 The module supports outputs from MetaPhlAn, that look like the following:
 
 ```tsv
-k__Bacteria 2       100.0
-k__Bacteria|p__Firmicutes   2|1239  44.30422
-k__Bacteria|p__Bacteroidetes        2|976   34.73101
+k__Bacteria	2	100.0
+k__Bacteria|p__Firmicutes	2|1239	44.30422
+k__Bacteria|p__Bacteroidetes	2|976	34.73101
 ```
 
 A bar graph is generated that shows the relative abundance for each sample that

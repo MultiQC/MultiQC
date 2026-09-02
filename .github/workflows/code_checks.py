@@ -17,6 +17,9 @@ must_be_present_after = [
     ("self.add_data_source", "self.find_log_files"),
     ("self.write_data_file", "self.find_log_files"),
     ("doi=", SUPER_INIT_TERMS),
+    # license/license_url are required constructor args (use None with a comment if unknown)
+    ("license=", SUPER_INIT_TERMS),
+    ("license_url=", SUPER_INIT_TERMS),
     ("self.add_software_version", "self.find_log_files"),
 ]
 

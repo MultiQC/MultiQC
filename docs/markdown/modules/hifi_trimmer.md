@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/hifi_trimmer/hifi_trim
 Filters and trims adapter sequences from HiFi reads using BLAST.
 
 [https://github.com/sanger-tol/hifi-trimmer](https://github.com/sanger-tol/hifi-trimmer)
+
+[MIT License](https://github.com/sanger-tol/hifi-trimmer/blob/main/LICENSE)
 :::
 
 Parse HiFi-Trimmer JSON summaries and optionally merge sample totals from

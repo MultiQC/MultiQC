@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/sambamba/sambamba.py
 Toolkit for interacting with BAM/CRAM files.
 
 [https://lomereiter.github.io/sambamba/](https://lomereiter.github.io/sambamba/)
+
+DOI: [10.1093/bioinformatics/btv098](https://doi.org/10.1093/bioinformatics/btv098)
+
+[GNU General Public License v2.0](https://github.com/biod/sambamba/blob/master/LICENSE)
 :::
 
 It is functionally similar to Samtools, but the source code is written in the D Language. It allows for faster performance while still being easy to use.

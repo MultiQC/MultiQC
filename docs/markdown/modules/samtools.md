@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/samtools/samtools.py
 Toolkit for interacting with BAM/CRAM files.
 
 [http://www.htslib.org](http://www.htslib.org)
+
+DOI: [10.1093/bioinformatics/btp352](https://doi.org/10.1093/bioinformatics/btp352)
+
+[MIT License](https://github.com/samtools/samtools/blob/master/LICENSE)
 :::
 
 Supported commands:

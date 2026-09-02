@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ibest/seqyclean",
             info="Filters adapters, vectors, and contaminants while quality trimming.",
             doi="10.1145/3107411.3107446",
+            license="MIT License",
+            license_url="https://github.com/ibest/seqyclean/blob/master/LICENSE",
         )
 
         # Parse logs

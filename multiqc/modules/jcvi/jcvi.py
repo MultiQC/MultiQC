@@ -47,6 +47,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://pypi.org/project/jcvi/",
             info="Computes statistics on genome annotation.",
             doi="10.5281/zenodo.31631",
+            license="BSD 2-Clause License",
+            license_url="https://github.com/tanghaibao/jcvi/blob/master/LICENSE",
         )
 
         # Parse logs

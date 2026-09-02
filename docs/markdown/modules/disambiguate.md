@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/disambiguate/disambigu
 Disambiguate reads aligned to two different species (e.g. human and mouse).
 
 [https://github.com/AstraZeneca-NGS/disambiguate](https://github.com/AstraZeneca-NGS/disambiguate)
+
+DOI: [10.12688/f1000research.10082.1](https://doi.org/10.12688/f1000research.10082.1)
+
+[MIT License](https://github.com/AstraZeneca-NGS/disambiguate/blob/master/LICENSE.txt)
 :::
 
 ### File search patterns

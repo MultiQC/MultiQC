@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/theta2/theta2.py
 Estimates tumour purity and clonal / subclonal copy number.
 
 [http://compbio.cs.brown.edu/projects/theta/](http://compbio.cs.brown.edu/projects/theta/)
+
+DOI: [10.1093/bioinformatics/btu651](https://doi.org/10.1093/bioinformatics/btu651), [10.1186/gb-2013-14-7-r80](https://doi.org/10.1186/gb-2013-14-7-r80)
+
+[Brown University non-commercial academic license](https://github.com/raphael-group/THetA/blob/master/doc/LICENSE.txt)
 :::
 
 The module plots the % germline and % tumour subclone for each sample.

@@ -89,6 +89,8 @@ class MultiqcModule(BaseMultiqcModule):
             extra="A shallow curve indicates complexity saturation. The dashed line shows a perfectly complex library "
             "where total reads = unique reads.",
             doi="10.1038/nmeth.2375",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/smithlabcode/preseq/blob/master/LICENSE",
         )
 
         # Find and load any Preseq reports

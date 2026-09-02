@@ -17,16 +17,19 @@ File path for the source of this content: multiqc/modules/busco/busco.py
 Assesses genome assembly and annotation completeness.
 
 [http://busco.ezlab.org/](http://busco.ezlab.org/)
+
+DOI: [10.1093/bioinformatics/btv351](https://doi.org/10.1093/bioinformatics/btv351)
+
+[MIT License](https://gitlab.com/ezlab/busco/-/blob/master/LICENSE)
 :::
 
-BUSCO v2 provides quantitative measures for the assessment of genome
+BUSCO provides quantitative measures for the assessment of genome
 assembly, gene set, and transcriptome completeness, based on
 evolutionarily-informed expectations of gene content from near-universal
-single-copy orthologs selected from OrthoDB v9.
+single-copy orthologs selected from OrthoDB.
 
 The module parses the `short_summary_[samplename].txt` files and
-plots the proportion of BUSCO types found. MultiQC has been tested with
-output from BUSCO v1.22 - v2.
+plots the proportion of BUSCO types found.
 
 ### File search patterns
 

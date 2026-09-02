@@ -23,6 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/pezmaster31/bamtools",
             info="Provides both a programmer's API and an end-user's toolkit for handling BAM files.",
             doi="10.1093/bioinformatics/btr174",
+            license="MIT License",
+            license_url="https://github.com/pezmaster31/bamtools/blob/master/LICENSE",
         )
 
         # Set up class objects to hold parsed data

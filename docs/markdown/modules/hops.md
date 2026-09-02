@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/hops/hops.py
 Ancient DNA characteristics screening tool of output from the metagenomic aligner MALT.
 
 [https://github.com/rhuebler/HOPS/](https://github.com/rhuebler/HOPS/)
+
+DOI: [10.1186/s13059-019-1903-0](https://doi.org/10.1186/s13059-019-1903-0)
+
+[GNU General Public License v3.0](https://github.com/rhuebler/HOPS/blob/external/LICENSE)
 :::
 
 This module takes the JSON output of the HOPS postprocessing R script (version >= 0.34) to recreate the

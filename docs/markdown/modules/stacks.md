@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/stacks/stacks.py
 Analyzes restriction enzyme-based data (e.g. RAD-seq).
 
 [http://catchenlab.life.illinois.edu/stacks/](http://catchenlab.life.illinois.edu/stacks/)
+
+DOI: [10.1111/mec.12354](https://doi.org/10.1111/mec.12354)
+
+[GNU General Public License v3.0](https://catchenlab.life.illinois.edu/stacks/)
 :::
 
 This module is designed to only parse some of the output from the Stacks `denovo_map` pipeline.

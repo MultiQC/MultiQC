@@ -289,6 +289,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=anchor,
             href=href,
             info=info,
+            license="MIT License",
+            license_url="https://github.com/broadinstitute/picard/blob/master/LICENSE.txt",
         )
 
         # Set up class objects to hold parsed data

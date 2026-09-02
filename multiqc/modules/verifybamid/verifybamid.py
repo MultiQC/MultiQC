@@ -55,6 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
             individual, or derived from a completely different individual.
             """,
             doi="10.1016/j.ajhg.2012.09.004",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/statgen/verifyBamID/blob/master/copyrights/COPYING",
         )
 
         # flag to hide columns if no chip data

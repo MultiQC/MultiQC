@@ -29,6 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             effectively find adapters, even at low sequence identity.
             """,
             # doi="",  # No DOI available
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/rrwick/Porechop/blob/master/LICENSE",
         )
 
         # Find and load reports

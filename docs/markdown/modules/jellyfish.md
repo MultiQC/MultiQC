@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/jellyfish/jellyfish.py
 Counting k-mers in DNA.
 
 [https://github.com/gmarcais/Jellyfish](https://github.com/gmarcais/Jellyfish)
+
+DOI: [10.1093/bioinformatics/btr011](https://doi.org/10.1093/bioinformatics/btr011)
+
+[BSD 3-Clause License](https://github.com/gmarcais/Jellyfish/blob/master/LICENSE)
 :::
 
 A k-mer is a substring of length k, and counting the occurrences of all such substrings

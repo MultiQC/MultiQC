@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/telseq/telseq.py
 Estimates telomere length from whole genome sequencing data (BAMs).
 
 [https://github.com/zd1/telseq](https://github.com/zd1/telseq)
+
+DOI: [10.1093/nar/gku181](https://doi.org/10.1093/nar/gku181)
+
+[GNU General Public License v3.0](https://github.com/zd1/telseq/blob/master/LICENSE)
 :::
 
 Telomeres play a key role in replicative ageing and undergo age-dependent attrition in vivo.

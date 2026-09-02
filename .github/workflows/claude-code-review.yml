@@ -37,6 +37,9 @@ jobs:
           ls -la
           PR_NUMBER=$(cat pr-number.txt)
           HEAD_SHA=$(cat head-sha.txt)
+          # Artifact from the unprivileged workflow: treat as untrusted input
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "Invalid PR number: $PR_NUMBER"; exit 1; }
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid head SHA: $HEAD_SHA"; exit 1; }
           echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
           echo "PR Number: $PR_NUMBER"

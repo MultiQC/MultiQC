@@ -40,6 +40,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/LabTranslationalArchitectomics/riboWaltz",
             info="Computes P-site offsets and performs quality control for ribosome profiling data.",
             doi="10.1371/journal.pcbi.1006169",
+            license="MIT License",
+            license_url="https://github.com/LabTranslationalArchitectomics/riboWaltz/blob/master/LICENSE",
         )
 
         # Data storage
