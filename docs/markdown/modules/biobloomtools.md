@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/biobloomtools/biobloom
 Assigns reads to different references using bloom filters. This is faster than alignment and can be used for contamination detection.
 
 [https://github.com/bcgsc/biobloom/](https://github.com/bcgsc/biobloom/)
+
+DOI: [10.1093/bioinformatics/btu558](https://doi.org/10.1093/bioinformatics/btu558)
+
+[GNU General Public License v3.0](https://github.com/bcgsc/biobloom/blob/master/LICENSE)
 :::
 
 BioBloom tools (BBT) create filters for a given reference and then to categorize sequences.

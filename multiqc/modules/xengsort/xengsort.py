@@ -34,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://gitlab.com/genomeinformatics/xengsort",
             info="Fast xenograft read sorter based on space-efficient k-mer hashing",
             doi="doi.org/10.4230/LIPIcs.WABI.2020.4",
+            license="MIT License",
+            license_url="https://gitlab.com/genomeinformatics/xengsort/-/blob/master/LICENSE",
         )
 
         # Find and load any Xenome reports

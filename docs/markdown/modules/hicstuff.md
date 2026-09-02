@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/hicstuff/hicstuff.py
 Hi-C pipeline that generates contact maps from sequencing reads.
 
 [https://github.com/koszullab/hicstuff](https://github.com/koszullab/hicstuff)
+
+DOI: [10.5281/zenodo.4066363](https://doi.org/10.5281/zenodo.4066363)
+
+[BSD 3-Clause License](https://github.com/koszullab/hicstuff/blob/master/LICENSE)
 :::
 
 The module parses two file types from the

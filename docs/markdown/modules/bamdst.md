@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/bamdst/bamdst.py
 Lightweight tool to stat the depth coverage of target regions of BAM file(s).
 
 [https://https://github.com/shiquan/bamdst](https://https://github.com/shiquan/bamdst)
+
+[MIT License](https://github.com/shiquan/bamdst/blob/master/LICENSE)
 :::
 
 The module reads data from two types of Bamdst logs:

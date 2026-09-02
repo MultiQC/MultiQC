@@ -28,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Screens a library of sequences in FastQ format against a set of sequence databases "
             "to see if the composition of the library matches with what you expect.",
             doi="10.12688/f1000research.15931.2",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/StevenWingett/FastQ-Screen/blob/master/license.txt",
         )
 
         # Find and load any FastQ Screen reports

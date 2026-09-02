@@ -37,6 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/percolator/percolator",
             info="Semi-supervised learning for peptide identification from shotgun proteomics datasets.",
             doi="10.1007/s13361-016-1460-7",
+            license="Apache License 2.0",
+            license_url="https://github.com/percolator/percolator/blob/master/license.txt",
         )
 
         # Parse logs

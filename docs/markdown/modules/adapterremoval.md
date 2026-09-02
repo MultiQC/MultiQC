@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/adapterremoval/adapter
 Removes adapter sequences, trims low quality bases from 3' ends, or merges overlapping pairs into consensus.
 
 [https://github.com/mikkelschubert/adapterremoval](https://github.com/mikkelschubert/adapterremoval)
+
+DOI: [10.1186/s13104-016-1900-2](https://doi.org/10.1186/s13104-016-1900-2), [10.1186/1756-0500-5-337](https://doi.org/10.1186/1756-0500-5-337)
+
+[GNU General Public License v3.0](https://github.com/mikkelschubert/adapterremoval/blob/main/LICENSE)
 :::
 
 AdapterRemoval searches for and removes remnant adapter sequences from High-Throughput Sequencing (HTS) data and (optionally) trims low quality bases from the 3' end of reads following adapter removal. It can analyze both single end and paired end data, and can be used to merge overlapping paired-ended reads into (longer) consensus sequences. Additionally, the AdapterRemoval may be used to recover a consensus adapter sequence for paired-ended data, for which this information is not available.

@@ -68,6 +68,8 @@ class MultiqcModule(BaseMultiqcModule):
             href=href,
             info=info,
             doi=doi,
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DerrickWood/kraken/blob/master/LICENSE",
         )
 
         total_cnt_by_sample: Dict[str, int] = dict()

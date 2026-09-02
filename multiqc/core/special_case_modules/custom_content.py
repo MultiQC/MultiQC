@@ -457,6 +457,8 @@ class MultiqcModule(BaseMultiqcModule):
             info=mod_info,
             extra=cc_dict.config.get("extra"),
             doi=cc_dict.config.get("doi"),
+            license=cc_dict.config.get("license"),
+            license_url=cc_dict.config.get("license_url"),
         )
         self.id = id
 

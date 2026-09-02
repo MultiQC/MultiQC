@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/hicup/hicup.py
 Mapping and quality control on Hi-C data.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/hicup/](http://www.bioinformatics.babraham.ac.uk/projects/hicup/)
+
+DOI: [10.12688/f1000research.7334.1](https://doi.org/10.12688/f1000research.7334.1)
+
+[GNU General Public License v3.0](https://github.com/StevenWingett/HiCUP/blob/master/LICENSE.txt)
 :::
 
 ### File search patterns

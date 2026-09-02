@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/porechop/porechop.py
 Finds and removes adapters from Oxford Nanopore reads.
 
 [https://github.com/rrwick/Porechop](https://github.com/rrwick/Porechop)
+
+[GNU General Public License v3.0](https://github.com/rrwick/Porechop/blob/master/LICENSE)
 :::
 
 Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle,

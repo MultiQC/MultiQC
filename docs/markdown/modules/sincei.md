@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/sincei/sincei.py
 Toolkit for processing and analyzing single-cell (epi)genomics data.
 
 [https://sincei.readthedocs.io](https://sincei.readthedocs.io)
+
+DOI: [10.5281/zenodo.7853375](https://doi.org/10.5281/zenodo.7853375)
+
+[MIT License](https://github.com/bhardwaj-lab/sincei/blob/master/LICENCE.txt)
 :::
 
 sincei (short for Single Cell Informatics) is a command-line toolkit for

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/slamdunk/slamdunk.py
 Tool to analyze SLAM-Seq data.
 
 [http://t-neumann.github.io/slamdunk/](http://t-neumann.github.io/slamdunk/)
+
+DOI: [10.1186/s12859-019-2849-7](https://doi.org/10.1186/s12859-019-2849-7)
+
+[GNU Affero General Public License v3.0](https://github.com/t-neumann/slamdunk/blob/master/LICENSE)
 :::
 
 This module should be able to parse logs from v0.2.2-dev onwards.

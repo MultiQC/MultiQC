@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/sequali/sequali.py
 Sequencing quality control for both long-read and short-read data.
 
 [https://github.com/rhpvorderman/sequali](https://github.com/rhpvorderman/sequali)
+
+DOI: [10.1093/bioadv/vbaf010](https://doi.org/10.1093/bioadv/vbaf010)
+
+[GNU Affero General Public License v3.0](https://github.com/rhpvorderman/sequali/blob/main/LICENSE)
 :::
 
 Features adapter search, overrepresented sequence  analysis and duplication analysis and supports

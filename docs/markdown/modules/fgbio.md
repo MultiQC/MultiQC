@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/fgbio/fgbio.py
 Processing and evaluating data containing UMIs.
 
 [http://fulcrumgenomics.github.io/fgbio/](http://fulcrumgenomics.github.io/fgbio/)
+
+[MIT License](https://github.com/fulcrumgenomics/fgbio/blob/master/LICENSE)
 :::
 
 The module currently supports tool the following outputs:

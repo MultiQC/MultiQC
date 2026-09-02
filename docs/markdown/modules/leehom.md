@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/leehom/leehom.py
 Bayesian reconstruction of ancient DNA.
 
 [https://github.com/grenaud/leeHom](https://github.com/grenaud/leeHom)
+
+DOI: [10.1093/nar/gku699](https://doi.org/10.1093/nar/gku699)
+
+[GNU General Public License v3.0](https://github.com/grenaud/leeHom/blob/master/LICENSE)
 :::
 
 leeHom is a Bayesian maximum a posteriori algorithm for stripping

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/ribotish/ribotish.py
 Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.
 
 [https://github.com/zhpn1024/ribotish](https://github.com/zhpn1024/ribotish)
+
+DOI: [10.1186/s13059-017-1316-1](https://doi.org/10.1186/s13059-017-1316-1)
+
+[GNU General Public License v3.0](https://github.com/zhpn1024/ribotish/blob/master/LICENSE)
 :::
 
 Ribo-TISH is a tool for identifying translated ORFs from Ribo-seq data.

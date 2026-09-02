@@ -588,6 +588,8 @@ The other available configuration options are:
 - `anchor`: Section report ID
 - `href`: Tool homepage URL (or list of URLs)
 - `doi`: DOI (or list of DOIs)
+- `license`: Software license name (shown in the Software Versions section)
+- `license_url`: URL to the software license text
 - `info`: Intro text, rendered as markdown
 - `comment`: Comment text, rendered as markdown
 - `extra`: Additional HTML after intro

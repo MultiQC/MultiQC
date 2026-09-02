@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/dedup/dedup.py
 Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis.
 
 [http://www.github.com/apeltzer/DeDup](http://www.github.com/apeltzer/DeDup)
+
+DOI: [10.1186/s13059-016-0918-z](https://doi.org/10.1186/s13059-016-0918-z)
+
+[GNU General Public License v3.0](https://github.com/apeltzer/DeDup/blob/master/LICENSE)
 :::
 
 By default, tables show read counts in thousands.

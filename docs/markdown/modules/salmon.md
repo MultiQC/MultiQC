@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/salmon/salmon.py
 Quantifies expression of transcripts using RNA-seq data.
 
 [https://combine-lab.github.io/salmon/](https://combine-lab.github.io/salmon/)
+
+DOI: [10.1038/nmeth.4197](https://doi.org/10.1038/nmeth.4197)
+
+[BSD 3-Clause License](https://github.com/COMBINE-lab/salmon/blob/master/LICENSE)
 :::
 
 The Salmon module parses `meta_info.json`, `lib_format_counts.json` and `flenDist.txt` files, if found.

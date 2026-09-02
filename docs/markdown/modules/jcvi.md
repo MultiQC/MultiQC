@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/jcvi/jcvi.py
 Computes statistics on genome annotation.
 
 [https://pypi.org/project/jcvi/](https://pypi.org/project/jcvi/)
+
+DOI: [10.5281/zenodo.31631](https://doi.org/10.5281/zenodo.31631)
+
+[BSD 2-Clause License](https://github.com/tanghaibao/jcvi/blob/master/LICENSE)
 :::
 
 The JCVI module parses the output of `python -m jcvi.annotation.stats genestats <input.gff>`.

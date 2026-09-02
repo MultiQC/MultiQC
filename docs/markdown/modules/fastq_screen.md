@@ -17,19 +17,19 @@ File path for the source of this content: multiqc/modules/fastq_screen/fastq_scr
 Screens a library of sequences in FastQ format against a set of sequence databases to see if the composition of the library matches with what you expect.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/](http://www.bioinformatics.babraham.ac.uk/projects/fastq_screen/)
+
+DOI: [10.12688/f1000research.15931.2](https://doi.org/10.12688/f1000research.15931.2)
+
+[GNU General Public License v3.0](https://github.com/StevenWingett/FastQ-Screen/blob/master/license.txt)
 :::
 
-By default, the module creates a plot that emulates the FastQ Screen output
-with blue and red stacked bars showing unique and multimapping read counts.
-This plot only works for a handful of samples however, so if
-`# samples * # organisms >= 160`, a simpler stacked barplot is shown. This
-is also shown when generating flat-image plots.
+The module creates a stacked bar plot showing, for each sample, the number of
+reads mapped to each of the screened organisms. Reads that align to more than
+one genome are grouped into a "Multiple Genomes" category, and unmapped reads
+into "No hits".
 
-To always show this style of plot, add the following line to a MultiQC config file:
-
-```yaml
-fastqscreen_simpleplot: true
-```
+If any samples were run in bisulfite mode, an additional stacked bar plot breaks
+the reads down by methylation status.
 
 ### File search patterns
 

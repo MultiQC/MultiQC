@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/glimpse/glimpse.py
 Low-coverage whole genome sequencing imputation.
 
 [https://odelaneau.github.io/GLIMPSE/](https://odelaneau.github.io/GLIMPSE/)
+
+DOI: [10.1101/2022.11.28.518213 ](https://doi.org/10.1101/2022.11.28.518213 )
+
+[MIT License](https://github.com/odelaneau/GLIMPSE/blob/master/LICENSE)
 :::
 
 The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing

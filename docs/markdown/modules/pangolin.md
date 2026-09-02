@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/pangolin/pangolin.py
 Uses variant calls to assign SARS-CoV-2 genome sequences to global lineages.
 
 [https://github.com/cov-lineages/pangolin](https://github.com/cov-lineages/pangolin)
+
+DOI: [10.1093/ve/veab064](https://doi.org/10.1093/ve/veab064)
+
+[GNU General Public License v3.0](https://github.com/cov-lineages/pangolin/blob/master/LICENSE.txt)
 :::
 
 Implements the dynamic nomenclature of SARS-CoV-2 lineages, known as the Pango nomenclature.

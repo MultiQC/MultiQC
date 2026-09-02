@@ -28,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.github.com/apeltzer/DeDup",
             info="Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis",
             doi="10.1186/s13059-016-0918-z",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/apeltzer/DeDup/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/optitype/optitype.py
 Precision HLA typing from next-generation sequencing data.
 
 [https://github.com/FRED-2/OptiType](https://github.com/FRED-2/OptiType)
+
+DOI: [10.1093/bioinformatics/btu548](https://doi.org/10.1093/bioinformatics/btu548)
+
+[BSD 3-Clause License](https://github.com/FRED-2/OptiType/blob/master/LICENSE)
 :::
 
 Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit

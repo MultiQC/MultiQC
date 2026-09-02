@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/megahit/megahit.py
 NGS read assembler.
 
 [https://github.com/voutcn/megahit](https://github.com/voutcn/megahit)
+
+DOI: [10.1093/bioinformatics/btv033](https://doi.org/10.1093/bioinformatics/btv033)
+
+[GNU General Public License v3.0](https://github.com/voutcn/megahit/blob/master/LICENSE)
 :::
 
 MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
