@@ -299,7 +299,7 @@ $(function () {
           if (namespace) {
             name = namespace + ": " + name;
           }
-          $("#table_scatter_col1, #table_scatter_col2").append('<option value="' + thId + '">' + name + "</select>");
+          $("#table_scatter_col1, #table_scatter_col2").append($("<option>").val(thId).text(name));
         }
       });
       table_scatter_table_anchor_el.val(tableAnchor);
