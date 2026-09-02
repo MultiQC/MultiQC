@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/seqkit/seqkit.py
 Cross-platform and ultrafast toolkit for FASTA/Q file manipulation.
 
 [https://bioinf.shenwei.me/seqkit/](https://bioinf.shenwei.me/seqkit/)
+
+DOI: [10.1371/journal.pone.0163962](https://doi.org/10.1371/journal.pone.0163962)
+
+[MIT License](https://github.com/shenwei356/seqkit/blob/master/LICENSE)
 :::
 
 SeqKit is a cross-platform and ultrafast toolkit for FASTA/Q file manipulation.

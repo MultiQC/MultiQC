@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/bases2fastq/bases2fast
 Demultiplexes and converts Element AVITI base calls into FASTQ files.
 
 [https://docs.elembio.io/docs/bases2fastq/introduction/](https://docs.elembio.io/docs/bases2fastq/introduction/)
+
+DOI: [10.1038/s41587-023-01750-7](https://doi.org/10.1038/s41587-023-01750-7)
 :::
 
 Bases2Fastq is Element Biosciences' secondary analysis software for demultiplexing

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/mirtop/mirtop.py
 Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.
 
 [https://github.com/miRTop/mirtop/](https://github.com/miRTop/mirtop/)
+
+DOI: [10.5281/zenodo.45385](https://doi.org/10.5281/zenodo.45385)
+
+[MIT License](https://github.com/miRTop/mirtop/blob/master/LICENSE)
 :::
 
 This tool is dedicated to the creation and management of miRNA alignment output using the standardized

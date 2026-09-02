@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/minionqc/minionqc.py
 Quality control for ONT (Oxford Nanopore) long reads.
 
 [https://github.com/roblanf/minion_qc](https://github.com/roblanf/minion_qc)
+
+DOI: [10.1093/bioinformatics/bty654](https://doi.org/10.1093/bioinformatics/bty654)
+
+[MIT License](https://github.com/roblanf/minion_qc/blob/master/LICENSE)
 :::
 
 It uses the `sequencing_summary.txt` files produced by ONT (Oxford Nanopore Technologies)

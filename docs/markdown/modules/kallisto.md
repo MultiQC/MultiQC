@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/kallisto/kallisto.py
 Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data.
 
 [http://pachterlab.github.io/kallisto/](http://pachterlab.github.io/kallisto/)
+
+DOI: [10.1038/nbt.3519](https://doi.org/10.1038/nbt.3519)
+
+[BSD 2-Clause License](https://github.com/pachterlab/kallisto/blob/master/license.txt)
 :::
 
 **Note** - MultiQC parses the standard out from Kallisto, _not_ any of its output files

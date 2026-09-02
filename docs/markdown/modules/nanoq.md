@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/nanoq/nanoq.py
 Reports read quality and length from nanopore sequencing data.
 
 [https://github.com/nerdna/nanoq/](https://github.com/nerdna/nanoq/)
+
+DOI: [10.21105/joss.02991](https://doi.org/10.21105/joss.02991)
+
+[MIT License](https://github.com/esteinig/nanoq/blob/master/LICENSE)
 :::
 
 ### File search patterns

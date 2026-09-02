@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/vcftools/vcftools.py
 Program to analyse and reporting on VCF files.
 
 [https://vcftools.github.io](https://vcftools.github.io)
+
+DOI: [10.1093/bioinformatics/btr330](https://doi.org/10.1093/bioinformatics/btr330)
+
+[GNU Lesser General Public License v3.0](https://github.com/vcftools/vcftools/blob/master/LICENSE)
 :::
 
 #### Important General Note

@@ -17,9 +17,13 @@ File path for the source of this content: multiqc/modules/nextclade/nextclade.py
 Viral genome alignment, clade assignment, mutation calling, and quality checks.
 
 [https://github.com/nextstrain/nextclade](https://github.com/nextstrain/nextclade)
+
+DOI: [10.21105/joss.03773](https://doi.org/10.21105/joss.03773)
+
+[MIT License](https://github.com/nextstrain/nextclade/blob/master/LICENSE)
 :::
 
-Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences
+Nextclade assigns input sequences to clades and lineages based on differences between the input sequences
 and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of
 the samples by performing several quality control checks on the input sequences.
 

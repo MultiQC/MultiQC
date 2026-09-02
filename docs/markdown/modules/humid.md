@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/humid/humid.py
 Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.
 
 [https://github.com/jfjlaros/HUMID](https://github.com/jfjlaros/HUMID)
+
+[MIT License](https://github.com/jfjlaros/HUMID/blob/master/LICENSE.md)
 :::
 
 ### File search patterns

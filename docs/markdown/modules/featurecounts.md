@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/featurecounts/featurec
 Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, genomic bins and chromosomal locations.
 
 [http://subread.sourceforge.net/](http://subread.sourceforge.net/)
+
+DOI: [10.1093/bioinformatics/btt656](https://doi.org/10.1093/bioinformatics/btt656)
+
+[GNU General Public License v3.0](http://subread.sourceforge.net)
 :::
 
 As of MultiQC v1.10, the module should also work with output from
