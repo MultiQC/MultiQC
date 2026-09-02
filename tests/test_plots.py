@@ -802,6 +802,7 @@ def test_flat_plot_plotly_engine_falls_back_to_interactive(reset):
     report.reset()
     config.strict = True
     plot2 = linegraph.plot({"Sample1": {0: 1, 1: 1}}, {"id": "flat_strict", "title": "Line Graph"})
+    assert isinstance(plot2, Plot)
     plot2.flat = True
     with pytest.raises(ValueError):
         plot2.add_to_report(module_anchor=Anchor("test"), section_anchor=Anchor("test"))
