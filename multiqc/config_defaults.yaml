@@ -341,6 +341,7 @@ fn_clean_exts:
   - ".cutadapt"
   - ".qcML"
   - ".mosdepth"
+  - ".cramino"
   - "_gopeaks"
   - ".readCounts"
   - ".wgs_contig_mean_cov"
