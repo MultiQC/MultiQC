@@ -106,9 +106,9 @@ window.initHighlights = function () {
 window.mqc_colours_idx = 0;
 window.make_colorsamples_filter = function (f_text, f_col) {
   let row = `
-  <li style="color: ${f_col};" id="${hashCode(f_text + f_col)}" class="d-flex justify-content-between">
+  <li style="color: ${escapeHtml(f_col)};" id="${hashCode(f_text + f_col)}" class="d-flex justify-content-between">
     <span class="hc_handle">&boxV;</span>
-    <input class="f_text flex-grow-1" value="${f_text}" tabindex="${mqc_colours_idx}" />
+    <input class="f_text flex-grow-1" value="${escapeHtml(f_text)}" tabindex="${mqc_colours_idx}" />
     <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
   </li>`;
   window.mqc_colours_idx += 1;

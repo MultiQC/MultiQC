@@ -18,6 +18,18 @@ jobs:
       startsWith(github.event.comment.body, '@multiqc-bot fix linting')
 
     steps:
+      # issue_comment is a privileged trigger and this job runs the PR's own
+      # prek hooks with a write token, so only let maintainers trigger it.
+      - name: Require maintainer access
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.event.comment.user.login }}
+        run: |
+          PERM=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" -q '.permission')
+          echo "${ACTOR} has permission: $PERM"
+          [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
+
       # Intentionally persists credentials: the job runs prek then
       # `git push`es the result back to the PR.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
