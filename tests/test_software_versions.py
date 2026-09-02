@@ -200,7 +200,8 @@ def test_software_versions_html_license_and_doi_columns():
 
 def test_license_shown_in_module_header():
     """
-    The license is rendered as a linked name in the module header, just after the DOI.
+    The license is rendered as a linked name (no "License:" prefix) in the module
+    header, just after the DOI.
     """
     mod = multiqc.BaseMultiqcModule(
         name="STAR",
@@ -211,19 +212,20 @@ def test_license_shown_in_module_header():
         license_url="https://opensource.org/license/mit",
     )
     intro = mod.intro
-    assert "License:" in intro
     assert '<a class="module-license text-muted" href="https://opensource.org/license/mit"' in intro
     assert ">MIT License</a>" in intro
-    # License comes after the DOI
-    assert intro.index("DOI:") < intro.index("License:")
+    # The link text is self-describing, so no "License:" label is added
+    assert "License:" not in intro
+    # License link comes after the DOI link
+    assert intro.index("module-doi") < intro.index("module-license")
 
 
 def test_license_absent_from_header_when_not_set():
     """
-    Modules without a license don't render a License entry in the header.
+    Modules without a license don't render a license entry in the header.
     """
     mod = multiqc.BaseMultiqcModule(name="Plain", info="A tool.", doi="10.1/x")
-    assert "License:" not in mod.intro
+    assert "module-license" not in mod.intro
 
 
 def test_software_versions_html_no_extra_columns_without_metadata():

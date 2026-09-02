@@ -234,13 +234,14 @@ class BaseMultiqcModule:
         license_html = ""
         if self.license:
             if self.license_url:
-                license_link = (
-                    f' <a class="module-license text-muted" href="{self.license_url}"'
+                license_inner = (
+                    f'<a class="module-license text-muted" href="{self.license_url}"'
                     f' target="_blank">{self.license}</a>'
                 )
             else:
-                license_link = f" {self.license}"
-            license_html = f'<span class="text-muted small ms-2">License:{license_link}</span>'
+                license_inner = self.license
+            # No "License:" prefix: the license name (e.g. "MIT License") is self-describing
+            license_html = f'<span class="text-muted small ms-2">{license_inner}</span>'
 
         url_link = ""
         if len(self.href) > 0:
