@@ -140,16 +140,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_jcvi(self, f):
         # Look at the first three lines, they are always the same
-        first_line = f["f"].readline()
-        second_line = f["f"].readline()
-        third_line = f["f"].readline()
+        first_line = f["f"].readline().strip()
+        second_line = f["f"].readline().strip()
+        third_line = f["f"].readline().strip()
 
-        # If any of these fail, it's probably not a jcvi summary file
+        # Validate JCVI genestats table header structure.
+        # The exact width varies across JCVI versions because the upstream
+        # table formatter (jcvi.utils.table.banner) dynamically sizes the
+        # border to match the widest data row. We therefore match the
+        # structural pattern rather than exact character counts.
         if not all(
             (
-                first_line.startswith("==================================================================="),
-                second_line.startswith("                                                   o            all"),
-                third_line.startswith("-------------------------------------------------------------------"),
+                re.fullmatch(r"={50,}", first_line),
+                second_line.split() == ["o", "all"],
+                re.fullmatch(r"-{50,}", third_line),
             )
         ):
             return
