@@ -171,8 +171,8 @@ def _svg_to_pdf(svg: str) -> bytes:
     try:
         import io
 
-        from reportlab.graphics import renderPDF  # type: ignore[import-untyped]
-        from svglib.svglib import svg2rlg  # type: ignore[import-untyped]
+        from reportlab.graphics import renderPDF  # type: ignore[import-untyped,import-not-found]
+        from svglib.svglib import svg2rlg  # type: ignore[import-untyped,import-not-found]
     except ImportError as e:
         raise RuntimeError(_PDF_INSTALL_MSG) from e
 

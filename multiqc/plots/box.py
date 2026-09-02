@@ -46,6 +46,9 @@ class Dataset(BaseDataset):
     data_sorted: Optional[List[BoxT]] = None  # Sorted version of data
     samples_sorted: Optional[List[str]] = None  # Sorted version of samples
     is_stats_data: bool = False  # True if data contains pre-calculated statistics
+    # Cache for the ECharts box/scatter series data, see multiqc.plots.echarts.box._build.
+    # Pydantic private attribute: not a plot field, excluded from serialisation.
+    _echarts_box_build: Optional[Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]] = None
 
     def sample_names(self) -> List[SampleName]:
         return [SampleName(sample) for sample in self.samples]

@@ -141,9 +141,8 @@ def _build(dataset: Dataset) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]
     (serialize/canvas threshold) both call this, each sorting every sample for quartiles
     and outliers; a report that renders both paths would otherwise do that work twice.
     """
-    cached = getattr(dataset, "_echarts_box_build", None)
-    if cached is not None:
-        return cached
+    if dataset._echarts_box_build is not None:
+        return dataset._echarts_box_build
 
     boxpoints = dataset.trace_params.get("boxpoints", "outliers")
     base_color = dataset.trace_params.get("marker", {}).get("color") or _DEFAULT_COLOR
