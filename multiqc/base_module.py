@@ -235,8 +235,7 @@ class BaseMultiqcModule:
         if self.license:
             if self.license_url:
                 license_inner = (
-                    f'<a class="module-license text-muted" href="{self.license_url}"'
-                    f' target="_blank">{self.license}</a>'
+                    f'<a class="module-license text-muted" href="{self.license_url}" target="_blank">{self.license}</a>'
                 )
             else:
                 license_inner = self.license
