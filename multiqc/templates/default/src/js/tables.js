@@ -37,11 +37,6 @@ $(function () {
       headers: null, // can revert when https://github.com/Mottie/tablesorter/pull/1851 is merged
     });
 
-    // Update tablesorter if samples renamed
-    $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_per_sample_table").trigger("update");
-    });
-
     $(".mqc-table-to-violin").click(function (e) {
       e.preventDefault();
       let tableAnchor = $(this).data("table-anchor");
@@ -155,18 +150,35 @@ $(function () {
 
     // Rename samples
     $(document).on("mqc_renamesamples", function (e, f_texts, t_texts, regex_mode) {
-      $(".mqc_per_sample_table tbody th span.th-sample-name").each(function () {
-        let s_name = String($(this).data("original-sn"));
+      let applyRenames = function (name) {
         $.each(f_texts, function (idx, f_text) {
           if (regex_mode) {
             let re = new RegExp(f_text, "g");
-            s_name = s_name.replace(re, t_texts[idx]);
+            name = name.replace(re, t_texts[idx]);
           } else {
-            s_name = s_name.replace(f_text, t_texts[idx]);
+            name = name.replace(f_text, t_texts[idx]);
           }
         });
-        $(this).text(s_name);
+        return name;
+      };
+
+      $(".mqc_per_sample_table tbody th span.th-sample-name").each(function () {
+        $(this).text(applyRenames(String($(this).data("original-sn"))));
       });
+
+      // Keep the sort key in step with the displayed names, or the table carries on
+      // sorting by the original ones. The key is the row's group name, shared by every
+      // row of a group so that grouped rows stay together. It has to be set through
+      // jQuery, not setAttribute: getSortVal reads it with .data(), which caches the
+      // attribute on first read and would otherwise keep returning the old name.
+      $(".mqc_per_sample_table tbody tr").each(function () {
+        $(this)
+          .children("th.rowheader")
+          .data("sorting-val", applyRenames(String($(this).data("sample-group"))));
+      });
+
+      // Rebuild the tablesorter cache, now that names and sort keys are both current
+      $(".mqc_per_sample_table").trigger("update");
     });
 
     // Hide samples
