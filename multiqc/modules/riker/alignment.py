@@ -1,14 +1,14 @@
 """Parse riker `alignment` (alignment-metrics.txt) outputs."""
 
 import logging
-from typing import Dict
+from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv, to_int
+from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ _INT_COLS = {
 
 def parse_reports(module):
     # data_by_sample[sample][category] -> dict of metrics
-    data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = {}
+    data_by_sample: Dict[str, Dict[str, Dict[str, Optional[float]]]] = {}
 
     for f in module.find_log_files("riker/alignment", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -41,8 +41,8 @@ def parse_reports(module):
             s_name = module.clean_s_name(sample, f)
 
             try:
-                parsed: Dict[str, float] = {
-                    col: (to_int(val) if col in _INT_COLS else float(val)) for col, val in row.items()
+                parsed: Dict[str, Optional[float]] = {
+                    col: (to_int(val) if col in _INT_COLS else to_float(val)) for col, val in row.items()
                 }
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
@@ -58,7 +58,7 @@ def parse_reports(module):
     module.add_software_version(None)
 
     # Pull the `pair` row (or fall back to the first available category) for general stats.
-    pair_data: Dict[str, Dict[str, float]] = {}
+    pair_data: Dict[str, Dict[str, Optional[float]]] = {}
     for s_name, by_cat in data_by_sample.items():
         pair_data[s_name] = by_cat.get("pair", next(iter(by_cat.values())))
 
@@ -165,7 +165,7 @@ def parse_reports(module):
     )
 
     # Per-category metrics table
-    table_data: Dict[str, Dict[str, float]] = {}
+    table_data: Dict[str, Dict[str, Optional[float]]] = {}
     for s_name, by_cat in data_by_sample.items():
         for category, row in by_cat.items():
             table_data[f"{s_name} ({category})"] = row
