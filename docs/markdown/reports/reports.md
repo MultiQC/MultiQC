@@ -75,7 +75,8 @@ the general statistics table.
 ### Interactive plots
 
 Plots in MultiQC reports are usually interactive, using the
-[Plotly](https://plotly.com/javascript) JavaScript library.
+[Apache ECharts](https://echarts.apache.org/) JavaScript library by default (or
+[Plotly](https://plotly.com/javascript) with `--template plotly`).
 
 You can hover the mouse over data to see a tooltip with more information
 about that dataset. Clicking and dragging on the line graphs will zoom into that area.

@@ -3,9 +3,8 @@
 import copy
 import json
 import logging
-from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
 
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from natsort import natsorted
 
@@ -13,6 +12,9 @@ from multiqc import config, report
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.plots.utils import determine_barplot_height
 from multiqc.types import Anchor, SampleName
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +46,9 @@ class Dataset(BaseDataset):
     data_sorted: Optional[List[BoxT]] = None  # Sorted version of data
     samples_sorted: Optional[List[str]] = None  # Sorted version of samples
     is_stats_data: bool = False  # True if data contains pre-calculated statistics
+    # Cache for the ECharts box/scatter series data, see multiqc.plots.echarts.box._build.
+    # Pydantic private attribute: not a plot field, excluded from serialisation.
+    _echarts_box_build: Optional[Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]] = None
 
     def sample_names(self) -> List[SampleName]:
         return [SampleName(sample) for sample in self.samples]
@@ -161,14 +166,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,  # noqa: ARG002
         is_pct: bool = False,  # noqa: ARG002
         **kwargs,  # noqa: ARG002
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         fig = go.Figure(layout=layout)
 
         for sname, values in zip(self.samples, self.data):
@@ -467,7 +474,7 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
         max_n_samples = max(len(x) for x in list_of_data_by_sample) if list_of_data_by_sample else 0
         height: int = determine_barplot_height(max_n_samples)
 
-        model.layout.update(
+        model.set_plotly_layout(
             height=height,
             showlegend=False,
             boxgroupgap=0.1,
@@ -476,15 +483,15 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             yaxis=dict(
                 automargin=True,  # to make sure there is enough space for ticks labels
                 categoryorder="trace",  # keep sample order
-                hoverformat=getattr(model.layout.xaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.xaxis, "ticksuffix", None),
+                hoverformat=None,
+                ticksuffix=None,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
             ),
             xaxis=dict(
-                title=dict(text=getattr(getattr(model.layout.yaxis, "title", None), "text", None)),
-                hoverformat=getattr(model.layout.yaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.yaxis, "ticksuffix", None),
+                title=dict(text=model.layout.yaxis.title),
+                hoverformat=None,
+                ticksuffix=None,
             ),
             hovermode="y",
             hoverlabel=dict(

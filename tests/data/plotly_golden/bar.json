@@ -1,0 +1,253 @@
+{
+  "figure": {
+    "data": [
+      {
+        "hovertemplate": "<b></b>%{meta}: <b>%{x}</b><extra></extra>",
+        "insidetextanchor": "start",
+        "marker": {
+          "color": "rgba(124,181,236,1)",
+          "line": {
+            "width": 0
+          }
+        },
+        "meta": "Cat1",
+        "name": "Cat1",
+        "orientation": "h",
+        "textposition": "inside",
+        "type": "bar",
+        "x": [1.0, 1.0, 1.0],
+        "y": ["Sample3", "Sample2", "Sample1"]
+      },
+      {
+        "hovertemplate": "<b></b>%{meta}: <b>%{x}</b><extra></extra>",
+        "insidetextanchor": "start",
+        "marker": {
+          "color": "rgba(67,67,72,1)",
+          "line": {
+            "width": 0
+          }
+        },
+        "meta": "Cat2",
+        "name": "Cat2",
+        "orientation": "h",
+        "textposition": "inside",
+        "type": "bar",
+        "x": [1.0, 1.0, NaN],
+        "y": ["Sample3", "Sample2", "Sample1"]
+      }
+    ],
+    "layout": {
+      "autosize": true,
+      "bargap": 0.2,
+      "bargroupgap": 0,
+      "barmode": "relative",
+      "height": 300,
+      "hoverlabel": {
+        "bgcolor": "white",
+        "font": {
+          "color": "rgba(60,60,60,1)"
+        },
+        "namelength": -1
+      },
+      "hovermode": "y unified",
+      "legend": {
+        "tracegroupgap": 0,
+        "traceorder": "normal"
+      },
+      "margin": {
+        "b": 65,
+        "l": 60,
+        "pad": 5,
+        "r": 15,
+        "t": 50
+      },
+      "showlegend": true,
+      "template": {
+        "layout": {
+          "colorway": [
+            "#7cb5ec",
+            "#434348",
+            "#90ed7d",
+            "#f7a35c",
+            "#8085e9",
+            "#f15c80",
+            "#e4d354",
+            "#2b908f",
+            "#f45b5b",
+            "#91e8e1"
+          ],
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+          },
+          "legend": {
+            "font": {
+              "color": "rgba(60,60,60,1)"
+            }
+          },
+          "modebar": {
+            "activecolor": "rgba(80, 80, 80, 1)",
+            "bgcolor": "rgba(0, 0, 0, 0)",
+            "color": "rgba(100, 100, 100, 0.5)"
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "title": {
+            "font": {
+              "color": "rgba(60,60,60,1)",
+              "size": 20
+            }
+          },
+          "xaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          },
+          "yaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          }
+        }
+      },
+      "title": {
+        "text": "Test: Bar Graph<br><sup>3 bars</sup>",
+        "x": 0.5,
+        "xanchor": "center"
+      },
+      "xaxis": {
+        "automargin": true,
+        "autorangeoptions": {
+          "maxallowed": 2.0,
+          "minallowed": 0
+        },
+        "hoverformat": ",.2f",
+        "ticksuffix": "",
+        "title": {
+          "text": ""
+        },
+        "type": "linear"
+      },
+      "yaxis": {
+        "automargin": true,
+        "categoryorder": "trace",
+        "showgrid": false,
+        "ticksuffix": "",
+        "type": "category"
+      }
+    }
+  },
+  "interactive_layout": {
+    "autosize": true,
+    "bargap": 0.2,
+    "bargroupgap": 0,
+    "barmode": "relative",
+    "height": 300,
+    "hoverlabel": {
+      "bgcolor": "white",
+      "font": {
+        "color": "rgba(60,60,60,1)"
+      },
+      "namelength": -1
+    },
+    "hovermode": "y unified",
+    "legend": {
+      "tracegroupgap": 0,
+      "traceorder": "normal"
+    },
+    "margin": {
+      "b": 65,
+      "l": 60,
+      "pad": 5,
+      "r": 15,
+      "t": 50
+    },
+    "showlegend": true,
+    "template": {
+      "layout": {
+        "colorway": [
+          "#7cb5ec",
+          "#434348",
+          "#90ed7d",
+          "#f7a35c",
+          "#8085e9",
+          "#f15c80",
+          "#e4d354",
+          "#2b908f",
+          "#f45b5b",
+          "#91e8e1"
+        ],
+        "font": {
+          "color": "rgba(60,60,60,1)",
+          "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+        },
+        "legend": {
+          "font": {
+            "color": "rgba(60,60,60,1)"
+          }
+        },
+        "modebar": {
+          "activecolor": "rgba(80, 80, 80, 1)",
+          "bgcolor": "rgba(0, 0, 0, 0)",
+          "color": "rgba(100, 100, 100, 0.5)"
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "title": {
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "size": 20
+          }
+        },
+        "xaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        },
+        "yaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        }
+      }
+    },
+    "title": {
+      "text": "Test: Bar Graph",
+      "x": 0.5,
+      "xanchor": "center"
+    },
+    "xaxis": {
+      "automargin": true
+    },
+    "yaxis": {
+      "automargin": true,
+      "categoryorder": "trace",
+      "showgrid": false,
+      "type": "category"
+    }
+  }
+}

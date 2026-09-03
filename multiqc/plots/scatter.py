@@ -5,17 +5,19 @@ import json
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import polars as pl
-from plotly import graph_objects as go  # type: ignore
 
 from multiqc import report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, PConfig, Plot, PlotType, plot_anchor
 from multiqc.types import Anchor, SampleName
 from multiqc.utils import mqc_colour
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -271,14 +273,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         fig = go.Figure(layout=layout)
         MAX_ANNOTATIONS = 10  # Maximum number of dots to be annotated directly on the plot
         n_annotated = len([el for el in self.points if "annotation" in el])
@@ -468,7 +472,7 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
         model._set_y_bands_and_range(pconfig)
 
         # Make a tooltip always show on hover over nearest point on plot
-        model.layout.hoverdistance = -1
+        model.set_plotly_layout(hoverdistance=-1)
 
         return ScatterPlot(**model.__dict__)
 

@@ -1,9 +1,23 @@
 ////////////////////////////////////////////////
-// MultiQC Table code
+// MultiQC Table code (ECharts template fork)
+//
+// This file is a fork of multiqc/templates/default/src/js/tables.js with ONLY the
+// "plot a column as a scatter" modal function rewritten to build an ECharts chart
+// instead of calling Plotly.newPlot() (the default template's version, ~line 460 in
+// the file this was copied from). Everything else in this ~600-line procedural file
+// is kept byte-for-byte identical to the default template's copy.
+//
+// Copy-drift risk: any future change to multiqc/templates/default/src/js/tables.js
+// (other than the scatter-modal plotting call) will NOT automatically appear here.
+// Reconcile by hand on merge conflicts / when reviewing changes to the default file.
 ////////////////////////////////////////////////
 
 // Execute when page load has finished loading
 $(function () {
+  // Live ECharts instance for the table-scatter modal (re-created on every column
+  // change / reopen, same as the default template rebuilds the Plotly figure).
+  let tableScatterChart = null;
+
   if ($(".mqc_per_sample_table").length > 0) {
     // Enable tablesorter on MultiQC tables
     let getSortVal = function (node) {
@@ -303,6 +317,12 @@ $(function () {
         }
       });
       table_scatter_table_anchor_el.val(tableAnchor);
+      // Different table selected: dispose the previous chart instance before wiping
+      // the container's contents, otherwise it's left dangling on a detached DOM node.
+      if (tableScatterChart) {
+        tableScatterChart.dispose();
+        tableScatterChart = null;
+      }
       $("#table_scatter_plot").html("<small>Please select two table columns.</small>").addClass("not_rendered");
     }
   });
@@ -406,75 +426,99 @@ $(function () {
 
       if (Object.keys(plotDataset).length > 0) {
         let target = "table_scatter_plot";
-        let traces = plotDataset.map(function (point) {
-          let trace = {
-            type: "scatter",
-            x: [point.x],
-            y: [point.y],
+        let data = plotDataset.map(function (point) {
+          let item = {
+            value: [point.x, point.y],
             name: point.name,
-            text: [point.name],
           };
           if (point.marker) {
-            trace.marker = point.marker;
+            item.itemStyle = { color: point.marker.color };
           }
-          return trace;
+          return item;
         });
-        // Get theme-aware colors
-        const colors = getPlotlyThemeColors();
+        // Get theme-aware colors (same palette as every other ECharts plot in this template)
+        const colors = getEchartsThemeColors();
 
-        let layout = {
-          title: plotTitle,
-          paper_bgcolor: colors.paper_bgcolor,
-          plot_bgcolor: colors.plot_bgcolor,
-          font: {
-            color: colors.textcolor,
+        let option = {
+          backgroundColor: colors.paper_bgcolor,
+          animation: false,
+          title: {
+            text: plotTitle,
+            textStyle: { color: colors.textcolor },
           },
-          xaxis: {
-            title: col1_name,
-            range: [col1_min, col1_max],
-            gridcolor: colors.gridcolor,
-            zerolinecolor: colors.zerolinecolor,
-            color: colors.axiscolor,
-            tickfont: { color: colors.tickcolor },
+          grid: { containLabel: true },
+          xAxis: {
+            type: "value",
+            name: col1_name,
+            nameLocation: "middle",
+            nameGap: 30,
+            min: col1_min,
+            max: col1_max,
+            axisLine: { lineStyle: { color: colors.axiscolor } },
+            axisLabel: { color: colors.tickcolor },
+            nameTextStyle: { color: colors.textcolor },
+            splitLine: { lineStyle: { color: colors.gridcolor } },
           },
-          yaxis: {
-            title: col2_name,
-            range: [col2_min, col2_max],
-            gridcolor: colors.gridcolor,
-            zerolinecolor: colors.zerolinecolor,
-            color: colors.axiscolor,
-            tickfont: { color: colors.tickcolor },
+          yAxis: {
+            type: "value",
+            name: col2_name,
+            nameLocation: "middle",
+            nameGap: 45,
+            min: col2_min,
+            max: col2_max,
+            axisLine: { lineStyle: { color: colors.axiscolor } },
+            axisLabel: { color: colors.tickcolor },
+            nameTextStyle: { color: colors.textcolor },
+            splitLine: { lineStyle: { color: colors.gridcolor } },
           },
-          showlegend: false,
-          hoverlabel: {
-            bgcolor: colors.hoverlabel_bgcolor,
-            bordercolor: colors.hoverlabel_bordercolor,
-            font: { color: colors.hoverlabel_fontcolor },
+          legend: { show: false },
+          tooltip: {
+            trigger: "item",
+            confine: true,
+            backgroundColor: colors.hoverlabel_bgcolor,
+            borderColor: colors.hoverlabel_bordercolor,
+            textStyle: { color: colors.hoverlabel_fontcolor },
+            formatter: function (params) {
+              return (
+                "<b>" +
+                params.name +
+                "</b><br/>" +
+                col1_name +
+                ": " +
+                params.value[0] +
+                "<br/>" +
+                col2_name +
+                ": " +
+                params.value[1]
+              );
+            },
           },
-        };
-        let config = {
-          responsive: true,
-          displaylogo: false,
-          displayModeBar: true,
-          toImageButtonOptions: { filename: target },
-          modeBarButtonsToRemove: [
-            "lasso2d",
-            "autoScale2d",
-            "pan2d",
-            "select2d",
-            "zoom2d",
-            "zoomIn2d",
-            "zoomOut2d",
-            "resetScale2d",
-            "toImage",
+          series: [
+            {
+              type: "scatter",
+              data: data,
+            },
           ],
         };
-        let plot = Plotly.newPlot(target, traces, layout, config);
-        if (!plot) {
+
+        // Re-create the chart instance on every render: the modal's columns (and
+        // therefore the axes) change on every submit, so there is nothing worth
+        // preserving between renders (mirrors the Plotly version's Plotly.newPlot()
+        // full-replace behavior).
+        if (tableScatterChart) {
+          tableScatterChart.dispose();
+          tableScatterChart = null;
+        }
+        plotDiv.empty();
+        // echarts.init() returns a truthy instance or throws, so a truthiness check on it
+        // can never fail; catch the throw instead so the error message is actually reachable.
+        try {
+          tableScatterChart = echarts.init(document.getElementById(target), null, { renderer: "svg" });
+          tableScatterChart.setOption(option, { notMerge: true });
+          plotDiv.removeClass("not_rendered");
+        } catch (err) {
           plotDiv.html("<small>Error: Something went wrong when plotting the scatter plot.</small>");
           plotDiv.addClass("not_rendered");
-        } else {
-          plotDiv.removeClass("not_rendered");
         }
       } else {
         plotDiv.html("<small>Error: No data pairs found for these columns.</small>");

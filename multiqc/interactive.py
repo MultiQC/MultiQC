@@ -25,6 +25,7 @@ from multiqc.plots.heatmap import HeatmapPlot
 from multiqc.plots.linegraph import LinePlot
 from multiqc.plots.plot import Plot, PlotType
 from multiqc.plots.scatter import ScatterPlot
+from multiqc.plots.seqcontent import SeqContentPlot
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ModuleId
 
@@ -225,6 +226,8 @@ def _load_plot(dump: Dict) -> Plot:
         return ScatterPlot(**dump)
     elif plot_type == PlotType.HEATMAP:
         return HeatmapPlot(**dump)
+    elif plot_type == PlotType.SEQCONTENT:
+        return SeqContentPlot(**dump)
     elif plot_type == PlotType.VIOLIN:
         return ViolinPlot(**dump)
     else:

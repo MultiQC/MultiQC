@@ -8,12 +8,38 @@ import re
 from collections import defaultdict
 from typing import Any, Dict, Set, Tuple
 
-from PIL import ImageColor
 from pydantic import BaseModel
 
 from multiqc import config
+from multiqc.utils.mqc_colour import mqc_colour_scale
 
 logger = logging.getLogger(__name__)
+
+_HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$")
+_RGB_COLOR_RE = re.compile(r"^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([0-9.]+)\s*)?\)$")
+_HSL_COLOR_RE = re.compile(r"^hsla?\(\s*(-?[0-9.]+)\s*,\s*([0-9.]+)%\s*,\s*([0-9.]+)%\s*(?:,\s*([0-9.]+)\s*)?\)$")
+
+
+def _is_valid_color_string(val: str) -> bool:
+    """Check if a string is a valid CSS colour: hex, rgb(a), hsl(a), or a named colour."""
+    if _HEX_COLOR_RE.match(val):
+        return True
+
+    m = _RGB_COLOR_RE.match(val)
+    if m:
+        r, g, b, a = m.groups()
+        if not all(0 <= int(v) <= 255 for v in (r, g, b)):
+            return False
+        return a is None or 0 <= float(a) <= 1
+
+    m = _HSL_COLOR_RE.match(val)
+    if m:
+        h, s, ll, a = m.groups()
+        if not (0 <= float(h) <= 360 and 0 <= float(s) <= 100 and 0 <= float(ll) <= 100):
+            return False
+        return a is None or 0 <= float(a) <= 1
+
+    return val.lower() in mqc_colour_scale.html_colors
 
 
 class ModuleConfigValidationError(Exception):
@@ -278,11 +304,8 @@ class ValidatedConfig(BaseModel):
             else:
                 return val  # Return the original rgba string
 
-        # For other formats, use ImageColor.getrgb
-        try:
-            ImageColor.getrgb(val_correct)
-        except ValueError:
+        # For other formats, validate against hex / rgb / hsl / named colours
+        if not _is_valid_color_string(val_correct):
             add_validation_error(path_in_cfg, f"invalid color value '{val}'")
             return None
-        else:
-            return val
+        return val

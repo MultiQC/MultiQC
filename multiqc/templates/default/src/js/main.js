@@ -1,5 +1,6 @@
-// Import our custom CSS
+// Reuse the default template's SCSS (Bootstrap theme, layout, component styles).
+// Cross-root relative imports at build time are proven by
+// multiqc/templates/disco/src/js/main.js.
 import "../scss/main.scss";
 
-// Import Bootstrap 5 JavaScript
 import "./main-js.js";

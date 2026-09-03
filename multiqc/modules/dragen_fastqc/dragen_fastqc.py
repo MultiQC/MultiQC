@@ -1,5 +1,4 @@
 import logging
-import os
 
 from multiqc.base_module import ModuleNoSamplesFound
 from .base_metrics import DragenBaseMetrics
@@ -61,17 +60,6 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             license=None,
             license_url=None,
         )
-
-        self.css = {
-            "assets/css/multiqc_fastqc.css": os.path.join(
-                os.path.dirname(__file__), "..", "fastqc", "assets", "css", "multiqc_fastqc.css"
-            )
-        }
-        self.js = {
-            "assets/js/multiqc_dragen_fastqc.js": os.path.join(
-                os.path.dirname(__file__), "assets", "js", "multiqc_dragen_fastqc.js"
-            )
-        }
 
         data_by_sample = {}
         for f in self.find_log_files("dragen_fastqc"):
