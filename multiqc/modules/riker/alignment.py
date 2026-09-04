@@ -1,12 +1,14 @@
 """Parse riker `alignment` (alignment-metrics.txt) outputs."""
 
 import logging
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
+from multiqc.plots.table_object import InputRow
+from multiqc.types import SampleGroup, SampleName
 
 from .util import read_tsv, to_float, to_int
 
@@ -164,11 +166,20 @@ def parse_reports(module):
         plot=bargraph.plot(bar_data, bar_keys, bar_config),
     )
 
-    # Per-category metrics table
-    table_data: Dict[str, Dict[str, Optional[float]]] = {}
+    # Per-category metrics table, grouped by sample so the `pair` row is the
+    # headline and the `read1` / `read2` rows nest under it, expandable on click.
+    # The first row in each group is the primary row, so `pair` is ordered first.
+    category_order = ["pair", "read1", "read2"]
+    rows_by_sample: Dict[SampleGroup, List[InputRow]] = {}
     for s_name, by_cat in data_by_sample.items():
-        for category, row in by_cat.items():
-            table_data[f"{s_name} ({category})"] = row
+        ordered = [c for c in category_order if c in by_cat]
+        ordered += [c for c in by_cat if c not in category_order]
+        rows: List[InputRow] = []
+        for category in ordered:
+            is_headline = not rows and category == "pair"
+            label = s_name if is_headline else f"{s_name} ({category})"
+            rows.append(InputRow(sample=SampleName(label), data=by_cat[category]))
+        rows_by_sample[SampleGroup(s_name)] = rows
 
     # Same coloring rationale as the general stats columns above.
     table_headers = {
@@ -252,8 +263,8 @@ def parse_reports(module):
         description="Per-category alignment metrics from riker's `alignment` tool.",
         helptext="""
             Alignment summary metrics, equivalent to Picard `CollectAlignmentSummaryMetrics`.
-            Each sample is split into rows for the `pair`, `first_of_pair`, and `second_of_pair`
-            read categories.
+            Each sample's `pair` row is the primary row; click it to expand the per-read
+            `read1` and `read2` rows underneath.
 
             * `Total reads` / `Aligned reads`: read counts (QC-failed reads are included in the total).
             * `% Aligned`: aligned reads as a fraction of total.
@@ -265,7 +276,7 @@ def parse_reports(module):
             * `Strand balance`: fraction of aligned reads on the forward strand. 0.5 is unbiased.
             * `Bad cycles`: sequencing cycles where at least 80% of reads called N.
         """,
-        plot=table.plot(table_data, table_headers, table_config),
+        plot=table.plot(rows_by_sample, table_headers, table_config),
     )
 
     module.write_data_file(pair_data, f"multiqc_{module.anchor}_alignment")

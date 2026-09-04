@@ -149,6 +149,38 @@ def test_alignment_metrics(run_riker_module):
     _assert_one_sample_for_tool(module, "alignment", "HG00240")
 
 
+def _alignment_group_rows(sample):
+    """Return the grouped table rows for a sample from the alignment metrics table."""
+    from multiqc.types import SampleGroup
+
+    for plot in report.plot_by_id.values():
+        for dataset in getattr(plot, "datasets", []):
+            dt = getattr(dataset, "dt", None)
+            if dt is None:
+                continue
+            for section in dt.section_by_id.values():
+                if SampleGroup(sample) in section.rows_by_sgroup:
+                    return section.rows_by_sgroup[SampleGroup(sample)]
+    return None
+
+
+def test_alignment_table_groups_pair_as_primary(run_riker_module):
+    """The alignment metrics table groups each sample so the `pair` row is the primary
+    (headline) row and `read1` / `read2` nest under it as expandable children."""
+    from multiqc.types import ColumnKey
+
+    run_riker_module("HG00240.alignment-metrics.txt", ALIGNMENT_TSV)
+
+    rows = _alignment_group_rows("HG00240")
+    assert rows is not None, "alignment table did not produce a HG00240 sample group"
+    assert [str(r.sample) for r in rows] == ["HG00240", "HG00240 (read1)", "HG00240 (read2)"]
+
+    # The primary row carries the `pair` metrics (total_reads is the sum of both reads).
+    assert rows[0].data[ColumnKey("total_reads")].raw == 98580386
+    assert rows[1].data[ColumnKey("total_reads")].raw == 49290193
+    assert rows[2].data[ColumnKey("total_reads")].raw == 49290193
+
+
 def test_basic_base_distribution(run_riker_module):
     module = run_riker_module("HG00240.base-distribution-by-cycle.txt", BASE_DIST_TSV)
     # When read_end=2 is present we split into _R1 / _R2; the per-tool sample set
