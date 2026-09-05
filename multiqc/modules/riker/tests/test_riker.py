@@ -29,6 +29,9 @@ ALIGNMENT_TSV = (
     "\t0.02466\t0\t0.49993\t0.01793\t0.01464\t0.00000\t21.69\n"
 )
 
+# Single-end riker output: the header plus only the `read1` row (no `read2`, no `pair`).
+ALIGNMENT_SE_TSV = "\n".join(ALIGNMENT_TSV.split("\n")[:2]) + "\n"
+
 BASE_DIST_TSV = (
     "sample\tread_end\tcycle\tfrac_a\tfrac_c\tfrac_g\tfrac_t\tfrac_n\n"
     "HG00240\t1\t1\t0.28942\t0.20943\t0.20676\t0.29184\t0.00255\n"
@@ -179,6 +182,16 @@ def test_alignment_table_groups_pair_as_primary(run_riker_module):
     assert rows[0].data[ColumnKey("total_reads")].raw == 98580386
     assert rows[1].data[ColumnKey("total_reads")].raw == 49290193
     assert rows[2].data[ColumnKey("total_reads")].raw == 49290193
+
+
+def test_alignment_table_single_end_has_no_expandable_group(run_riker_module):
+    """Single-end riker emits only a `read1` row. It is shown as a bare primary row
+    (no `(read1)` suffix and nothing to expand), so the group degrades to one row."""
+    run_riker_module("HG00240.alignment-metrics.txt", ALIGNMENT_SE_TSV)
+
+    rows = _alignment_group_rows("HG00240")
+    assert rows is not None, "alignment table did not produce a HG00240 sample group"
+    assert [str(r.sample) for r in rows] == ["HG00240"]
 
 
 def test_basic_base_distribution(run_riker_module):

@@ -166,9 +166,12 @@ def parse_reports(module):
         plot=bargraph.plot(bar_data, bar_keys, bar_config),
     )
 
-    # Per-category metrics table, grouped by sample so the `pair` row is the
-    # headline and the `read1` / `read2` rows nest under it, expandable on click.
-    # The first row in each group is the primary row, so `pair` is ordered first.
+    # Per-category metrics table, grouped by sample. For paired data the `pair`
+    # row is ordered first and becomes the headline, with the `read1` / `read2`
+    # rows nesting under it, expandable on click. For single-end data riker emits
+    # only a `read1` row, which then becomes the headline on its own.
+    # The first row of each group is always the primary row, so the headline is
+    # whichever category sorts first, not `pair` specifically.
     category_order = ["pair", "read1", "read2"]
     rows_by_sample: Dict[SampleGroup, List[InputRow]] = {}
     for s_name, by_cat in data_by_sample.items():
@@ -176,7 +179,7 @@ def parse_reports(module):
         ordered += [c for c in by_cat if c not in category_order]
         rows: List[InputRow] = []
         for category in ordered:
-            is_headline = not rows and category == "pair"
+            is_headline = not rows
             label = s_name if is_headline else f"{s_name} ({category})"
             rows.append(InputRow(sample=SampleName(label), data=by_cat[category]))
         rows_by_sample[SampleGroup(s_name)] = rows
@@ -263,8 +266,9 @@ def parse_reports(module):
         description="Per-category alignment metrics from riker's `alignment` tool.",
         helptext="""
             Alignment summary metrics, equivalent to Picard `CollectAlignmentSummaryMetrics`.
-            Each sample's `pair` row is the primary row; click it to expand the per-read
-            `read1` and `read2` rows underneath.
+            For paired data each sample's `pair` row is the primary row; click it to expand
+            the per-read `read1` and `read2` rows underneath. For single-end data riker
+            reports only a `read1` row, which is shown as the primary row on its own.
 
             * `Total reads` / `Aligned reads`: read counts (QC-failed reads are included in the total).
             * `% Aligned`: aligned reads as a fraction of total.
