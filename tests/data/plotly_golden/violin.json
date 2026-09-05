@@ -1,0 +1,287 @@
+{
+  "figure": {
+    "data": [
+      {
+        "box": {
+          "visible": true
+        },
+        "fillcolor": "#999999",
+        "hoveron": "points",
+        "hovertemplate": "<b>%{text}</b>: %{x}<extra></extra>",
+        "line": {
+          "width": 0
+        },
+        "meanline": {
+          "visible": true
+        },
+        "name": "0",
+        "opacity": 1,
+        "orientation": "h",
+        "points": false,
+        "text": ["sample1", "sample2"],
+        "type": "violin",
+        "x": [1, 3],
+        "xaxis": "x",
+        "yaxis": "y"
+      },
+      {
+        "hoverlabel": {
+          "bgcolor": "white",
+          "font": {
+            "color": "rgba(60,60,60,1)"
+          }
+        },
+        "hovertemplate": "<b>%{text}</b>: %{x}<extra></extra>",
+        "marker": {
+          "color": "#0b79e6",
+          "opacity": 1,
+          "size": 4
+        },
+        "mode": "markers",
+        "showlegend": false,
+        "text": ["sample1"],
+        "type": "scatter",
+        "x": [1],
+        "xaxis": "x",
+        "y": [0.0],
+        "yaxis": "y"
+      },
+      {
+        "hoverlabel": {
+          "bgcolor": "white",
+          "font": {
+            "color": "rgba(60,60,60,1)"
+          }
+        },
+        "hovertemplate": "<b>%{text}</b>: %{x}<extra></extra>",
+        "marker": {
+          "color": "#0b79e6",
+          "opacity": 1,
+          "size": 4
+        },
+        "mode": "markers",
+        "showlegend": false,
+        "text": ["sample2"],
+        "type": "scatter",
+        "x": [3],
+        "xaxis": "x",
+        "y": [0.0],
+        "yaxis": "y"
+      }
+    ],
+    "layout": {
+      "autosize": true,
+      "grid": {
+        "columns": 1,
+        "roworder": "top to bottom",
+        "rows": 1,
+        "subplots": [["xy"]],
+        "ygap": 0.4
+      },
+      "height": 133,
+      "hoverlabel": {
+        "namelength": -1
+      },
+      "margin": {
+        "b": 40,
+        "l": 60,
+        "pad": 0,
+        "r": 15,
+        "t": 50
+      },
+      "showlegend": false,
+      "template": {
+        "layout": {
+          "colorway": [
+            "#7cb5ec",
+            "#434348",
+            "#90ed7d",
+            "#f7a35c",
+            "#8085e9",
+            "#f15c80",
+            "#e4d354",
+            "#2b908f",
+            "#f45b5b",
+            "#91e8e1"
+          ],
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+          },
+          "legend": {
+            "font": {
+              "color": "rgba(60,60,60,1)"
+            }
+          },
+          "modebar": {
+            "activecolor": "rgba(80, 80, 80, 1)",
+            "bgcolor": "rgba(0, 0, 0, 0)",
+            "color": "rgba(100, 100, 100, 0.5)"
+          },
+          "paper_bgcolor": "rgba(0,0,0,0)",
+          "plot_bgcolor": "rgba(0,0,0,0)",
+          "title": {
+            "font": {
+              "color": "rgba(60,60,60,1)",
+              "size": 20
+            }
+          },
+          "xaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          },
+          "yaxis": {
+            "color": "rgba(100,100,100,1)",
+            "gridcolor": "rgba(128,128,128,0.15)",
+            "spikecolor": "rgba(60,60,60,1)",
+            "spikethickness": -3,
+            "tickfont": {
+              "color": "rgba(80,80,80,1)",
+              "size": 10
+            },
+            "zerolinecolor": "rgba(128,128,128,0.2)"
+          }
+        }
+      },
+      "title": {
+        "text": "Violin<br><sup>2 samples</sup>",
+        "x": 0.5,
+        "xanchor": "center"
+      },
+      "violingap": 0,
+      "xaxis": {
+        "automargin": false,
+        "gridcolor": "rgba(0,0,0,0.1)",
+        "range": [-0.015, 3.015075],
+        "tickfont": {
+          "color": "rgba(0,0,0,0.5)",
+          "size": 9
+        },
+        "zerolinecolor": "rgba(0,0,0,0.1)"
+      },
+      "yaxis": {
+        "automargin": true,
+        "gridcolor": "rgba(0,0,0,0.1)",
+        "tickfont": {
+          "color": "rgba(0,0,0,0.5)",
+          "size": 9
+        },
+        "tickmode": "array",
+        "ticktext": ["Metric X  "],
+        "tickvals": [0],
+        "zerolinecolor": "rgba(0,0,0,0.1)"
+      }
+    }
+  },
+  "interactive_layout": {
+    "autosize": true,
+    "grid": {
+      "columns": 1,
+      "roworder": "top to bottom",
+      "ygap": 0.4
+    },
+    "height": 500,
+    "hoverlabel": {
+      "namelength": -1
+    },
+    "margin": {
+      "b": 40,
+      "l": 60,
+      "pad": 0,
+      "r": 15,
+      "t": 50
+    },
+    "showlegend": false,
+    "template": {
+      "layout": {
+        "colorway": [
+          "#7cb5ec",
+          "#434348",
+          "#90ed7d",
+          "#f7a35c",
+          "#8085e9",
+          "#f15c80",
+          "#e4d354",
+          "#2b908f",
+          "#f45b5b",
+          "#91e8e1"
+        ],
+        "font": {
+          "color": "rgba(60,60,60,1)",
+          "family": "system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans', 'Liberation Sans', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'"
+        },
+        "legend": {
+          "font": {
+            "color": "rgba(60,60,60,1)"
+          }
+        },
+        "modebar": {
+          "activecolor": "rgba(80, 80, 80, 1)",
+          "bgcolor": "rgba(0, 0, 0, 0)",
+          "color": "rgba(100, 100, 100, 0.5)"
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "title": {
+          "font": {
+            "color": "rgba(60,60,60,1)",
+            "size": 20
+          }
+        },
+        "xaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        },
+        "yaxis": {
+          "color": "rgba(100,100,100,1)",
+          "gridcolor": "rgba(128,128,128,0.15)",
+          "spikecolor": "rgba(60,60,60,1)",
+          "spikethickness": -3,
+          "tickfont": {
+            "color": "rgba(80,80,80,1)",
+            "size": 10
+          },
+          "zerolinecolor": "rgba(128,128,128,0.2)"
+        }
+      }
+    },
+    "title": {
+      "text": "Violin",
+      "x": 0.5,
+      "xanchor": "center"
+    },
+    "violingap": 0,
+    "xaxis": {
+      "automargin": false,
+      "gridcolor": "rgba(0,0,0,0.1)",
+      "tickfont": {
+        "color": "rgba(0,0,0,0.5)",
+        "size": 9
+      },
+      "zerolinecolor": "rgba(0,0,0,0.1)"
+    },
+    "yaxis": {
+      "automargin": true,
+      "gridcolor": "rgba(0,0,0,0.1)",
+      "tickfont": {
+        "color": "rgba(0,0,0,0.5)",
+        "size": 9
+      },
+      "zerolinecolor": "rgba(0,0,0,0.1)"
+    }
+  }
+}

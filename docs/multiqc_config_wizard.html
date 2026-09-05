@@ -2210,7 +2210,7 @@
       </div>
 
       <footer class="page-footer">
-        Generated on <time datetime="2026-08-28">2026-08-28</time> for MultiQC <code>1.36.dev0</code>.
+        Generated on <time datetime="2026-08-31">2026-08-31</time> for MultiQC <code>1.36.dev0</code>.
       </footer>
     </main>
 
@@ -5371,12 +5371,33 @@
         },
         "Plot Settings": {
           "Rendering mode": {
+            plotting_engine: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description:
+                "Plotting library used to render report plots. The default is 'echarts' (Apache ECharts, no extra dependencies); the 'plotly' template sets this to 'plotly' for interactive Plotly plots (requires the optional plotly extra).",
+              default: "echarts",
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
+            echarts_canvas_threshold: {
+              deprecated: false,
+              multiline: false,
+              type: "integer",
+              description:
+                "Number of individual marks (points, bars, heatmap cells) above which an ECharts plot uses the canvas renderer instead of SVG.",
+              default: 3000,
+              enum: null,
+              items_enum: null,
+              examples: [],
+            },
             plots_force_flat: {
               deprecated: false,
               multiline: false,
               type: "boolean",
-              description:
-                "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+              description: "Render plots as static images instead of interactive plots. Useful for very large reports.",
               default: false,
               enum: null,
               items_enum: null,
@@ -8803,6 +8824,39 @@
             section: "File Discovery",
             title: "Sp",
           },
+          plotting_engine: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Plotting library used to render report plots. The default is 'echarts' (Apache ECharts, no extra dependencies); the 'plotly' template sets this to 'plotly' for interactive Plotly plots (requires the optional plotly extra).",
+            group: "Rendering mode",
+            section: "Plot Settings",
+            title: "Plotting Engine",
+          },
+          echarts_canvas_threshold: {
+            anyOf: [
+              {
+                exclusiveMinimum: 0,
+                type: "integer",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Number of individual marks (points, bars, heatmap cells) above which an ECharts plot uses the canvas renderer instead of SVG.",
+            group: "Rendering mode",
+            section: "Plot Settings",
+            title: "Echarts Canvas Threshold",
+          },
           plots_force_flat: {
             anyOf: [
               {
@@ -8813,7 +8867,7 @@
               },
             ],
             default: null,
-            description: "Render plots as static images instead of interactive Plotly. Useful for very large reports.",
+            description: "Render plots as static images instead of interactive plots. Useful for very large reports.",
             group: "Rendering mode",
             section: "Plot Settings",
             title: "Plots Force Flat",

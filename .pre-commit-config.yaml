@@ -11,6 +11,9 @@ repos:
     rev: "v6.0.0"
     hooks:
       - id: check-added-large-files
+        # Vendored, minified third-party JS bundles (Plotly, ECharts) and
+        # packaged fonts are legitimately large build/vendor assets.
+        exclude: '^(multiqc/templates/.*/assets/js/packages/.*\.min\.js|multiqc/plots/echarts/fonts/.*)$'
       - id: check-merge-conflict
       - id: debug-statements
 
@@ -23,6 +26,10 @@ repos:
     rev: "v3.7.4"
     hooks:
       - id: prettier
+        # templates' head.html mixes Jinja {% raw %} with a JSON blob that
+        # prettier-plugin-jinja-template cannot parse (the default template's
+        # head.html has the same structure); exclude it from prettier.
+        exclude: '^multiqc/templates/.*/head\.html$'
         additional_dependencies:
           - prettier@3.7.4
           - prettier-plugin-jinja-template@2.1.0

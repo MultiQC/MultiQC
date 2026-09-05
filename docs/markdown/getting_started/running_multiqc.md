@@ -191,8 +191,8 @@ as `.png`, `.svg` and `.pdf` files. Raw data for the plots are also saved to fil
 You can instruct MultiQC to always do this by setting the `export_plots` config
 option to `true`, though note that this will add a few seconds on to execution time.
 The `plots_dir_name` changes the default directory name for plots and the
-`export_plot_formats` specifies what file formats should be created (must be
-supported by Plotly).
+`export_plot_formats` specifies what file formats should be created (`png` and `svg`;
+`pdf` is not supported by the default ECharts engine).
 
 Note that not all plot types are yet supported, so you may find some plots are
 missing.

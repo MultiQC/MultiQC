@@ -1,13 +1,9 @@
-import json
-
 # Initialise the logger
 import logging
 from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.plots import linegraph
-from multiqc import report
-from multiqc.utils.material_icons import get_material_icon
+from multiqc.plots import linegraph, seqcontent
 
 from .util import average_from_range, average_pos_from_metric
 
@@ -98,10 +94,10 @@ class DragenContentMetrics(BaseMultiqcModule):
         )
 
     def sequence_content_plot(self):
-        """Create the epic HTML for the FastQC sequence content heatmap"""
+        """Create the sequence content heatmap for DRAGEN-FastQC"""
 
         # Prep the data
-        data = dict()
+        data: dict = dict()
         GROUP = "POSITIONAL BASE CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
@@ -109,62 +105,35 @@ class DragenContentMetrics(BaseMultiqcModule):
                 data[r_name] = dict()
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
 
-                totals = defaultdict(int)
+                totals: defaultdict = defaultdict(int)
                 for metric, value in group_data.items():
                     parts = metric.split()
-                    # avg_pos = average_from_range(parts[1])
-                    avg_pos = parts[1]
+                    pos = parts[1]
+                    # Normalize position labels the same way as fastqc's parser: a
+                    # single-position label arriving as a float (e.g. 1.0) becomes "1".
+                    label = str(int(pos)) if isinstance(pos, float) else str(pos)
                     base = parts[-2].lower()
 
-                    if avg_pos not in data[r_name]:
-                        data[r_name][avg_pos] = dict()
+                    if label not in data[r_name]:
+                        data[r_name][label] = dict()
 
                     # Store the current count and add it to the total
-                    data[r_name][avg_pos][base] = value
-                    totals[avg_pos] += value
+                    data[r_name][label][base] = value
+                    totals[label] += value
 
-                # Use the accumulated totals to normalize each bin to a percentage
+                # Use the accumulated totals to normalize each bin to a percentage.
+                # A base absent from a bin stays absent; seqcontent.create treats a
+                # missing base as 0.
                 for pos, total in totals.items():
                     if total == 0:
                         del data[r_name][pos]
                         continue
-                    for base in "acgt":
-                        try:
-                            data[r_name][pos][base] = (float(data[r_name][pos][base]) / float(total)) * 100.0
-                        except Exception:
-                            pass
-                    data[r_name][pos]["base"] = pos
+                    for base in list(data[r_name][pos].keys()):
+                        data[r_name][pos][base] = (float(data[r_name][pos][base]) / float(total)) * 100.0
 
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
             return None
-
-        html = """<div id="dragen_fastqc_per_base_sequence_content_plot_div">
-            <div class="alert alert-info">
-               {hand_icon} Click a sample row to see a line plot for that dataset.
-            </div>
-            <h5><span class="s_name text-primary">Rollover for sample name</span></h5>
-            <div class="fastqc_seq_heatmap_key">
-                Position: <span id="fastqc_seq_heatmap_key_pos">-</span>
-                <div><span id="fastqc_seq_heatmap_key_t"> %T: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_c"> %C: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_a"> %A: <span>-</span></span></div>
-                <div><span id="fastqc_seq_heatmap_key_g"> %G: <span>-</span></span></div>
-            </div>
-            <div id="fastqc_seq_heatmap_div" class="fastqc-overlay-plot">
-                <div id="{id}" class="dragen_fastqc_per_base_sequence_content_plot hc-plot has-custom-export">
-                    <canvas id="fastqc_seq_heatmap" height="100%" width="800px" style="width:100%;"></canvas>
-                </div>
-            </div>
-            <div class="clearfix"></div>
-        </div>
-        <script type="application/json" class="fastqc_seq_content">{d}</script>
-        """.format(
-            # Generate unique plot ID, needed in mqc_export_selectplots
-            id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data]),
-            hand_icon=get_material_icon("mdi:hand-pointing-up", 16),
-        )
 
         self.add_section(
             name="Per-Position Sequence Content",
@@ -194,7 +163,13 @@ class DragenContentMetrics(BaseMultiqcModule):
             by trimming and in most cases doesn't seem to adversely affect the downstream
             analysis._
             """,
-            content=html,
+            plot=seqcontent.plot(
+                data,
+                {
+                    "id": "dragen_fastqc_per_base_sequence_content_plot",
+                    "title": "DRAGEN-QC: Per-Position Sequence Content",
+                },
+            ),
         )
 
     def adapter_content_plot(self):

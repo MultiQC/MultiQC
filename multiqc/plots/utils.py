@@ -11,7 +11,7 @@ from packaging import version
 logger = logging.getLogger(__name__)
 
 
-LATEST_SUPPORTED = "5.17"
+LATEST_SUPPORTED = "6.1"
 
 
 def check_plotly_version():

@@ -10,7 +10,7 @@ A child theme of 'default' - experimental / testing template.
 import os
 import importlib
 
-template_parent = "default"
+template_parent = "plotly"
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
 

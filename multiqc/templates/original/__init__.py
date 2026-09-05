@@ -20,3 +20,6 @@ import os
 
 template_dir = os.path.dirname(__file__)
 base_fn = "base.html"
+
+# Template configuration - overrides user config
+plotting_engine = "plotly"

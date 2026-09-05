@@ -23,6 +23,7 @@ from multiqc.plots.heatmap import HeatmapNormalizedInputData, HeatmapPlot
 from multiqc.plots.linegraph import LinePlot, LinePlotNormalizedInputData
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.scatter import ScatterNormalizedInputData, ScatterPlot
+from multiqc.plots.seqcontent import SeqContentNormalizedInputData, SeqContentPlot
 from multiqc.plots.violin import ViolinPlot, ViolinPlotInputData
 from multiqc.types import Anchor, PlotType
 
@@ -63,6 +64,8 @@ def create_plot_input_data_only(plot_input_data_dict: Dict) -> NormalizedPlotInp
         plot_input = BoxPlotInputData(**processed_dict)
     elif plot_type == PlotType.HEATMAP:
         plot_input = HeatmapNormalizedInputData(**processed_dict)
+    elif plot_type == PlotType.SEQCONTENT:
+        plot_input = SeqContentNormalizedInputData(**processed_dict)
     elif plot_type == PlotType.VIOLIN or plot_type == PlotType.TABLE:
         plot_input = ViolinPlotInputData(**processed_dict)
     elif plot_type == PlotType.SCATTER:
@@ -101,6 +104,10 @@ def create_plot_from_input_data(plot_input: NormalizedPlotInputData) -> Union[Pl
         from multiqc.plots.heatmap import HeatmapPlot
 
         return HeatmapPlot.from_inputs(cast(HeatmapNormalizedInputData, plot_input))
+    elif plot_input.plot_type == PlotType.SEQCONTENT:
+        from multiqc.plots.seqcontent import SeqContentPlot
+
+        return SeqContentPlot.from_inputs(cast(SeqContentNormalizedInputData, plot_input))
     else:
         log.warning(f"Unknown plot type {plot_input.plot_type}, cannot create plot object")
         return None

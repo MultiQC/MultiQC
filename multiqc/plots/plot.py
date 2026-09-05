@@ -1,17 +1,13 @@
 import base64
-import io
 import json
 import logging
 import math
-import multiprocessing
-import platform
 import random
 import re
-import subprocess
 from datetime import datetime
-from functools import lru_cache
 from pathlib import Path
 from typing import (
+    TYPE_CHECKING,
     Any,
     Dict,
     Generic,
@@ -26,23 +22,47 @@ from typing import (
     cast,
 )
 
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
-from multiqc.core.log_and_rich import init_log, iterate_using_progress_bar
 from multiqc.core.strict_helpers import lint_error
-from multiqc.plots.utils import check_plotly_version
+from multiqc.plots.layout import AxisIR, LayoutIR, deep_merge
 from multiqc.types import Anchor, ColumnKey, PlotType, SampleName
 from multiqc.utils import mqc_colour
 from multiqc.utils.material_icons import get_material_icon
 from multiqc.validation import ValidatedConfig, add_validation_warning
 
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
+
 logger = logging.getLogger(__name__)
 
-check_plotly_version()
+# Plotly is an optional dependency: it is imported lazily, inside the functions that build
+# figures (the Plotly rendering/notebook path), never at module import. `check_plotly_version`
+# runs once on first use via `_ensure_plotly`. A default (ECharts) install has no Plotly.
+_plotly_checked = False
+
+
+def _ensure_plotly() -> None:
+    """Verify Plotly is installed and version-compatible before the Plotly path runs.
+    Raises ImportError (not sys.exit) when Plotly is absent, so callers such as
+    Plot.show() can catch it and fall back to the ECharts static renderer."""
+    global _plotly_checked
+    if _plotly_checked:
+        return
+    try:
+        import plotly  # noqa: F401
+    except ImportError as e:
+        raise ImportError(
+            "Plotly is not installed. Install it with: pip install 'multiqc[plotly]', "
+            "or use the default ECharts plotting engine."
+        ) from e
+    from multiqc.plots.utils import check_plotly_version
+
+    check_plotly_version()
+    _plotly_checked = True
 
 
 def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
@@ -61,6 +81,7 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
         PlotType.BOX: "boxes",
         PlotType.SCATTER: "points",
         PlotType.HEATMAP: "samples",  # heatmaps typically show samples
+        PlotType.SEQCONTENT: "samples",  # seqcontent heatmap rows are samples
         PlotType.VIOLIN: "samples",  # violins keep the default "samples"
     }
 
@@ -72,6 +93,8 @@ def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> st
 # JavaScript in plotting.js will override colors for dark mode
 def get_multiqc_plotly_template():
     """Get the MultiQC Plotly template with runtime config values."""
+    import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
     return dict(
         layout=go.Layout(
             paper_bgcolor="rgba(0,0,0,0)",  # transparent for HTML report
@@ -433,11 +456,11 @@ class BaseDataset(BaseModel):
 
     def create_figure(
         self,
-        layout: go.Layout,
+        layout: "go.Layout",
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Abstract method to be overridden by specific plots: create a Plotly figure for a dataset, update layout if needed.
         """
@@ -660,7 +683,12 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     id: str
     anchor: Anchor  # unlike id, has to be unique
     plot_type: PlotType
-    layout: go.Layout
+    layout: LayoutIR
+    # Plotly-only layout keys a module contributes on top of the neutral IR (hover styling,
+    # legend geometry, tick arrays, gridlines): a plain plotly-json dict, so building it needs
+    # no Plotly import. `to_plotly_layout` replays it onto `ir_to_layout(self.layout)`, exactly
+    # reproducing the go.Layout modules used to mutate. ECharts ignores it (reads only the IR).
+    plotly_layout_extra: Dict[str, Any] = Field(default_factory=dict)
     datasets: List[DatasetT]
     pconfig: PConfigT
     add_log_tab: bool
@@ -681,17 +709,72 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         use_enum_values=True,
     )
 
-    @field_serializer("layout")
-    def serialize_dt(self, layout: go.Layout, _info):
-        return layout.to_plotly_json()
-
     # noinspection PyNestedDecorators
     @field_validator("layout", mode="before")
     @classmethod
     def parse_layout(cls, d: Any):
         if isinstance(d, dict):
-            return go.Layout(**d)
+            return LayoutIR(**d)
         return d
+
+    @property
+    def layout_ir(self) -> LayoutIR:
+        """
+        The plot's shared layout as the neutral, backend-agnostic `LayoutIR`, the seam the
+        ECharts backend reads. `Plot.layout` is already a `LayoutIR`; this alias keeps the
+        ECharts call sites stable. Per-dataset overrides (`BaseDataset.layout`) are applied
+        by the caller via `LayoutIR.from_dataset_layout` + `merged_with`.
+        """
+        return self.layout
+
+    _IR_TOP_FIELDS = ("height", "width", "showlegend", "barmode")
+
+    def set_plotly_layout(self, **kwargs: Any) -> None:
+        """
+        Record a module's layout contribution. Every key is stored verbatim in
+        `plotly_layout_extra` (the plotly-json a module used to `layout.update(...)`), so
+        `to_plotly_layout` reproduces the old `go.Layout` byte-for-byte. The neutral fields
+        the ECharts backend reads from the shared layout (height/width/showlegend/barmode
+        and the per-axis title/type/ticksuffix/range) are additionally mirrored onto the IR.
+        """
+        for key, value in kwargs.items():
+            if key in self._IR_TOP_FIELDS:
+                setattr(self.layout, key, value)
+            elif key in ("xaxis", "yaxis") and isinstance(value, dict):
+                self._mirror_axis(getattr(self.layout, key), value)
+            deep_merge(self.plotly_layout_extra, {key: value})
+
+    @staticmethod
+    def _mirror_axis(axis_ir: "AxisIR", d: Dict[str, Any]) -> None:
+        if "title" in d:
+            title = d["title"]
+            axis_ir.title = title.get("text") if isinstance(title, dict) else title
+        if d.get("type") in ("linear", "log", "category"):
+            axis_ir.type = d["type"]
+        if "ticksuffix" in d and d["ticksuffix"] is not None:
+            axis_ir.ticksuffix = d["ticksuffix"]
+        if d.get("tickformat") is not None:
+            axis_ir.tickformat = d["tickformat"]
+        if d.get("range") is not None:
+            axis_ir.range = (d["range"][0], d["range"][1])
+        auto = d.get("autorangeoptions")
+        if isinstance(auto, dict):
+            if auto.get("minallowed") is not None:
+                axis_ir.minallowed = auto["minallowed"]
+            if auto.get("maxallowed") is not None:
+                axis_ir.maxallowed = auto["maxallowed"]
+
+    def to_plotly_layout(self, *, flat: bool = False) -> "go.Layout":
+        """
+        Reassemble the Plotly `go.Layout`: the neutral base from `ir_to_layout(self.layout)`
+        with the module's `plotly_layout_extra` replayed on top. This is what the browser
+        Plotly renderer and the static/notebook figure path consume; it reproduces the
+        go.Layout that modules mutated in place before the IR migration.
+        """
+        _ensure_plotly()
+        from multiqc.plots.plotly import ir_to_layout
+
+        return ir_to_layout(self.layout, flat=flat, extra=self.plotly_layout_extra or None)
 
     def __init__(self, **data):
         super().__init__(**data)
@@ -775,45 +858,14 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if showlegend is None:
             showlegend = True if flat else False
 
-        # Use the MultiQC template with runtime config values
-        template = go.layout.Template(get_multiqc_plotly_template())
-
-        layout: go.Layout = go.Layout(
-            template=template,
-            title=go.layout.Title(
-                text=pconfig.title,
-                xanchor="center",
-                x=0.5,
-            ),
-            xaxis=go.layout.XAxis(
-                automargin=True,  # auto-expand axis to fit the tick labels
-            ),
-            yaxis=go.layout.YAxis(
-                automargin=True,  # auto-expand axis to fit the tick labels
-            ),
+        # The neutral base layout. The fixed Plotly styling (template, margins, hover label,
+        # automargined axes, flat-legend) is owned by the Plotly backend's `ir_to_layout`;
+        # per-module Plotly extras are recorded via `Plot.set_plotly_layout` in each module.
+        layout = LayoutIR(
+            title=pconfig.title,
             height=height,
             width=width,
-            autosize=True,
-            margin=go.layout.Margin(
-                pad=5,  # pad sample names in a bar graph a bit
-                t=50,  # more compact title
-                r=15,  # remove excessive whitespace on the right
-                b=65,  # remove excessive whitespace on the bottom
-                l=60,  # remove excessive whitespace on the left
-            ),
-            hoverlabel=go.layout.Hoverlabel(
-                namelength=-1,  # do not crop sample names inside hover label <extra></extra>
-            ),
             showlegend=showlegend,
-            legend=go.layout.Legend(
-                orientation="h",
-                yanchor="top",
-                y=-0.15,
-                xanchor="center",
-                x=0.5,
-            )
-            if flat
-            else None,
         )
 
         # Layout update for the counts/percentage switch
@@ -824,16 +876,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
         axis_controlled_by_switches = axis_controlled_by_switches or []
         if pconfig.xlog:
-            _set_axis_log_scale(layout.xaxis)
+            layout.xaxis.type = "log"
             if "xaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("xaxis")
         if pconfig.ylog:
-            _set_axis_log_scale(layout.yaxis)
+            layout.yaxis.type = "log"
             if "yaxis" in axis_controlled_by_switches:
                 axis_controlled_by_switches.remove("yaxis")
         if add_log_tab and l_active:
             for axis in axis_controlled_by_switches:
-                layout[axis].type = "log"
+                getattr(layout, axis).type = "log"
 
         datasets = []
         for idx, n_series in enumerate(n_series_per_dataset):
@@ -1060,34 +1112,81 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if new_shapes:
                 dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
 
+    def _dataset_index(self, dataset_id: Union[int, str]) -> int:
+        if isinstance(dataset_id, int):
+            return dataset_id
+        for i, d in enumerate(self.datasets):
+            if d.label == dataset_id:
+                return i
+        return 0
+
+    def _echarts_static_image(self, dataset_id: Union[int, str], fmt: str = "png") -> Union[bytes, str]:
+        """
+        Render one dataset to a static image via the ECharts SSR path (mini-racer + resvg),
+        the same engine the report flat/export uses. `fmt` is "png" (bytes) or "svg" (str).
+        This is how the notebook API produces flat images now that the Plotly static path is gone.
+        """
+        from multiqc.plots import echarts
+        from multiqc.plots.echarts import static_export
+
+        ds_idx = self._dataset_index(dataset_id)
+        option = echarts.get_option(self, ds_idx, is_log=self.l_active, is_pct=self.p_active)
+        width = 600 if config.simple_output else 1100
+        height = static_export._dataset_height(self, self.datasets[ds_idx])
+        svg = static_export.render_svg(option, width, height)
+        return svg if fmt == "svg" else static_export.svg_to_png(svg)
+
+    def _echarts_interactive_html(self, dataset_id: Union[int, str]) -> str:
+        """
+        Build a self-contained interactive ECharts HTML fragment for one dataset: the same
+        engine (option + browser bundle) the report itself renders when
+        `config.plotting_engine == "echarts"`. Used by `show()`/`save()` so a notebook
+        matches the report engine instead of always rendering Plotly.
+        """
+        from multiqc.plots.echarts import static_export
+
+        ds_idx = self._dataset_index(dataset_id)
+        return static_export.interactive_html(self, ds_idx)
+
     def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 
-        @param dataset_id: index of the dataset to plot
-        @param flat: whether to save a flat image or an interactive plot
-        """
-        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
-        if flat:
-            try:
-                from IPython.core.display import HTML  # type: ignore
-            except ImportError:
-                raise ImportError(
-                    "IPython is required to show plot. The function is expected to be run in an interactive environment, "
-                    "such as Jupyter notebook. To save plot to file, use Plot.save method"
-                )
+        With `flat=False`, the interactive figure matches the engine the report itself uses
+        (`config.plotting_engine`): a live ECharts chart when the engine is "echarts" (the
+        default), or a live Plotly figure when it is "plotly" (falling back to a static
+        ECharts image below if Plotly is not installed). With `flat=True`, always returns a
+        static image rendered by the ECharts SSR engine, regardless of `config.plotting_engine`.
 
-            return HTML(
-                fig_to_static_html(
-                    fig,
-                    active=True,
-                    embed_in_html=True,
-                    export_plots=False,
-                    file_name=self.id,
-                )
+        @param dataset_id: index of the dataset to plot
+        @param flat: whether to show a flat image or an interactive plot
+        """
+        if not flat:
+            if config.plotting_engine == "echarts":
+                try:
+                    from IPython.core.display import HTML  # type: ignore
+                except ImportError:
+                    raise ImportError(
+                        "IPython is required to show plot. The function is expected to be run in an interactive "
+                        "environment, such as Jupyter notebook. To save plot to file, use Plot.save method"
+                    )
+                return HTML(self._echarts_interactive_html(dataset_id))
+            try:
+                return self.get_figure(dataset_id=dataset_id, **kwargs)
+            except ImportError:
+                pass  # Plotly not installed: fall back to a static ECharts image below.
+
+        try:
+            from IPython.core.display import HTML  # type: ignore
+        except ImportError:
+            raise ImportError(
+                "IPython is required to show plot. The function is expected to be run in an interactive environment, "
+                "such as Jupyter notebook. To save plot to file, use Plot.save method"
             )
-        else:
-            return fig
+
+        png = self._echarts_static_image(dataset_id, fmt="png")
+        b64 = base64.b64encode(cast(bytes, png)).decode()
+        return HTML(f'<img src="data:image/png;base64,{b64}"/>')
 
     @staticmethod
     def _proc_save_args(filename: str, flat: Optional[bool]) -> Tuple[str, bool]:
@@ -1107,6 +1206,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
 
+        The interactive HTML matches the engine the report itself uses
+        (`config.plotting_engine`): a self-contained ECharts chart when the engine is
+        "echarts" (the default), or a Plotly figure when it is "plotly".
+
         @param filename: a string representing a local file path or a writeable object
         (e.g. a pathlib.Path object or an open file descriptor). If the filename ends with ".html",
         an interactive plot will be saved, otherwise a flat image.
@@ -1115,15 +1218,28 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         """
         filename, flat = self._proc_save_args(filename, flat)
 
-        fig = self.get_figure(dataset_id=dataset_id, flat=flat, **kwargs)
         if flat:
-            fig.write_image(
-                filename,
-                scale=2,
-                width=fig.layout.width,
-                height=fig.layout.height,
-            )
+            # Static images are rendered by the ECharts SSR engine. `filename` may be a
+            # writeable object (matching the interactive branch below); infer the format
+            # from its `.name` when it has one, else default to PNG.
+            name = getattr(filename, "name", "") if hasattr(filename, "write") else filename
+            fmt = "svg" if Path(name).suffix.lower() == ".svg" else "png"
+            image = self._echarts_static_image(dataset_id, fmt=fmt)
+            if hasattr(filename, "write"):
+                filename.write(image)
+            elif fmt == "svg":
+                Path(filename).write_text(cast(str, image))
+            else:
+                Path(filename).write_bytes(cast(bytes, image))
+        elif config.plotting_engine == "echarts":
+            html = self._echarts_interactive_html(dataset_id)
+            if hasattr(filename, "write"):
+                filename.write(html)
+            else:
+                Path(filename).write_text(html, encoding="utf-8")
         else:
+            # Interactive HTML goes through Plotly (requires the optional dependency).
+            fig = self.get_figure(dataset_id=dataset_id, flat=False, **kwargs)
             fig.write_html(
                 filename,
                 include_plotlyjs="cdn",
@@ -1138,7 +1254,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         is_pct: bool = False,
         flat: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Public method: create a Plotly Figure object.
         """
@@ -1152,7 +1268,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         else:
             dataset = self.datasets[dataset_id]
 
-        layout = go.Layout(self.layout.to_plotly_json())  # make a copy
+        layout = self.to_plotly_layout(flat=flat)  # reassemble go.Layout from the neutral IR
         layout.update(**dataset.layout)
         if flat:
             if config.simple_output:
@@ -1217,9 +1333,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 ds.uid = report.save_htmlid(f"{self.id}_{ds.label}", skiplint=True)
 
         if self.flat:
-            if is_running_under_rosetta():
-                # Kaleido is unstable under rosetta, falling back to interactive plots
-                return self.interactive_plot(module_anchor, section_anchor)
             try:
                 html = self.flat_plot(
                     module_anchor=module_anchor,
@@ -1233,7 +1346,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 html = self.interactive_plot(module_anchor, section_anchor)
         else:
             html = self.interactive_plot(module_anchor, section_anchor)
-            if config.export_plots and not is_running_under_rosetta():
+            if config.export_plots:
                 try:
                     self.flat_plot(
                         module_anchor=module_anchor,
@@ -1274,7 +1387,16 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         html += "</div>"
 
         # Saving compressed data for JavaScript to pick up and uncompress.
-        report.plot_data[self.anchor] = self.model_dump(warnings=False)
+        dump = self.model_dump(warnings=False)
+        if config.plotting_engine == "echarts":
+            from multiqc.plots import echarts  # lazy: avoids a circular import, see multiqc/plots/echarts/__init__.py
+
+            dump["echarts"] = echarts.serialize(self)
+        else:
+            # The Plotly-JS renderer consumes dump["layout"] as a full plotly-json layout;
+            # model_dump serialized the neutral IR, so reassemble the go.Layout here.
+            dump["layout"] = self.to_plotly_layout(flat=self.flat).to_plotly_json()
+        report.plot_data[self.anchor] = dump
         return html
 
     def flat_plot(
@@ -1303,58 +1425,17 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         if not config.simple_output:
             html += self.__control_panel(flat=True, module_anchor=module_anchor, section_anchor=section_anchor)
 
-        # Collect all figures that need to be exported
-        figures_to_export = []
-        for ds_idx, dataset in enumerate(self.datasets):
-            figures_to_export.append(
-                (
-                    self.get_figure(ds_idx, flat=True),
-                    ds_idx == 0 and not self.p_active and not self.l_active,
-                    dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
-                    embed_in_html,
-                    plots_dir_name,
-                )
-            )
-            if self.add_pct_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_pct=True, flat=True),
-                        ds_idx == 0 and self.p_active,
-                        f"{dataset.uid}-pct",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
-            if self.add_log_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_log=True, flat=True),
-                        ds_idx == 0 and self.l_active,
-                        f"{dataset.uid}-log",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
-            if self.add_pct_tab and self.add_log_tab:
-                figures_to_export.append(
-                    (
-                        self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
-                        ds_idx == 0 and self.p_active and self.l_active,
-                        f"{dataset.uid}-pct-log",
-                        embed_in_html,
-                        plots_dir_name,
-                    )
-                )
+        if config.plotting_engine == "echarts":
+            from multiqc.plots.echarts import static_export  # lazy: avoids a circular import
 
-        # Add all figures to HTML
-        for fig, active, file_name, embed_in_html, plots_dir_name in figures_to_export:
-            html += fig_to_static_html(
-                fig,
-                active=active,
-                file_name=file_name,
-                plots_dir_name=plots_dir_name,
-                embed_in_html=embed_in_html,
-                batch_processing=True,
+            html += static_export.flat_plot_html(self, embed_in_html, plots_dir_name)
+        else:
+            # The Plotly engine renders interactive plots only: static/flat image export was
+            # the Plotly static-image path, which has been removed. `add_to_report` catches this and
+            # falls back to the interactive plot (raising instead under strict mode).
+            raise ValueError(
+                "The Plotly plotting engine cannot export static (flat) images: that path has "
+                "been removed. Use the ECharts engine (the default) for flat image export."
             )
 
         html += "</div>"
@@ -1490,399 +1571,6 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         buttons = "\n".join(self.buttons(flat=flat, module_anchor=module_anchor, section_anchor=section_anchor))
         html = f"<div class='row' style='align-items: center;'>\n<div class='col-12'>\n{buttons}\n</div>\n</div>\n\n"
         return html
-
-
-class ExportProcess(multiprocessing.Process):
-    def __init__(self, fig, plot_path, write_kwargs):
-        super().__init__()
-        self.fig = fig
-        self.plot_path = plot_path
-        self.write_kwargs = write_kwargs
-        self.exception = None
-
-    def run(self):
-        try:
-            self.fig.write_image(self.plot_path, **self.write_kwargs)
-        except Exception as e:
-            self.exception = e
-
-
-class BatchExportProcess(multiprocessing.Process):
-    def __init__(self, export_tasks):
-        """
-        Initialize a batch export process with multiple tasks
-
-        Args:
-            export_tasks: List of tuples (fig, plot_path, write_kwargs)
-        """
-        super().__init__()
-        self.export_tasks = export_tasks
-
-    def run(self):
-        def update_fn(_, item):
-            fig, plot_path, write_kwargs = item
-            try:
-                fig.write_image(plot_path, **write_kwargs)
-            except Exception as e:
-                logger.error(f"Error exporting plot to {plot_path}: {e}")
-
-        def item_to_str_fn(item) -> str:
-            _, plot_path, _ = item
-            return str(plot_path)
-
-        init_log()
-
-        iterate_using_progress_bar(
-            items=self.export_tasks,
-            update_fn=update_fn,
-            item_to_str_fn=item_to_str_fn,
-            desc="Exporting plots",
-        )
-
-
-def _batch_export_plots(export_tasks, timeout=None):
-    """Export multiple plotly figures to files in a single process.
-
-    Args:
-        export_tasks: List of tuples (fig, plot_path, write_kwargs)
-        timeout: Timeout in seconds, default from config
-
-    Returns:
-        Set of indexes for successfully exported plots
-    """
-    # Default timeout from config
-    if timeout is None:
-        timeout = config.export_plots_timeout
-
-    # Start the export in a separate process
-    export_process = BatchExportProcess(export_tasks)
-    export_process.start()
-    export_process.join(timeout)
-
-    completed_tasks = set()
-
-    if export_process.is_alive():
-        # Check which files were actually written
-        for idx, (_, plot_path, _) in enumerate(export_tasks):
-            if plot_path.exists() and plot_path.stat().st_size > 0:
-                completed_tasks.add(idx)
-
-        # If process is still running after timeout, log warning and continue
-        logger.warning(
-            f"Batch plot export timed out after {timeout}s. "
-            f"Only {len(completed_tasks)} of {len(export_tasks)} plots were exported. "
-            "This is likely due to a known issue in Kaleido. "
-            "The remaining plots will be skipped but the report will continue to generate."
-        )
-        # Kill the process
-        export_process.terminate()
-        return completed_tasks
-
-    # Verify which files were actually written
-    for idx, (_, plot_path, _) in enumerate(export_tasks):
-        if plot_path.exists() and plot_path.stat().st_size > 0:
-            completed_tasks.add(idx)
-    if len(completed_tasks) < len(export_tasks):
-        logger.warning(
-            f"Some plot exports failed or produced empty files: {len(completed_tasks)}/{len(export_tasks)} completed"
-        )
-
-    return completed_tasks
-
-
-def _prepare_figure_for_export(fig):
-    """
-    Prepare a figure for export by ensuring it has solid backgrounds.
-    Only modifies transparent backgrounds - preserves custom theme backgrounds.
-
-    Plots use transparent backgrounds by default to adapt to page themes in HTML,
-    but exports need solid backgrounds for readability.
-    """
-    # Create a copy to avoid modifying the original figure used in HTML
-    fig_copy = go.Figure(fig)
-
-    # Helper function to check if a color is transparent
-    def is_transparent(color):
-        if color is None:
-            return True
-        color_str = str(color).lower()
-        # Check for transparent rgba values
-        return color_str.startswith("rgba(") and ",0)" in color_str.replace(" ", "")
-
-    # Only change background if it's transparent
-    if is_transparent(fig_copy.layout.paper_bgcolor):
-        fig_copy.update_layout(paper_bgcolor="white")
-
-    if is_transparent(fig_copy.layout.plot_bgcolor):
-        fig_copy.update_layout(plot_bgcolor="white")
-
-    return fig_copy
-
-
-def _export_plot(fig, plot_path, write_kwargs):
-    """Export a plotly figure to a file."""
-
-    # Prepare figure with solid backgrounds for export (only if currently transparent)
-    fig = _prepare_figure_for_export(fig)
-
-    timeout = config.export_plots_timeout
-
-    # Start the export in a separate process
-    export_process = ExportProcess(fig, plot_path, write_kwargs)
-    export_process.start()
-    export_process.join(timeout)
-
-    if export_process.is_alive():
-        # If process is still running after timeout, log warning and continue
-        logger.warning(
-            f"Plot export timed out after {timeout}s: {plot_path}. "
-            "This is likely due to a known issue in Kaleido. "
-            "The plot will be skipped but the report will continue to generate."
-        )
-        # Kill the process
-        export_process.terminate()
-        return False
-    if export_process.exception:
-        # If there was an exception in the process, log it
-        logger.error(f"Error exporting plot to {plot_path}: {export_process.exception}")
-        return False
-
-    return True
-
-
-def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
-    try:
-        # Prepare figure with solid backgrounds for export (only if currently transparent)
-        fig = _prepare_figure_for_export(fig)
-
-        img_buffer = io.BytesIO()
-        fig.write_image(img_buffer, **write_kwargs)
-        img_buffer = add_logo(img_buffer, format="PNG")
-        # Convert to a base64 encoded string
-        b64_img = base64.b64encode(img_buffer.getvalue()).decode("utf8")
-        img_src = f"data:image/png;base64,{b64_img}"
-        img_buffer.close()
-    except Exception as e:
-        logger.error(f"Unable to export PNG figure to static image: {e}")
-        return None
-    else:
-        return img_src
-
-
-plot_export_has_failed: bool = False
-
-
-# Collect plot exports for batch processing
-_plot_export_batch: List[Tuple[go.Figure, Path, Dict]] = []
-_plot_export_batch_results: Dict[int, bool] = {}  # Mapping of plot_path to success status
-
-
-def fig_to_static_html(
-    fig: go.Figure,
-    active: bool = True,
-    export_plots: Optional[bool] = None,
-    embed_in_html: Optional[bool] = None,
-    plots_dir_name: Optional[str] = None,
-    file_name: Optional[str] = None,
-    batch_processing: bool = True,
-) -> str:
-    """
-    Build one static image, return an HTML wrapper.
-
-    Args:
-        fig: Plotly figure
-        active: Whether the plot should be visible initially
-        export_plots: Whether to export plots (default from config)
-        embed_in_html: Whether to embed plots in HTML (default not in development)
-        plots_dir_name: Directory for exported plots
-        file_name: File name for the plot
-        batch_processing: Whether to use batch processing for exports
-    """
-    global _plot_export_batch, _plot_export_batch_results, plot_export_has_failed
-
-    if is_running_under_rosetta():
-        raise ValueError(
-            "Detected Rosetta process, meaning running in an x86_64 container hosted by Apple Silicon. "
-            "Plot export is unstable and will be skipped"
-        )
-
-    if plot_export_has_failed:
-        raise ValueError("Could not previously export a plots, so won't try again")
-
-    embed_in_html = embed_in_html if embed_in_html is not None else not config.development
-    export_plots = export_plots if export_plots is not None else config.export_plots
-
-    assert fig.layout.width
-    scale = 2.0  # higher detail (to look sharp on the retina display)
-    scale *= config.plots_export_font_scale  # bigger font if configured in the settings
-    write_kwargs = dict(
-        width=fig.layout.width / config.plots_export_font_scale,  # While interactive plots take full width of screen,
-        # for the flat plots we explicitly set width
-        height=fig.layout.height / config.plots_export_font_scale,
-        scale=scale,  # higher detail (retina display)
-    )
-
-    formats = set(config.export_plot_formats) if export_plots else set()
-    if not embed_in_html and "png" not in formats:
-        if not export_plots:
-            formats = {"png"}
-        else:
-            formats.add("png")
-
-    # Save the plot to the data directory if export is requested
-    png_is_written = False
-    tasks_added = []  # Track tasks added for this figure
-
-    if formats:
-        if file_name is None:
-            raise ValueError("file_name is required for export_plots")
-        for file_ext in formats:
-            plot_path = tmp_dir.plots_tmp_dir() / file_ext / f"{file_name}.{file_ext}"
-            plot_path.parent.mkdir(parents=True, exist_ok=True)
-
-            # Add to batch if using batch processing
-            if batch_processing:
-                # Prepare figure with solid backgrounds for export (only if currently transparent)
-                fig_for_export = _prepare_figure_for_export(fig)
-                task_idx = len(_plot_export_batch)
-                _plot_export_batch.append((fig_for_export, plot_path, write_kwargs))
-                tasks_added.append((task_idx, plot_path, file_ext))
-
-                # If we're using batch processing, we'll assume the PNG will be written by the batch process
-                # Since we check that png_is_written below, we need to make it True for batch processing
-                if file_ext == "png" and not embed_in_html:
-                    png_is_written = True
-            else:
-                try:
-                    if not plot_export_has_failed:
-                        # Running for the first time, so doing a safe run in a subprocess to find out if it freezes the process or not
-                        export_success = _export_plot(fig, plot_path, write_kwargs)
-                        if not export_success:
-                            plot_export_has_failed = True
-                            raise ValueError(f"Failed to export plot to {file_ext.upper()} image")
-                except Exception as e:
-                    msg = f"{file_name}: Unable to export plot to {file_ext.upper()} image"
-                    logger.error(f"{msg}. {e}")
-                    plot_export_has_failed = True
-                    raise ValueError(msg)  # Raising to the caller to fall back to interactive plots
-                else:
-                    if file_ext == "png":
-                        png_is_written = True
-
-    # Now writing the PNGs for the HTML
-    if not embed_in_html:
-        if file_name is None:
-            raise ValueError("file_name is required for non-embedded plots")
-        if plots_dir_name is None:
-            raise ValueError("plots_dir_name is required for non-embedded plots")
-
-        # Using file written in the config.export_plots block above
-        img_path = Path(plots_dir_name) / "png" / f"{file_name}.png"
-        if not png_is_written:  # Could not write in the block above
-            raise ValueError(f"Unable to export plot to PNG image {file_name}")
-        img_src = str(img_path)
-    else:
-        _img_src = _export_plot_to_buffer(fig, write_kwargs)
-        if _img_src is None:
-            raise ValueError("Unable to export PNG figure to static image")
-        img_src = _img_src
-
-    # Should this plot be hidden on report load?
-    style = "" if active else "display:none;"
-    return "".join(
-        [
-            f'<div class="mqc_mplplot" style="{style}" id="{file_name}">',
-            f'<img src="{img_src}" height="{fig.layout.height}px" width="{fig.layout.width}px"/>',
-            "</div>",
-        ]
-    )
-
-
-def process_batch_exports():
-    """Process all batched exports in a single process"""
-    global _plot_export_batch, _plot_export_batch_results, plot_export_has_failed
-
-    if not _plot_export_batch:
-        return
-
-    try:
-        # Process all exports in a single process
-        completed_indexes = _batch_export_plots(_plot_export_batch)
-
-        # Record results
-        for idx in range(len(_plot_export_batch)):
-            _plot_export_batch_results[idx] = idx in completed_indexes
-
-        # Check if any exports failed
-        if len(completed_indexes) < len(_plot_export_batch):
-            logger.warning(f"Some plot exports failed: {len(completed_indexes)}/{len(_plot_export_batch)} completed")
-
-            # Check specifically for PNG failures
-            png_failures = []
-            for idx in range(len(_plot_export_batch)):
-                if idx not in completed_indexes:
-                    _, plot_path, _ = _plot_export_batch[idx]
-                    if plot_path.suffix.lower() == ".png":
-                        png_failures.append(str(plot_path))
-
-            if png_failures:
-                logger.error(f"Failed to export the following PNG images: {', '.join(png_failures)}")
-    except Exception as e:
-        logger.error(f"Error during batch export: {e}")
-        plot_export_has_failed = True
-
-    # Clear the batch
-    _plot_export_batch = []
-    _plot_export_batch_results = {}
-
-
-def add_logo(
-    img_buffer: io.BytesIO,
-    format: str = "png",
-    text: str = "Created with MultiQC",
-    font_size: int = 16,
-) -> io.BytesIO:
-    try:
-        from PIL import Image, ImageDraw
-
-        # Load the image from the BytesIO object
-        image = Image.open(img_buffer)
-
-        # Create a drawing context
-        draw = ImageDraw.Draw(image)
-
-        # Define the text position. In order to do that, first calculate the expected
-        # text block width, given the font size.
-        # noinspection PyArgumentList
-        text_width: float = draw.textlength(text, font_size=font_size)
-        position: Tuple[int, int] = (
-            image.width - int(text_width) - 3,
-            image.height - 30,
-        )
-
-        # Draw the text
-        draw.text(position, text, fill="#9f9f9f", font_size=font_size)
-
-        # Save the image to a BytesIO object
-        output_buffer = io.BytesIO()
-        image.save(output_buffer, format=format)
-        output_buffer.seek(0)
-
-    except Exception as e:
-        logger.warning(f"Failure adding logo to the plot: {e}")
-        output_buffer = img_buffer
-
-    return output_buffer
-
-
-def _set_axis_log_scale(axis):
-    axis.type = "log"
-    minval = axis.autorangeoptions["minallowed"]
-    maxval = axis.autorangeoptions["maxallowed"]
-    minval = math.log10(minval) if minval is not None and minval > 0 else None
-    maxval = math.log10(maxval) if maxval is not None and maxval > 0 else None
-    axis.autorangeoptions["minallowed"] = minval
-    axis.autorangeoptions["maxallowed"] = maxval
 
 
 def rename_deprecated_highcharts_keys(conf: Dict) -> Dict:
@@ -2099,40 +1787,3 @@ def convert_dash_style(dash_style: Optional[str], path_in_cfg: Tuple[str, ...]) 
     else:
         add_validation_warning(path_in_cfg, f"'{dash_style}' is not a valid dash style, using 'solid' instead")
         return "solid"
-
-
-ROSETTA_WARNING = (
-    "\n===========================\n"
-    "WARNING: Detected a Rosetta process, implying that MultiQC is running inside an x86_64 container, but hosted "
-    "by Apple Silicon.\n\nStatic plot export uses Kaleido - a tool that is unstable under conflicting architectures, so "
-    "MultiQC will not save static PNG/PDF/SVG plots to disk. If you still need those, please use a container with "
-    "a compatible architecture. The official Dockerhub image multiqc/multiqc:latest is available for both "
-    "platforms, and can be pulled with:\n\n"
-    "docker pull multiqc/multiqc:latest\n"
-    "==========================="
-)
-
-
-@lru_cache()
-def is_running_under_rosetta() -> bool:
-    """
-    Detect if running in an x86_64 container hosted by Apple Silicon. Kaleido often freezes in such containers:
-    https://github.com/MultiQC/MultiQC/issues/2667
-    https://github.com/MultiQC/MultiQC/issues/2812
-    https://github.com/MultiQC/MultiQC/issues/2867
-    So we have to know when to disable plot export and show a warning.
-    """
-    # If not x86_64 architecture, rosetta wouldn't be needed
-    if platform.machine() != "x86_64":
-        return False
-
-    # Check for Rosetta processes
-    try:
-        output = subprocess.check_output(["ps", "aux"], universal_newlines=True)
-        if "/run/rosetta/rosetta" in output:
-            logger.warning(ROSETTA_WARNING)
-            return True
-    except subprocess.CalledProcessError:
-        pass
-
-    return False

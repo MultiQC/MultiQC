@@ -2,10 +2,9 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
+from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from pydantic import Field
 
@@ -22,6 +21,9 @@ from multiqc.plots.plot import (
 )
 from multiqc.types import Anchor, SampleName
 from multiqc.utils.util_functions import scipy_hierarchy_leaves_list, scipy_hierarchy_linkage, scipy_pdist
+
+if TYPE_CHECKING:
+    import plotly.graph_objects as go  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -420,14 +422,16 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: Optional[go.Layout] = None,
+        layout: Optional["go.Layout"] = None,
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
-    ) -> go.Figure:
+    ) -> "go.Figure":
         """
         Create a Plotly figure for a dataset
         """
+        import plotly.graph_objects as go  # lazy: Plotly is an optional dependency
+
         return go.Figure(
             data=go.Heatmap(
                 z=self.rows,
@@ -539,7 +543,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             defer_render_if_large=False,  # We hide samples on large heatmaps, so no need to defer render
         )
 
-        model.layout.update(
+        model.set_plotly_layout(
             yaxis=dict(
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
                 type="category",
@@ -642,31 +646,32 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
 
         # logger.debug(f"Heatmap size: {width}x{height}, px per element: {x_px_per_elem:.2f}x{y_px_per_elem:.2f}")
 
+        # Plotly-only axis config accumulated into `plotly_layout_extra` (tick arrays,
+        # gridlines, reversed y): not part of the neutral IR.
+        x_extra: Dict[str, Any] = {}
+        y_extra: Dict[str, Any] = {}
         # For not very large datasets, making sure all ticks are displayed:
         if y_px_per_elem > 12:
-            model.layout.yaxis.tickmode = "array"
-            model.layout.yaxis.tickvals = list(range(num_rows))
-            model.layout.yaxis.ticktext = ycats
+            y_extra.update(tickmode="array", tickvals=list(range(num_rows)), ticktext=ycats)
         if x_px_per_elem > 18:
-            model.layout.xaxis.tickmode = "array"
-            model.layout.xaxis.tickvals = list(range(num_cols))
-            model.layout.xaxis.ticktext = xcats
+            x_extra.update(tickmode="array", tickvals=list(range(num_cols)), ticktext=xcats)
         if not pconfig.angled_xticks and x_px_per_elem >= 40 and xcats:
             # Break up the horizontal ticks by whitespace to make them fit better vertically:
-            model.layout.xaxis.ticktext = ["<br>".join(split_long_string(str(cat), 10)) for cat in xcats]
+            x_extra["ticktext"] = ["<br>".join(split_long_string(str(cat), 10)) for cat in xcats]
             # And leave x ticks horizontal:
-            model.layout.xaxis.tickangle = 0
+            x_extra["tickangle"] = 0
         else:
             # Rotate x-ticks to fit more of them on screen
-            model.layout.xaxis.tickangle = 45
+            x_extra["tickangle"] = 45
 
         model.layout.height = 200 + height
         model.layout.width = (250 + width) if model.square else None
 
-        model.layout.xaxis.showgrid = False
-        model.layout.yaxis.showgrid = False
-        model.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
-        model.layout.yaxis.ticklabelposition = "outside right"
+        x_extra["showgrid"] = False
+        y_extra["showgrid"] = False
+        y_extra["autorange"] = "reversed"  # to make sure the first sample is at the top
+        y_extra["ticklabelposition"] = "outside right"
+        model.set_plotly_layout(xaxis=x_extra, yaxis=y_extra)
 
         colorscale: List[Tuple[float, str]] = []
         if pconfig.colstops:

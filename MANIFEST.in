@@ -1,3 +1,9 @@
 include LICENSE
 include README.md
 recursive-include multiqc *
+
+# Keep build/dev junk out of the sdist and wheel. `recursive-include multiqc *`
+# above otherwise sweeps whatever sits under the template dirs at build time: the
+# per-template npm install (node_modules, ~50 MB each) and Python bytecode caches.
+prune multiqc/templates/*/node_modules
+global-exclude __pycache__ *.py[cod] .DS_Store

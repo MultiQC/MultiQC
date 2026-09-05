@@ -59,14 +59,28 @@ a filename when exporting plots, and all plots should have a title when exported
 Plot titles should use the format _Module name: Plot name_ (this is partly for
 ease of use within MegaQC and other downstream tools).
 
-### Plotly themes
+### Plot themes
 
-MultiQC plots use Plotly for visualization. You can customize the appearance of all plots by setting a Plotly theme using the `plot_theme` configuration option. This option accepts any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
-name as a string.
+The `plot_theme` configuration option customises the appearance of Plotly plots. It accepts
+any [registered Plotly theme](https://plotly.com/python/templates/#view-available-themes)
+name as a string and only applies when a report is rendered with the Plotly engine (the
+`plotly` template).
 
 ```yaml
 plot_theme: "plotly_dark"
 ```
+
+### Plotting engines
+
+Reports are rendered with [Apache ECharts](https://echarts.apache.org/) by default. MultiQC
+also has an alternative plotting engine based on [Plotly](https://plotly.com/python/), used
+when a report is built with `--template plotly` (which requires the optional `plotly`
+dependency, `pip install 'multiqc[plotly]'`). Nothing changes on the module author's side:
+you call `bargraph.plot()`, `linegraph.plot()`, `scatter.plot()`, `heatmap.plot()`,
+`box.plot()` and `violin.plot()` exactly as documented below regardless of which engine ends
+up rendering the plot, since both engines consume the same `pconfig` options and data
+structures. The choice of engine is made purely by which report template is selected, not by
+module code. See [Writing new templates](templates.md#plotting-engines) for details.
 
 ## Bar graphs
 
@@ -969,6 +983,47 @@ pconfig = {
     ]
 }
 ```
+
+## Sequence content
+
+Sequence content plots render a per-base-position heatmap, one row per sample, where each
+cell is coloured from the relative proportion of A/C/G/T bases at that position (red for T,
+green for A, blue for C, with G implied by the complement of the other three). This is the
+plot type used for per-base sequence content reports, such as those produced by tools like
+FastQC. It renders as an RGB image on both the default ECharts template and
+`--template plotly`, with a native hover tooltip showing the base percentages, and a
+click-to-drilldown into a line plot of the clicked sample's per-base composition.
+
+Data is a dict of sample name to a dict of position label to base percentages. Position
+labels are strings, either a single position (`"1"`) or an inclusive range (`"10-14"`), and
+values are percentages in the range 0 to 100 for each of the four bases:
+
+```python
+from multiqc.plots import seqcontent
+
+data = {
+    "sample 1": {
+        "1": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+        "2": {"a": 30.0, "c": 20.0, "g": 20.0, "t": 30.0},
+        "3-10": {"a": 24.5, "c": 25.5, "g": 25.5, "t": 24.5},
+    },
+    "sample 2": {
+        "1": {"a": 26.0, "c": 24.0, "g": 24.0, "t": 26.0},
+        "2": {"a": 28.0, "c": 22.0, "g": 22.0, "t": 28.0},
+        "3-10": {"a": 25.0, "c": 25.0, "g": 25.0, "t": 25.0},
+    },
+}
+pconfig = {
+    "id": "toolname_seqcontent_plot",
+    "title": "toolname: Per Base Sequence Content",
+}
+html = seqcontent.plot(data, pconfig)
+```
+
+The function accepts the usual `id`, `title` and `height` config options common to all plot
+types, plus `xlab` (defaults to `"Position (bp)"`). There is no separate `zlab` or colour
+scale option: the RGB colouring is a fixed convention (matching FastQC's own), not a
+configurable heatmap colour axis.
 
 ## Interactive / Flat image plots
 

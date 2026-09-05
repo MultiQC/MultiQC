@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from multiqc import config
 from multiqc.utils.config_schema import MultiQCConfig
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -240,3 +241,26 @@ def test_config_defaults_keys_are_in_schema():
         f"Config defaults present in config_defaults.yaml but missing from MultiQCConfig: {missing}. "
         f"Add a Field for each to multiqc/utils/config_schema.py."
     )
+
+
+def test_update_config_resolves_plotting_engine_from_template():
+    """`update_config` resolves `config.plotting_engine` from the selected template,
+    walking its `template_parent` chain so children inherit their parent's engine.
+    The `default` template renders ECharts; the `plotly` template and the Plotly-based
+    templates (`original` and its children, `disco`) render Plotly. This resolution must
+    happen before plot serialization, in `update_config.py` (not `write_results.py`,
+    which runs after)."""
+    from multiqc.core.update_config import ClConfig, update_config
+
+    expected = {
+        "default": "echarts",  # default renders ECharts
+        "plotly": "plotly",  # explicit Plotly template
+        "disco": "plotly",  # child of `plotly`
+        "simple": "echarts",  # flat/static output via ECharts SSR (also used by --pdf)
+        "sections": "plotly",  # child of `original`
+    }
+    for template, engine in expected.items():
+        update_config(cfg=ClConfig(template=template))
+        assert config.plotting_engine == engine, (
+            f"template {template!r} resolved to engine {config.plotting_engine!r}, expected {engine!r}"
+        )
