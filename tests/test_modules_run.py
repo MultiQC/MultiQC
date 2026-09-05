@@ -241,3 +241,93 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_d
     assert set(report.general_stats_data[SectionKey(anchors[1] or "adapterremoval-1")].keys()) == {
         Path(fn).name for fn in expected_pe_files
     }
+
+
+def _run_freyja(tmp_path):
+    from multiqc.modules.freyja.freyja import MultiqcModule
+
+    report.reset()
+    report.analysis_files = [tmp_path]
+    report.search_files(["freyja"])
+    return MultiqcModule()
+
+
+def _freyja_stats_cols(sample):
+    """Column keys recorded across all freyja general-stats sections for a given sample."""
+    cols: set = set()
+    for section_key, section in report.general_stats_data.items():
+        if not str(section_key).startswith("freyja"):
+            continue
+        for row in section.get(sample, []):
+            cols.update(row.data.keys())
+    return cols
+
+
+def test_freyja_legacy_no_pathogen(tmp_path):
+    """Legacy Freyja reports without a 'pathogen' line default to SARS-CoV-2."""
+    (tmp_path / "sample.demix_out.tsv").write_text(
+        "\tvariant_files/sample.demix_out.tsv\n"
+        "summarized\t[('BA.5* [Omicron (BA.5.X)]', 0.9), ('Omicron', 0.1)]\n"
+        "lineages\tBF.5.1 BF.7.7\n"
+        "abundances\t0.5 0.5\n"
+        "resid\t0.06\n"
+        "coverage\t1.83\n"
+    )
+
+    module = _run_freyja(tmp_path)
+
+    # The pathogen (defaulted to SARS-CoV-2) is included in anchors and column keys
+    assert {s.anchor for s in module.sections} == {"freyja-summary-sars-cov-2"}
+    assert _freyja_stats_cols("sample.demix_out") == {
+        "Top_lineage_freyja_sars_cov_2",
+        "Top_lineage_freyja_sars_cov_2_percentage",
+    }
+
+
+def test_freyja_multiple_pathogens(tmp_path):
+    """When reports declare different pathogens, each gets its own section and columns."""
+    (tmp_path / "covid.demix_out.tsv").write_text(
+        "\tvariant_files/covid.demix_out.tsv\n"
+        "summarized\t[('BA.5* [Omicron (BA.5.X)]', 0.9), ('Omicron', 0.1)]\n"
+        "lineages\tBF.5.1 BF.7.7\n"
+        "abundances\t0.5 0.5\n"
+        "resid\t0.06\n"
+        "coverage\t1.83\n"
+        "pathogen\tSARS-CoV-2\n"
+    )
+    # A legacy report with no pathogen line should be grouped with SARS-CoV-2
+    (tmp_path / "covid_legacy.demix_out.tsv").write_text(
+        "\tvariant_files/covid_legacy.demix_out.tsv\n"
+        "summarized\t[('BA.5* [Omicron (BA.5.X)]', 0.8), ('Omicron', 0.2)]\n"
+        "lineages\tBF.5.1\n"
+        "abundances\t1.0\n"
+        "resid\t0.1\n"
+        "coverage\t1.83\n"
+    )
+    (tmp_path / "rsv.demix_out.tsv").write_text(
+        "\tvariant_files/rsv.demix_out.tsv\n"
+        "summarized\t[('A.D.1', 0.7), ('A.D.5.2', 0.3)]\n"
+        "lineages\tA.D.1 A.D.5.2\n"
+        "abundances\t0.7 0.3\n"
+        "resid\t0.05\n"
+        "coverage\t1.9\n"
+        "pathogen\tRSV-A\n"
+    )
+
+    module = _run_freyja(tmp_path)
+
+    assert {s.anchor for s in module.sections} == {"freyja-summary-sars-cov-2", "freyja-summary-rsv-a"}
+
+    # The legacy sample (no pathogen line) is grouped under SARS-CoV-2 alongside the explicit one
+    assert _freyja_stats_cols("covid.demix_out") == {
+        "Top_lineage_freyja_sars_cov_2",
+        "Top_lineage_freyja_sars_cov_2_percentage",
+    }
+    assert _freyja_stats_cols("covid_legacy.demix_out") == {
+        "Top_lineage_freyja_sars_cov_2",
+        "Top_lineage_freyja_sars_cov_2_percentage",
+    }
+    assert _freyja_stats_cols("rsv.demix_out") == {
+        "Top_lineage_freyja_rsv_a",
+        "Top_lineage_freyja_rsv_a_percentage",
+    }
