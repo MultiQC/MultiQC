@@ -1,6 +1,7 @@
 """Super Special-Case MultiQC module to produce report section on software versions"""
 
 import logging
+from html import escape
 from textwrap import dedent
 from typing import Dict, List, Optional
 
@@ -105,12 +106,13 @@ class MultiqcModule(BaseMultiqcModule):
             tool_versions: List[str]
             for i, (tool, tool_versions) in enumerate(sorted(group_versions.items())):
                 meta = metadata.get(group, {}).get(tool)
+                # Tool names and versions are parsed from tool output, so escape them
                 rows = [
-                    f"<td>{tool}</td>",
-                    f"<td><samp>{', '.join(list(map(str, tool_versions)))}</samp></td>",
+                    f"<td>{escape(tool)}</td>",
+                    f"<td><samp>{', '.join(escape(str(v)) for v in tool_versions)}</samp></td>",
                 ]
                 if not ignore_groups:
-                    rows.insert(0, f"<td>{group if (i == 0) else ''}</td>")
+                    rows.insert(0, f"<td>{escape(group) if (i == 0) else ''}</td>")
                 if show_license:
                     rows.append(f"<td>{_license_html(meta)}</td>")
                 if show_doi:

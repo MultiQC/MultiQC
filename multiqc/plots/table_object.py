@@ -5,6 +5,7 @@ MultiQC datatable class, used by tables and violin plots
 import logging
 import math
 import re
+from html import escape
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
@@ -656,8 +657,10 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
     ):
         val = val[1:-1]
 
-    # Now also calculate formatted values
-    valstr = str(val)
+    # Now also calculate formatted values. Values are parsed from tool output, so escape
+    # them. A callable `format` is module-authored and may legitimately return HTML, so
+    # it overwrites this and is responsible for escaping its own inputs.
+    valstr = escape(str(val))
     fmt: Union[None, str, Callable[[ValueT], str]] = column.format
     if fmt is None:
         if isinstance(val, float):
@@ -797,9 +800,6 @@ def render_html(
     # empty_cells: Dict[ColumnKeyT, str] = dict()
     hidden_cols = 1
     table_title = dt.pconfig.title
-
-    def escape(s: str) -> str:
-        return s.replace('"', "&quot;").replace("'", "&#39;").replace("<", "&lt;").replace(">", "&gt;")
 
     for idx, col_key, header in dt.get_headers_in_order():
         col_anchor: ColumnAnchor = header.clean_rid
@@ -1229,7 +1229,7 @@ def render_html(
             cls = " ".join(group_classes + tr_classes)
             html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{cls}">'
             # Sample name row header
-            html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{s_name}</span></th>'
+            html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{escape(s_name)}</span></th>'
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
