@@ -33,4 +33,4 @@ jobs:
       - run: pip install rich
 
       - name: "Run manual code style checks"
-        run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py
+        run: python "${GITHUB_WORKSPACE}/.github/workflows/code_checks.py"
