@@ -1,13 +1,13 @@
 """Parse riker `hybcap` outputs (hybcap-metrics.txt)."""
 
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from multiqc import config
 from multiqc.plots import linegraph, table
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv
+from .util import read_tsv, to_float
 
 log = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ TARGET_COVERAGE_LEVELS = [1, 10, 20, 30, 50, 100, 250, 500, 1000]
 
 
 def parse_reports(module):
-    data_by_sample: Dict[str, Dict[str, float]] = {}
+    data_by_sample: Dict[str, Dict[str, Optional[float]]] = {}
     panel_by_sample: Dict[str, str] = {}
 
     for f in module.find_log_files("riker/hybcap_metrics", filehandles=True):
@@ -27,7 +27,7 @@ def parse_reports(module):
             s_name = module.clean_s_name(sample, f)
             panel = row.pop("panel_name", "")
             try:
-                parsed = {col: float(val) for col, val in row.items()}
+                parsed = {col: to_float(val) for col, val in row.items()}
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
@@ -138,7 +138,7 @@ def parse_reports(module):
     module.general_stats_addcols(data_by_sample, headers, namespace="hybcap")
 
     # Full metrics table; most columns hidden by default and the user can toggle them.
-    table_data: Dict[str, Dict[str, float]] = {}
+    table_data: Dict[str, Dict[str, object]] = {}
     for s_name, row in data_by_sample.items():
         merged = dict(row)
         merged["panel_name"] = panel_by_sample.get(s_name, "")
@@ -352,8 +352,9 @@ def parse_reports(module):
         curve_data[s_name] = {}
         for cov in TARGET_COVERAGE_LEVELS:
             key = f"frac_target_bases_{cov}x"
-            if key in row:
-                curve_data[s_name][cov] = row[key] * 100.0
+            val = row.get(key)
+            if val is not None:
+                curve_data[s_name][cov] = val * 100.0
 
     if any(curve_data.values()):
         pconfig = {

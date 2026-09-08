@@ -25,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Ecogenomics/CheckM",
             info="Estimates genome completeness and contamination based on the presence or absence of marker genes.",
             doi=["10.1101/gr.186072.114"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/Ecogenomics/CheckM/blob/master/LICENSE",
         )
 
         data_by_sample = {}

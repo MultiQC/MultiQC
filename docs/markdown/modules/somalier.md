@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/somalier/somalier.py
 Genotype to pedigree correspondence checks from sketches derived from BAM/CRAM or VCF.
 
 [https://github.com/brentp/somalier](https://github.com/brentp/somalier)
+
+DOI: [10.1186/s13073-020-00761-2](https://doi.org/10.1186/s13073-020-00761-2)
+
+[MIT License](https://github.com/brentp/somalier/blob/master/LICENSE)
 :::
 
 Somalier can be used to find sample swaps or duplicates in cancer

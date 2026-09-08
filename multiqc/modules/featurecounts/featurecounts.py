@@ -52,6 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Counts mapped reads for genomic features such as genes, exons, promoter, gene bodies, "
             "genomic bins and chromosomal locations.",
             doi="10.1093/bioinformatics/btt656",
+            license="GNU General Public License v3.0",
+            license_url="http://subread.sourceforge.net",
         )
 
         data_by_sample: Dict[str, Dict[str, List[int]]] = dict()

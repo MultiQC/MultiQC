@@ -146,8 +146,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "id": f["s_name"],
                     "plot_type": "image",
                     "section_name": f["s_name"]
-                    .rstrip(f_extension)
-                    .rstrip("_mqc")
+                    .removesuffix(f_extension)
+                    .removesuffix("_mqc")
                     .replace("_", " ")
                     .replace("-", " ")
                     .replace(".", " "),
@@ -179,8 +179,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     "id": f["s_name"],
                     "plot_type": "html",
                     "section_name": f["s_name"]
-                    .rstrip(f_extension)
-                    .rstrip("_mqc")
+                    .removesuffix(f_extension)
+                    .removesuffix("_mqc")
                     .replace("_", " ")
                     .replace("-", " ")
                     .replace(".", " "),
@@ -457,6 +457,8 @@ class MultiqcModule(BaseMultiqcModule):
             info=mod_info,
             extra=cc_dict.config.get("extra"),
             doi=cc_dict.config.get("doi"),
+            license=cc_dict.config.get("license"),
+            license_url=cc_dict.config.get("license_url"),
         )
         self.id = id
 

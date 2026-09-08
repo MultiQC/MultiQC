@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/sourmash/sourmash.py
 Quickly searches, compares, and analyzes genomic and metagenomic data sets.
 
 [https://github.com/sourmash-bio/sourmash](https://github.com/sourmash-bio/sourmash)
+
+DOI: [10.21105/joss.00027](https://doi.org/10.21105/joss.00027)
+
+[BSD 3-Clause License](https://github.com/sourmash-bio/sourmash/blob/master/LICENSE)
 :::
 
 The module can summarise data from the following sourmash output files

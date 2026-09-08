@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/star/star.py
 Universal RNA-seq aligner.
 
 [https://github.com/alexdobin/STAR](https://github.com/alexdobin/STAR)
+
+DOI: [10.1093/bioinformatics/bts635](https://doi.org/10.1093/bioinformatics/bts635)
+
+[MIT License](https://github.com/alexdobin/STAR/blob/master/LICENSE)
 :::
 
 This module parses summary statistics from the `Log.final.out` log files.

@@ -18,6 +18,9 @@ class MultiqcModule(BaseMultiqcModule):
             extra="It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
             "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Set up vars

@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 Quality control tool for high throughput sequencing data.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+
+[GNU General Public License v3.0](https://github.com/s-andrews/FastQC/blob/master/LICENSE)
 :::
 
 FastQC and [Falco](https://github.com/smithlabcode/falco) (a high-performance
@@ -93,10 +95,10 @@ column 2 = % of genome):
 
 ```bash
 # FastQC theoretical GC content curve: YOUR REFERENCE NAME
-0   0.005311768
-1   0.004108502
-2   0.004060371
-3   0.005066476
+0	0.005311768
+1	0.004108502
+2	0.004060371
+3	0.005066476
 [...]
 ```
 

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/bcftools/bcftools.py
 Utilities for variant calling and manipulating VCFs and BCFs.
 
 [https://samtools.github.io/bcftools/](https://samtools.github.io/bcftools/)
+
+DOI: [10.1093/gigascience/giab008](https://doi.org/10.1093/gigascience/giab008)
+
+[MIT License](https://github.com/samtools/bcftools/blob/master/LICENSE)
 :::
 
 Supported commands: `stats`

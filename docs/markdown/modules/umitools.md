@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/umitools/umitools.py
 Tools for dealing with Unique Molecular Identifiers (UMIs)/(RMTs) and scRNA-Seq barcodes.
 
 [https://github.com/CGATOxford/UMI-tools](https://github.com/CGATOxford/UMI-tools)
+
+DOI: [10.1101/gr.209601.116](https://doi.org/10.1101/gr.209601.116)
+
+[MIT License](https://github.com/CGATOxford/UMI-tools/blob/master/LICENSE)
 :::
 
 Currently, `dedup` and `extract` commands are supported.

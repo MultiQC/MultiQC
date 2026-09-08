@@ -15,6 +15,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.github.com/apeltzer/MTNucRatioCalculator",
             info="Computes mitochondrial to nuclear genome ratios in NGS datasets.",
             doi="10.1186/s13059-016-0918-z",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/apeltzer/MTNucRatioCalculator/blob/master/LICENSE",
         )
 
         # Find and load any MTNUCRATIO reports

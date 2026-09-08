@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/sargasso/sargasso.py
 Separates mixed-species RNA-seq reads according to their species of origin.
 
 [http://biomedicalinformaticsgroup.github.io/Sargasso/](http://biomedicalinformaticsgroup.github.io/Sargasso/)
+
+DOI: [10.1038/s41596-018-0029-2](https://doi.org/10.1038/s41596-018-0029-2)
+
+[MIT License](https://github.com/biomedicalinformaticsgroup/sargasso/blob/master/LICENSE.txt)
 :::
 
 ### File search patterns

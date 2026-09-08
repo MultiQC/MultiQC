@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/anglerfish/anglerfish.
 Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells.
 
 [https://github.com/remiolsen/anglerfish](https://github.com/remiolsen/anglerfish)
+
+[MIT License](https://github.com/remiolsen/anglerfish/blob/master/LICENSE)
 :::
 
 Assessment of pool balancing, contamination, and insert sizes are currently supported

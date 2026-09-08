@@ -41,6 +41,11 @@ REASONING_MODELS = {
 }
 
 
+REFURSAL_STUB_CONTENT = """\
+AI summary could not be generated as the request was refused by the model
+"""
+
+
 def is_reasoning_model(model_name: str) -> bool:
     """Check if a model is a reasoning model based on its name."""
     if not model_name:
@@ -501,30 +506,39 @@ class AWSBedrockClient(Client):
 
     def _query(self, prompt: str) -> ApiResponse:
         # TODO consider error-handling/backoff
-        body = json.dumps(
-            {
-                # this is the only allowable value as of 2025/03/04
-                # if they ever add more, we can make it configurable
-                # or add smart logic to figure it out.
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-                "max_tokens": 4096,
-            }
-        )
+        body = {
+            # this is the only allowable value as of 2025/03/04
+            # if they ever add more, we can make it configurable
+            # or add smart logic to figure it out.
+            "anthropic_version": "bedrock-2023-05-31",
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            "max_tokens": 4096,
+        }
+
+        if config.ai_extended_thinking:
+            thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+            if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+            body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
+        else:
+            body["thinking"] = {"type": "disabled"}
 
         response = self.client.invoke_model(
-            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
         )
 
         response_body = json.loads(response["body"].read())
-        if (
-            "content" not in response_body
-            or len(response_body["content"]) != 1
-            or "text" not in response_body["content"][0]
-        ):
-            logger.error(f"bedrock response content: {response_body}")
+        if response_body["stop_reason"] == "refusal":
+            return AWSBedrockClient.ApiResponse(content=REFURSAL_STUB_CONTENT, model=self.model)
+        if not response_body.get("content", []):
+            logger.error(f"bedrock response does not have 'content': {response_body}")
             raise ValueError("Unexpected bedrock response body")
-        content = response_body["content"][0]["text"]  # Extract the assistant's response
+        text_blocks = [b for b in response_body["content"] if b["type"] == "text"]
+        if len(text_blocks) != 1:
+            logger.error(f"bedrock response does not contain 1 text block: {response_body}")
+            raise ValueError("Unexpected bedrock response body")
+        content = text_blocks[0]["text"]  # Extract the assistant's response
         return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
 

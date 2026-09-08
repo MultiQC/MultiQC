@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/samblaster/samblaster.
 Marks duplicates and extracts discordant and split reads from sam files.
 
 [https://github.com/GregoryFaust/samblaster](https://github.com/GregoryFaust/samblaster)
+
+DOI: [10.1093/bioinformatics/btu314](https://doi.org/10.1093/bioinformatics/btu314)
+
+[MIT License](https://github.com/GregoryFaust/samblaster/blob/master/LICENSE.txt)
 :::
 
 ### File search patterns

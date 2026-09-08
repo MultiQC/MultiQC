@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/mtnucratio/mtnucratio.
 Computes mitochondrial to nuclear genome ratios in NGS datasets.
 
 [http://www.github.com/apeltzer/MTNucRatioCalculator](http://www.github.com/apeltzer/MTNucRatioCalculator)
+
+DOI: [10.1186/s13059-016-0918-z](https://doi.org/10.1186/s13059-016-0918-z)
+
+[GNU General Public License v3.0](https://github.com/apeltzer/MTNucRatioCalculator/blob/master/LICENSE)
 :::
 
 ### File search patterns

@@ -17,6 +17,9 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://methylqa.sourceforge.net/",
             info="Methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any methylQA reports

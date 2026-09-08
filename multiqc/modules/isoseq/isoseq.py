@@ -36,6 +36,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/PacificBiosciences/IsoSeq",
             info="Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads).",
             # doi=,  # Not published
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/IsoSeq/blob/master/LICENSE",
         )
 
         cnt_by_cluster_id_by_sample = self._parse_cluster()

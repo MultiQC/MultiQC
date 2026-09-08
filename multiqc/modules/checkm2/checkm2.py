@@ -24,6 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/chklovski/CheckM2",
             info="Assesses microbial genome quality using machine learning.",
             doi=["10.1038/s41592-023-01940-w"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/chklovski/CheckM2/blob/main/LICENSE",
         )
 
         data_by_sample = {}

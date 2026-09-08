@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/kat/kat.py
 Analyses sequencing data via its k-mer spectra.
 
 [https://github.com/TGAC/KAT](https://github.com/TGAC/KAT)
+
+DOI: [10.1093/bioinformatics/btw663](https://doi.org/10.1093/bioinformatics/btw663)
+
+[GNU General Public License v3.0](https://github.com/TGAC/KAT/blob/master/COPYING)
 :::
 
 The KAT multiqc module interprets output from KAT distribution analysis json files, which typically

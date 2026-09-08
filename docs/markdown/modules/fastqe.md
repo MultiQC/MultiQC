@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/fastqe/fastqe.py
 Uses emoji to represent FASTQ sequence quality scores.
 
 [https://github.com/fastqe/fastqe](https://github.com/fastqe/fastqe)
+
+[BSD 3-Clause License](https://github.com/fastqe/fastqe/blob/master/LICENSE.txt)
 :::
 
 FastQE uses emoji to represent FASTQ sequence quality scores, providing a

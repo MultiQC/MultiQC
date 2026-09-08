@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/gopeaks/gopeaks.py
 Calls peaks in CUT&TAG/CUT&RUN datasets.
 
 [https://github.com/maxsonBraunLab/gopeaks](https://github.com/maxsonBraunLab/gopeaks)
+
+DOI: [10.1186/s13059-022-02707-w](https://doi.org/10.1186/s13059-022-02707-w)
+
+[MIT License](https://github.com/maxsonBraunLab/gopeaks/blob/main/LICENSE)
 :::
 
 Gopeaks uses a binomial distribution to model the read counts in sliding windows across

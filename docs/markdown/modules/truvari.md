@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/truvari/truvari.py
 Benchmarking, merging, and annotating structural variants.
 
 [https://github.com/ACEnglish/truvari](https://github.com/ACEnglish/truvari)
+
+DOI: [https://doi.org/10.1101/2022.02.21.481353](https://doi.org/https://doi.org/10.1101/2022.02.21.481353)
+
+[MIT License](https://github.com/ACEnglish/truvari/blob/master/LICENSE)
 :::
 
 Supported commands:

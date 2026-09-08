@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/pbmarkdup/pbmarkdup.py
 Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or removes duplicates.
 
 [https://github.com/PacificBiosciences/pbmarkdup](https://github.com/PacificBiosciences/pbmarkdup)
+
+[BSD 3-Clause Clear License](https://github.com/PacificBiosciences/pbmarkdup/blob/master/LICENSE)
 :::
 
 The module adds the **% Unique Molecules** and **%Duplicate Reads** (hidden) to the General Statistics

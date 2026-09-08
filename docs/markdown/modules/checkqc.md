@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/checkqc/checkqc.py
 Checks a set of quality criteria against an Illumina runfolder.
 
 [https://github.com/Molmed/checkQC](https://github.com/Molmed/checkQC)
+
+DOI: [10.21105/joss.00556](https://doi.org/10.21105/joss.00556)
+
+[GNU General Public License v3.0](https://github.com/Molmed/checkQC/blob/master/LICENSE)
 :::
 
 The module parses a CheckQC JSON file, so make sure to use CheckQC with the `--json` flag and collect the stdout in a file.

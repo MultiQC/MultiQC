@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/ataqv/ataqv.py
 Toolkit for quality control and visualization of ATAC-seq data.
 
 [https://github.com/ParkerLab/ataqv/](https://github.com/ParkerLab/ataqv/)
+
+DOI: [10.1093/bioinformatics/btx865](https://doi.org/10.1093/bioinformatics/btx865)
+
+[GNU General Public License v3.0](https://github.com/ParkerLab/ataqv/blob/master/LICENSE)
 :::
 
 ### File search patterns

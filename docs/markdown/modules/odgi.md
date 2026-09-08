@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/odgi/odgi.py
 Analysis and manipulation of pangenome graphs structured in the variation graph model.
 
 [https://github.com/pangenome/odgi](https://github.com/pangenome/odgi)
+
+[MIT License](https://github.com/pangenome/odgi/blob/master/LICENSE)
 :::
 
 The odgi module parses [odgi stats](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_stats.html) reports.

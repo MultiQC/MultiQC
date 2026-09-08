@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/nanostat/nanostat.py
 Reports various statistics for long read dataset in FASTQ, BAM, or albacore sequencing summary format (supports NanoPack; NanoPlot, NanoComp).
 
 [https://github.com/wdecoster/nanostat/](https://github.com/wdecoster/nanostat/), [https://github.com/wdecoster/nanoplot/](https://github.com/wdecoster/nanoplot/)
+
+DOI: [10.1093/bioinformatics/bty149](https://doi.org/10.1093/bioinformatics/bty149)
+
+[GNU General Public License v3.0](https://github.com/wdecoster/nanostat/blob/master/LICENSE)
 :::
 
 Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore methods (MinION, PromethION etc.)

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/peddy/peddy.py
 Compares familial-relationships and sexes as reported in a PED file with those inferred from a VCF.
 
 [https://github.com/brentp/peddy](https://github.com/brentp/peddy)
+
+DOI: [10.1016/j.ajhg.2017.01.017](https://doi.org/10.1016/j.ajhg.2017.01.017)
+
+[MIT License](https://github.com/brentp/peddy/blob/master/LICENSE)
 :::
 
 It samples the VCF at about 25000 sites (plus chrX) to accurately estimate relatedness, IBS0, heterozygosity, sex and ancestry. It uses 2504 thousand genome samples as backgrounds to calibrate the relatedness calculation and to make ancestry predictions.

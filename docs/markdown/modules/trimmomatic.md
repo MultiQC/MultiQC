@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/trimmomatic/trimmomati
 Read trimming tool for Illumina NGS data.
 
 [http://www.usadellab.org/cms/?page=trimmomatic](http://www.usadellab.org/cms/?page=trimmomatic)
+
+DOI: [10.1093/bioinformatics/btu170](https://doi.org/10.1093/bioinformatics/btu170)
+
+[GNU General Public License v3.0](https://github.com/usadellab/Trimmomatic/blob/master/LICENSE)
 :::
 
 The module parses the stderr output, that can be captured by directing it to a file e.g.:

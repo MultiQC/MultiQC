@@ -37,6 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://samtools.github.io/bcftools/",
             info="Utilities for variant calling and manipulating VCFs and BCFs.",
             doi="10.1093/gigascience/giab008",
+            license="MIT License",
+            license_url="https://github.com/samtools/bcftools/blob/master/LICENSE",
         )
 
         # Set up class objects to hold parsed data
