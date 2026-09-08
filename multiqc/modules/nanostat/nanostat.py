@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from html import escape
 from typing import Any, Dict, List
 
 from multiqc import config
@@ -466,7 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
             content_before_plot = (
                 f'<div class="alert alert-warning">Different quality score cutoffs used across different logs. '
                 f"Using ones from the first met sample, and hiding samples "
-                f"{', '.join('<code>' + s + '</code>' for s in samples_with_other_q_values)}.</div>"
+                f"{', '.join(f'<code>{escape(s)}</code>' for s in samples_with_other_q_values)}.</div>"
             )
 
         # Add the report section

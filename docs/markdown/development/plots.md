@@ -719,6 +719,22 @@ key for that column. The default format string is `"{:,.1f}"`, which specifies a
 float number with a single decimal place. To remove decimals use `"{:,d}"`.
 To have two decimal places, use `"{:,.2f}"`.
 
+`format` also accepts a callable, which is given the cell value and returns the
+string to display. Unlike a format string, a callable may return HTML, so its
+return value is **not** escaped for you. Values parsed from tool output are
+attacker-controlled, so escape them yourself:
+
+```python
+from html import escape
+
+headers = {
+    "toolname_path": {
+        "title": "Path",
+        "format": lambda x: f"<code>{escape(str(x))}</code>",
+    }
+}
+```
+
 ### Table colour scales
 
 Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).

@@ -1214,6 +1214,7 @@ def render_html(
                 break
         if all_samples_empty:
             group_classes.append("row-empty")
+        esc_g_name = escape(g_name)
         for number_in_group, s_name in enumerate(group_to_sample_to_anchor_to_td[g_name]):
             tr_classes: List[str] = []
             prefix = ""
@@ -1227,9 +1228,10 @@ def render_html(
                 prefix += "&nbsp;↳&nbsp;"
                 tr_classes.append("expandable-row-secondary expandable-row-secondary-hidden")
             cls = " ".join(group_classes + tr_classes)
-            html += f'<tr data-sample-group="{escape(g_name)}" data-table-id="{dt.id}" class="{cls}">'
+            html += f'<tr data-sample-group="{esc_g_name}" data-table-id="{dt.id}" class="{cls}">'
             # Sample name row header
-            html += f'<th class="rowheader" data-sorting-val="{escape(g_name)}">{prefix}<span class="th-sample-name" data-original-sn="{escape(s_name)}">{escape(s_name)}</span></th>'
+            esc_s_name = escape(s_name)
+            html += f'<th class="rowheader" data-sorting-val="{esc_g_name}">{prefix}<span class="th-sample-name" data-original-sn="{esc_s_name}">{esc_s_name}</span></th>'
             for col_anchor in col_to_th.keys():
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:

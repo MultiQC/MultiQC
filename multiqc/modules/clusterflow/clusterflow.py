@@ -3,11 +3,24 @@ import logging
 import os
 import re
 import time
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
+
+# Commands are parsed from Cluster Flow log files, so they are stored as plain text and
+# only turned into HTML here, after escaping. The placeholder marks chunks that varied
+# between otherwise identical commands.
+VARIABLE_PLACEHOLDER = "[variable]"
+
+
+def _format_command(cmd: str) -> str:
+    highlighted = escape(cmd).replace(
+        VARIABLE_PLACEHOLDER, f'<span style="background-color:#dedede; color:#999;">{VARIABLE_PLACEHOLDER}</span>'
+    )
+    return f'<code style="white-space:nowrap;">{highlighted}</code>'
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -117,8 +130,7 @@ class MultiqcModule(BaseMultiqcModule):
         tool_cmds = dict()
         headers = dict()
         for pipeline_id, commands in self.clusterflow_commands.items():
-            headers[pipeline_id] = {"scale": False}
-            self.var_html = '<span style="background-color:#dedede; color:#999;">[variable]</span>'
+            headers[pipeline_id] = {"scale": False, "format": _format_command}
             tool_cmd_parts = dict()
             for cmd in commands:
                 s = cmd.split()
@@ -130,22 +142,18 @@ class MultiqcModule(BaseMultiqcModule):
             for tool, cmds in tool_cmd_parts.items():
                 cons_cmd = self._replace_variable_chunks(cmds)
                 # Try again with first two blocks if all variable
-                variable_count = cons_cmd.count(self.var_html)
+                variable_count = cons_cmd.count(VARIABLE_PLACEHOLDER)
                 if variable_count == len(cmds[0]) - 1 and len(cmds[0]) > 2:
                     for subcmd in set([x[1] for x in cmds]):
                         sub_cons_cmd = self._replace_variable_chunks([cmd for cmd in cmds if cmd[1] == subcmd])
                         tool = f"{tool} {subcmd}"
                         if tool not in tool_cmds:
                             tool_cmds[tool] = dict()
-                        tool_cmds[tool][pipeline_id] = '<code style="white-space:nowrap;">{}</code>'.format(
-                            " ".join(sub_cons_cmd)
-                        )
+                        tool_cmds[tool][pipeline_id] = " ".join(sub_cons_cmd)
                 else:
                     if tool not in tool_cmds:
                         tool_cmds[tool] = dict()
-                    tool_cmds[tool][pipeline_id] = '<code style="white-space:nowrap;">{}</code>'.format(
-                        " ".join(cons_cmd)
-                    )
+                    tool_cmds[tool][pipeline_id] = " ".join(cons_cmd)
 
         table_config = {
             "namespace": "Cluster Flow",
@@ -174,7 +182,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     for idx, s in enumerate(cons_cmd):
                         if s not in cmd:
-                            cons_cmd[idx] = self.var_html
+                            cons_cmd[idx] = VARIABLE_PLACEHOLDER
         return cons_cmd
 
     def _guess_cmd_name(self, cmd):
@@ -361,5 +369,5 @@ class MultiqcModule(BaseMultiqcModule):
                     <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {} (<code>{}</code>)</h3></div>
                     <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{}</pre>
                 </div>
-                """.format(pid, d[0], d[1])
+                """.format(escape(pid), escape(str(d[0])), escape(d[1]))
         return html

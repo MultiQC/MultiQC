@@ -5,6 +5,7 @@ import os
 import re
 import tarfile
 from collections import defaultdict
+from html import escape
 from typing import Any, Dict
 
 import humanize
@@ -223,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
                 m = runUrl_re.search(x)
                 if m:
                     org, workspace, run = m.groups()
-                    return f'<a href="{x}" target="_blank">{run}</a>'
+                    return f'<a href="{escape(x)}" target="_blank">{escape(run)}</a>'
             return str(x)
 
         headers = {
@@ -244,7 +245,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "Accent",
                 "modify": lambda x: repositories.index(x),
                 "format": lambda x: (
-                    f'<a href="{repositories[x]}" style="white-space: nowrap;">{repositories[x].replace("https://", "").replace("http://", "").replace("github.com/", "")}</a>'
+                    f'<a href="{escape(repositories[x])}" style="white-space: nowrap;">'
+                    f"{escape(repositories[x].replace('https://', '').replace('http://', '').replace('github.com/', ''))}</a>"
                 ),
             },
             "revision": {

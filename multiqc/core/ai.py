@@ -9,7 +9,6 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
 import yaml
-from markdown import markdown
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
@@ -169,28 +168,6 @@ PROMPT_FULL = f"""\
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
     detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
-
-    def markdown_to_html(self, text: str) -> str:
-        """
-        Convert markdown to HTML
-        """
-        # First convert pseudonyms back to original names if needed
-        text = deanonymize_sample_names(text)
-
-        html = markdown(text)
-        # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
-        html = re.sub(
-            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<span class='text-\2'>\1</span>",
-            html,
-        )
-        # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
-        html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-bs-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
-            html,
-        )
-        return html
 
 
 class InterpretationResponse(BaseModel):
@@ -1143,10 +1120,12 @@ def add_ai_summary_to_report():
     if response.thread_id:
         report.ai_thread_id = response.thread_id
 
+    # Stored as markdown: the report renders it in the browser, through the same
+    # sanitiser as summaries generated there, so there is only one rendering path.
     interpretation: InterpretationOutput = response.interpretation
-    report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
+    report.ai_global_summary = deanonymize_sample_names(interpretation.summary)
 
     if config.ai_summary_full and interpretation.detailed_analysis:
-        report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
+        report.ai_global_detailed_analysis = deanonymize_sample_names(interpretation.detailed_analysis)
 
     logger.info(f"Summarised report with {report.ai_provider_title}")
