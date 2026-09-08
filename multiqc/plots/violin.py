@@ -17,7 +17,6 @@ from multiqc import config, report
 from multiqc.core.plot_data_store import parse_value
 from multiqc.plots import table_object
 from multiqc.plots.plot import BaseDataset, NormalizedPlotInputData, Plot, PlotType, plot_anchor
-from multiqc.utils import mqc_colour
 from multiqc.plots.table_object import (
     Cell,
     ColumnAnchor,
@@ -34,6 +33,7 @@ from multiqc.plots.table_object import (
     render_html,
 )
 from multiqc.types import Anchor, ColumnKey, SampleName, SectionKey
+from multiqc.utils import mqc_colour
 from multiqc.utils.material_icons import get_material_icon
 
 logger = logging.getLogger(__name__)
@@ -1037,7 +1037,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             values: List[List[Any]] = [list(data.keys())]
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.clean_rid
-                values.append([data[s].get(rid, "") for s in data.keys()])
+                values.append([data[s].get(rid, "") for s in data])
 
             keys = list(data.keys())
             if not keys:

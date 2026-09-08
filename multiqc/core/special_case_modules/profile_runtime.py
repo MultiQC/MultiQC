@@ -124,10 +124,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Files searched counts",
             anchor="multiqc_runtime_files_searched",
-            description="""
+            description=f"""
                 Number of files searched by MultiQC, categorised by what happened to them.
-                **Total file searches: {}**.
-            """.format(sum(file_search_counts.values())),
+                **Total file searches: {sum(file_search_counts.values())}**.
+            """,
             helptext="""
                 Note that only files are considered in this plot - skipped directories are not shown.
 
@@ -172,10 +172,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Search patterns run times",
             anchor="multiqc_runtime_search_patterns",
-            description="""
+            description=f"""
                 Time spent running each search pattern to find files for MultiQC modules.
-                **Total file search time: {:.2f} seconds**.
-            """.format(report.runtimes.total_sp),
+                **Total file search time: {report.runtimes.total_sp:.2f} seconds**.
+            """,
             helptext="""
                 **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.
                 Unless you are running MultiQC on many thousands of analysis files, optimising this process

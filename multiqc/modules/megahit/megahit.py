@@ -1,7 +1,6 @@
 import logging
 import re
 
-
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table

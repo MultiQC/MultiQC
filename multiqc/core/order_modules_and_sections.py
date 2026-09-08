@@ -51,10 +51,9 @@ def order_modules_and_sections():
             idx += 10
 
         for sec_or_mod_id_or_anchor, ss in config.report_section_order.items():
-            if sec_or_mod_id_or_anchor not in module_id_order.keys():
+            if sec_or_mod_id_or_anchor not in module_id_order:
                 if (
-                    sec_or_mod_id_or_anchor.endswith("-module")
-                    and sec_or_mod_id_or_anchor[:-7] in module_id_order.keys()
+                    sec_or_mod_id_or_anchor.endswith("-module") and sec_or_mod_id_or_anchor[:-7] in module_id_order
                 ):  # back-compat with < 1.24
                     sec_or_mod_id_or_anchor = ModuleId(sec_or_mod_id_or_anchor[:-7])
                 else:
@@ -64,10 +63,10 @@ def order_modules_and_sections():
                 if ss.get("order") is not None:
                     assert isinstance(ss["order"], int)
                     module_id_order[sec_or_mod_id_or_anchor] = ss["order"]
-                if ss.get("after") in module_id_order.keys():
+                if ss.get("after") in module_id_order:
                     assert isinstance(ss["after"], str)
                     module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["after"]] + 1
-                if ss.get("before") in module_id_order.keys():
+                if ss.get("before") in module_id_order:
                     assert isinstance(ss["before"], str)
                     module_id_order[sec_or_mod_id_or_anchor] = module_id_order[ss["before"]] - 1
         sorted_ids = sorted(module_id_order.keys(), key=lambda k: module_id_order[k])
@@ -87,7 +86,7 @@ def order_modules_and_sections():
             # Go through each section to be reordered
             for sec_or_mod_id_or_anchor, ss in config.report_section_order.items():
                 # Section to be moved is not in this module
-                if sec_or_mod_id_or_anchor not in section_id_order.keys():
+                if sec_or_mod_id_or_anchor not in section_id_order:
                     continue
                 if ss == "remove":
                     section_id_order[sec_or_mod_id_or_anchor] = False
@@ -96,10 +95,10 @@ def order_modules_and_sections():
                     if ss.get("order") is not None:
                         assert isinstance(ss["order"], int)
                         section_id_order[sec_or_mod_id_or_anchor] = ss["order"]
-                    if ss.get("after") in section_id_order.keys():
+                    if ss.get("after") in section_id_order:
                         assert isinstance(ss["after"], str)
                         section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["after"]] + 1
-                    if ss.get("before") in section_id_order.keys():
+                    if ss.get("before") in section_id_order:
                         assert isinstance(ss["before"], str)
                         section_id_order[sec_or_mod_id_or_anchor] = section_id_order[ss["before"]] - 1
             # Remove module sections

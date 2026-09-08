@@ -224,7 +224,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Found report in: {f['root']}")
             sid, data = self.parse_report(f["f"])
             s_name = self.clean_s_name(sid, f)
-            if s_name in reports.keys():
+            if s_name in reports:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             reports[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
@@ -242,7 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             s_name = self.clean_s_name(sid, f)
-            if s_name in summaries.keys():
+            if s_name in summaries:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             summaries[s_name] = data
             self.add_data_source(f, s_name=s_name, section="supernova-table")
@@ -253,7 +253,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("supernova/molecules"):
             log.debug(f"Found histogram_molecules.json in: {f['root']}")
             try:
-                if f["root"] in root_summary.keys():
+                if f["root"] in root_summary:
                     data = self.parse_histogram(f["f"])
                     sid = root_summary[f["root"]]
                     s_name = self.clean_s_name(sid, f)
@@ -267,7 +267,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("supernova/kmers"):
             log.debug(f"Found histogram_kmer_count.json in: {f['root']}")
             try:
-                if f["root"] in root_summary.keys():
+                if f["root"] in root_summary:
                     data = self.parse_histogram(f["f"], 400)
                     sid = root_summary[f["root"]]
                     s_name = self.clean_s_name(sid, f)
@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Data from summary.json supersedes data from report.txt
         for sample_id, sum_data in summaries.items():
-            if sample_id in reports.keys():
+            if sample_id in reports:
                 log.debug(f"Found summary data for sample {sample_id} which supersedes report data")
                 reports[sample_id] = sum_data
         # Ignore cmd-line specified samples
@@ -442,7 +442,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise RuntimeError
 
         for key, value in cdict.items():
-            if key in stats.keys():
+            if key in stats:
                 # Some trickery for supernova 1.1.4 compatability
                 if key == "placed_frac":
                     value = value * 100
@@ -510,9 +510,9 @@ class MultiqcModule(BaseMultiqcModule):
             stat_val = stat_m.groups()
             stat_type = stat_val[2].strip()
             # Parse the lines containing statistics
-            if stat_type in stats.keys():
+            if stat_type in stats:
                 try:
-                    if stat_val[1] in exp.keys():
+                    if stat_val[1] in exp:
                         data[stats[stat_type]] = float(stat_val[0]) * exp[stat_val[1]]
                     else:
                         data[stats[stat_type]] = float(stat_val[0])
@@ -529,7 +529,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise e
 
         numbins = cdict["numbins"] + 1
-        xdata = [i * cdict["binsize"] for i in range(0, numbins)]
+        xdata = [i * cdict["binsize"] for i in range(numbins)]
         return {i: j for (i, j) in zip(xdata, cdict["vals"][:cutoff])}
 
     @staticmethod
@@ -540,11 +540,10 @@ class MultiqcModule(BaseMultiqcModule):
             for key, value in plot_data.items():
                 join_plot[key] = join_plot.get(key, 0) + value
         max_i = 0
-        for key in join_plot.keys():
+        for key in join_plot:
             max_i += join_plot[key]
             cuml_plot[key] = max_i
         max_x = [i for i, j in cuml_plot.items() if j <= max_i * pct][-1]
         # xlim = {, 50} at minimum
-        if max_x < min_x:
-            max_x = min_x
+        max_x = max(max_x, min_x)
         return max_x

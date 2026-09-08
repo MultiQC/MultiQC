@@ -32,10 +32,10 @@ You can see the bundled templates defined in this way:
 
 ```python
 entry_points = {
-    'multiqc.templates.v1': [
-        'default = multiqc.templates.default',
-        'simple = multiqc.templates.simple',
-        'geo = multiqc.templates.geo',
+    "multiqc.templates.v1": [
+        "default = multiqc.templates.default",
+        "simple = multiqc.templates.simple",
+        "geo = multiqc.templates.geo",
     ]
 }
 ```
@@ -59,7 +59,7 @@ directory and the main jinja template file:
 
 ```python
 template_dir = os.path.dirname(__file__)
-base_fn = 'base.html'
+base_fn = "base.html"
 ```
 
 ## Child templates
@@ -73,7 +73,7 @@ _child template_.
 To do this, add an extra variable to your template's `__init__.py`:
 
 ```python
-template_parent = 'default'
+template_parent = "default"
 ```
 
 This tells MultiQC to use the template files from the `default` template unless
@@ -109,8 +109,8 @@ static image plots.
 ```python
 from multiqc.utils import config
 
-output_subdir = 'multiqc_report'
-copy_files = ['assets']
+output_subdir = "multiqc_report"
+copy_files = ["assets"]
 config.plots_force_flat = True
 ```
 
@@ -182,11 +182,16 @@ either `bargraph` or `linegraph`, MultiQC will use that instead. For example:
 
 ```python
 def custom_linegraph(plotdata, pconfig):
-    return '<h1>Awesome line graph here</h1>'
+    return "<h1>Awesome line graph here</h1>"
+
+
 linegraph = custom_linegraph
 
+
 def custom_bargraph(plotdata, plotseries, pconfig):
-    return '<h1>Awesome bar graph here</h1>'
+    return "<h1>Awesome bar graph here</h1>"
+
+
 bargraph = custom_bargraph
 ```
 

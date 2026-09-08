@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
         except Exception as e:
             log.warning(f"Could not parse DamageProfiler JSON: '{f['fn']}': {e}")
-            return None
+            return
 
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)

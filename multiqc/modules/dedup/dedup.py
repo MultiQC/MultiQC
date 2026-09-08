@@ -69,11 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
             # Check for Keys existing
             if "metrics" not in parsed_json or "metadata" not in parsed_json:
                 log.debug(f"DeDup JSON missing essential keys - skipping sample: '{f['fn']}'")
-                return None
+                return
         except JSONDecodeError as e:
             log.debug(f"Could not parse DeDup JSON: '{f['fn']}'")
             log.debug(e)
-            return None
+            return
 
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)

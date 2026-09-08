@@ -3,13 +3,13 @@ import os
 import platform
 import re
 import sys
-from typing import Optional, Dict, Union
+from typing import Dict, Optional, Union
 
 import requests
 from packaging import version
 
 from multiqc import config
-from multiqc.utils.util_functions import strtobool, is_running_in_notebook
+from multiqc.utils.util_functions import is_running_in_notebook, strtobool
 
 logger = logging.getLogger(__name__)
 

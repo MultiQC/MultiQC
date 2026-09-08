@@ -5,7 +5,8 @@ import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, Dict, List, Literal, NewType, Optional, Set, Tuple, TypedDict, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -49,11 +50,7 @@ class CatConf(ValidatedConfig):
 
 # Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
 InputCategoriesT = Union[
-    Sequence[str],
-    Mapping[CatName, Mapping[str, Any]],
-    Sequence[CatName],
-    Mapping[str, Mapping[str, Any]],
-    Sequence[str],
+    Sequence[str], Mapping[CatName, Mapping[str, Any]], Sequence[CatName], Mapping[str, Mapping[str, Any]]
 ]
 
 
@@ -155,7 +152,7 @@ def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "co
         return [sample_names[i] for i in clustered_indices]
 
     except Exception as e:
-        logger.warning(f"Sample clustering failed: {str(e)}")
+        logger.warning(f"Sample clustering failed: {e!s}")
         return sample_names
 
 
@@ -679,7 +676,7 @@ class Dataset(BaseDataset):
                     cats_clustered.append(cat_clustered)
 
             except Exception as e:
-                logger.warning(f"Failed to create clustered data: {str(e)}")
+                logger.warning(f"Failed to create clustered data: {e!s}")
 
         dataset = Dataset(
             **dataset.model_dump(),
@@ -979,16 +976,10 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 xmin_cnt = min(min(cat.data[i] for cat in dataset.cats) for i in range(len(dataset.samples)))
             else:
                 # max sum of all categories across all samples
-                xmax_cnt = max(
-                    sum(cat.data[i] if cat.data[i] > 0 else 0 for cat in dataset.cats)
-                    for i in range(len(dataset.samples))
-                )
-                xmin_cnt = min(
-                    sum(cat.data[i] if cat.data[i] < 0 else 0 for cat in dataset.cats)
-                    for i in range(len(dataset.samples))
-                )
+                xmax_cnt = max(sum(max(0, cat.data[i]) for cat in dataset.cats) for i in range(len(dataset.samples)))
+                xmin_cnt = min(sum(min(0, cat.data[i]) for cat in dataset.cats) for i in range(len(dataset.samples)))
 
-            minallowed = 0 if xmin_cnt > 0 else xmin_cnt  # allow bar to start below zero
+            minallowed = min(xmin_cnt, 0)  # allow bar to start below zero
             maxallowed = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
             if maxallowed is None:
                 maxallowed = xmax_cnt
@@ -1076,8 +1067,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                     )
                 else:
                     dataset.pct_range["xaxis"]["min"] = min(
-                        sum(cat.data_pct[i] if cat.data_pct[i] < 0 else 0 for cat in dataset.cats)
-                        for i in range(len(dataset.samples))
+                        sum(min(0, cat.data_pct[i]) for cat in dataset.cats) for i in range(len(dataset.samples))
                     )
 
         if model.add_log_tab:

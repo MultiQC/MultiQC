@@ -120,8 +120,8 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[key] = this_row
 
         # Check that this actually is a featureCounts file, as format and parsing is quite general
-        if "Assigned" not in parsed_data.keys():
-            return None
+        if "Assigned" not in parsed_data:
+            return
 
         for idx, f_name in enumerate(file_names):
             # Clean up sample name

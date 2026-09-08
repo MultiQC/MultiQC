@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, violin
@@ -193,28 +193,27 @@ def parse_samtools_stats(module: BaseMultiqcModule):
         "tt_decimals": 2,
         "shared_key": "base_count",
     }
-    keys["raw_total_sequences"] = dict(reads, **{"title": "Total sequences"})
+    keys["raw_total_sequences"] = dict(reads, title="Total sequences")
     keys["reads_mapped_and_paired"] = dict(
         reads,
-        **{"title": "Mapped &amp; paired", "description": "Paired-end technology bit set + both mates mapped"},
+        title="Mapped &amp; paired",
+        description="Paired-end technology bit set + both mates mapped",
     )
-    keys["reads_properly_paired"] = dict(reads, **{"title": "Properly paired", "description": "Proper-pair bit set"})
-    keys["reads_duplicated"] = dict(reads, **{"title": "Duplicated", "description": "PCR or optical duplicate bit set"})
-    keys["reads_QC_failed"] = dict(reads, **{"title": "QC Failed"})
-    keys["reads_MQ0"] = dict(reads, **{"title": "Reads MQ0", "description": "Reads mapped and MQ=0"})
-    keys["bases_mapped_(cigar)"] = dict(
-        bases, **{"title": "Mapped bases (CIGAR)", "description": "Mapped bases (CIGAR)"}
-    )
-    keys["bases_trimmed"] = dict(bases, **{"title": "Bases Trimmed"})
-    keys["bases_duplicated"] = dict(bases, **{"title": "Duplicated bases"})
+    keys["reads_properly_paired"] = dict(reads, title="Properly paired", description="Proper-pair bit set")
+    keys["reads_duplicated"] = dict(reads, title="Duplicated", description="PCR or optical duplicate bit set")
+    keys["reads_QC_failed"] = dict(reads, title="QC Failed")
+    keys["reads_MQ0"] = dict(reads, title="Reads MQ0", description="Reads mapped and MQ=0")
+    keys["bases_mapped_(cigar)"] = dict(bases, title="Mapped bases (CIGAR)", description="Mapped bases (CIGAR)")
+    keys["bases_trimmed"] = dict(bases, title="Bases Trimmed")
+    keys["bases_duplicated"] = dict(bases, title="Duplicated bases")
     keys["pairs_on_different_chromosomes"] = dict(
-        reads, **{"title": "Diff chromosomes", "description": "Pairs on different chromosomes"}
+        reads, title="Diff chromosomes", description="Pairs on different chromosomes"
     )
     keys["pairs_with_other_orientation"] = dict(
-        reads, **{"title": "Other orientation", "description": "Pairs with other orientation"}
+        reads, title="Other orientation", description="Pairs with other orientation"
     )
-    keys["inward_oriented_pairs"] = dict(reads, **{"title": "Inward pairs", "description": "Inward oriented pairs"})
-    keys["outward_oriented_pairs"] = dict(reads, **{"title": "Outward pairs", "description": "Outward oriented pairs"})
+    keys["inward_oriented_pairs"] = dict(reads, title="Inward pairs", description="Inward oriented pairs")
+    keys["outward_oriented_pairs"] = dict(reads, title="Outward pairs", description="Outward oriented pairs")
 
     module.add_section(
         name="Alignment stats",
@@ -249,9 +248,7 @@ def alignment_section(module, samples_data):
             bedgraph_data[sample_id] = data
         else:
             log.warning(
-                "sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {}".format(
-                    sample_id
-                )
+                f"sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {sample_id}"
             )
     module.add_section(
         name="Percent mapped",

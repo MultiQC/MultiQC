@@ -1,10 +1,8 @@
 import re
-from operator import itemgetter
 from bisect import bisect
-from typing import Tuple, Union, Dict, List
-
 from math import sqrt
-from operator import add
+from operator import add, itemgetter
+from typing import Dict, List, Tuple, Union
 
 
 def humanize_genomic_dist(dist, units=1) -> str:

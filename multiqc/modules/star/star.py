@@ -76,9 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data_by_sample) > 0:
             if len(genecounts_unstranded) > 0:
-                log.info(
-                    "Found {} reports and {} gene count files".format(len(data_by_sample), len(genecounts_unstranded))
-                )
+                log.info(f"Found {len(data_by_sample)} reports and {len(genecounts_unstranded)} gene count files")
             else:
                 log.info(f"Found {len(data_by_sample)} reports")
         else:

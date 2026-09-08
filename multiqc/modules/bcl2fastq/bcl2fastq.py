@@ -196,9 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
                 sample = self.clean_s_name(sample, f)
                 if sample in run_data[lane]["samples"]:
                     log.debug(
-                        "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
-                            self.prepend_runid(runId, lane), sample
-                        )
+                        f"Duplicate runId/lane/sample combination found! Overwriting: {self.prepend_runid(runId, lane)}, {sample}"
                     )
                 run_data[lane]["samples"][sample] = {
                     "total": 0,

@@ -4,9 +4,9 @@ import json
 import logging
 from collections import defaultdict
 
+from multiqc import report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
-from multiqc import report
 from multiqc.utils.material_icons import get_material_icon
 
 from .util import average_from_range, average_pos_from_metric
@@ -61,7 +61,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("per_base_n_content not found in DRAGEN FastQC reports")
-            return None
+            return
 
         pconfig = {
             "id": "dragenqc_per_base_n_content_plot",
@@ -137,7 +137,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
-            return None
+            return
 
         html = """<div id="dragen_fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">

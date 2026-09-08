@@ -199,9 +199,7 @@ def _histogram_data(iterator):
                 try:
                     problem_type, name = values[0].split(":")
                 except ValueError:
-                    log.warning(
-                        "Line did not look like normal picard 'ERROR:NAME' format, ignoring: {}".format(values[0])
-                    )
+                    log.warning(f"Line did not look like normal picard 'ERROR:NAME' format, ignoring: {values[0]}")
                     continue
                 yield problem_type, name, int(values[1])
             elif line.startswith("Error Type"):

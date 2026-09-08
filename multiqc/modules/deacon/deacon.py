@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-
 from typing import Dict
 
 from multiqc import config

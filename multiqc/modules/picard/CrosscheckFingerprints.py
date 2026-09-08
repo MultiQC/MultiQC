@@ -7,7 +7,7 @@ from csv import DictReader
 from itertools import chain, groupby
 
 from multiqc import config
-from multiqc.plots import table, heatmap
+from multiqc.plots import heatmap, table
 from multiqc.utils.util_functions import strtobool
 
 # Initialize the logger

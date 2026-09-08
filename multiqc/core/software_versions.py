@@ -3,7 +3,8 @@
 import logging
 import os
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any, Dict, List, Optional, Tuple
 
 import packaging.version
 import yaml

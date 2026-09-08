@@ -175,9 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name][org] = self.fq_screen_data[s_name][org]["counts"]["one_hit_one_library"]
                 except KeyError:
                     log.error(
-                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results. Skipping sample".format(
-                            org, s_name
-                        )
+                        f"No counts found for '{org}' ('{s_name}'). Could be malformed or very old FastQ Screen results. Skipping sample"
                     )
                     continue
                 try:
@@ -267,7 +265,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pcats.append(cats)
 
         if len(pdata) == 0:
-            return None
+            return
 
         self.add_section(
             name="Bisulfite Reads", anchor="fastq_screen_bisulfite", plot=bargraph.plot(pdata, pcats, pconfig)

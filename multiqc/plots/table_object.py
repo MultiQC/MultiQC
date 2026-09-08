@@ -5,11 +5,12 @@ MultiQC datatable class, used by tables and violin plots
 import logging
 import math
 import re
-from html import escape
 from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from html import escape
 from pathlib import Path
+from typing import Any, Callable, Dict, List, NewType, Optional, Set, Tuple, TypedDict, Union, cast
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -187,7 +188,7 @@ class ColumnMeta(ValidatedConfig):
             else:
                 multiplier = 1
             if col_dict.get("modify") is None:
-                col_dict["modify"] = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore  # noqa: E731
+                col_dict["modify"] = lambda x: x * multiplier if isinstance(x, (int, float)) else x  # type: ignore
             if col_dict.get("min") is None:
                 col_dict["min"] = 0
             if col_dict.get("format") is None and multiplier == 1:
@@ -601,7 +602,7 @@ def _get_or_create_headers(
 
     # Check that we have some data in each column
     empties: List[ColumnKey] = list()
-    for col_id in header_by_key_copy.keys():
+    for col_id in header_by_key_copy:
         n = 0
         for _, rows in rows_by_sample.items():
             for row in rows:
@@ -930,7 +931,7 @@ def render_html(
                 for cfk in ["all_columns", str(col_anchor), str(dt.id)]:
                     if cfk in cond_formatting_rules:
                         # Loop through match types
-                        for ftype in cmatches.keys():
+                        for ftype in cmatches:
                             # Loop through array of comparison types
                             for cmp in cond_formatting_rules[cfk].get(ftype, []):
                                 try:
@@ -1232,7 +1233,7 @@ def render_html(
             # Sample name row header
             esc_s_name = escape(s_name)
             html += f'<th class="rowheader" data-sorting-val="{esc_g_name}">{prefix}<span class="th-sample-name" data-original-sn="{esc_s_name}">{esc_s_name}</span></th>'
-            for col_anchor in col_to_th.keys():
+            for col_anchor in col_to_th:
                 cell_html = group_to_sample_to_anchor_to_td[g_name][s_name].get(col_anchor)
                 if not cell_html:
                     td_hide_cls = "column-hidden" if col_to_hidden[col_anchor] else ""

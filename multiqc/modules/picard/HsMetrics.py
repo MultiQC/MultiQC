@@ -1,9 +1,8 @@
 """MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
-from collections import defaultdict
-
 import re
+from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, cast
 
 from multiqc import config

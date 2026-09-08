@@ -6,9 +6,9 @@ across all MultiQC templates and Python code using the Iconify naming scheme.
 """
 
 import logging
-from typing import Optional, Dict
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 

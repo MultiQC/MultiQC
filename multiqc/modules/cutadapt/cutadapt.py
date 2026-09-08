@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Since all reports are most likely the same version, cache the result.
         # version.parse is **very** expensive
-        @functools.lru_cache()
+        @functools.lru_cache
         def version_parse(v):
             return version.parse(v)
 

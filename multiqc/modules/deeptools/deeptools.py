@@ -3,7 +3,6 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
-
 from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
 from .estimateReadFiltering import EstimateReadFilteringMixin
 from .plotCorrelation import plotCorrelationMixin

@@ -212,7 +212,7 @@ def remove_file_handler():
             if config.data_dir is not None and Path(config.data_dir).is_dir():
                 try:
                     shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
-                except IOError:
+                except OSError:
                     pass
         try:
             os.remove(log_tmp_fn)

@@ -1,7 +1,6 @@
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.sambamba.markdup import parse_sambamba_markdup
 
 log = logging.getLogger(__name__)

@@ -59,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
             s = line.split(",")
             # Check that this actually is a Sargasso file
             if is_first_line and s[0] != "Sample":
-                return None
+                return
 
             if len(s) < 7:
                 continue

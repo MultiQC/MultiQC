@@ -2,18 +2,16 @@ import json
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.cells2stats.cells2stats_bar_plots import (
-    plot_cell_segmentation,
     plot_barcoding,
     plot_cell_assignment,
+    plot_cell_segmentation,
     plot_controls,
-    plot_target_polony_assignment,
     plot_target_cell_assignment,
+    plot_target_polony_assignment,
 )
-
+from multiqc.modules.cells2stats.cells2stats_tables import tabulate_batches, tabulate_target_wells, tabulate_wells
 from multiqc.modules.cells2stats.utils import summarize_target_site_names
-from multiqc.modules.cells2stats.cells2stats_tables import tabulate_wells, tabulate_batches, tabulate_target_wells
 
 log = logging.getLogger(__name__)
 

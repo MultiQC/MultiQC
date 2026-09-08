@@ -4,8 +4,8 @@ import os.path
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc import config, report
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 
 logger = logging.getLogger(__name__)
 

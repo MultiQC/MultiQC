@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 txt_data[title][key] = value
 
-        for title in txt_data.keys():
+        for title in txt_data:
             if title not in self.vep_data[f["s_name"]]:
                 self.vep_data[f["s_name"]][title] = {}
             self.vep_data[f["s_name"]][title] = txt_data[title]

@@ -222,8 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse zipped FastQC reports
         for f in self.find_log_files("fastqc/zip", filecontents=False):
             fn = f["fn"]
-            if fn.endswith("_fastqc.zip"):
-                fn = fn[:-11]
+            fn = fn.removesuffix("_fastqc.zip")
             s_name = SampleName(self.clean_s_name(fn, f))
             # Skip if we already have this report - parsing zip files is slow
             if s_name in self.fastqc_data.keys():
@@ -643,7 +642,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         if len(data_by_sample) == 0:
             log.debug("sequence_quality not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -699,7 +698,7 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[s_name] = {d["quality"]: d["count"] for d in sd["per_sequence_quality_scores"]}
         if len(data_by_sample) == 0:
             log.debug("per_seq_quality not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -763,7 +762,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data_by_sample) == 0:
             log.debug("sequence_content not found in FastQC reports")
-            return None
+            return
 
         # Generate unique plot ID, needed in mqc_export_selectplots
         anchor = report.save_htmlid(f"{self.anchor}_per_base_sequence_content_plot")
@@ -846,7 +845,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data_norm_by_sample[s_name][gc] = (count / total) * 100
         if len(data_by_sample) == 0:
             log.debug("per_sequence_gc_content not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -891,7 +890,7 @@ class MultiqcModule(BaseMultiqcModule):
                 try:
                     with open(tgc_path, "r", encoding="utf-8") as f:
                         theoretical_gc_raw = f.read()
-                except IOError:
+                except OSError:
                     log.warning(f"Couldn't open FastQC Theoretical GC Content file {tgc_path}")
                     theoretical_gc_raw = None
         if theoretical_gc_raw is not None:
@@ -970,7 +969,7 @@ class MultiqcModule(BaseMultiqcModule):
             }
         if len(data_by_sample) == 0:
             log.debug("per_base_n_content not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -1036,7 +1035,7 @@ class MultiqcModule(BaseMultiqcModule):
             all_ranges_across_samples.update(sample_ranges_set)
         if len(cnt_by_range_by_sample) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -1095,7 +1094,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
         if len(data) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
-            return None
+            return
 
         # Convert status dict format
         status_dict: Dict[Literal["pass", "warn", "fail"], List[str]] = {"pass": [], "warn": [], "fail": []}
@@ -1187,13 +1186,12 @@ class MultiqcModule(BaseMultiqcModule):
                         "overrepresented_sequences": [],
                     }
                 else:
-                    if s_name in data_by_sample:
-                        del data_by_sample[s_name]
+                    data_by_sample.pop(s_name, None)
                     log.debug(f"Couldn't find data for {s_name}, invalid Key")
 
         if all(len(data_by_sample.get(s_name, {})) == 0 for s_name in self.fastqc_data):
             log.debug("overrepresented_sequences not found in FastQC reports")
-            return None
+            return
 
         cats = {
             "top_overrepresented": {"name": "Top overrepresented sequence"},
@@ -1348,7 +1346,7 @@ class MultiqcModule(BaseMultiqcModule):
                         pct_by_pos_by_sample.setdefault(k, {})[pos] = percent
         if len(pct_by_pos_by_sample) == 0:
             log.debug("adapter_content not found in FastQC reports")
-            return None
+            return
 
         # Lots of these datasets will be all zeros.
         # Only take datasets with > 0.1% adapter contamination

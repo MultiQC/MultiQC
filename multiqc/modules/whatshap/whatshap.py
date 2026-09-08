@@ -144,7 +144,6 @@ class MultiqcModule(BaseMultiqcModule):
             avg_fields = {
                 "bp_per_block_avg",
                 "variant_per_block_avg",
-                "bp_per_block_avg",
             }
             results[ALL_CHROM] = defaultdict(int)
             for chrom in results:

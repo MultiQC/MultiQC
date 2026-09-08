@@ -324,8 +324,8 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
         if len(warnings) > 0:
             warnings_by_sample[s_name] = warnings
         all_plots_params_by_id.update(plots_params_by_id)
-        for k in plots_data_by_sname_by_id.keys():
-            if k not in all_plots_data_by_sname_by_id.keys():
+        for k in plots_data_by_sname_by_id:
+            if k not in all_plots_data_by_sname_by_id:
                 all_plots_data_by_sname_by_id[k] = dict()
             all_plots_data_by_sname_by_id[k].update(plots_data_by_sname_by_id[k])
 
@@ -334,7 +334,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
         antibody_data_by_sample = module.ignore_samples(antibody_data_by_sample)
     general_data_by_sample = module.ignore_samples(general_data_by_sample)
     warnings_by_sample = module.ignore_samples(warnings_by_sample)
-    for k in all_plots_data_by_sname_by_id.keys():
+    for k in all_plots_data_by_sname_by_id:
         all_plots_data_by_sname_by_id[k] = module.ignore_samples(all_plots_data_by_sname_by_id[k])
 
     general_data_headers["reads"] = {

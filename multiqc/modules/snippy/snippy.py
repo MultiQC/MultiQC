@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 data[sample] = {}
-                for i in range(0, len(self.snippy_core_col)):
+                for i in range(len(self.snippy_core_col)):
                     data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])
                 data[sample]["Percent_Aligned"] = (data[sample]["ALIGNED"] / data[sample]["LENGTH"]) * 100
                 data[sample]["Percent_Het"] = (data[sample]["HET"] / data[sample]["ALIGNED"]) * 100
@@ -194,7 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 bargraph_data[sample] = {}
-                for i in range(0, len(self.snippy_core_col)):
+                for i in range(len(self.snippy_core_col)):
                     if self.snippy_core_col[i] == "LENGTH":
                         continue
                     bargraph_data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])

@@ -1,7 +1,7 @@
 import json
 import logging
-from html import escape
 import os
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -115,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         if len(databases) == 1:
             databases_message = f"Database index: {list(databases)[0]}"
         elif len(databases) > 1:
-            log.warning(f"Multiple database indices found in data: {', '.join(list(sorted(databases)))}")
+            log.warning(f"Multiple database indices found in data: {', '.join(sorted(databases))}")
             databases_message = (
                 f"<div class='alert alert-warning'>Warning: multiple database indices found in data: "
                 f"{', '.join(f'<code>{escape(d)}</code>' for d in sorted(databases))}. "

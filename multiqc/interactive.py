@@ -5,8 +5,9 @@ Python environment, such as Jupyter notebooks.
 
 import logging
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
+from typing import Dict, List, Optional, Union
 
 from numpy import isin
 

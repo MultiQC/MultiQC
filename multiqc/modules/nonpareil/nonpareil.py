@@ -5,11 +5,9 @@ import numpy as np
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
+from multiqc.plots import linegraph, table
 from multiqc.plots.linegraph import Series
 from multiqc.utils import mqc_colour
-
-
-from multiqc.plots import table, linegraph
 
 log = logging.getLogger(__name__)
 

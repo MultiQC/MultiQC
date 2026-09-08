@@ -16,7 +16,6 @@ from .plot_qahist import plot_qahist
 from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
 
-
 section_order = [
     "stats",
     "covhist",

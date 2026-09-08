@@ -73,18 +73,11 @@ class plotProfileMixin:
                         "color": "#000000",
                     }
                 )
-                plotBandHelp = """
-                    * Green: {} upstream of gene to {}
-                    * Yellow: {} to {}
-                    * Pink: {} to {} downstream of gene
-                    """.format(
-                    list(filter(None, bin_labels))[0],
-                    list(filter(None, bin_labels))[1],
-                    list(filter(None, bin_labels))[1],
-                    list(filter(None, bin_labels))[2],
-                    list(filter(None, bin_labels))[2],
-                    list(filter(None, bin_labels))[3],
-                )
+                plotBandHelp = f"""
+                    * Green: {list(filter(None, bin_labels))[0]} upstream of gene to {list(filter(None, bin_labels))[1]}
+                    * Yellow: {list(filter(None, bin_labels))[1]} to {list(filter(None, bin_labels))[2]}
+                    * Pink: {list(filter(None, bin_labels))[2]} to {list(filter(None, bin_labels))[3]} downstream of gene
+                    """
             except (ValueError, IndexError):
                 pass
 
@@ -101,11 +94,11 @@ class plotProfileMixin:
             self.add_section(
                 name="Read Distribution Profile after Annotation",
                 anchor="read_distribution_profile_plot",
-                description="""
+                description=f"""
                     Accumulated view of the distribution of sequence reads related to the closest annotated gene.
                     All annotated genes have been normalized to the same size.
 
-                    {}""".format(plotBandHelp),
+                    {plotBandHelp}""",
                 plot=linegraph.plot(self.deeptools_plotProfile, config),
             )
 

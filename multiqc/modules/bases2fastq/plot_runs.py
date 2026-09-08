@@ -2,10 +2,11 @@ import math
 from html import escape
 from typing import Any, Dict, List, cast
 
+from natsort import natsorted
+
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict, SectionT
 from multiqc.utils import mqc_colour
-from natsort import natsorted
 
 
 def _format_indexing(value: str) -> str:
@@ -607,7 +608,7 @@ def plot_base_quality_hist(run_data, color_dict):
         R1R2_base_quality_counts = [r1 + r2 for r1, r2 in zip(R1_base_quality_counts, R2_base_quality_counts)]
         total_bases = sum(R1R2_base_quality_counts)
         bq_hist_dict.update({s_name: {}})
-        for quality in range(0, len(R1R2_base_quality_counts)):
+        for quality in range(len(R1R2_base_quality_counts)):
             bq_hist_dict[s_name].update({quality: R1R2_base_quality_counts[quality] / total_bases * 100})
 
     # Prepare plot data for per read average BQ histogram
@@ -624,7 +625,7 @@ def plot_base_quality_hist(run_data, color_dict):
         total_reads = run_data[s_name]["NumPolonies"] * multiplier
         R1R2_quality_counts = [r1 + r2 for r1, r2 in zip(R1_quality_counts, R2_quality_counts)]
         per_read_quality_hist_dict.update({s_name: {}})
-        for meanQuality in range(0, len(R1R2_quality_counts)):
+        for meanQuality in range(len(R1R2_quality_counts)):
             per_read_quality_hist_dict[s_name].update(
                 {meanQuality: R1R2_quality_counts[meanQuality] / total_reads * 100}
             )

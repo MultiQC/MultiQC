@@ -4,8 +4,8 @@ http://bamtools.sourceforge.net/#bam-stat-py"""
 import logging
 import re
 
-from multiqc.plots import violin
 from multiqc import config
+from multiqc.plots import violin
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -104,18 +104,18 @@ def parse_reports(self):
         "tt_decimals": 2,
     }
 
-    keys["total_reads"] = dict(num_defaults, **{"title": "Total reads", "description": "Total reads (millions)"})
-    keys["mapped_reads_pct"] = dict(defaults, **{"title": "Mapped reads"})
-    keys["forward_strand_pct"] = dict(defaults, **{"title": "Forward strand"})
-    keys["reverse_strand_pct"] = dict(defaults, **{"title": "Reverse strand"})
-    keys["failed_qc_pct"] = dict(defaults, **{"title": "Failed QC"})
-    keys["duplicates_pct"] = dict(defaults, **{"title": "Duplicates"})
-    keys["paired_end_pct"] = dict(defaults, **{"title": "Paired-end", "description": "Paired-end reads"})
-    keys["proper_pairs_pct"] = dict(defaults, **{"title": "Proper-pairs"})
-    keys["both_mapped_pct"] = dict(defaults, **{"title": "Both mapped", "description": "Both pairs mapped"})
-    keys["bt_read_1"] = dict(num_defaults, **{"title": "Read 1", "description": "Read 1 (millions)"})
-    keys["bt_read_2"] = dict(num_defaults, **{"title": "Read 2", "description": "Read 2 (millions)"})
-    keys["singletons_pct"] = dict(defaults, **{"title": "Singletons"})
+    keys["total_reads"] = dict(num_defaults, title="Total reads", description="Total reads (millions)")
+    keys["mapped_reads_pct"] = dict(defaults, title="Mapped reads")
+    keys["forward_strand_pct"] = dict(defaults, title="Forward strand")
+    keys["reverse_strand_pct"] = dict(defaults, title="Reverse strand")
+    keys["failed_qc_pct"] = dict(defaults, title="Failed QC")
+    keys["duplicates_pct"] = dict(defaults, title="Duplicates")
+    keys["paired_end_pct"] = dict(defaults, title="Paired-end", description="Paired-end reads")
+    keys["proper_pairs_pct"] = dict(defaults, title="Proper-pairs")
+    keys["both_mapped_pct"] = dict(defaults, title="Both mapped", description="Both pairs mapped")
+    keys["bt_read_1"] = dict(num_defaults, title="Read 1", description="Read 1 (millions)")
+    keys["bt_read_2"] = dict(num_defaults, title="Read 2", description="Read 2 (millions)")
+    keys["singletons_pct"] = dict(defaults, title="Singletons")
 
     self.add_section(
         name="Bamtools Stats",

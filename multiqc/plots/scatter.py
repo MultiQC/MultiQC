@@ -5,7 +5,8 @@ import json
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
+from collections.abc import Mapping
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import numpy as np
 import polars as pl

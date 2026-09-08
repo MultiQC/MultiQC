@@ -2,6 +2,7 @@ import logging
 import os
 
 from multiqc.base_module import ModuleNoSamplesFound
+
 from .base_metrics import DragenBaseMetrics
 from .content_metrics import DragenContentMetrics
 from .gc_metrics import DragenFastqcGcMetrics

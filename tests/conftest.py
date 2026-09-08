@@ -1,6 +1,6 @@
 import pytest
 
-from multiqc import report, config, validation
+from multiqc import config, report, validation
 from multiqc.utils import testing
 
 

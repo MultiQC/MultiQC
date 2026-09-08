@@ -3,10 +3,11 @@ JSON Schema for MultiQC config validation.
 Generated from the config defaults and type hints.
 """
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import Any, Dict, Iterator, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -857,28 +858,27 @@ class MultiQCConfig(BaseModel):
                 ],
             )
 
-    with section("Software Versions"):
-        with group("Software Versions"):
-            software_versions: Optional[Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]] = cfg(
-                (
-                    "Manually specify software versions for the Software Versions section. "
-                    "Top-level keys are group or software names. Values are a single version string, "
-                    "a list of version strings, or a dict mapping software name to a version "
-                    "string or list of version strings (when the group contains multiple tools)."
-                ),
-                examples=[
-                    {"samtools": "1.20", "bwa": "0.7.17", "fastqc": "0.12.1"},
-                    {"quast": ["5.2.0", "5.1.0"]},
-                    {"samtools": {"samtools": "1.11", "htslib": "1.3"}},
-                ],
-            )
-            versions_table_group_header: Optional[str] = cfg(
-                "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
-            )
-            disable_version_detection: Optional[bool] = cfg(
-                "Skip parsing software versions from module log files.",
-            )
-            skip_versions_section: Optional[bool] = cfg("Hide the Software Versions section.")
+    with section("Software Versions"), group("Software Versions"):
+        software_versions: Optional[Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]] = cfg(
+            (
+                "Manually specify software versions for the Software Versions section. "
+                "Top-level keys are group or software names. Values are a single version string, "
+                "a list of version strings, or a dict mapping software name to a version "
+                "string or list of version strings (when the group contains multiple tools)."
+            ),
+            examples=[
+                {"samtools": "1.20", "bwa": "0.7.17", "fastqc": "0.12.1"},
+                {"quast": ["5.2.0", "5.1.0"]},
+                {"samtools": {"samtools": "1.11", "htslib": "1.3"}},
+            ],
+        )
+        versions_table_group_header: Optional[str] = cfg(
+            "Column header for the grouping column in the Software Versions table. Defaults to 'Group'.",
+        )
+        disable_version_detection: Optional[bool] = cfg(
+            "Skip parsing software versions from module log files.",
+        )
+        skip_versions_section: Optional[bool] = cfg("Hide the Software Versions section.")
 
     with section("Read & Base Counts"):
         with group("Short reads"):
@@ -1002,21 +1002,20 @@ class MultiQCConfig(BaseModel):
                 gt=0,
             )
 
-    with section("MegaQC"):
-        with group("MegaQC Integration"):
-            megaqc_url: Optional[str] = cfg(
-                "URL of a MegaQC instance to upload report data to after generation.",
-            )
-            megaqc_access_token: Optional[str] = cfg(
-                "Auth token for the MegaQC instance.",
-            )
-            megaqc_timeout: Optional[int] = cfg(
-                "Upload timeout in seconds when posting to MegaQC.",
-                gt=0,
-            )
-            megaqc_upload: Optional[bool] = cfg(
-                "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
-            )
+    with section("MegaQC"), group("MegaQC Integration"):
+        megaqc_url: Optional[str] = cfg(
+            "URL of a MegaQC instance to upload report data to after generation.",
+        )
+        megaqc_access_token: Optional[str] = cfg(
+            "Auth token for the MegaQC instance.",
+        )
+        megaqc_timeout: Optional[int] = cfg(
+            "Upload timeout in seconds when posting to MegaQC.",
+            gt=0,
+        )
+        megaqc_upload: Optional[bool] = cfg(
+            "Upload report data to MegaQC after generation. Requires megaqc_url and megaqc_access_token.",
+        )
 
     with section("Performance & Debugging"):
         with group("Profiling"):

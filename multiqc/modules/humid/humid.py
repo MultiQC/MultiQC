@@ -2,7 +2,7 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import stats, neighbours, counts, clusters
+from . import clusters, counts, neighbours, stats
 
 log = logging.getLogger(__name__)
 

@@ -118,7 +118,7 @@ def load_plot_input(plot_input_data_dict: Dict) -> Tuple[NormalizedPlotInputData
 
 class LoadMultiqcData(BaseMultiqcModule):
     def __init__(self):
-        super(LoadMultiqcData, self).__init__(
+        super().__init__(
             name="MultiQC Data",
             anchor=Anchor("multiqc_data"),
             info="loads multiqc data",

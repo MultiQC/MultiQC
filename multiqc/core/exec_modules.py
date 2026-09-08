@@ -14,8 +14,8 @@ from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks, software_versions
 from multiqc.core.exceptions import NoAnalysisFound, RunError
-from multiqc.types import Anchor
 from multiqc.core.special_case_modules.load_multiqc_data import LoadMultiqcData
+from multiqc.types import Anchor
 
 logger = logging.getLogger(__name__)
 
@@ -76,8 +76,11 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
-            setattr(module_initializer, "mod_cust_config", mod_cust_config)
-            setattr(module_initializer, "mod_id", this_module)
+            # Attributes stashed on the loaded entry point for the module to pick up.
+            # setattr() used to hide this from mypy; ruff rewrites that away, so the
+            # ignores now say plainly what is going on.
+            module_initializer.mod_cust_config = mod_cust_config  # type: ignore[attr-defined]
+            module_initializer.mod_id = this_module  # type: ignore[attr-defined]
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.

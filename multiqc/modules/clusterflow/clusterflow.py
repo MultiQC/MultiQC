@@ -135,7 +135,7 @@ class MultiqcModule(BaseMultiqcModule):
             for cmd in commands:
                 s = cmd.split()
                 tool = self._guess_cmd_name(s)
-                if tool not in tool_cmd_parts.keys():
+                if tool not in tool_cmd_parts:
                     tool_cmd_parts[tool] = list()
                 tool_cmd_parts[tool].append(s)
 
@@ -364,10 +364,10 @@ class MultiqcModule(BaseMultiqcModule):
             pid = d.get("pipeline_id", "unknown")
             data[pid] = [d.get("pipeline_name"), "\n".join(d.get("pipeline_steps", []))]
         for pid, d in data.items():
-            html += """
+            html += f"""
                 <div class="panel panel-default">
-                    <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {} (<code>{}</code>)</h3></div>
-                    <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{}</pre>
+                    <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {escape(pid)} (<code>{escape(str(d[0]))}</code>)</h3></div>
+                    <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{escape(d[1])}</pre>
                 </div>
-                """.format(escape(pid), escape(str(d[0])), escape(d[1]))
+                """
         return html

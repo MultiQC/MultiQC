@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any anglerfish reports
-        self.anglerfish_data: Dict[str, Dict[str, Union[str, float, str]]] = {}
+        self.anglerfish_data: Dict[str, Dict[str, Union[str, float]]] = {}
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)

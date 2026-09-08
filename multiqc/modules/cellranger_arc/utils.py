@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
 
 from multiqc import config
 

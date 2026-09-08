@@ -6,9 +6,9 @@ from typing import Dict, Optional
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.cellranger_arc.utils import (
     extract_plot_data,
+    set_hidden_cols,
     subset_header,
     table_data_and_headers,
-    set_hidden_cols,
 )
 from multiqc.plots import linegraph, table
 

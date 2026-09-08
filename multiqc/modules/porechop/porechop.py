@@ -162,9 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "Start Trimmed": {
                 "title": f"Start Trimmed ({config.read_count_prefix})",
-                "description": "Number of reads that had adapters trimmed from the start ({})".format(
-                    config.read_count_prefix
-                ),
+                "description": f"Number of reads that had adapters trimmed from the start ({config.read_count_prefix})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -179,9 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "End Trimmed": {
                 "title": f"End Trimmed ({config.read_count_prefix})",
-                "description": "Number of reads that had adapters trimmed from the end ({})".format(
-                    config.read_count_prefix
-                ),
+                "description": f"Number of reads that had adapters trimmed from the end ({config.read_count_prefix})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

@@ -1,7 +1,8 @@
 """Shared helpers for the riker submodules."""
 
 import logging
-from typing import Dict, Iterator, List, Optional, TextIO
+from collections.abc import Iterator
+from typing import Dict, List, Optional, TextIO
 
 log = logging.getLogger(__name__)
 

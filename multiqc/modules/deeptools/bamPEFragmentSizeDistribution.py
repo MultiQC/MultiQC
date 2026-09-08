@@ -55,9 +55,7 @@ class bamPEFragmentSizeDistributionMixin:
         lastsample = []
         for line in f["f"].splitlines():
             cols = line.rstrip().split("\t")
-            if cols[0] == "#bamPEFragmentSize":
-                continue
-            elif cols[0] == "Size":
+            if cols[0] == "#bamPEFragmentSize" or cols[0] == "Size":
                 continue
             else:
                 s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f)

@@ -1,10 +1,10 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from multiqc import config
-from multiqc.base_module import BaseMultiqcModule, SampleGroupingConfig, ModuleNoSamplesFound
+from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
 from multiqc.plots import bargraph
-from multiqc.types import SampleName, ColumnKey
+from multiqc.types import ColumnKey, SampleName
 
 log = logging.getLogger(__name__)
 
@@ -154,7 +154,7 @@ def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNam
 
     seqfu_lengths_data = []
     for c in seqfu_lengths_cols:
-        seqfu_lengths_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
+        seqfu_lengths_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats})
 
     module.add_section(
         name="Sequence lengths",
@@ -198,7 +198,7 @@ def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName
 
     seqfu_counts_data = []
     for c in seqfu_counts_cols:
-        seqfu_counts_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats.keys()})
+        seqfu_counts_data.append({str(s): {c: seqfu_stats[s][c]} for s in seqfu_stats})
 
     module.add_section(
         name="Sequence counts",

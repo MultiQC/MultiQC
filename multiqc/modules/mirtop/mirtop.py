@@ -168,9 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "read_count": {
                 "title": f"{config.read_count_prefix} Reads",
-                "description": "Total read counts - both isomiRs and reference miRNA ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Total read counts - both isomiRs and reference miRNA ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "BuGn",

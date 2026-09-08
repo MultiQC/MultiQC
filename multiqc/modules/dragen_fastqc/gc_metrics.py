@@ -58,7 +58,7 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("per_sequence_gc_content not found in FastQC reports")
-            return None
+            return
 
         pconfig = {
             "id": "dragenqc_per_sequence_gc_content_plot",

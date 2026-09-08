@@ -194,12 +194,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         top_one_hkey = None
 
-        top_one_hkey = "% {}".format(top_taxa[0])
+        top_one_hkey = f"% {top_taxa[0]}"
         headers[top_one_hkey] = {
             "title": top_one_hkey,
-            "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                top_rank_name, top_taxa[0]
-            ),
+            "description": f"Percentage of reads that were the top {top_rank_name} over all samples - {top_taxa[0]}",
             "suffix": "%",
             "max": 100,
             "scale": "PuBuGn",

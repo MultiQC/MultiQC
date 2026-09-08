@@ -242,9 +242,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "paired_reads": {
                 "title": "Reported Read Pairs",
-                "description": "Total number of read pairs ({}) passing the mapping filters".format(
-                    config.read_count_desc
-                ),
+                "description": f"Total number of read pairs ({config.read_count_desc}) passing the mapping filters",
                 "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,

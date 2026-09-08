@@ -8,6 +8,7 @@ import platform
 import random
 import re
 import subprocess
+from collections.abc import Mapping
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -16,7 +17,6 @@ from typing import (
     Dict,
     Generic,
     List,
-    Mapping,
     Optional,
     Set,
     Tuple,
@@ -456,7 +456,7 @@ class BaseDataset(BaseModel):
         return None, None
 
     @staticmethod
-    def fmt_value_for_llm(value: Union[float, int, str, None]) -> str:
+    def fmt_value_for_llm(value: Union[float, str, None]) -> str:
         if isinstance(value, str):
             return value
         if value is None:
@@ -2093,7 +2093,7 @@ def convert_dash_style(dash_style: Optional[str], path_in_cfg: Tuple[str, ...]) 
     }
     if dash_style in mapping.values():  # Plotly style?
         return dash_style
-    elif dash_style in mapping.keys():  # Highcharts style?
+    elif dash_style in mapping:  # Highcharts style?
         add_validation_warning(path_in_cfg, f"'{dash_style}' is a deprecated dash style, use '{mapping[dash_style]}'")
         return mapping[dash_style]
     else:
@@ -2113,7 +2113,7 @@ ROSETTA_WARNING = (
 )
 
 
-@lru_cache()
+@lru_cache
 def is_running_under_rosetta() -> bool:
     """
     Detect if running in an x86_64 container hosted by Apple Silicon. Kaleido often freezes in such containers:

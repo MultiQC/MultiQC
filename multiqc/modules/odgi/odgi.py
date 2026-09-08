@@ -407,7 +407,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         if "cons@" in file_name:
             file_name = file_name.split(".")
-            consensus_identifier = list((e for e in file_name if "cons@" in e))
+            consensus_identifier = list(e for e in file_name if "cons@" in e)
             return consensus_identifier[0]
         elif "smooth" in file_name:
             return "smooth"

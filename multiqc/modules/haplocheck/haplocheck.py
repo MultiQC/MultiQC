@@ -1,7 +1,8 @@
+import logging
 from typing import Dict, Union
+
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
-import logging
 
 log = logging.getLogger(__name__)
 

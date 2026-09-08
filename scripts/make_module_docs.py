@@ -7,14 +7,15 @@ Usage:
 """
 
 import json
-from typing import Dict
-import yaml
-from markdownify import markdownify
+import subprocess
 from pathlib import Path
 from textwrap import dedent
-import subprocess
+from typing import Dict
 
-from multiqc import config, report, BaseMultiqcModule
+import yaml
+from markdownify import markdownify
+
+from multiqc import BaseMultiqcModule, config, report
 
 
 def main():
@@ -152,7 +153,7 @@ If you would like another tool to to be supported, please [open an issue](https:
 import MultiqcModules from "@site/src/components/MultiqcModules";
 
 <MultiqcModules
-modules={{{str(json.dumps(modules_data))}}}
+modules={{{json.dumps(modules_data)!s}}}
 />
 """
         )

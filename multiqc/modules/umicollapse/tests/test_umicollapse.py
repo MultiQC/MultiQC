@@ -1,4 +1,5 @@
 import pytest
+
 from multiqc import config, report
 from multiqc.modules.umicollapse import MultiqcModule
 from multiqc.plots.table_object import InputRow

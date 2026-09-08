@@ -3,6 +3,7 @@ from collections import defaultdict
 from typing import Dict
 
 from multiqc.base_module import ModuleNoSamplesFound
+
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig

@@ -343,7 +343,7 @@ class MultiqcModule(BaseMultiqcModule):
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
         # not all samples have minimizers data, and we want to find top 5 species across those that have
         _taxa_in_samples_with_minimizers = set()
-        taxa_sorted_by_pct = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
+        taxa_sorted_by_pct = sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True)
         for taxon, pct_sum in taxa_sorted_by_pct:
             # Pull out counts for this rank + classif from each sample
             for s_name, dup_by_taxon in species_minimizer_duplication_by_top_taxon_by_sample.items():

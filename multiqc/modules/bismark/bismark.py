@@ -389,9 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
             keys.pop("strand_ctot", None)
             d_mode = "All samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored."
         elif directional > 0:
-            d_mode = "{} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored.".format(
-                directional
-            )
+            d_mode = f"{directional} samples were run with <code>--directional</code> mode; alignments to complementary strands (CTOT, CTOB) were ignored."
 
         # Config for the plot
         config = {
@@ -439,9 +437,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Config for the plot
         defaults = {"max": 100, "min": 0, "suffix": "%", "tt_decimals": 1}
         keys = {
-            "percent_cpg_meth": dict(defaults, **{"title": "Methylated CpG"}),
-            "percent_chg_meth": dict(defaults, **{"title": "Methylated CHG"}),
-            "percent_chh_meth": dict(defaults, **{"title": "Methylated CHH"}),
+            "percent_cpg_meth": dict(defaults, title="Methylated CpG"),
+            "percent_chg_meth": dict(defaults, title="Methylated CHG"),
+            "percent_chh_meth": dict(defaults, title="Methylated CHH"),
         }
 
         self.add_section(

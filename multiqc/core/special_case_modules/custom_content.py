@@ -6,8 +6,9 @@ import logging
 import os
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from io import BufferedReader
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
 
 import markdown
 import yaml
@@ -139,9 +140,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # image is an exception - will return a file handler
                 image_string = base64.b64encode(cast(BufferedReader, f["f"]).read()).decode("utf-8")
                 image_format = "jpg" if f_extension in [".jpeg", ".jpg"] else f_extension[1:]
-                img_html = '<div class="mqc-custom-content-image"><img src="data:image/{};base64,{}" /></div>'.format(
-                    image_format, image_string
-                )
+                img_html = f'<div class="mqc-custom-content-image"><img src="data:image/{image_format};base64,{image_string}" /></div>'
                 parsed_dict = {
                     "id": f["s_name"],
                     "plot_type": "image",

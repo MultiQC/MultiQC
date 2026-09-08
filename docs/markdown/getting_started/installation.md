@@ -463,6 +463,7 @@ the `multiqc.run()` function as follows:
 
 ```python
 import multiqc
+
 multiqc.run("/path/to/dir")
 ```
 

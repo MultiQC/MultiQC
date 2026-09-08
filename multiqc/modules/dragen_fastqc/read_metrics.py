@@ -49,7 +49,7 @@ class DragenReadMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("per_seq_quality not found in DRAGEN FastQC reports")
-            return None
+            return
 
         pconfig = {
             "id": "dragenqc_per_sequence_quality_scores_plot",
@@ -108,7 +108,7 @@ class DragenReadMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("sequence_length_distribution not found in FastQC reports")
-            return None
+            return
 
         if not multiple_lenths:
             lengths = "bp , ".join([str(line) for line in list(seq_lengths)])

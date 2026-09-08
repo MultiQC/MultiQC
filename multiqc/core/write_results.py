@@ -26,8 +26,8 @@ from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
-from multiqc.utils.util_functions import rmtree_with_retries
 from multiqc.utils.material_icons import get_material_icon
+from multiqc.utils.util_functions import rmtree_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -557,11 +557,11 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             _path: str = os.path.join(fdir, name)
 
             if config.development:
-                if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
-                    fdir = template_mod.template_dir
-                    name = dev_path
-                    _path = dev_path
-                elif parent_template and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
+                if (
+                    os.path.exists(dev_path := os.path.join(template_mod.template_dir, name))
+                    or parent_template
+                    and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name))
+                ):
                     fdir = template_mod.template_dir
                     name = dev_path
                     _path = dev_path
@@ -582,7 +582,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             else:
                 with open(_path, "r", encoding="utf-8") as f:
                     return f.read()
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Could not include file '{name}': {e}")
 
     # Load the report template
@@ -601,7 +601,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
 
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
-        raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
+        raise OSError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
 
     # Compress the report plot JSON data
     runtime_compression_start = time.time()
@@ -627,8 +627,8 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
         try:
             with open(report_path, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
-        except IOError as e:
-            raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
+        except OSError as e:
+            raise OSError(f"Could not print report to '{config.output_fn}' - {OSError(e)}")
 
         # Copy over files if requested by the theme
         try:

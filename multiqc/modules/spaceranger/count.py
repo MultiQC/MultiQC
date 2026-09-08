@@ -6,10 +6,9 @@ import os
 from collections import defaultdict
 from typing import Dict, Union
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.spaceranger.utils import populate_data_and_headers, set_hidden_cols, transform_data
 from multiqc.plots import linegraph, table
-
-from multiqc.modules.spaceranger.utils import set_hidden_cols, transform_data, populate_data_and_headers
 
 log = logging.getLogger(__name__)
 
@@ -247,7 +246,7 @@ def parse_count_html(module: BaseMultiqcModule):
     summary_data_by_sample = module.ignore_samples(summary_data_by_sample)
     warnings_data_by_sample = module.ignore_samples(warnings_data_by_sample)
     general_stats_data = module.ignore_samples(general_stats_data)
-    for k in plots_data.keys():
+    for k in plots_data:
         plots_data[k] = module.ignore_samples(plots_data[k])
 
     summary_headers = set_hidden_cols(

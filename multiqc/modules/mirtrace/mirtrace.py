@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.summary_data[s_name] = parsed_data
         else:
             log.debug(f"No valid data {f['fn']} in miRTrace summary")
-            return None
+            return
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
     def parse_length(self, f):
@@ -140,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "LENGTH":
                     log.debug(f"No valid data {f['fn']} for read length distribution")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "CLADE":
                     log.debug(f"No valid data {f['fn']} for contamination check")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]
@@ -192,7 +192,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT":
                     log.debug(f"No valid data {f['fn']} for miRNA complexity")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]

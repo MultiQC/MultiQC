@@ -66,7 +66,7 @@ def parse_samtools_markdup(module) -> int:
         }
         for name, val in raw_d.items():
             if name in rename_map:
-                d[rename_map[name]] = int(raw_d[name])
+                d[rename_map[name]] = int(val)
             elif name == "COMMAND":
                 m = re.search(r".*-d\s(\d+)", val)
                 if m:
@@ -129,23 +129,21 @@ def parse_samtools_markdup(module) -> int:
             data=val_by_metric_by_sample,
             headers=dict(
                 genstats_headers,
-                **{
-                    "optical_duplicate_distance": {
-                        "title": "Optical distance",
-                        "description": "The optical distance for considering instrument duplicates",
-                        "min": 0,
-                        "format": "{:,d}",
-                        "scale": "RdYlGn",
-                    },
-                    "duplicate_optical_fraction": {
-                        "title": "Optical dups",
-                        "description": "The percent of optical/clustering duplicate reads",
-                        "min": 0,
-                        "max": 100,
-                        "modify": lambda x: x * 100,
-                        "suffix": "%",
-                        "scale": "RdYlGn-rev",
-                    },
+                optical_duplicate_distance={
+                    "title": "Optical distance",
+                    "description": "The optical distance for considering instrument duplicates",
+                    "min": 0,
+                    "format": "{:,d}",
+                    "scale": "RdYlGn",
+                },
+                duplicate_optical_fraction={
+                    "title": "Optical dups",
+                    "description": "The percent of optical/clustering duplicate reads",
+                    "min": 0,
+                    "max": 100,
+                    "modify": lambda x: x * 100,
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
                 },
             ),
             pconfig={

@@ -5,7 +5,8 @@ import logging
 import math
 import os
 import random
-from typing import Any, Dict, Generic, List, Literal, Mapping, Optional, Sequence, Tuple, Type, TypeVar, Union, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, Dict, Generic, List, Literal, Optional, Tuple, Type, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl

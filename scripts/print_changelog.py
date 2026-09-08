@@ -135,19 +135,19 @@ def main():
         )
         sections_to_prs[section_name].append(pr)
 
-    print("")
+    print()
     print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")
-    print("")
+    print()
 
     for section, prs in sections_to_prs.items():
         if section == "Chores":
             continue
         print(f"### {section}")
-        print("")
+        print()
         for pr in prs:
             link = f"([#{pr.number}]({REPO_URL}/pull/{pr.number}))"
             print(f"- {pr.title} {link}")
-        print("")
+        print()
 
 
 def skip_pr(message: str) -> bool:

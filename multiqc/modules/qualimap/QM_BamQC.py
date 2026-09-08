@@ -1,12 +1,11 @@
 import logging
-import os
-from typing import Union, Dict, Tuple, List
-
 import math
+import os
 import re
+from typing import Dict, List, Tuple, Union
 
-from multiqc import config, BaseMultiqcModule
-from multiqc.modules.qualimap import parse_numerals, get_s_name, parse_version
+from multiqc import BaseMultiqcModule, config
+from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
 from multiqc.plots import linegraph
 from multiqc.utils.util_functions import update_dict
 

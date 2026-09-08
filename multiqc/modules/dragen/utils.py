@@ -263,7 +263,7 @@ def make_log_report(log_data, logger, module):
     """The only purpose of this function is to create a readable and informative log output
     about found info/warnings/errors, which were found at the time of executing a parser."""
 
-    if "invalid_file_names" in log_data and log_data["invalid_file_names"]:
+    if log_data.get("invalid_file_names"):
         if module in DRAGEN_MODULE_TEXTS["invalid_file_names"]:
             log_message = DRAGEN_MODULE_TEXTS["invalid_file_names"][module]
         else:
@@ -276,7 +276,7 @@ def make_log_report(log_data, logger, module):
 
         logger.warning(log_message + "\n")
 
-    if "invalid_file_lines" in log_data and log_data["invalid_file_lines"]:
+    if log_data.get("invalid_file_lines"):
         if module in DRAGEN_MODULE_TEXTS["invalid_file_lines"]:
             log_message = DRAGEN_MODULE_TEXTS["invalid_file_lines"][module]
         else:
@@ -291,7 +291,7 @@ def make_log_report(log_data, logger, module):
 
         logger.debug(log_message + "\n")
 
-    if "unknown_metrics" in log_data and log_data["unknown_metrics"]:
+    if log_data.get("unknown_metrics"):
         if module in DRAGEN_MODULE_TEXTS["unknown_metrics"]:
             log_message = DRAGEN_MODULE_TEXTS["unknown_metrics"][module]
         else:
@@ -302,7 +302,7 @@ def make_log_report(log_data, logger, module):
 
         logger.debug(log_message + "\n")
 
-    if "unusual_values" in log_data and log_data["unusual_values"]:
+    if log_data.get("unusual_values"):
         if module in DRAGEN_MODULE_TEXTS["unusual_values"]:
             log_message = DRAGEN_MODULE_TEXTS["unusual_values"][module]
         else:

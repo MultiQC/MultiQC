@@ -41,11 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s_names = parsed_data.keys()
                 for s_name in s_names:
                     if taxo_rank in self.kaiju_data and s_name in self.kaiju_data[taxo_rank].keys():
-                        log.debug(
-                            "Duplicate sample found in logs at {} rank! Overwriting sample: {}".format(
-                                taxo_rank, s_name
-                            )
-                        )
+                        log.debug(f"Duplicate sample found in logs at {taxo_rank} rank! Overwriting sample: {s_name}")
 
                     # Superfluous function call to confirm that it is used in this module
                     # Replace None with actual version if it is available
@@ -94,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             (s_file, pct, reads, taxon_id, taxon_names) = line.rstrip().split("\t")
             s_name = self.clean_s_name(s_file, f)
-            if s_name not in parsed_data.keys():
+            if s_name not in parsed_data:
                 parsed_data[s_name] = {"assigned": {}}
 
             if taxon_names.startswith("cannot be assigned") or taxon_names == "unclassified":
@@ -163,9 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["assigned"] = {
             "title": f"{config.read_count_prefix} Reads assigned",
-            "description": "Number of reads assigned ({})  at {} rank".format(
-                config.read_count_desc, general_taxo_rank
-            ),
+            "description": f"Number of reads assigned ({config.read_count_desc})  at {general_taxo_rank} rank",
             "modify": lambda x: x * config.read_count_multiplier,
             "scale": "Blues",
         }

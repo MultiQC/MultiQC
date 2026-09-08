@@ -1109,10 +1109,10 @@ def add_ai_summary_to_report():
         logger.error(f"Failed to interpret report with {client.title}: {e}")
         if config.strict:
             raise
-        return None
+        return
 
     if not response.interpretation:
-        return None
+        return
 
     if response.model:
         report.ai_model_resolved = response.model

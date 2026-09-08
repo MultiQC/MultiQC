@@ -131,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         header = lines[0].strip()
-        if not header.startswith(("Bin Id")):
+        if not header.startswith("Bin Id"):
             log.warning(f"Unrecognized header in {f['fn']}: {header}")
             return
 

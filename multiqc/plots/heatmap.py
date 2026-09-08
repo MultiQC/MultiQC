@@ -2,7 +2,8 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -348,7 +349,7 @@ def _cluster_data(
             row_idx = scipy_hierarchy_leaves_list(row_linkage)
             data_array = data_array[row_idx]
         except Exception as e:
-            logger.warning(f"Row clustering failed: {str(e)}")
+            logger.warning(f"Row clustering failed: {e!s}")
 
     if cluster_cols and len(rows[0]) > 1:
         try:
@@ -357,7 +358,7 @@ def _cluster_data(
             col_idx = scipy_hierarchy_leaves_list(col_linkage)
             data_array = data_array[:, col_idx]
         except Exception as e:
-            logger.warning(f"Column clustering failed: {str(e)}")
+            logger.warning(f"Column clustering failed: {e!s}")
 
     return cast(List[List[ElemT]], data_array.tolist()), row_idx, col_idx
 
@@ -403,7 +404,7 @@ class Dataset(BaseDataset):
                 xcats_clustered = [xcats[i] for i in col_idx] if cluster_cols else xcats
                 ycats_clustered = [ycats[i] for i in row_idx] if cluster_rows else ycats
             except Exception as e:
-                logger.warning(f"Clustering failed: {str(e)}")
+                logger.warning(f"Clustering failed: {e!s}")
 
         dataset = Dataset(
             **dataset.__dict__,

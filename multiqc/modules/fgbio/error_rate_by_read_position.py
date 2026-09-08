@@ -144,9 +144,7 @@ def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
     module.add_section(
         name="Error Rate by Read Position",
         anchor="fgbio-error-rate-by-read-position",
-        description="Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={}`".format(
-            collapse
-        ),
+        description=f"Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={collapse}`",
         helptext="""
         The error rate by read position. If `collapsed` was `true`, then complementary
         substitutions were grouped together into the first 6 error rates.

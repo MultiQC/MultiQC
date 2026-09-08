@@ -5,8 +5,7 @@ from html import escape
 from textwrap import dedent
 from typing import Dict, List, Optional
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.types import Anchor, SoftwareVersionMetadata
 from multiqc.utils.material_icons import get_material_icon

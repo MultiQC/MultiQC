@@ -288,6 +288,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # rename column headers with '_indel' or '_snp' suffix
-        headers = [k + suffix for k in h.keys()]
+        headers = [k + suffix for k in h]
         # recreate the ordered dictionary with all headers and information
         return dict(zip(headers, h.values()))

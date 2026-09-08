@@ -103,9 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "numUMIs": {
                 "title": f"{config.read_count_prefix} Distinct UMIs",
-                "description": "Number of distinct Unique Molecular Identifiers (UMIs) ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Number of distinct Unique Molecular Identifiers (UMIs) ({config.read_count_desc})",
                 "scale": "Purples",
                 "min": 0,
                 "shared_key": "read_count",
@@ -114,9 +112,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "numBarcodeUMIs": {
                 "title": f"{config.read_count_prefix} Distinct barcode-UMI",
-                "description": "Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Number of distinct barcode and Unique Molecular Identifiers (UMIs) pairs ({config.read_count_desc})",
                 "scale": "Greens",
                 "min": 0,
                 "shared_key": "read_count",
@@ -131,9 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "gtRecords": {
                 "title": f"{config.read_count_prefix} 2xdepth records",
-                "description": "Estimated number of new records at 2x sequencing depth ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Estimated number of new records at 2x sequencing depth ({config.read_count_desc})",
                 "min": 0,
                 "scale": "Oranges",
                 "format": "{:,.2f}",
@@ -170,9 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "gtTargets": {
                 "title": f"{config.read_count_prefix} 2xdepth targets",
-                "description": "Estimated number of new targets at 2x sequencing depth ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Estimated number of new targets at 2x sequencing depth ({config.read_count_desc})",
                 "min": 0,
                 "scale": "BuGn",
                 "hidden": True,
@@ -198,9 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "numReadsOnWhitelist": {
                 "title": f"{config.read_count_prefix} Whitelisted reads",
-                "description": "Number of reads with barcode in agreement with whitelist ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Number of reads with barcode in agreement with whitelist ({config.read_count_desc})",
                 "scale": "PuBu",
                 "min": 0,
                 "hidden": True,

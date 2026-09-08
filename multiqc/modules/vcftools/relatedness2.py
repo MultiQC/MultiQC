@@ -45,9 +45,7 @@ class Relatedness2Mixin:
             self.add_section(
                 name="Relatedness2",
                 anchor=f"vcftools-relatedness2-{idx}",
-                description="**Input:** `{}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.".format(
-                    name
-                ),
+                description=f"**Input:** `{name}`.\n\n Heatmap of `RELATEDNESS_PHI` values from the output of vcftools relatedness2.",
                 helptext=helptext,
                 plot=heatmap.plot(
                     m.data,

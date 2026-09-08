@@ -1,4 +1,5 @@
 import logging
+
 from multiqc.plots import linegraph
 
 log = logging.getLogger(__name__)

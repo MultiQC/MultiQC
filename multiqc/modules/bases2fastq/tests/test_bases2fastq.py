@@ -7,11 +7,10 @@ from unittest.mock import patch
 
 import pytest
 
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.types import LoadedFileDict
-
 from multiqc.modules.bases2fastq.bases2fastq import MultiqcModule, _get_min_polonies
+from multiqc.types import LoadedFileDict
 
 
 def _load_fixture(fixtures_dir: Path, *parts: str) -> dict:

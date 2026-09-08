@@ -81,7 +81,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Import the submodule and call parse_reports()
                 #   Function returns number of parsed logs
                 module = __import__(f"multiqc.modules.rseqc.{sm}", fromlist=[""])
-                n[sm] = getattr(module, "parse_reports")(self)
+                n[sm] = module.parse_reports(self)
                 if n[sm] > 0:
                     log.info(f"Found {n[sm]} {sm} reports")
             except (ImportError, AttributeError):

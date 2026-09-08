@@ -3,7 +3,9 @@
 import copy
 import json
 import logging
-from typing import Any, Dict, List, Mapping, Optional, OrderedDict, Tuple, Union, cast
+from collections import OrderedDict
+from collections.abc import Mapping
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -162,9 +164,9 @@ class Dataset(BaseDataset):
     def create_figure(
         self,
         layout: go.Layout,
-        is_log: bool = False,  # noqa: ARG002
-        is_pct: bool = False,  # noqa: ARG002
-        **kwargs,  # noqa: ARG002
+        is_log: bool = False,
+        is_pct: bool = False,
+        **kwargs,
     ) -> go.Figure:
         """
         Create a Plotly figure for a dataset

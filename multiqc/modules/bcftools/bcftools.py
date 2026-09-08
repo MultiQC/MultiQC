@@ -2,7 +2,6 @@ import logging
 from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.bcftools.stats import parse_bcftools_stats
 
 log = logging.getLogger(__name__)

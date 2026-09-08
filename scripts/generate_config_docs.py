@@ -53,8 +53,9 @@ def _dump_yaml(value):
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups  # noqa: E402
-from multiqc.utils.config_schema import (  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups
+
+from multiqc.utils.config_schema import (
     AiProviderLiteral,
     CleanPattern,
     CondFormattingRule,

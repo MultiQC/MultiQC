@@ -1,7 +1,7 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from html import escape
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound

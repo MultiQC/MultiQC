@@ -847,7 +847,7 @@ def create_table_handlers():
                 regions[phenotype].add(region)
 
                 plots[phenotype]["config"] = {config: val for config, val in TABLE_CONFIG.items() if val is not None}
-                if region in REGION_TABLE_CONFIG and REGION_TABLE_CONFIG[region]:
+                if REGION_TABLE_CONFIG.get(region):
                     plots[phenotype]["config"].update(REGION_TABLE_CONFIG[region])
 
         sections = []
@@ -1179,11 +1179,11 @@ def create_coverage_headers_handler():
                     output_auto = MPAT["make_configs"](metric_match)
                     orig_metric = metric_IDs[metric_id]
 
-                    if "region" in output_auto and output_auto["region"]:
+                    if output_auto.get("region"):
                         region = output_auto["region"]
 
                     # Metric could not be recognized.
-                    if "warning" in output_auto and output_auto["warning"]:
+                    if output_auto.get("warning"):
                         log_data["unknown_metrics"].append(orig_metric)
 
                     # First set common configs from the SINGLE_HEADER.
@@ -1229,7 +1229,7 @@ def create_coverage_headers_handler():
 
         if region:
             metric = metric.replace(region, "region")
-            if region in REGIONS and REGIONS[region]:
+            if REGIONS.get(region):
                 configs.update(get_std_configs(REGIONS[region]))
 
         pct_case = PCT_PAT["RGX"].search(metric)

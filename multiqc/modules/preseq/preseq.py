@@ -6,7 +6,7 @@ import numpy as np
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
-from multiqc.plots.linegraph import LinePlotConfig, Series, Marker
+from multiqc.plots.linegraph import LinePlotConfig, Marker, Series
 from multiqc.plots.plot import PConfig
 from multiqc.utils import mqc_colour
 
@@ -174,7 +174,7 @@ class MultiqcModule(BaseMultiqcModule):
             max_yx = max_y_cov
 
         else:
-            d_covs = {sn: {} for sn in data_raw.keys()}
+            d_covs = {sn: {} for sn in data_raw}
             # Prepare final dataset for plotting
             data = d_cnts
             # Count maximum values to draw the "ideal" line
@@ -273,8 +273,8 @@ class MultiqcModule(BaseMultiqcModule):
                             if len(cols) >= 3:
                                 if cols[2].isdigit():
                                     real_counts_unique[sn] = int(cols[2])
-            except IOError as e:
-                log.error(f"Error loading real counts file {real_counts_file_name}: {str(e)}")
+            except OSError as e:
+                log.error(f"Error loading real counts file {real_counts_file_name}: {e!s}")
             else:
                 log.debug(f"Found {len(real_counts_total)} matching sets of counts from {real_counts_file_name}")
 

@@ -1,24 +1,24 @@
-from multiqc.utils import mqc_colour
 from multiqc.plots import bargraph
+from multiqc.utils import mqc_colour
 
-from .utils import summarize_batch_names, is_nan, find_entry, json_decode_float
 from .queries import (
     get_batch_counts,
     get_batch_density,
     get_batch_extracellularratio,
     get_cell_count,
     get_median_cell_diameter,
-    get_percent_confluency,
-    get_percent_nucleated_cells,
     get_percent_assigned,
-    get_percent_mismatch,
-    get_total_counts,
-    get_total_density,
     get_percent_assigned_target_polony,
+    get_percent_confluency,
+    get_percent_mismatch,
     get_percent_mismatch_target_polony,
+    get_percent_nucleated_cells,
     get_target_cell_assignment_status,
     get_target_cell_metric_by_key,
+    get_total_counts,
+    get_total_density,
 )
+from .utils import find_entry, is_nan, json_decode_float, summarize_batch_names
 
 
 def plot_barcoding(c2s_run_data):

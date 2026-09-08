@@ -18,16 +18,14 @@ import shutil
 import sys
 import time
 from collections import defaultdict
+from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
     Any,
     Dict,
-    Iterator,
     List,
-    Mapping,
     Optional,
-    Sequence,
     Set,
     TextIO,
     Tuple,
@@ -336,7 +334,7 @@ class SearchFile:
         if self._filesize is None:
             try:
                 self._filesize = os.path.getsize(self.path)
-            except (IOError, OSError, ValueError, UnicodeDecodeError):
+            except (OSError, ValueError, UnicodeDecodeError):
                 logger.debug(f"Couldn't read file when checking filesize: {self.filename}")
                 self._filesize = None
         return self._filesize

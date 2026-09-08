@@ -2,9 +2,10 @@ import csv
 import functools
 import logging
 from collections import defaultdict
+from collections.abc import Mapping
 from itertools import islice
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional, Set, Tuple, TypedDict, Union
+from typing import Dict, List, Optional, Set, Tuple, TypedDict, Union
 from xml.etree import ElementTree
 
 from pydantic import BaseModel

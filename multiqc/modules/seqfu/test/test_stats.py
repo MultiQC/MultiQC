@@ -1,10 +1,10 @@
 import pytest
 
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.types import SampleName
-from multiqc.modules.seqfu.stats import all_same_length
 from multiqc.modules.seqfu.seqfu import MultiqcModule
+from multiqc.modules.seqfu.stats import all_same_length
+from multiqc.types import SampleName
 from multiqc.utils import testing
 
 

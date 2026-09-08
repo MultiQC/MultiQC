@@ -188,7 +188,7 @@ class TagDirReportMixin:
         """Add core HOMER stats to the general stats table from tagInfo file"""
 
         if len(self.tagdir_data["header"]) == 0:
-            return None
+            return
 
         headers = {
             "UniqPositions": {

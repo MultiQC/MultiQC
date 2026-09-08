@@ -91,8 +91,7 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
         "nanopore_metrics",
     ]
     for key in keys_to_delete:
-        if key in sample_dict:
-            del sample_dict[key]
+        sample_dict.pop(key, None)
 
     for key in ("per_position_mean_quality_and_spread", "per_position_mean_quality_and_spread_read2"):
         if key in sample_dict:

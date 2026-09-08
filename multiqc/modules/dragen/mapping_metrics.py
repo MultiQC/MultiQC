@@ -1,6 +1,3 @@
-# coding=utf-8
-
-
 import itertools
 import logging
 from collections import defaultdict
@@ -162,7 +159,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
-                    "skipping mapping/paired percentages plot for: {}".format(sample_id)
+                    f"skipping mapping/paired percentages plot for: {sample_id}"
                 )
             else:
                 paired_reads_data[sample_id] = data
@@ -177,7 +174,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             ) != data.get("Total reads in RG", 0):
                 log.warning(
                     "sum of unique/duplicate/unmapped reads not matching total, "
-                    "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
+                    f"skipping mapping/duplicates percentages plot for: {sample_id}"
                 )
             else:
                 mapped_reads_data[sample_id] = data

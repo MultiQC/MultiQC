@@ -235,9 +235,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _add_refine_box_plots(self, values_by_metric_by_sample):
-        data_by_sample_by_metric: Dict = {k: {} for k in REFINE_CATEGORIES.keys()}
+        data_by_sample_by_metric: Dict = {k: {} for k in REFINE_CATEGORIES}
         for sname, values_by_metric in values_by_metric_by_sample.items():
-            for metric in REFINE_CATEGORIES.keys():
+            for metric in REFINE_CATEGORIES:
                 data_by_sample_by_metric[metric][sname] = values_by_metric[metric]
 
         for metric, data_by_sample in data_by_sample_by_metric.items():

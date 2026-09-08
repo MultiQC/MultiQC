@@ -2,10 +2,9 @@ import logging
 from copy import copy
 from typing import Dict, Tuple, Union
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule, config
 from multiqc.modules.ngsbits.utils import parse_qcml_by
 from multiqc.plots import table
-
 
 log = logging.getLogger(__name__)
 

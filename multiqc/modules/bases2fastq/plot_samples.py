@@ -2,9 +2,9 @@ from typing import Any, Dict, List, Optional, cast
 
 from natsort import natsorted
 
+from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict
-from multiqc import config
 from multiqc.types import SectionAlert
 
 

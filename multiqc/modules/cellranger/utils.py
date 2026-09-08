@@ -1,4 +1,4 @@
-from typing import Dict, Union, List
+from typing import Dict, List, Union
 
 
 def clean_title_case(col_id):
@@ -74,7 +74,7 @@ def parse_bcknee_data(data, s_name, max_idx=1000) -> Dict[str, Dict[str, Union[i
         if len(data_series["x"]) == 0:
             continue
         id = f"{s_name}_{data_series['name']}"
-        if id not in value_dict.keys():
+        if id not in value_dict:
             value_dict[id] = dict()
         value_dict[id].update(transform_data(data_series))
 

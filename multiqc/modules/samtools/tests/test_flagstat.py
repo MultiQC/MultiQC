@@ -1,7 +1,7 @@
+import math
 import os
 from pathlib import Path
 
-import math
 import pytest
 
 from multiqc import config, report

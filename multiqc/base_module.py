@@ -13,17 +13,15 @@ import os
 import re
 import textwrap
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Dict,
-    Iterable,
     List,
     Literal,
-    Mapping,
     Optional,
-    Sequence,
     Set,
     Tuple,
     TypeVar,
@@ -316,8 +314,7 @@ class BaseMultiqcModule:
             values: List[str] = val if isinstance(val, list) else [val]
             pf: str
             for pf in values:
-                if pf.startswith("./"):
-                    pf = pf[2:]
+                pf = pf.removeprefix("./")
                 pfs.append(pf)
             return pfs
 
@@ -418,7 +415,7 @@ class BaseMultiqcModule:
                                         fh.close()
                                 else:
                                     yield {**f, "s_name": s_name, "f": str(contents)}
-                except (IOError, OSError, ValueError, UnicodeDecodeError) as e:
+                except (OSError, ValueError, UnicodeDecodeError) as e:
                     logger.debug(f"Couldn't open filehandle when returning file: {f['fn']}\n{e}")
                     yield {**f, "s_name": s_name, "f": None}
             else:
@@ -817,7 +814,7 @@ class BaseMultiqcModule:
                     continue
                 groups_iter[SampleGroup(str(s_name))] = [(None, SampleName(str(s_name)), SampleName(str(s_name)))]
         else:
-            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample.keys()])
+            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample])
 
         for g_name, labels_s_names in groups_iter.items():
             if len(labels_s_names) == 0:
@@ -844,7 +841,7 @@ class BaseMultiqcModule:
                     sum_by_col[weight_col_key] = 0
 
                 # Calculate the weights
-                for col in sum_by_col.keys():
+                for col in sum_by_col:
                     for _, _, original_s_name in labels_s_names:
                         val = data_by_sample[original_s_name][col]
                         if isinstance(val, int) or isinstance(val, float):
@@ -1013,10 +1010,11 @@ class BaseMultiqcModule:
             # Check if we should use filename for this specific module/pattern
             if isinstance(config.use_filename_as_sample_name, list):
                 # Check for module anchor (e.g., "verifybamid")
-                if self.anchor in config.use_filename_as_sample_name:
-                    should_use_filename = True
-                # Check for search pattern key (e.g., "verifybamid/selfsm")
-                elif search_pattern_key is not None and search_pattern_key in config.use_filename_as_sample_name:
+                if (
+                    self.anchor in config.use_filename_as_sample_name
+                    or search_pattern_key is not None
+                    and search_pattern_key in config.use_filename_as_sample_name
+                ):
                     should_use_filename = True
             # Check if we should use filename for all modules
             elif config.use_filename_as_sample_name is True:

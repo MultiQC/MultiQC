@@ -1,7 +1,6 @@
-from typing import Dict, Union, Tuple
-
-import xml.etree.ElementTree
 import re
+import xml.etree.ElementTree
+from typing import Dict, Tuple, Union
 
 
 def parse_qcml_by(qcml_contents: str, tag: str) -> Tuple[Dict[str, Union[float, str]], Dict[str, Tuple[str, str]]]:

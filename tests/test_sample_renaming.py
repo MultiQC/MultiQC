@@ -1,9 +1,9 @@
 """Test that the sample renaming functionality works as expected."""
 
-import tempfile
+import json
 import os
 import subprocess
-import json
+import tempfile
 from pathlib import Path
 
 import pytest

@@ -425,11 +425,11 @@ def load_config_file(
                     schema = config_to_schema()
                     validate_json_schema(instance=new_config, schema=schema)
                 except Exception as e:
-                    logger.warning(f"Config validation warning for {path}: {str(e)}")
+                    logger.warning(f"Config validation warning for {path}: {e!s}")
 
             logger.info(f"Loading config settings from: {path}")
             _add_config(new_config, str(path))
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
     except yaml.YAMLError as e:
@@ -590,9 +590,7 @@ def load_sample_names(sample_names_file: Path):
                         num_cols = len(s)
                     elif num_cols != len(s):
                         logger.warning(
-                            "Inconsistent number of columns found in sample names file (skipping line): '{}'".format(
-                                line.strip()
-                            )
+                            f"Inconsistent number of columns found in sample names file (skipping line): '{line.strip()}'"
                         )
                     # Parse the line
                     if len(sample_names_rename_buttons) == 0:
@@ -601,7 +599,7 @@ def load_sample_names(sample_names_file: Path):
                         sample_names_rename.append(s)
                 elif len(line.strip()) > 0:
                     logger.warning(f"Sample names file line did not have columns (must use tabs): {line.strip()}")
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.error(f"Error loading sample names file: {e}")
     logger.debug(f"Found {len(sample_names_rename_buttons)} sample renaming patterns")
 
@@ -615,7 +613,7 @@ def load_replace_names(replace_names_file: Path):
                 s = line.strip().split("\t")
                 if len(s) == 2:
                     sample_names_replace[s[0]] = s[1]
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.error(f"Error loading sample names replacement file: {e}")
     logger.debug(f"Found {len(sample_names_replace)} sample replacing patterns")
 

@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         except JSONDecodeError as e:
             log.debug(f"Could not parse HOPS JSON: '{f['fn']}'")
             log.debug(e)
-            return None
+            return
 
         # Convert JSON to dict for easier manipulation
         for s in parsed_json:

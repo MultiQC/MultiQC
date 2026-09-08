@@ -3,6 +3,7 @@ from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
+
 from .bbmap_filetypes import file_types, section_order
 
 log = logging.getLogger(__name__)

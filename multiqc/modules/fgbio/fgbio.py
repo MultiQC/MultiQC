@@ -1,7 +1,6 @@
 import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.fgbio.error_rate_by_read_position import error_rate_by_read_position
 from multiqc.modules.fgbio.group_reads_by_umi import run_group_reads_by_umi
 
