@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to general statistics table:
         # Percentage of full length transcripts
         data_general_stats = {}
-        for sample in self.pychopper_data.keys():
+        for sample in self.pychopper_data:
             data_general_stats[sample] = {}
             c = self.pychopper_data[sample]["Classification"]
             ftp = c["Primers_found"] * 100 / (c["Primers_found"] + c["Rescue"] + c["Unusable"])
@@ -141,7 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         data_classification = {}
-        for sample in self.pychopper_data.keys():
+        for sample in self.pychopper_data:
             data_classification[sample] = {}
             data_classification[sample] = self.pychopper_data[sample]["Classification"]
 
@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         data_orientation = {}
-        for sample in self.pychopper_data.keys():
+        for sample in self.pychopper_data:
             data_orientation[sample] = {}
             data_orientation[sample] = self.pychopper_data[sample]["Strand"]
 
@@ -181,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         data_umi = {}
-        for sample in self.pychopper_data.keys():
+        for sample in self.pychopper_data:
             data_umi[sample] = {}
 
             # Get total reads (Primers_found + Rescue + Unusable)

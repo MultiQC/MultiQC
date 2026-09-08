@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/Ensembl/ensembl-vep/blob/main/LICENSE",
         )
 
-        self.vep_data = dict()
+        self.vep_data = {}
 
         # Scan for VEP stats in plain html format
         for f in self.find_log_files("vep/vep_html", filehandles=True):
@@ -219,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
             "Lines of input read",
         ]
         # Set up the base config for each column
-        table_cats = dict()
+        table_cats = {}
         color_list = ["Oranges", "Reds", "Blues", "Greens"]
         for order, header in enumerate(cat_names):
             table_cats[header] = {
@@ -381,11 +381,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _prep_bar_graph(self, title):
-        plot_data = dict()
+        plot_data = {}
         for s_name in self.vep_data:
             if title in self.vep_data[s_name]:
                 plot_data[s_name] = self.vep_data[s_name][title]
-        plot_cats = dict()
+        plot_cats = {}
         htmlid = re.sub(r"\W+", "_", title).lower()
         plotid = f"{htmlid}_plot"
         plot_config = {
@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Build plot categories
         for d in plot_data.values():
-            for k in d.keys():
+            for k in d:
                 if k not in plot_cats:
                     plot_cats[k] = {"name": k}
 

@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load reports
-        self.porechop_data = dict()
+        self.porechop_data = {}
 
         # Find all files for porechop
         for f in self.find_log_files("porechop", filehandles=True):

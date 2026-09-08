@@ -7,7 +7,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -19,18 +19,18 @@ class SearchPattern(BaseModel):
 
     fn: Optional[str] = Field(None, description="Filename pattern to match")
     fn_re: Optional[str] = Field(None, description="Filename regex pattern to match")
-    contents: Optional[Union[str, List[str]]] = Field(None, description="File contents to match")
-    contents_re: Optional[Union[str, List[str]]] = Field(None, description="File contents regex pattern to match")
+    contents: Optional[Union[str, list[str]]] = Field(None, description="File contents to match")
+    contents_re: Optional[Union[str, list[str]]] = Field(None, description="File contents regex pattern to match")
     num_lines: Optional[int] = Field(None, description="Number of lines to search")
     shared: bool = Field(False, description="Allow file to be processed by multiple search patterns")
     skip: bool = Field(False, description="Skip this search pattern")
     max_filesize: Optional[int] = Field(None, description="Maximum file size to process")
-    exclude_fn: Optional[Union[str, List[str]]] = Field(None, description="Exclude files matching this pattern")
-    exclude_fn_re: Optional[Union[str, List[str]]] = Field(
+    exclude_fn: Optional[Union[str, list[str]]] = Field(None, description="Exclude files matching this pattern")
+    exclude_fn_re: Optional[Union[str, list[str]]] = Field(
         None, description="Exclude files matching this regex pattern"
     )
-    exclude_contents: Optional[Union[str, List[str]]] = Field(None, description="Exclude files containing this content")
-    exclude_contents_re: Optional[Union[str, List[str]]] = Field(
+    exclude_contents: Optional[Union[str, list[str]]] = Field(None, description="Exclude files containing this content")
+    exclude_contents_re: Optional[Union[str, list[str]]] = Field(
         None, description="Exclude files containing this regex content"
     )
 
@@ -44,7 +44,7 @@ class CleanPattern(BaseModel):
         "truncate", description="Type of pattern matching to use"
     )
     pattern: str = Field(..., description="Pattern to match")
-    module: Optional[Union[str, List[str]]] = Field(None, description="Module(s) to apply this pattern to")
+    module: Optional[Union[str, list[str]]] = Field(None, description="Module(s) to apply this pattern to")
 
 
 class CondFormattingRule(BaseModel):
@@ -93,18 +93,18 @@ class ModuleOverride(BaseModel):
     info: Optional[str] = Field(None, description="Intro text rendered as markdown under the section heading")
     comment: Optional[str] = Field(None, description="Comment text rendered as markdown under the heading")
     extra: Optional[str] = Field(None, description="Extra HTML appended after the intro")
-    href: Optional[Union[str, List[str]]] = Field(None, description="Tool homepage URL, or list of URLs")
-    doi: Optional[Union[str, List[str]]] = Field(None, description="DOI or list of DOIs")
-    path_filters: Optional[Union[str, List[str]]] = Field(
+    href: Optional[Union[str, list[str]]] = Field(None, description="Tool homepage URL, or list of URLs")
+    doi: Optional[Union[str, list[str]]] = Field(None, description="DOI or list of DOIs")
+    path_filters: Optional[Union[str, list[str]]] = Field(
         None, description="Glob patterns restricting which files this module run sees"
     )
-    path_filters_exclude: Optional[Union[str, List[str]]] = Field(
+    path_filters_exclude: Optional[Union[str, list[str]]] = Field(
         None, description="Glob patterns excluding files from this module run"
     )
     generalstats: Optional[bool] = Field(
         None, description="Set to false to suppress this module's general-stats columns"
     )
-    custom_config: Optional[Dict[str, Any]] = Field(
+    custom_config: Optional[dict[str, Any]] = Field(
         None, description="Module-specific config values merged into config.<module_id>"
     )
 
@@ -147,7 +147,7 @@ class GeneralStatsModuleConfig(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    columns: Dict[str, GeneralStatsColumnConfig] = Field(
+    columns: dict[str, GeneralStatsColumnConfig] = Field(
         default_factory=dict, description="Columns to show in general stats table. Keys are column IDs."
     )
 
@@ -233,7 +233,7 @@ def cfg(
             'cfg() needs a group. Wrap the field in `with group("..."):` inside the section, '
             "or pass group= explicitly. Every config option must belong to a group."
         )
-    extra: Dict[str, Any] = {"section": section, "group": group}
+    extra: dict[str, Any] = {"section": section, "group": group}
     if multiline:
         extra["multiline"] = True
     if default_factory is not None:
@@ -257,7 +257,7 @@ class MultiQCConfig(BaseModel):
                 multiline=True,
                 examples=["This report was generated from the RNA-seq pipeline on 2024-08-21."],
             )
-            report_header_info: Optional[List[Dict[str, str]]] = cfg(
+            report_header_info: Optional[list[dict[str, str]]] = cfg(
                 (
                     "Extra key/value pairs shown in the report header, eg. contact name, run ID, pipeline version. "
                     "Each list item is a single-key dictionary."
@@ -317,14 +317,14 @@ class MultiQCConfig(BaseModel):
                 "Path to a custom favicon image to show in the browser tab.",
                 examples=["/path/to/favicon.ico", "./assets/favicon.png"],
             )
-            custom_css_files: Optional[List[str]] = cfg(
+            custom_css_files: Optional[list[str]] = cfg(
                 "Paths to additional CSS files to inline into the report. Useful for branding overrides.",
                 examples=[["./assets/custom.css", "/path/to/branding.css"]],
             )
 
     with section("Report Contents"):
         with group("Custom content"):
-            custom_content: Optional[Dict[str, Any]] = cfg(
+            custom_content: Optional[dict[str, Any]] = cfg(
                 "Embed arbitrary plots, tables or text in the report. See the "
                 "[Custom Content docs](https://docs.seqera.io/multiqc/custom_content) for the full structure.",
                 examples=[
@@ -341,22 +341,22 @@ class MultiQCConfig(BaseModel):
                     }
                 ],
             )
-            custom_content_modules: Optional[List[str]] = cfg(
+            custom_content_modules: Optional[list[str]] = cfg(
                 "Extra module IDs whose output should be parsed as custom content.",
             )
-            custom_data: Optional[Dict[str, Any]] = cfg(
+            custom_data: Optional[dict[str, Any]] = cfg(
                 "Inline custom content data keyed by section ID. Companion to custom_content for users who prefer "
                 "splitting the metadata and the data across two top-level keys.",
             )
         with group("Module ordering"):
-            top_modules: Optional[List[Union[str, Dict[str, ModuleOverride]]]] = cfg(
+            top_modules: Optional[list[Union[str, dict[str, ModuleOverride]]]] = cfg(
                 (
                     "Module IDs to render before module_order. Useful for pinning a module to the top "
                     "regardless of where it appears in module_order. Same shape as module_order entries."
                 ),
                 examples=[["fastqc", "cutadapt"]],
             )
-            module_order: Optional[List[Union[str, Dict[str, ModuleOverride]]]] = cfg(
+            module_order: Optional[list[Union[str, dict[str, ModuleOverride]]]] = cfg(
                 (
                     "Order in which modules appear in the report. Each entry is either a module ID, "
                     "or a single-key dict mapping the ID to per-run overrides (eg. name, anchor, info, "
@@ -371,19 +371,19 @@ class MultiQCConfig(BaseModel):
                     ]
                 ],
             )
-            run_modules: Optional[List[str]] = cfg(
+            run_modules: Optional[list[str]] = cfg(
                 "Module IDs to run. If set, only listed modules are processed (mirror of the --module CLI flag).",
                 examples=[["fastqc", "cutadapt", "samtools"]],
             )
-            exclude_modules: Optional[List[str]] = cfg(
+            exclude_modules: Optional[list[str]] = cfg(
                 "Module IDs to skip (mirror of the --exclude CLI flag).",
                 examples=[["fastqc"]],
             )
-            remove_sections: Optional[List[str]] = cfg(
+            remove_sections: Optional[list[str]] = cfg(
                 "Module sections to hide. Use the section anchor as it appears in the URL.",
                 examples=[["fastqc_overrepresented_sequences", "gatk-compare-overlap"]],
             )
-            report_section_order: Optional[Dict[str, Union[Literal["remove"], SectionOrderOverride]]] = cfg(
+            report_section_order: Optional[dict[str, Union[Literal["remove"], SectionOrderOverride]]] = cfg(
                 (
                     "Reorder, group or hide report sections by ID. Values are either the literal "
                     "string 'remove' (drops the section) or a dict with any combination of "
@@ -394,7 +394,7 @@ class MultiQCConfig(BaseModel):
                 examples=[{"fastqc": {"order": -10}, "custom_content-my-section": {"before": "fastqc"}}],
             )
         with group("Section comments + indicators"):
-            section_comments: Optional[Dict[str, str]] = cfg(
+            section_comments: Optional[dict[str, str]] = cfg(
                 "Markdown text shown under specific module sections. Keys are section anchors.",
                 examples=[
                     {
@@ -403,7 +403,7 @@ class MultiQCConfig(BaseModel):
                     }
                 ],
             )
-            section_status_checks: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = cfg(
+            section_status_checks: Optional[dict[str, Union[bool, dict[str, bool]]]] = cfg(
                 (
                     "Enable or disable the green/yellow/red status indicators on report sections. "
                     "Top-level keys are module IDs, values are either a bool or a dict mapping section ID to bool."
@@ -429,7 +429,7 @@ class MultiQCConfig(BaseModel):
             data_format: Optional[Literal["tsv", "csv", "json", "yaml"]] = cfg(
                 "Format used when writing parsed data files.",
             )
-            data_format_extensions: Optional[Dict[str, str]] = cfg(
+            data_format_extensions: Optional[dict[str, str]] = cfg(
                 "Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
                 examples=[{"tsv": "txt", "json": "json", "yaml": "yml"}],
             )
@@ -451,7 +451,7 @@ class MultiQCConfig(BaseModel):
             export_plots: Optional[bool] = cfg(
                 "Save each plot as a static image (formats set by export_plot_formats).",
             )
-            export_plot_formats: Optional[List[Literal["png", "svg", "pdf"]]] = cfg(
+            export_plot_formats: Optional[list[Literal["png", "svg", "pdf"]]] = cfg(
                 "Image formats to export when export_plots is on.",
             )
             export_plots_timeout: Optional[int] = cfg("Timeout for exporting each plot, in seconds.", gt=0)
@@ -482,23 +482,23 @@ class MultiQCConfig(BaseModel):
             fn_clean_sample_names: Optional[bool] = cfg(
                 "Apply the cleaning rules in fn_clean_exts and fn_clean_trim to sample names.",
             )
-            extra_fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = cfg(
+            extra_fn_clean_exts: Optional[list[Union[str, CleanPattern]]] = cfg(
                 "Extensions appended to the built-in list. Use to add custom suffixes without overriding defaults.",
                 examples=[[".mySuffix", {"type": "remove", "pattern": "_tmp", "module": ["samtools"]}]],
             )
-            extra_fn_clean_trim: Optional[List[str]] = cfg(
+            extra_fn_clean_trim: Optional[list[str]] = cfg(
                 "Strings appended to the built-in trim list, without overriding defaults.",
                 examples=[["sample_", "_processed"]],
             )
-            fn_clean_exts: Optional[List[Union[str, CleanPattern]]] = cfg(
+            fn_clean_exts: Optional[list[Union[str, CleanPattern]]] = cfg(
                 "Extensions stripped from sample names, eg. .gz, .fastq. Replaces the built-in list.",
                 examples=[[".gz", ".fastq", ".bam", {"type": "regex", "pattern": r"_S\d+_L\d+"}]],
             )
-            fn_clean_trim: Optional[List[str]] = cfg(
+            fn_clean_trim: Optional[list[str]] = cfg(
                 "Strings trimmed from the start or end of sample names. Replaces the built-in list.",
                 examples=[["_R1", "_R2", "_001"]],
             )
-            use_filename_as_sample_name: Optional[Union[bool, List[str]]] = cfg(
+            use_filename_as_sample_name: Optional[Union[bool, list[str]]] = cfg(
                 (
                     "Use the source filename as the sample name instead of any name parsed from the log. "
                     "Set to true for all modules, or to a list of module IDs / patterns to apply selectively."
@@ -506,24 +506,24 @@ class MultiQCConfig(BaseModel):
                 default=False,
             )
         with group("Ignore samples"):
-            sample_names_ignore: Optional[List[str]] = cfg(
+            sample_names_ignore: Optional[list[str]] = cfg(
                 "Glob patterns. Matching samples are dropped from the report.",
                 examples=[["*_temp", "control_*"]],
             )
-            sample_names_ignore_re: Optional[List[str]] = cfg(
+            sample_names_ignore_re: Optional[list[str]] = cfg(
                 "Regex patterns. Matching samples are dropped from the report.",
                 examples=[[r"^test_.*", r".*_neg_ctrl$"]],
             )
-            sample_names_only_include: Optional[List[str]] = cfg(
+            sample_names_only_include: Optional[list[str]] = cfg(
                 "Glob patterns. If set, only matching samples are kept.",
                 examples=[["RNA_*", "Sample_??"]],
             )
-            sample_names_only_include_re: Optional[List[str]] = cfg(
+            sample_names_only_include_re: Optional[list[str]] = cfg(
                 "Regex patterns. If set, only matching samples are kept.",
                 examples=[[r"^WGS_[0-9]+$"]],
             )
         with group("Rename and replace"):
-            sample_names_rename: Optional[List[List[str]]] = cfg(
+            sample_names_rename: Optional[list[list[str]]] = cfg(
                 "Toolbox rename rows. Each entry is a list where the first element is the source "
                 "sample name and each subsequent element is the rename for the corresponding "
                 "button in `sample_names_rename_buttons` (so inner lists should have "
@@ -536,11 +536,11 @@ class MultiQCConfig(BaseModel):
                     ]
                 ],
             )
-            sample_names_rename_buttons: Optional[List[str]] = cfg(
+            sample_names_rename_buttons: Optional[list[str]] = cfg(
                 "Names of the toolbox buttons that switch between the rename groups defined in sample_names_rename.",
                 examples=[["Sample ID", "Patient ID", "Lane"]],
             )
-            sample_names_replace: Optional[Dict[str, str]] = cfg(
+            sample_names_replace: Optional[dict[str, str]] = cfg(
                 "Substring replacements applied to every sample name. Keys are matched, values are replacements.",
                 examples=[{"_001": "", "Sample_": "S"}],
             )
@@ -575,23 +575,23 @@ class MultiQCConfig(BaseModel):
             ignore_images: Optional[bool] = cfg(
                 "Skip image files (PNG/JPEG/etc.) to avoid wasting time opening them.",
             )
-            fn_ignore_dirs: Optional[List[str]] = cfg(
+            fn_ignore_dirs: Optional[list[str]] = cfg(
                 "Glob patterns for directory names to skip entirely during the file search.",
                 examples=[["work", ".nextflow", "*_logs"]],
             )
-            fn_ignore_paths: Optional[List[str]] = cfg(
+            fn_ignore_paths: Optional[list[str]] = cfg(
                 "Glob patterns for paths to skip during the file search.",
                 examples=[["*/test_data/*", "*/.snakemake/*"]],
             )
-            fn_ignore_files: Optional[List[str]] = cfg(
+            fn_ignore_files: Optional[list[str]] = cfg(
                 "Glob patterns for file names to skip during the file search.",
                 examples=[["*.bai", "*.bak", "*.tmp"]],
             )
-            filesearch_file_shared: Optional[List[str]] = cfg(
+            filesearch_file_shared: Optional[list[str]] = cfg(
                 "Module IDs whose log files may be matched by multiple modules during the search.",
             )
         with group("Search patterns"):
-            sp: Optional[Dict[str, Union[SearchPattern, List[SearchPattern]]]] = cfg(
+            sp: Optional[dict[str, Union[SearchPattern, list[SearchPattern]]]] = cfg(
                 (
                     "Override or add to the built-in module search patterns. Top-level keys are "
                     "module IDs (eg. `fastqc`); values are a single `SearchPattern` dict or a list "
@@ -633,7 +633,7 @@ class MultiQCConfig(BaseModel):
             plot_font_family: Optional[str] = cfg(
                 "CSS font-family for plot text. Defaults to a system font stack.",
             )
-            custom_plot_config: Optional[Dict[str, Any]] = cfg(
+            custom_plot_config: Optional[dict[str, Any]] = cfg(
                 "Override plot config options per plot. Top-level keys are plot IDs, values are option dicts.",
                 examples=[
                     {
@@ -677,11 +677,11 @@ class MultiQCConfig(BaseModel):
 
     with section("Toolbox"):
         with group("Highlighting"):
-            highlight_patterns: Optional[List[str]] = cfg(
+            highlight_patterns: Optional[list[str]] = cfg(
                 "Substring (or regex) patterns. Matching samples are highlighted in plots and tables.",
                 examples=[["control", "treated"]],
             )
-            highlight_colors: Optional[List[str]] = cfg(
+            highlight_colors: Optional[list[str]] = cfg(
                 "CSS colour for each entry in highlight_patterns, in the same order. "
                 "Accepts hex (`#377eb8`), named colours (`red`), or any CSS colour function "
                 "(`rgb(...)`, `hsl(...)`).",
@@ -691,22 +691,22 @@ class MultiQCConfig(BaseModel):
                 "Treat highlight_patterns as regex instead of plain substring.",
             )
         with group("Show/hide buttons"):
-            show_hide_buttons: Optional[List[str]] = cfg(
+            show_hide_buttons: Optional[list[str]] = cfg(
                 "Labels for the toolbox show/hide buttons. One per pattern set.",
                 examples=[["Tumour samples", "Normal samples"]],
             )
-            show_hide_patterns: Optional[List[Union[str, List[str]]]] = cfg(
+            show_hide_patterns: Optional[list[Union[str, list[str]]]] = cfg(
                 "Patterns for each show/hide button. Each entry is a string or list of strings to match against sample names.",
                 examples=[[["_T_", "_tumour_"], ["_N_", "_normal_"]]],
             )
-            show_hide_mode: Optional[List[Literal["show", "hide", "show_re", "hide_re"]]] = cfg(
+            show_hide_mode: Optional[list[Literal["show", "hide", "show_re", "hide_re"]]] = cfg(
                 (
                     "Action for each show/hide button: 'show' (only show matches), 'hide' (hide matches), "
                     "or their `_re` variants which signal regex patterns (set by the TSV loader)."
                 ),
                 examples=[["show", "show"]],
             )
-            show_hide_regex: Optional[List[Union[str, bool]]] = cfg(
+            show_hide_regex: Optional[list[Union[str, bool]]] = cfg(
                 "Whether each pattern set is treated as regex. List of bools aligned with show_hide_buttons.",
                 examples=[[False, False]],
             )
@@ -736,7 +736,7 @@ class MultiQCConfig(BaseModel):
                 examples=[","],
             )
         with group("General Stats table"):
-            general_stats_columns: Dict[str, GeneralStatsModuleConfig] = cfg(
+            general_stats_columns: dict[str, GeneralStatsModuleConfig] = cfg(
                 "Per-module overrides for General Stats columns. Top-level keys are module IDs.",
                 default_factory=dict,
                 examples=[
@@ -763,21 +763,21 @@ class MultiQCConfig(BaseModel):
                 "Hide the General Statistics table at the top of the report.",
             )
         with group("Column overrides"):
-            table_columns_name: Optional[Dict[str, Union[str, Dict[str, str]]]] = cfg(
+            table_columns_name: Optional[dict[str, Union[str, dict[str, str]]]] = cfg(
                 (
                     "Rename table columns. Top-level keys are module IDs, inner keys are column IDs, "
                     "values are the new display name."
                 ),
                 examples=[{"fastqc": {"percent_duplicates": "% Dups", "percent_gc": "% GC"}}],
             )
-            table_columns_placement: Optional[Dict[str, Dict[str, float]]] = cfg(
+            table_columns_placement: Optional[dict[str, dict[str, float]]] = cfg(
                 (
                     "Reorder table columns. Top-level keys are module IDs, inner keys are column IDs, "
                     "values are float sort weights (lower is further left)."
                 ),
                 examples=[{"fastqc": {"percent_duplicates": 900, "percent_gc": 800, "total_sequences": 700}}],
             )
-            table_columns_visible: Optional[Dict[str, Union[bool, Dict[str, bool]]]] = cfg(
+            table_columns_visible: Optional[dict[str, Union[bool, dict[str, bool]]]] = cfg(
                 (
                     "Hide or show specific columns. Top-level keys are module IDs, "
                     "values are either a bool (apply to all columns) or a dict mapping column ID to bool."
@@ -789,7 +789,7 @@ class MultiQCConfig(BaseModel):
                     }
                 ],
             )
-            custom_table_header_config: Optional[Dict[str, Any]] = cfg(
+            custom_table_header_config: Optional[dict[str, Any]] = cfg(
                 "Override table column config. Same shape as custom_plot_config but for table headers.",
                 examples=[
                     {
@@ -800,7 +800,7 @@ class MultiQCConfig(BaseModel):
                 ],
             )
         with group("Conditional formatting"):
-            table_cond_formatting_rules: Optional[Dict[str, Dict[str, List[CondFormattingRule]]]] = cfg(
+            table_cond_formatting_rules: Optional[dict[str, dict[str, list[CondFormattingRule]]]] = cfg(
                 (
                     "Conditional cell formatting. Nested dicts map table ID (or the literal 'all_columns') "
                     "to colour ID to a list of rules. Each rule has exactly one operator: string operators "
@@ -821,7 +821,7 @@ class MultiQCConfig(BaseModel):
                     }
                 ],
             )
-            table_cond_formatting_colours: Optional[List[Dict[str, str]]] = cfg(
+            table_cond_formatting_colours: Optional[list[dict[str, str]]] = cfg(
                 (
                     "Background colours referenced by table_cond_formatting_rules. "
                     "List of single-key dicts mapping a colour ID to a hex code."
@@ -836,9 +836,9 @@ class MultiQCConfig(BaseModel):
             )
         with group("Row merging"):
             table_sample_merge: Optional[
-                Dict[
+                dict[
                     str,
-                    Union[str, CleanPattern, List[Union[str, CleanPattern]]],
+                    Union[str, CleanPattern, list[Union[str, CleanPattern]]],
                 ]
             ] = cfg(
                 (
@@ -859,7 +859,7 @@ class MultiQCConfig(BaseModel):
             )
 
     with section("Software Versions"), group("Software Versions"):
-        software_versions: Optional[Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]] = cfg(
+        software_versions: Optional[dict[str, Union[str, list[str], dict[str, Union[str, list[str]]]]]] = cfg(
             (
                 "Manually specify software versions for the Software Versions section. "
                 "Top-level keys are group or software names. Values are a single version string, "
@@ -979,7 +979,7 @@ class MultiQCConfig(BaseModel):
                 "Number of times to retry an AI request on transient errors.",
                 gt=0,
             )
-            ai_extra_query_options: Optional[Dict[str, Any]] = cfg(
+            ai_extra_query_options: Optional[dict[str, Any]] = cfg(
                 "Extra request-body fields merged into the AI request payload (provider-specific).",
                 examples=[{"temperature": 0.3, "top_p": 0.9}],
             )
@@ -1057,7 +1057,7 @@ class MultiQCConfig(BaseModel):
 
 
 @lru_cache(maxsize=1)
-def config_to_schema() -> Dict[str, Any]:
+def config_to_schema() -> dict[str, Any]:
     """Convert the config schema to a JSON Schema dict.
 
     Cached: Pydantic rebuilds the schema (~10ms) on every

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class bamPEFragmentSizeTableMixin:
     def parse_bamPEFragmentSize(self):
         """Find bamPEFragmentSize output. Supports the --table option"""
-        self.deeptools_bamPEFragmentSize = dict()
+        self.deeptools_bamPEFragmentSize = {}
         for f in self.find_log_files("deeptools/bamPEFragmentSizeTable"):
             parsed_data = self.parseBamPEFile(f)
             for k, v in parsed_data.items():
@@ -188,8 +188,8 @@ class bamPEFragmentSizeTableMixin:
             "ylab": "Read length (bases)",
             "xlab": "Percentile",
         }
-        SE = dict()
-        PE = dict()
+        SE = {}
+        PE = {}
         for k, v in self.deeptools_bamPEFragmentSize.items():
             SE[k] = {
                 0: v["Read Len. Min."],
@@ -247,7 +247,7 @@ class bamPEFragmentSizeTableMixin:
                         s_name = self.clean_s_name(cols[0], f)
                         if s_name in d:
                             log.debug(f"Replacing duplicate sample {s_name}.")
-                        d[s_name] = dict()
+                        d[s_name] = {}
                     else:
                         if idx < 19 and cols[1] == "0":
                             # Don't store fragment metrics for SE datasets, they're just 0.

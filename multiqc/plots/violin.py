@@ -7,7 +7,7 @@ import json
 import logging
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -101,7 +101,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         df = pl.DataFrame(records)
         return self.finalize_df(df)
 
-    def to_wide_df(self) -> Tuple[pl.DataFrame, Set[ColumnKey]]:
+    def to_wide_df(self) -> tuple[pl.DataFrame, set[ColumnKey]]:
         """
         Save plot data to a parquet file using a tabular representation where metrics are columns
         and samples are rows, optimized for cross-run analysis. Used for parquet data dump.
@@ -113,7 +113,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         ordered_headers = list(self.dt.get_headers_in_order())
 
         # Create a dictionary to collect metrics for each sample across all sections
-        samples_data: Dict[str, Dict[str, Any]] = {}
+        samples_data: dict[str, dict[str, Any]] = {}
         metric_col_names = set()
 
         # Process each section and its rows to collect all metrics for each sample
@@ -182,7 +182,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     def from_df(
         cls,
         df: pl.DataFrame,
-        pconfig: Union[Dict, TableConfig],
+        pconfig: Union[dict, TableConfig],
         anchor: Anchor,
     ) -> "ViolinPlotInputData":
         """
@@ -215,8 +215,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
         show_table_by_default = df.select("show_table_by_default").row(0)[0]
 
-        data_dict: Dict[SectionKey, Dict[str, GroupT]] = {}
-        headers_dict: Dict[SectionKey, Dict[ColumnKey, ColumnDict]] = {}
+        data_dict: dict[SectionKey, dict[str, GroupT]] = {}
+        headers_dict: dict[SectionKey, dict[ColumnKey, ColumnDict]] = {}
 
         # Extract all columns as lists for efficient access (avoiding repeated iter_rows)
         all_section_keys = df.get_column("section_key").to_list()
@@ -234,7 +234,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         all_section_order = df.get_column("section_order").to_list() if has_section_order else None
 
         # Build index: section_key -> group_sample -> row_sample -> [indices]
-        section_group_row_indices: Dict[str, Dict[str, Dict[str, List[int]]]] = {}
+        section_group_row_indices: dict[str, dict[str, dict[str, list[int]]]] = {}
         for i, (section_key, group_sample, row_sample) in enumerate(
             zip(all_section_keys, all_samples, all_row_samples)
         ):
@@ -258,16 +258,16 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             return Cell(raw=val_raw, mod=val_mod, fmt=all_val_fmt[idx])
 
         for section_key, group_map in section_group_row_indices.items():
-            section_headers: Dict[ColumnKey, ColumnDict] = {}
-            section_data: Dict[str, GroupT] = {}
+            section_headers: dict[ColumnKey, ColumnDict] = {}
+            section_data: dict[str, GroupT] = {}
 
             for group_sample, row_sample_map in group_map.items():
-                input_rows: List[InputRow] = []
+                input_rows: list[InputRow] = []
                 for row_sample, indices in row_sample_map.items():
                     if has_section_order and all_section_order is not None:
                         indices = sorted(indices, key=lambda idx: all_section_order[idx])
 
-                    val_by_metric: Dict[ColumnKeyT, Optional[ExtValueT]] = {}
+                    val_by_metric: dict[ColumnKeyT, Optional[ExtValueT]] = {}
                     for idx in indices:
                         metric_name = all_metrics[idx]
                         val_by_metric[ColumnKey(str(metric_name))] = _parse_cell(idx)
@@ -308,9 +308,9 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     @classmethod
     def create_from_sections(
         cls,
-        data: Dict[SectionKey, SectionT],
-        headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]],
-        pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+        data: dict[SectionKey, SectionT],
+        headers: dict[SectionKey, dict[ColumnKey, ColumnDict]],
+        pconfig: Union[dict[str, Any], TableConfig, None] = None,
     ) -> "ViolinPlotInputData":
         """
         Create a ViolinPlotInputData object from a dictionary of sections and headers.
@@ -339,8 +339,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
     @staticmethod
     def create_from_dataset(
         data: SectionT,
-        headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
-        pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+        headers: Optional[dict[ColumnKeyT, ColumnDict]] = None,
+        pconfig: Union[dict[str, Any], TableConfig, None] = None,
         show_table_by_default: bool = False,
     ) -> "ViolinPlotInputData":
         """
@@ -391,7 +391,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
             # Get original order of metrics using a more efficient approach
             # Create a mapping from metric to its first occurrence index
             metric_list = merged_df.get_column("metric").to_list()
-            metric_order: Dict[str, int] = {}
+            metric_order: dict[str, int] = {}
             for idx, metric in enumerate(metric_list):
                 if metric not in metric_order:
                     metric_order[metric] = idx
@@ -420,8 +420,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
 
 def plot(
     data: SectionT,
-    headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
-    pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+    headers: Optional[dict[ColumnKeyT, ColumnDict]] = None,
+    pconfig: Union[dict[str, Any], TableConfig, None] = None,
     show_table_by_default: bool = False,
 ) -> Union["ViolinPlot", str, None]:
     """
@@ -447,8 +447,8 @@ def plot(
 @dataclass
 class XAxis:
     ticksuffix: Optional[str] = None
-    tickvals: Optional[List[int]] = None
-    range: Optional[List[Union[float, int]]] = None
+    tickvals: Optional[list[int]] = None
+    range: Optional[list[Union[float, int]]] = None
 
 
 @dataclass
@@ -466,7 +466,7 @@ class ViolinColumn:
     color: Optional[str] = None
     hoverformat: Optional[str] = None
 
-    def model_dump(self) -> Dict[str, Any]:
+    def model_dump(self) -> dict[str, Any]:
         d = self.__dict__
         d["xaxis"] = self.xaxis.__dict__
         return d
@@ -477,32 +477,32 @@ EXTRA_HEIGHT = 63  # extra space for the title and footer
 
 
 class Dataset(BaseDataset):
-    metrics: List[ColumnAnchor]
-    header_by_metric: Dict[ColumnAnchor, ViolinColumn]
-    violin_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
-    scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]]
-    all_samples: List[SampleName]  # unique list of all samples in this dataset
-    scatter_trace_params: Dict[str, Any]
+    metrics: list[ColumnAnchor]
+    header_by_metric: dict[ColumnAnchor, ViolinColumn]
+    violin_value_by_sample_by_metric: dict[ColumnAnchor, dict[SampleName, Union[int, float, str, None]]]
+    scatter_value_by_sample_by_metric: dict[ColumnAnchor, dict[SampleName, Union[int, float, str, None]]]
+    all_samples: list[SampleName]  # unique list of all samples in this dataset
+    scatter_trace_params: dict[str, Any]
     dt: DataTable
     show_table_by_default: bool
     is_downsampled: bool
 
-    def sample_names(self) -> List[SampleName]:
+    def sample_names(self) -> list[SampleName]:
         return self.all_samples if self.dt.pconfig.rows_are_samples else []
 
     @staticmethod
     def values_and_headers_from_dt(
         dt: DataTable,
-    ) -> Tuple[
-        Dict[ColumnAnchor, Dict[SampleName, ValueT]],
-        Dict[ColumnAnchor, ColumnMeta],
+    ) -> tuple[
+        dict[ColumnAnchor, dict[SampleName, ValueT]],
+        dict[ColumnAnchor, ColumnMeta],
     ]:
-        value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, ValueT]] = {}
-        dt_column_by_metric: Dict[ColumnAnchor, ColumnMeta] = {}
+        value_by_sample_by_metric: dict[ColumnAnchor, dict[SampleName, ValueT]] = {}
+        dt_column_by_metric: dict[ColumnAnchor, ColumnMeta] = {}
 
         for idx, metric_name, dt_column in dt.get_headers_in_order():
-            value_by_sample: Dict[SampleName, ValueT] = {}
-            for _, group_rows in list(dt.section_by_id.values())[idx].rows_by_sgroup.items():
+            value_by_sample: dict[SampleName, ValueT] = {}
+            for group_rows in list(dt.section_by_id.values())[idx].rows_by_sgroup.values():
                 for row in group_rows:
                     try:
                         v = row.data[metric_name]
@@ -518,7 +518,7 @@ class Dataset(BaseDataset):
             dt_column_by_metric[dt_column.clean_rid] = dt_column
 
         # If all colors are the same, remove them
-        if len(set([t_col.color for t_col in dt_column_by_metric.values()])) == 1:
+        if len({t_col.color for t_col in dt_column_by_metric.values()}) == 1:
             for t_col in dt_column_by_metric.values():
                 t_col.color = None
 
@@ -532,11 +532,11 @@ class Dataset(BaseDataset):
     ) -> "Dataset":
         value_by_sample_by_metric, dt_column_by_metric = Dataset.values_and_headers_from_dt(dt)
 
-        all_samples: Set[SampleName] = set()
-        scatter_value_by_sample_by_metric: Dict[ColumnAnchor, Dict[SampleName, Union[int, float, str, None]]] = {}
+        all_samples: set[SampleName] = set()
+        scatter_value_by_sample_by_metric: dict[ColumnAnchor, dict[SampleName, Union[int, float, str, None]]] = {}
         violin_value_by_sample_by_metric = {}
-        header_by_metric: Dict[ColumnAnchor, ViolinColumn] = {}
-        metrics: List[ColumnAnchor] = []
+        header_by_metric: dict[ColumnAnchor, ViolinColumn] = {}
+        metrics: list[ColumnAnchor] = []
 
         for col_anchor, dt_column in dt_column_by_metric.items():
             column = ViolinColumn(
@@ -588,7 +588,7 @@ class Dataset(BaseDataset):
                     column.xaxis.range = [xmin, xmax]
 
             if not column.show_points:  # Do not add any interactive points
-                scatter_value_by_sample: Dict[SampleName, Union[int, float, str, None]] = {}
+                scatter_value_by_sample: dict[SampleName, Union[int, float, str, None]] = {}
             elif not column.show_only_outliers:
                 scatter_value_by_sample = {}  # will use the violin values
             else:
@@ -599,7 +599,7 @@ class Dataset(BaseDataset):
                 else:
                     # For numbers, finding outliers and adding only them as interactive points
                     samples = list(value_by_sample.keys())
-                    numeric_values: List[Union[int, float]] = []
+                    numeric_values: list[Union[int, float]] = []
                     for v in value_by_sample.values():
                         assert isinstance(v, (int, float))  # values_are_numeric assures that all values are numeric
                         numeric_values.append(v)
@@ -626,7 +626,7 @@ class Dataset(BaseDataset):
                 samples = list(violin_value_by_sample.keys())
                 values = list(violin_value_by_sample.values())
                 indices = np.argsort(values)
-                indices = indices[:: int(math.ceil(len(indices) / max_violin_points))]
+                indices = indices[:: math.ceil(len(indices) / max_violin_points)]
                 violin_value_by_sample = {samples[idx]: values[idx] for idx in indices}
 
             violin_value_by_sample_by_metric[col_anchor] = violin_value_by_sample
@@ -636,8 +636,8 @@ class Dataset(BaseDataset):
                 tt_decimals = dt_column.tt_decimals if dt_column.tt_decimals is not None else 2
                 column.hoverformat = f".{tt_decimals}f"
 
-            all_samples.update(set(list(scatter_value_by_sample.keys())))
-            all_samples.update(set(list(violin_value_by_sample.keys())))
+            all_samples.update(set(scatter_value_by_sample.keys()))
+            all_samples.update(set(violin_value_by_sample.keys()))
             metrics.append(col_anchor)
 
         is_downsampled = (
@@ -651,7 +651,7 @@ class Dataset(BaseDataset):
             violin_value_by_sample_by_metric=violin_value_by_sample_by_metric,
             scatter_value_by_sample_by_metric=scatter_value_by_sample_by_metric,
             all_samples=sorted(all_samples),
-            scatter_trace_params=dict(),
+            scatter_trace_params={},
             dt=dt,
             show_table_by_default=show_table_by_default,
             is_downsampled=is_downsampled,
@@ -796,7 +796,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
+        data: dict[str, dict[str, Union[int, float, str, None]]] = {}
         for metric in self.metrics:
             values_by_sample = self.violin_value_by_sample_by_metric[metric]
             title = self.header_by_metric[metric].title
@@ -859,7 +859,7 @@ class Dataset(BaseDataset):
 
 
 class ViolinPlot(Plot[Dataset, TableConfig]):
-    datasets: List[Dataset]
+    datasets: list[Dataset]
     violin_height: int = VIOLIN_HEIGHT  # single violin height
     extra_height: int = EXTRA_HEIGHT  # extra space for the title and footer
     no_violin: bool
@@ -868,8 +868,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
     n_samples: int
     table_anchor: Anchor
 
-    def all_sample_names(self) -> List[SampleName]:
-        names: List[SampleName] = []
+    def all_sample_names(self) -> list[SampleName]:
+        names: list[SampleName] = []
         for ds in self.datasets:
             names.extend(ds.sample_names())
         return names
@@ -880,7 +880,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         anchor: Anchor,
         show_table_by_default: bool = False,
     ) -> "ViolinPlot":
-        ds_samples: Set[str] = set()
+        ds_samples: set[str] = set()
         for section in dt.section_by_id.values():
             ds_samples.update(section.rows_by_sgroup.keys())
 
@@ -902,29 +902,29 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
         # Violin-specific layout parameters
         model.layout.update(
-            margin=dict(
-                pad=0,
-                b=40,
-            ),
-            xaxis=dict(
+            margin={
+                "pad": 0,
+                "b": 40,
+            },
+            xaxis={
                 # so Plotly doesn't try to fit the ticks the on the most bottom violin,
                 # and squish the other violins
-                automargin=False,
-                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-            ),
-            yaxis=dict(
-                tickfont=dict(size=9, color="rgba(0,0,0,0.5)"),
-                gridcolor="rgba(0,0,0,0.1)",
-                zerolinecolor="rgba(0,0,0,0.1)",
-            ),
+                "automargin": False,
+                "tickfont": {"size": 9, "color": "rgba(0,0,0,0.5)"},
+                "gridcolor": "rgba(0,0,0,0.1)",
+                "zerolinecolor": "rgba(0,0,0,0.1)",
+            },
+            yaxis={
+                "tickfont": {"size": 9, "color": "rgba(0,0,0,0.5)"},
+                "gridcolor": "rgba(0,0,0,0.1)",
+                "zerolinecolor": "rgba(0,0,0,0.1)",
+            },
             violingap=0,
-            grid=dict(
-                columns=1,
-                roworder="top to bottom",
-                ygap=0.4,
-            ),
+            grid={
+                "columns": 1,
+                "roworder": "top to bottom",
+                "ygap": 0.4,
+            },
             showlegend=False,
         )
 
@@ -950,9 +950,9 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             table_anchor=model.datasets[0].dt.anchor,
         )
 
-    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> list[str]:
         """Add a control panel to the plot"""
-        buttons: List[str] = []
+        buttons: list[str] = []
         if self.show_table:
             buttons.append(
                 self._btn(
@@ -979,10 +979,10 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             # `dataset_id` and `flat` are derived from the parent class and ignored, as for this plot
             # we only support one dataset, and the flat mode is not applicable.
 
-            data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
+            data: dict[str, dict[str, Union[int, float, str, None]]] = {}
             for idx, col_key, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.clean_rid
-                for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
+                for group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.values():
                     for row in group_rows:
                         if col_key in row.data:
                             val = row.data[col_key]
@@ -1025,16 +1025,16 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
         """
         if self.show_table_by_default and violin is not True or table is True:
             # Make Plotly go.Table object and save it
-            data: Dict[str, Dict[str, Union[int, float, str, None]]] = {}
+            data: dict[str, dict[str, Union[int, float, str, None]]] = {}
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.clean_rid
-                for _, group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.items():
+                for group_rows in list(self.datasets[0].dt.section_by_id.values())[idx].rows_by_sgroup.values():
                     for row in group_rows:
                         if metric in row.data:
                             val = row.data[metric]
                             data.setdefault(row.sample, {})[rid] = val.raw
 
-            values: List[List[Any]] = [list(data.keys())]
+            values: list[list[Any]] = [list(data.keys())]
             for idx, metric, header in self.datasets[0].dt.get_headers_in_order():
                 rid = header.clean_rid
                 values.append([data[s].get(rid, "") for s in data])
@@ -1047,8 +1047,8 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
             fig = go.Figure(
                 data=[
                     go.Table(
-                        header=dict(values=["Sample"] + list(data[list(data.keys())[0]].keys())),
-                        cells=dict(values=values),
+                        header={"values": ["Sample"] + list(data[next(iter(data.keys()))].keys())},
+                        cells={"values": values},
                     )
                 ],
                 layout=self.layout,
@@ -1141,7 +1141,7 @@ class ViolinPlot(Plot[Dataset, TableConfig]):
 
 
 def find_outliers(
-    values: List[Union[int, float]],
+    values: list[Union[int, float]],
     top_n: Optional[int] = None,
     z_cutoff: float = 2.0,
     minval: Optional[Union[float, int]] = None,
@@ -1163,7 +1163,7 @@ def find_outliers(
     if len(values) == 0 or (top_n is not None and top_n <= 0):
         return np.zeros(len(values), dtype=bool)
 
-    added_values: List[Union[int, float]] = []
+    added_values: list[Union[int, float]] = []
     if minval is not None:
         added_values.append(minval)
     if maxval is not None:

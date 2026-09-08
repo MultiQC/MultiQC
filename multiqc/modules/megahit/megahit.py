@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/voutcn/megahit/blob/master/LICENSE",
         )
 
-        data = dict()
+        data = {}
         for f in self.find_log_files("megahit", filehandles=True):
             for line in f["f"]:
                 self.add_data_source(f, f["s_name"])

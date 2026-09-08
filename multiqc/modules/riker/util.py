@@ -2,12 +2,12 @@
 
 import logging
 from collections.abc import Iterator
-from typing import Dict, List, Optional, TextIO
+from typing import Optional, TextIO
 
 log = logging.getLogger(__name__)
 
 
-def read_tsv(handle: TextIO, source: str = "<unknown>") -> Iterator[Dict[str, str]]:
+def read_tsv(handle: TextIO, source: str = "<unknown>") -> Iterator[dict[str, str]]:
     """
     Yield rows of a riker TSV output as ``{column: value}`` dicts.
 
@@ -21,7 +21,7 @@ def read_tsv(handle: TextIO, source: str = "<unknown>") -> Iterator[Dict[str, st
     header_line = handle.readline()
     if not header_line:
         return
-    header: List[str] = header_line.rstrip("\n").split("\t")
+    header: list[str] = header_line.rstrip("\n").split("\t")
 
     for line_num, line in enumerate(handle, start=2):
         line = line.rstrip("\n")

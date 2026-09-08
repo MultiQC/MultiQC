@@ -320,7 +320,36 @@ line-length = 120
 # Past release notes are a historical record, so ruff should not reformat the
 # Python snippets in them
 extend-exclude = ["CHANGELOG.md"]
-lint.ignore = ["F401"]   # unused-import
+
+[tool.ruff.lint]
+# Ruff picks its own default rule set, and it grew a great deal in 0.15. Rules
+# turned off below are ones that conflict with a project convention or would be a
+# behaviour change rather than a cleanup. Each is worth revisiting on its own.
+ignore = [
+  "F401",    # unused-import: modules re-export names for the public API
+  "FA100",   # wants `from __future__ import annotations`, which code_checks.py forbids
+  "N999",    # module names match the tool they support and are public identifiers
+             # tied to entry points and search patterns, so they cannot be renamed
+  "BLE001",  # 85 broad `except Exception` handlers; narrowing them changes behaviour
+             # per call site and needs its own review against the crash-loudly rule
+  "S110",    # try/except/pass, same story as BLE001
+  "S112",    # try/except/continue, likewise
+  "PLC0206", # 34 `for k in d` loops that could use `.items()`; a readability-only
+             # rewrite across modules with uneven test coverage
+  "SIM102",  # the 13 remaining nested ifs each carry a comment explaining the inner
+             # condition, and merging them loses that; ruff declines to fix them too
+  "PYI019",  # the fix imports typing_extensions, which is not a dependency here
+  "DTZ001",  # naive datetimes: report timestamps are deliberately local time, and
+  "DTZ005",  # making them tz-aware changes what users see in reports
+  "DTZ006",
+  "DTZ007",
+  "DTZ011",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Mutable defaults on pydantic model fields are correct: pydantic copies them per
+# instance. Ruff cannot see the BaseModel inheritance through ValidatedConfig.
+"multiqc/plots/*.py" = ["RUF012"]
 
 [tool.mypy]
 check_untyped_defs = true

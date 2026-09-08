@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.base_module import SampleGroupingConfig
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_samtools_flagstat(module: BaseMultiqcModule):
     """Find Samtools flagstat logs and parse their data"""
 
-    samtools_flagstat: Dict = dict()
+    samtools_flagstat: dict = {}
     for f in module.find_log_files("samtools/flagstat"):
         parsed_data = parse_single_report(f["f"])
         if len(parsed_data) > 0:
@@ -78,7 +77,7 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
         "format": None,
         "suffix": None,
     }
-    keys_counts = dict()
+    keys_counts = {}
     keys_counts["flagstat_total"] = dict(reads, title="Total Reads")
     keys_counts["total_passed"] = dict(reads, title="Total Passed QC")
     keys_counts["mapped_passed"] = dict(reads, title="Mapped")
@@ -103,21 +102,21 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
         reads, title="Diff chr (mapQ >= 5)", description="Mate mapped to different chromosome (mapQ >= 5)"
     )
 
-    data_pct: Dict = dict()
+    data_pct: dict = {}
     for sample, d in samtools_flagstat.items():
-        data_pct[sample] = dict()
+        data_pct[sample] = {}
         total = d["flagstat_total"]
         if total > 0:
             for metric, cnt in d.items():
                 data_pct[sample][f"{metric}_pct"] = cnt / total * 100
     keys_pct = {
-        f"{metric}_pct": dict(
-            title=header["title"],
-            min=0,
-            max=100,
-            suffix="%",
-            shared_key=None,
-        )
+        f"{metric}_pct": {
+            "title": header["title"],
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "shared_key": None,
+        }
         for metric, header in keys_counts.items()
     }
 
@@ -180,7 +179,7 @@ def parse_single_report(file_obj):
     Take a filename, parse the data assuming it's a flagstat file
     Returns a dictionary {'lineName_pass' : value, 'lineName_fail' : value}
     """
-    parsed_data: Dict = {}
+    parsed_data: dict = {}
 
     re_groups = ["passed", "failed", "passed_pct", "failed_pct"]
     for k, r in flagstat_regexes.items():

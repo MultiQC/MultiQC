@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.top_n = getattr(config, "metaphlan", {}).get("top_n", 10)
 
-        self.metaphlan_raw_data = dict()
+        self.metaphlan_raw_data = {}
         for f in self.find_log_files("metaphlan", filehandles=True):
             f["f"].seek(0)
             self.parse_logs(f)
@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.metaphlan_raw_data, f"multiqc_{self.anchor}")
 
         # Sum percentages across all samples, so that we can pick top species
-        self.metaphlan_total_pct = dict()
+        self.metaphlan_total_pct = {}
         self.sum_sample_counts()
 
         self.general_stats_cols()
@@ -154,13 +154,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick the top taxa for each rank
-        for s_name, data in self.metaphlan_raw_data.items():
+        for data in self.metaphlan_raw_data.values():
             for row in data:
                 tax_rank = row["tax_rank"]
                 taxonomy = row["taxonomy"]
 
                 if tax_rank not in self.metaphlan_total_pct:
-                    self.metaphlan_total_pct[tax_rank] = dict()
+                    self.metaphlan_total_pct[tax_rank] = {}
 
                 if taxonomy not in self.metaphlan_total_pct[tax_rank]:
                     self.metaphlan_total_pct[tax_rank][taxonomy] = 0
@@ -190,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pass
 
         # Column headers
-        headers = dict()
+        headers = {}
 
         top_one_hkey = None
 
@@ -229,13 +229,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a bar plot showing the top-N from each taxa rank"""
 
         pd = []
-        cats = list()
+        cats = []
         # Keeping track of encountered codes to display only tabs with available data
         found_rank_codes = set()
 
         for rank_code in self.t_ranks:
-            rank_cats = dict()
-            rank_data = dict()
+            rank_cats = {}
+            rank_data = {}
 
             # Loop through the summed tax percentages to get the top-N across all samples
             try:
@@ -255,7 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
                     rank_cats[taxonomy] = {"name": taxonomy}
                     for s_name, d in self.metaphlan_raw_data.items():
                         if s_name not in rank_data:
-                            rank_data[s_name] = dict()
+                            rank_data[s_name] = {}
                         if s_name not in counts_shown:
                             counts_shown[s_name] = 0
                         for row in d:
@@ -277,7 +277,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # Pull out counts for this rank + classif from each sample
                     for s_name, d in self.metaphlan_raw_data.items():
                         if s_name not in rank_data:
-                            rank_data[s_name] = dict()
+                            rank_data[s_name] = {}
                         if s_name not in counts_shown:
                             counts_shown[s_name] = 0
 
@@ -294,7 +294,7 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, d in self.metaphlan_raw_data.items():
                 # In case none of the top_n were in some sample:
                 if s_name not in rank_data:
-                    rank_data[s_name] = dict()
+                    rank_data[s_name] = {}
                 if s_name not in counts_shown:
                     counts_shown[s_name] = 0
                 rank_data[s_name]["other"] = 100 - counts_shown[s_name]

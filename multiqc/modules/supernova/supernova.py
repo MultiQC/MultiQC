@@ -426,17 +426,14 @@ class MultiqcModule(BaseMultiqcModule):
             "p10": "p10",
         }
 
-        try:
-            cdict = json.loads(content)
-        except ValueError as e:
-            raise e
+        cdict = json.loads(content)
 
         data = {}
         # Try to find sample_id
         sid = ""
-        if "CS_SAMPLE_ID" in cdict.keys():
+        if "CS_SAMPLE_ID" in cdict:
             sid = cdict["CS_SAMPLE_ID"]  # supernova 1.2
-        elif "sample_id" in cdict.keys():
+        elif "sample_id" in cdict:
             sid = cdict["sample_id"]
         else:
             raise RuntimeError
@@ -523,20 +520,17 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def parse_histogram(content, cutoff=None):
-        try:
-            cdict = json.loads(content)
-        except ValueError as e:
-            raise e
+        cdict = json.loads(content)
 
         numbins = cdict["numbins"] + 1
         xdata = [i * cdict["binsize"] for i in range(numbins)]
-        return {i: j for (i, j) in zip(xdata, cdict["vals"][:cutoff])}
+        return dict(zip(xdata, cdict["vals"][:cutoff]))
 
     @staticmethod
     def trim_tail(plot, min_x=50, pct=0.99):
         join_plot = {}
         cuml_plot = {}
-        for sample, plot_data in plot.items():
+        for plot_data in plot.values():
             for key, value in plot_data.items():
                 join_plot[key] = join_plot.get(key, 0) + value
         max_i = 0

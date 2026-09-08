@@ -75,7 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         # Call submodule functions
-        n = dict()
+        n = {}
         for sm in rseqc_sections:
             try:
                 # Import the submodule and call parse_reports()

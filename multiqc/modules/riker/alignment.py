@@ -1,7 +1,7 @@
 """Parse riker `alignment` (alignment-metrics.txt) outputs."""
 
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -32,7 +32,7 @@ _INT_COLS = {
 
 def parse_reports(module):
     # data_by_sample[sample][category] -> dict of metrics
-    data_by_sample: Dict[str, Dict[str, Dict[str, Optional[float]]]] = {}
+    data_by_sample: dict[str, dict[str, dict[str, Optional[float]]]] = {}
 
     for f in module.find_log_files("riker/alignment", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -43,7 +43,7 @@ def parse_reports(module):
             s_name = module.clean_s_name(sample, f)
 
             try:
-                parsed: Dict[str, Optional[float]] = {
+                parsed: dict[str, Optional[float]] = {
                     col: (to_int(val) if col in _INT_COLS else to_float(val)) for col, val in row.items()
                 }
             except (TypeError, ValueError) as e:
@@ -60,7 +60,7 @@ def parse_reports(module):
     module.add_software_version(None)
 
     # Pull the `pair` row (or fall back to the first available category) for general stats.
-    pair_data: Dict[str, Dict[str, Optional[float]]] = {}
+    pair_data: dict[str, dict[str, Optional[float]]] = {}
     for s_name, by_cat in data_by_sample.items():
         pair_data[s_name] = by_cat.get("pair", next(iter(by_cat.values())))
 
@@ -135,7 +135,7 @@ def parse_reports(module):
     module.general_stats_addcols(pair_data, headers, namespace="alignment")
 
     # Bar plot: aligned vs unaligned reads using the `pair` row.
-    bar_data: Dict[str, Dict[str, float]] = {}
+    bar_data: dict[str, dict[str, float]] = {}
     for s_name, by_cat in data_by_sample.items():
         row = by_cat.get("pair", next(iter(by_cat.values())))
         total = row.get("total_reads", 0.0)
@@ -173,11 +173,11 @@ def parse_reports(module):
     # The first row of each group is always the primary row, so the headline is
     # whichever category sorts first, not `pair` specifically.
     category_order = ["pair", "read1", "read2"]
-    rows_by_sample: Dict[SampleGroup, List[InputRow]] = {}
+    rows_by_sample: dict[SampleGroup, list[InputRow]] = {}
     for s_name, by_cat in data_by_sample.items():
         ordered = [c for c in category_order if c in by_cat]
         ordered += [c for c in by_cat if c not in category_order]
-        rows: List[InputRow] = []
+        rows: list[InputRow] = []
         for category in ordered:
             is_headline = not rows
             label = s_name if is_headline else f"{s_name} ({category})"

@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -45,11 +45,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Data storage
-        self.psite_region_data: Dict[str, Dict] = {}
-        self.frames_data: Dict[str, Dict[str, Dict[str, float]]] = {}
-        self.metaprofile_start_data: Dict[str, Dict[int, float]] = {}
-        self.metaprofile_stop_data: Dict[str, Dict[int, float]] = {}
-        self.rna_reference_data: Optional[Dict[str, float]] = None
+        self.psite_region_data: dict[str, dict] = {}
+        self.frames_data: dict[str, dict[str, dict[str, float]]] = {}
+        self.metaprofile_start_data: dict[str, dict[int, float]] = {}
+        self.metaprofile_stop_data: dict[str, dict[int, float]] = {}
+        self.rna_reference_data: Optional[dict[str, float]] = None
 
         # Parse all file types
         self.parse_psite_region_files()
@@ -135,8 +135,8 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Parse data lines
-        sample_data: Dict[str, Dict[str, float]] = {}
-        rna_ref_data: Dict[str, float] = {}
+        sample_data: dict[str, dict[str, float]] = {}
+        rna_ref_data: dict[str, float] = {}
 
         for line in lines[1:]:
             parts = line.strip().split(delim)
@@ -199,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Parse data lines: sample -> region -> frame -> scaled_count
-        sample_data: Dict[str, Dict[str, Dict[str, float]]] = {}
+        sample_data: dict[str, dict[str, dict[str, float]]] = {}
 
         for line in lines[1:]:
             parts = line.strip().split(delim)
@@ -258,8 +258,8 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Separate start and stop codon data
-        start_data: Dict[str, Dict[int, float]] = {}
-        stop_data: Dict[str, Dict[int, float]] = {}
+        start_data: dict[str, dict[int, float]] = {}
+        stop_data: dict[str, dict[int, float]] = {}
 
         for line in lines[1:]:
             parts = line.strip().split(delim)
@@ -351,7 +351,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Create stacked bar graph for P-site region distribution"""
 
         # Prepare data for plotting
-        plot_data: Dict[str, Dict[str, float]] = {}
+        plot_data: dict[str, dict[str, float]] = {}
 
         for s_name, regions in self.psite_region_data.items():
             plot_data[s_name] = regions
@@ -412,7 +412,7 @@ translating ribosomes rather than random RNA fragments.
         """Create grouped stacked bar graph for reading frame distribution"""
 
         # Prepare data with special sample keys for grouping
-        plot_data: Dict[str, Dict[str, float]] = {}
+        plot_data: dict[str, dict[str, float]] = {}
         samples = sorted(self.frames_data.keys())
         regions = ["5' UTR", "CDS", "3' UTR"]
 
@@ -427,9 +427,9 @@ translating ribosomes rather than random RNA fragments.
 
         # Build sample groups for visual grouping by region
         # Format: {"Group Name": [[sample_key, offset_group], ...], ...}
-        sample_groups: Dict[str, List[List[str]]] = {}
+        sample_groups: dict[str, list[list[str]]] = {}
         for region in regions:
-            group_samples: List[List[str]] = []
+            group_samples: list[list[str]] = []
             for s_name in samples:
                 key = f"{s_name}_{region}"
                 if key in plot_data:

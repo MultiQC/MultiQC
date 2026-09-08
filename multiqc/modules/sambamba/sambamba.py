@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/biod/sambamba/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["markdup"] = parse_sambamba_markdup(self)

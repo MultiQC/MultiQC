@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule, Relatedness2Mixin, TsTvByCountMixin, TsTv
             license_url="https://github.com/vcftools/vcftools/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
         n["relatedness2"] = self.parse_relatedness2()
 
         n["tstv_by_count"] = self.parse_tstv_by_count()

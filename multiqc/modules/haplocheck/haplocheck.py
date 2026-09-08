@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Union
+from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
             license="MIT License",
             license_url="https://github.com/genepi/haplocheck/blob/master/LICENSE",
         )
-        haplocheck_data: Dict = dict()
+        haplocheck_data: dict = {}
 
         for f in self.find_log_files("haplocheck"):
             haplocheck_data.update(self.parse_logs(f))
@@ -85,8 +85,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(haplocheck_data, headers)
 
-    def parse_logs(self, f: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        parsed_data: Dict[str, Dict[str, Union[float, str]]] = {}
+    def parse_logs(self, f: str) -> dict[str, dict[str, Union[float, str]]]:
+        parsed_data: dict[str, dict[str, Union[float, str]]] = {}
         file_content = f["f"]
         lines = file_content.strip().splitlines()
 

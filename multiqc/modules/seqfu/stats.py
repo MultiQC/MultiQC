@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -19,7 +19,7 @@ def parse_seqfu_stats(module: BaseMultiqcModule):
     elif config.use_filename_as_sample_name is True:
         use_filename = True
 
-    seqfu_stats: Dict[SampleName, Dict[str, Any]] = {}
+    seqfu_stats: dict[SampleName, dict[str, Any]] = {}
     for f in module.find_log_files("seqfu/stats", filehandles=True):
         for sample_name, data in parse_file(f, use_filename):
             sample_name = SampleName(module.clean_s_name(sample_name, f=f))
@@ -67,7 +67,7 @@ def parse_file(f, use_filename=False):
         return []
 
     # Extract columns from first line
-    cols = [c for c in lines[0].strip().split("\t")]
+    cols = list(lines[0].strip().split("\t"))
 
     # Parse sample(s) data
     for line in lines[1:]:
@@ -84,7 +84,7 @@ def parse_file(f, use_filename=False):
         yield sample_name, data
 
 
-def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
+def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: dict[SampleName, dict[str, Any]]):
     # Add columns to General Stats Table
     general_stats_headers = get_general_stats_headers()
 
@@ -114,7 +114,7 @@ def add_general_stats_cols(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNa
     )
 
 
-def all_same_length(seqfu_stats: Dict[SampleName, Dict[str, Any]]):
+def all_same_length(seqfu_stats: dict[SampleName, dict[str, Any]]):
     """Check if all sequences are the same length"""
     lengths: set[float] = set()
     for col in ["Min", "Max"]:
@@ -122,7 +122,7 @@ def all_same_length(seqfu_stats: Dict[SampleName, Dict[str, Any]]):
     return len(lengths) == 1
 
 
-def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
+def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: dict[SampleName, dict[str, Any]]):
     """
     Plot sequence length statistics as a bar graph with switches for different stats
     """
@@ -185,7 +185,7 @@ def plot_sequence_lengths(module: BaseMultiqcModule, seqfu_stats: Dict[SampleNam
     )
 
 
-def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: Dict[SampleName, Dict[str, Any]]):
+def plot_sequence_counts(module: BaseMultiqcModule, seqfu_stats: dict[SampleName, dict[str, Any]]):
     """
     Plot sequence count statistics as a bar graph with switches for sequences and bases
     """

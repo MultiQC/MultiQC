@@ -27,13 +27,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HOPS post-processing JSONs
-        self.hops_data = dict()
+        self.hops_data = {}
 
         for f in self.find_log_files("hops", filehandles=True):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning(f"Error loading file {f['fn']}")
+                log.warning(f"Error loading file {f['fn']}")
 
             # Superfluous function call to confirm that it is used in this module
             # Replace None with actual version if it is available
@@ -76,9 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def hops_heatmap(self):
         """Heatmap showing all statuses for every sample"""
-        samples = []
-        for s in self.hops_data:
-            samples.append(s)
+        samples = list(self.hops_data)
 
         # As all samples always have same taxa, will take from the first sample
         taxa = []
@@ -87,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get values from named list into a list of lists required for heatmap
         data = []
-        for s, d in self.hops_data.items():
+        for d in self.hops_data.values():
             row = []
             for val in d.values():
                 # Values can be lists of 1 element, so flattening to single value

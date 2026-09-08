@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Literal, Optional, Union, cast
 
 from pydantic import BaseModel
 
@@ -28,7 +28,7 @@ class ClConfig(BaseModel):
     template: Optional[str] = None
     require_logs: Optional[bool] = None
     output_dir: Optional[Union[str, Path]] = None
-    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = None
+    use_filename_as_sample_name: Optional[Union[bool, list[str]]] = None
     replace_names: Optional[str] = None
     sample_names: Optional[str] = None
     sample_filters: Optional[str] = None
@@ -52,17 +52,17 @@ class ClConfig(BaseModel):
     profile_runtime: Optional[bool] = None
     profile_memory: Optional[bool] = None
     no_version_check: Optional[bool] = None
-    ignore: List[str] = []
-    ignore_samples: List[str] = []
-    only_samples: List[str] = []
-    run_modules: List[str] = []
-    exclude_modules: List[str] = []
-    config_files: List[Union[str, Path]] = []
-    cl_config: List[str] = []
-    custom_css_files: List[str] = []
-    module_order: List[Union[str, Dict]] = []
-    extra_fn_clean_exts: List = []
-    extra_fn_clean_trim: List = []
+    ignore: list[str] = []
+    ignore_samples: list[str] = []
+    only_samples: list[str] = []
+    run_modules: list[str] = []
+    exclude_modules: list[str] = []
+    config_files: list[Union[str, Path]] = []
+    cl_config: list[str] = []
+    custom_css_files: list[str] = []
+    module_order: list[Union[str, dict]] = []
+    extra_fn_clean_exts: list = []
+    extra_fn_clean_trim: list = []
     preserve_module_raw_data: Optional[bool] = None
     data_dump_file_write_raw: Optional[bool] = None
     ai_summary: Optional[bool] = None
@@ -74,7 +74,7 @@ class ClConfig(BaseModel):
     ai_prompt_short: Optional[str] = None
     ai_prompt_full: Optional[str] = None
     no_ai: Optional[bool] = None
-    unknown_options: Optional[Dict] = None
+    unknown_options: Optional[dict] = None
     check_config: Optional[bool] = None
 
 
@@ -245,7 +245,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:
-        config.analysis_dir = [p for p in analysis_dir]
+        config.analysis_dir = list(analysis_dir)
     if cfg.file_list is not None:
         if len(config.analysis_dir) > 1:
             raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")

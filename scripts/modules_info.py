@@ -8,16 +8,14 @@ Potentially will print more per-module info, as well as aggregate stats.
 import re
 from collections import defaultdict
 from pathlib import Path
-from typing import Dict
 
 
-def find_plot_calls(module_path: Path) -> Dict[str, int]:
-    call_by_plot_type: Dict[str, int] = defaultdict(int)
+def find_plot_calls(module_path: Path) -> dict[str, int]:
+    call_by_plot_type: dict[str, int] = defaultdict(int)
     with module_path.open() as f:
         for line in f:
-            if ".plot(" in line:
-                if m := re.search(r"(\w+)\.plot\(", line):
-                    call_by_plot_type[m.group(1)] += 1
+            if ".plot(" in line and (m := re.search(r"(\w+)\.plot\(", line)):
+                call_by_plot_type[m.group(1)] += 1
             if "general_stats_addcols(" in line:
                 call_by_plot_type["general_stats_table"] = 1
     return call_by_plot_type
@@ -25,7 +23,7 @@ def find_plot_calls(module_path: Path) -> Dict[str, int]:
 
 def main():
     modules_dir = Path(__file__).parent.parent / "multiqc/modules"
-    stat_by_plot_type_by_module: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    stat_by_plot_type_by_module: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
     for mod_dir in modules_dir.iterdir():
         if mod_dir.is_dir():
             mod_name = mod_dir.name

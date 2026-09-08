@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import table
@@ -57,7 +56,7 @@ def parse_reports(module):
     # There can be two types of these files for the same sample: one with IlluminaLaneMetrics,
     # and one with IlluminaPhasingMetrics. We want to collect both, thus using default dicts
     # and calling .update() on them when any metrics are found.
-    data_by_lane_by_run: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(dict))
+    data_by_lane_by_run: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/collectilluminalanemetrics", filehandles=True):

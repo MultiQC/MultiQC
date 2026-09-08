@@ -150,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
             chrom = parts[2].strip() if len(parts) >= 3 else "genome"
             chroms.setdefault(chrom, {})[start_bp] = p_s
 
-        return chroms if chroms else None
+        return chroms or None
 
     def hicstuff_distance_law_plot(self):
         """Generate P(s) distance-law line graph and slope analysis."""

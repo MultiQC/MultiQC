@@ -41,8 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the summary data
-        self.lima_summary = dict()
-        self.lima_counts = dict()
+        self.lima_summary = {}
+        self.lima_counts = {}
 
         # Parse the output files
         self.parse_summary_files()
@@ -80,8 +80,8 @@ class MultiqcModule(BaseMultiqcModule):
         #       statistics table.
         # 2. All samples that have not been renamed will be added to their own
         #       table in the Lima section of the report.
-        lima_renamed_count = dict()
-        lima_original_count = dict()
+        lima_renamed_count = {}
+        lima_original_count = {}
 
         for sample in self.lima_counts:
             if sample in config.sample_names_replace.values():
@@ -129,10 +129,10 @@ class MultiqcModule(BaseMultiqcModule):
         header = next(file_content).strip().split()
 
         # A dictionary to store the results
-        lima_counts = dict()
+        lima_counts = {}
         for line in file_content:
             spline = line.strip().split("\t")
-            data = {field: value for field, value in zip(header, spline)}
+            data = dict(zip(header, spline))
 
             first_barcode = data["IdxFirstNamed"]
             second_barcode = data["IdxCombinedNamed"]
@@ -155,11 +155,11 @@ class MultiqcModule(BaseMultiqcModule):
         all_filters.insert(0, all_filters.pop(all_filters.index("ZMWs above all thresholds")))
 
         # Flatten the data into a structure that can be plotted
-        plot_data = dict()
+        plot_data = {}
         for s_name, data in self.lima_summary.items():
-            plot_data[s_name] = dict()
+            plot_data[s_name] = {}
             for reason in all_filters:
-                plot_data[s_name][reason] = dict()
+                plot_data[s_name][reason] = {}
                 # This is where the filter reasons are stored
                 zmw_marginals = data["ZMWs below any threshold"]["ZMW marginals"]
                 for filter_reason in zmw_marginals:
@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def filter_and_pass(self, data):
         """Get the reasons why each ZMW was filtered"""
-        reasons = dict()
+        reasons = {}
 
         # Add why ZMWs were filtered
         filter_data = data["ZMWs below any threshold"]["ZMW marginals"]
@@ -251,11 +251,11 @@ class MultiqcModule(BaseMultiqcModule):
 
 def parse_PacBio_log(file_content):
     """Parse PacBio log file"""
-    data = dict()
+    data = {}
     # This is a local dictionary to store which annotations belong to which
     # result dictionary. This will be used to structure the output, but will
     # not be part of the output itself
-    annotations = dict()
+    annotations = {}
     current_annotation = None
 
     for line in file_content:
@@ -272,7 +272,7 @@ def parse_PacBio_log(file_content):
             name = line[:-9]
             # We make a new heading with the current name under the data that
             # matches the current annotation
-            current_annotation = dict()
+            current_annotation = {}
             # We keep the dictonary accessible under 'current_annotation',
             # so we can keep adding new data to it without having to keep track
             # of where it belongs
@@ -305,7 +305,7 @@ def parse_PacBio_log(file_content):
 
 def parse_line(line):
     """Parse a line from the Lima log file"""
-    data = dict()
+    data = {}
 
     # If we got an empty line to parse
     if not line.strip():

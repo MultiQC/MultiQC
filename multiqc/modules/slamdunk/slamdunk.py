@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
 
         # Summary Reports
-        self.slamdunk_data = dict()
+        self.slamdunk_data = {}
         for f in self.find_log_files("slamdunk/summary", filehandles=True):
             self.parseSummary(f)
         self.slamdunk_data = self.ignore_samples(self.slamdunk_data)
@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.slamdunk_data))
 
         # PCA Plots
-        self.PCA_data = dict()
+        self.PCA_data = {}
         for f in self.find_log_files("slamdunk/PCA", filehandles=True):
             self.parsePCA(f)
         self.PCA_data = self.ignore_samples(self.PCA_data)
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.PCA_data))
 
         # UTR Rate reports
-        self.utrates_data = dict()
+        self.utrates_data = {}
         for f in self.find_log_files("slamdunk/utrrates", filehandles=True):
             self.parseUtrRates(f)
         self.utrates_data = self.ignore_samples(self.utrates_data)
@@ -76,8 +76,8 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.utrates_data))
 
         # Read rate reports
-        self.rates_data_plus = dict()
-        self.rates_data_minus = dict()
+        self.rates_data_plus = {}
+        self.rates_data_minus = {}
         for f in self.find_log_files("slamdunk/rates", filehandles=True):
             self.parseSlamdunkRates(f)
         self.rates_data_plus = self.ignore_samples(self.rates_data_plus)
@@ -90,10 +90,10 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.rates_data_plus))
 
         # TCP error read rate
-        self.nontc_per_readpos_plus = dict()
-        self.nontc_per_readpos_minus = dict()
-        self.tc_per_readpos_plus = dict()
-        self.tc_per_readpos_minus = dict()
+        self.nontc_per_readpos_plus = {}
+        self.nontc_per_readpos_minus = {}
+        self.tc_per_readpos_plus = {}
+        self.tc_per_readpos_minus = {}
         for f in self.find_log_files("slamdunk/tcperreadpos", filehandles=True):
             self.parseSlamdunkTCPerReadpos(f)
         self.nontc_per_readpos_plus = self.ignore_samples(self.nontc_per_readpos_plus)
@@ -110,10 +110,10 @@ class MultiqcModule(BaseMultiqcModule):
             num_reports = max(num_reports, len(self.tc_per_readpos_plus))
 
         # Non-TCP error read rate
-        self.nontc_per_utrpos_plus = dict()
-        self.nontc_per_utrpos_minus = dict()
-        self.tc_per_utrpos_plus = dict()
-        self.tc_per_utrpos_minus = dict()
+        self.nontc_per_utrpos_plus = {}
+        self.nontc_per_utrpos_minus = {}
+        self.tc_per_utrpos_plus = {}
+        self.tc_per_utrpos_minus = {}
         for f in self.find_log_files("slamdunk/tcperutrpos", filehandles=True):
             self.parseSlamdunkTCPerUtrpos(f)
         self.nontc_per_utrpos_plus = self.ignore_samples(self.nontc_per_utrpos_plus)
@@ -156,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if "Conversions=" in line:
             sample = f["s_name"]
-            self.utrates_data[sample] = dict()
+            self.utrates_data[sample] = {}
 
             conversions = re.sub(".*Conversions=", "", line.rstrip()).split(",")
 
@@ -304,7 +304,7 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
             fields = line.rstrip().split("\t")
             s_name = self.clean_s_name(fields[0], f)
-            self.slamdunk_data[s_name] = dict()
+            self.slamdunk_data[s_name] = {}
             self.slamdunk_data[s_name]["sequenced"] = int(fields[4])
             self.slamdunk_data[s_name]["mapped"] = int(fields[5])
             # self.slamdunk_data[s_name]['deduplicated'] = int(fields[6])
@@ -318,7 +318,7 @@ class MultiqcModule(BaseMultiqcModule):
             if columnCount == 14:
                 self.slamdunk_data[s_name]["counted"] = int(fields[12])
 
-        for s_name in self.slamdunk_data.keys():
+        for s_name in self.slamdunk_data:
             self.add_software_version(version, s_name)
             self.add_data_source(f, s_name=s_name)
 
@@ -459,7 +459,7 @@ class MultiqcModule(BaseMultiqcModule):
             ],
         }
 
-        cats = [dict(), dict()]
+        cats = [{}, {}]
         keys = [
             ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"],
             ["A>G", "A>T", "A>C", "T>A", "T>G", "T>C", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"],
@@ -481,7 +481,7 @@ class MultiqcModule(BaseMultiqcModule):
     def slamdunkUtrRatesPlot(self):
         """Generate the UTR rates plot"""
 
-        cats = dict()
+        cats = {}
         keys = ["T>C", "A>T", "A>G", "A>C", "T>A", "T>G", "G>A", "G>T", "G>C", "C>A", "C>T", "C>G"]
         for i, v in enumerate(keys):
             cats[v] = {"color": self.plot_cols[i]}

@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any BioBloom Tools reports
-        self.bbt_data = dict()
+        self.bbt_data = {}
         self.num_orgs = 0
         for f in self.find_log_files("biobloomtools", filehandles=True):
             parsed_data = self.parse_bbt(f["f"])
@@ -55,21 +55,21 @@ class MultiqcModule(BaseMultiqcModule):
         # Write the total counts and percentages to files
         data_export = {}
         for s_name in self.bbt_data:
-            data_export[s_name] = dict()
+            data_export[s_name] = {}
             for org in self.bbt_data[s_name]:
                 data_export[s_name][org] = int(self.bbt_data[s_name][org]["hits"])
         self.write_data_file(data_export, "multiqc_biobloomtools")
 
     def parse_bbt(self, fh):
         """Parse the BioBloom Tools output into a 3D dict"""
-        parsed_data = dict()
+        parsed_data = {}
         headers = None
         for line in fh:
             s = line.split("\t")
             if headers is None:
                 headers = s
             else:
-                parsed_data[s[0]] = dict()
+                parsed_data[s[0]] = {}
                 for i, h in enumerate(headers[1:]):
                     parsed_data[s[0]][h] = float(s[i + 1])
 
@@ -80,10 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
         each species, stacked."""
 
         # First, sum the different types of alignment counts
-        data = dict()
-        cats = dict()
+        data = {}
+        cats = {}
         for s_name in self.bbt_data:
-            data[s_name] = dict()
+            data[s_name] = {}
             for org in self.bbt_data[s_name]:
                 data[s_name][org] = self.bbt_data[s_name][org]["hits"] - self.bbt_data[s_name][org]["shared"]
                 if org not in cats and org != "multiMatch" and org != "noMatch":

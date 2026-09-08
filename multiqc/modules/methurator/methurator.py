@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict
+from typing import Any
 
 import yaml
 
@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Store parsed data
-        self.methurator_data: Dict[str, Dict[str, Any]] = {}
+        self.methurator_data: dict[str, dict[str, Any]] = {}
 
         # Find and parse methurator summary files
         for f in self.find_log_files("methurator"):
@@ -91,9 +91,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data file (must be last)
         self.write_data_file(self.methurator_data, "methurator")
 
-    def _extract_sample_data(self, parsed: Dict) -> Dict[str, Dict[str, Any]]:
+    def _extract_sample_data(self, parsed: dict) -> dict[str, dict[str, Any]]:
         """Extract per-sample data from the parsed YAML structure."""
-        samples_data: Dict[str, Dict[str, Any]] = {}
+        samples_data: dict[str, dict[str, Any]] = {}
 
         summary = parsed.get("methurator_summary", {})
         reads_summary = summary.get("reads_summary", [])
@@ -104,14 +104,14 @@ class MultiqcModule(BaseMultiqcModule):
         # The structure is: [{sample_name: [[pct, value], ...]}, ...]
 
         # Parse reads summary
-        reads_by_sample: Dict[str, list] = {}
+        reads_by_sample: dict[str, list] = {}
         for item in reads_summary:
             if isinstance(item, dict):
                 for sample_name, data in item.items():
                     reads_by_sample[sample_name] = data
 
         # Parse CpGs summary
-        cpgs_by_sample: Dict[str, Dict[int, list]] = {}
+        cpgs_by_sample: dict[str, dict[int, list]] = {}
         for item in cpgs_summary:
             if isinstance(item, dict):
                 for sample_name, coverage_data in item.items():
@@ -125,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
                                     cpgs_by_sample[sample_name][min_cov] = data
 
         # Parse saturation analysis
-        saturation_by_sample: Dict[str, Dict[int, Dict[str, Any]]] = {}
+        saturation_by_sample: dict[str, dict[int, dict[str, Any]]] = {}
         for item in saturation_analysis:
             if isinstance(item, dict):
                 for sample_name, sat_data in item.items():
@@ -141,7 +141,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_samples = set(reads_by_sample.keys()) | set(cpgs_by_sample.keys()) | set(saturation_by_sample.keys())
 
         for sample_name in all_samples:
-            sample_data: Dict[str, Any] = {
+            sample_data: dict[str, Any] = {
                 "reads": reads_by_sample.get(sample_name, []),
                 "cpgs": cpgs_by_sample.get(sample_name, {}),
                 "saturation_analysis": saturation_by_sample.get(sample_name, {}),
@@ -181,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _add_general_stats(self):
         """Add columns to the general statistics table."""
-        general_stats_data: Dict[str, Dict[str, Any]] = {}
+        general_stats_data: dict[str, dict[str, Any]] = {}
 
         for s_name, data in self.methurator_data.items():
             general_stats_data[s_name] = {
@@ -226,13 +226,13 @@ class MultiqcModule(BaseMultiqcModule):
     def _add_saturation_plot(self):
         """Add the CpG saturation curve plot showing CpGs vs number of reads."""
         # Collect plot data for each sample, one dataset per minimum coverage level
-        plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
+        plot_data_by_coverage: dict[int, dict[str, dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
             saturation_analysis = data.get("saturation_analysis", {})
             # Build a lookup from percentage to reads count
             reads_data = data.get("reads", [])
-            pct_to_reads = {pct: reads for pct, reads in reads_data}
+            pct_to_reads = dict(reads_data)
 
             for min_cov, sat_data in saturation_analysis.items():
                 if min_cov not in plot_data_by_coverage:
@@ -240,7 +240,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Extract data points: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
                 sat_points = sat_data.get("data", [])
-                sample_curve: Dict[float, float] = {}
+                sample_curve: dict[float, float] = {}
                 for point in sat_points:
                     if len(point) >= 2:
                         pct = point[0]
@@ -300,7 +300,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _add_saturation_pct_plot(self):
         """Add a plot showing saturation percentage vs percentage of reads."""
         # Collect plot data for each sample, one dataset per minimum coverage level
-        plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
+        plot_data_by_coverage: dict[int, dict[str, dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
             saturation_analysis = data.get("saturation_analysis", {})
@@ -310,7 +310,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Extract data points: [downsampling_pct, cpgs, saturation_pct, is_extrapolated]
                 sat_points = sat_data.get("data", [])
-                sample_curve: Dict[float, float] = {}
+                sample_curve: dict[float, float] = {}
                 for point in sat_points:
                     if len(point) >= 3 and point[2] is not None:
                         sample_curve[point[0] * 100] = float(point[2])

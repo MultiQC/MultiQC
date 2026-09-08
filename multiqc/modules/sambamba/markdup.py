@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -21,7 +20,7 @@ def parse_sambamba_markdup(module: BaseMultiqcModule) -> int:
     Give user warning if redundant samples are found.
     """
 
-    data_by_sample: Dict[str, Dict] = dict()
+    data_by_sample: dict[str, dict] = {}
 
     for f in module.find_log_files("sambamba/markdup"):
         if f["s_name"] in data_by_sample:
@@ -113,7 +112,7 @@ def parse_markdup_stats(f):
     return d
 
 
-def markdup_general_stats_table(module: BaseMultiqcModule, data_by_sample: Dict[str, Dict]):
+def markdup_general_stats_table(module: BaseMultiqcModule, data_by_sample: dict[str, dict]):
     """
     Take parsed stats from sambamba markdup to general stats table at the top of the report.
 
@@ -134,7 +133,7 @@ def markdup_general_stats_table(module: BaseMultiqcModule, data_by_sample: Dict[
     module.general_stats_addcols(data_by_sample, headers, namespace="markdup")
 
 
-def markdup_section(module: BaseMultiqcModule, data_by_sample: Dict[str, Dict]):
+def markdup_section(module: BaseMultiqcModule, data_by_sample: dict[str, dict]):
     """
     Add markdup statistics as bar graph to multiQC report.
     """

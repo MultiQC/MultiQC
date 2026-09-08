@@ -195,7 +195,7 @@ def _parse_purple_qc(f):
     DeletedGenes    5529
     """
 
-    data = dict()
+    data = {}
     for line in f["f"].splitlines():
         fields = line.strip().split("\t")
         if len(fields) == 2:

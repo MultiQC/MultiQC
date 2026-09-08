@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard VariantCallingMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc.plots import bargraph, table
 
@@ -125,7 +124,7 @@ def parse_reports(module):
 def collect_data(module):
     """Find Picard VariantCallingMetrics reports and parse their data"""
 
-    data: Dict = dict()
+    data: dict = {}
     for f in module.find_log_files("picard/variant_calling_metrics", filehandles=True):
         s_name = None
         for header, value in table_in(f["f"], pre_header_string="## METRICS CLASS"):
@@ -133,7 +132,7 @@ def collect_data(module):
                 s_name = module.clean_s_name(value, f)
                 if s_name in data:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                data[s_name] = dict()
+                data[s_name] = {}
             else:
                 data[s_name][header] = value
     return data
@@ -144,7 +143,7 @@ def table_in(filehandle, pre_header_string):
 
     in_histogram = False
     next_is_header = False
-    headers = list()
+    headers = []
     for line in stripped(filehandle):
         if not in_histogram and line.startswith(pre_header_string):
             in_histogram = True
@@ -155,14 +154,13 @@ def table_in(filehandle, pre_header_string):
         elif in_histogram:
             values = line.split("\t")
             if values != [""]:
-                for couple in zip(headers, values):
-                    yield couple
+                yield from zip(headers, values)
 
 
 def derive_data(data):
     """Based on the data derive additional data"""
 
-    for s_name, values in data.items():
+    for values in data.values():
         # setup holding variable
 
         # Sum all variants that have been called
@@ -340,15 +338,15 @@ def get_table_headers():
 
 def compare_variant_type_plot(data):
     """Return HTML for the Variant Counts barplot"""
-    keys = dict()
+    keys = {}
     keys["snps"] = {"name": "SNPs", "color": "#7cb5ec"}
     keys["indels"] = {"name": "InDels", "color": "#90ed7d"}
     keys["multiallelic_snps"] = {"name": "multi-allelic SNP", "color": "orange"}
     keys["complex_indels"] = {"name": "Complex InDels", "color": "#8085e9"}
 
-    total_variants = dict()
-    known_variants = dict()
-    novel_variants = dict()
+    total_variants = {}
+    known_variants = {}
+    novel_variants = {}
     for s_name, values in data.items():
         total_variants[s_name] = {
             "snps": values["TOTAL_SNPS"],
@@ -387,7 +385,7 @@ def compare_variant_type_plot(data):
 
 def compare_variants_label_plot(data):
     """Return HTML for the Compare variants plot"""
-    keys = dict()
+    keys = {}
     keys["total_called_variants_known"] = {"name": "Known Variants"}
     keys["total_called_variants_novel"] = {"name": "Novel Variants"}
 

@@ -39,9 +39,7 @@ class Relatedness2Mixin:
         found in the graph with the Highlight tab.
         """
 
-        idx = 0
-        for name, m in matrices.items():
-            idx += 1
+        for idx, (name, m) in enumerate(matrices.items(), start=1):
             self.add_section(
                 name="Relatedness2",
                 anchor=f"vcftools-relatedness2-{idx}",

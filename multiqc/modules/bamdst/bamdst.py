@@ -4,7 +4,7 @@ import logging
 import math
 import os
 from collections import defaultdict
-from typing import Dict, Union
+from typing import Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -27,7 +27,7 @@ default_exclude_contigs = [
 
 
 def _read_config():
-    cfg = getattr(config, "bamdst", dict())
+    cfg = getattr(config, "bamdst", {})
     if not isinstance(cfg, dict):
         return {}
 
@@ -137,8 +137,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = _read_config()
-        data_by_sample: Dict[str, Dict[str, Union[float, int]]] = dict()
-        data_by_chromosome_by_sample: Dict[str, Dict[str, Dict[str, Union[float, str]]]] = dict()
+        data_by_sample: dict[str, dict[str, Union[float, int]]] = {}
+        data_by_chromosome_by_sample: dict[str, dict[str, dict[str, Union[float, str]]]] = {}
         for f in self.find_log_files("bamdst/coverage"):
             if data := self._parse_coverage_report(f):
                 data_by_sample[f["s_name"]] = data
@@ -161,11 +161,11 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: LoadedFileDict) -> Dict[str, Union[float, int]]:
+    def _parse_coverage_report(self, f: LoadedFileDict) -> dict[str, Union[float, int]]:
         """
         Parse one coverage report.
         """
-        data = dict()
+        data = {}
         s_name = None
         version = None
         for line in f["f"].split("\n"):
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
                 version = line.split(":")[1].strip()
                 continue
             fields = line.split("\t")
-            if not len(fields) == 2:
+            if len(fields) != 2:
                 continue
             metric, value = fields
             if value.endswith("%"):
@@ -214,8 +214,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name=s_name, section="coverage table")
         return data
 
-    def _parse_chromosomes_report(self, path: str, s_name: str) -> Dict[str, Dict[str, Union[float, str]]]:
-        data_by_contig: Dict[str, Dict[str, Union[float, str]]] = defaultdict(dict)
+    def _parse_chromosomes_report(self, path: str, s_name: str) -> dict[str, dict[str, Union[float, str]]]:
+        data_by_contig: dict[str, dict[str, Union[float, str]]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:
@@ -296,8 +296,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         coverage_metrics = []
-        for s_name, d in data_by_sample.items():
-            for k in d.keys():
+        for d in data_by_sample.values():
+            for k in d:
                 if k.startswith("[Target] Coverage (") and k not in coverage_metrics:
                     coverage_metrics.append(k)
         for m in coverage_metrics:
@@ -385,13 +385,12 @@ class MultiqcModule(BaseMultiqcModule):
                     else:
                         filtered_data_by_chrom_by_sample[s_name][contig] = data
 
-            if rejected_contigs:
-                if self.cfg.get("show_excluded_debug_logs") is True:
-                    log.debug(
-                        f"Skipping {len(rejected_contigs)} contigs not passing the "
-                        f"cutoff of {self.cfg['perchrom_fraction_cutoff']}%:. "
-                        f"Skipped contigs: {''.join(rejected_contigs)}"
-                    )
+            if rejected_contigs and self.cfg.get("show_excluded_debug_logs") is True:
+                log.debug(
+                    f"Skipping {len(rejected_contigs)} contigs not passing the "
+                    f"cutoff of {self.cfg['perchrom_fraction_cutoff']}%:. "
+                    f"Skipped contigs: {''.join(rejected_contigs)}"
+                )
             if not filtered_data_by_chrom_by_sample:
                 filtered_data_by_chrom_by_sample = data_by_chrom_by_sample
                 log.warning(

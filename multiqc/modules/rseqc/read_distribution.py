@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC read_distribution reports and parse their data"""
 
-    read_dist = dict()
+    read_dist = {}
     first_regexes = {
         "total_reads": r"Total Reads\s+(\d+)\s*",
         "total_tags": r"Total Tags\s+(\d+)\s*",
@@ -34,7 +34,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Go through files and parse data using regexes
     for f in module.find_log_files("rseqc/read_distribution"):
-        d = dict()
+        d = {}
         for k, r in first_regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -51,7 +51,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         # Calculate some percentages for parsed file
         if "total_tags" in d:
             t = float(d["total_tags"])
-            pcts = dict()
+            pcts = {}
             for k in d:
                 if k.endswith("_tag_count"):
                     pk = f"{k[:-10]}_tag_pct"

@@ -4,7 +4,7 @@ import gzip
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Union
+from typing import Union
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import table
@@ -40,7 +40,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     Find Glimpse concordance by samples logs and parse their data
     """
 
-    metrics_by_var_by_sample: Dict[str, Dict[str, Dict[str, Union[int, float]]]] = dict()
+    metrics_by_var_by_sample: dict[str, dict[str, dict[str, Union[int, float]]]] = {}
     for f in module.find_log_files("glimpse/err_spl", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
             lines = [line.decode() for line in f_gz.readlines()]
@@ -192,7 +192,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     }
 
     # Keep only items from all variants (SNPs + indels)
-    gcsv_by_sample: Dict[str, Dict[str, Union[int, float]]] = defaultdict(dict)
+    gcsv_by_sample: dict[str, dict[str, Union[int, float]]] = defaultdict(dict)
     for sample, metrics_by_var in metrics_by_var_by_sample.items():
         for var, metrics in metrics_by_var.items():
             if var == "GCsV":
@@ -221,7 +221,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     return n_reports_found
 
 
-def parse_err_spl_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, float]]]]:
+def parse_err_spl_report(lines) -> dict[str, dict[str, dict[str, Union[int, float]]]]:
     """
     Example:
     #Genotype concordance by sample (SNPs)
@@ -236,10 +236,10 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data: Dict[str, Dict[str, Dict[str, Union[int, float]]]] = {}
+    parsed_data: dict[str, dict[str, dict[str, Union[int, float]]]] = {}
     expected_header = "#Genotype concordance by sample (SNPs)\n"
     if lines[0] != expected_header:
-        logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
+        log.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
         return {}
 
     for line in lines[1:]:
@@ -247,7 +247,7 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
         if fields[0][0] == "#":  # Skip comments
             continue
         if len(fields) != len(EXPECTED_COLUMNS):
-            logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
+            log.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
         (
             variants,
             idn,
@@ -271,24 +271,24 @@ def parse_err_spl_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
         ) = fields
         if sample_name not in parsed_data:
             parsed_data[sample_name] = {}
-        parsed_data[sample_name][variants] = dict(
-            idn=int(idn),
-            val_gt_RR=int(val_gt_RR),
-            val_gt_RA=int(val_gt_RA),
-            val_gt_AA=int(val_gt_AA),
-            filtered_gp=int(filtered_gp),
-            RR_hom_matches=int(RR_hom_matches),
-            RA_het_matches=int(RA_het_matches),
-            AA_hom_matches=int(AA_hom_matches),
-            RR_hom_mismatches=int(RR_hom_mismatches),
-            RA_het_mismatches=int(RA_het_mismatches),
-            AA_hom_mismatches=int(AA_hom_mismatches),
-            RR_hom_mismatches_rate_percent=float(RR_hom_mismatches_rate_percent),
-            RA_het_mismatches_rate_percent=float(RA_het_mismatches_rate_percent),
-            AA_hom_mismatches_rate_percent=float(AA_hom_mismatches_rate_percent),
-            non_reference_discordance_rate_percent=float(non_reference_discordance_rate_percent),
-            best_gt_rsquared=float(best_gt_rsquared),
-            imputed_ds_rsquared=float(imputed_ds_rsquared),
-        )
+        parsed_data[sample_name][variants] = {
+            "idn": int(idn),
+            "val_gt_RR": int(val_gt_RR),
+            "val_gt_RA": int(val_gt_RA),
+            "val_gt_AA": int(val_gt_AA),
+            "filtered_gp": int(filtered_gp),
+            "RR_hom_matches": int(RR_hom_matches),
+            "RA_het_matches": int(RA_het_matches),
+            "AA_hom_matches": int(AA_hom_matches),
+            "RR_hom_mismatches": int(RR_hom_mismatches),
+            "RA_het_mismatches": int(RA_het_mismatches),
+            "AA_hom_mismatches": int(AA_hom_mismatches),
+            "RR_hom_mismatches_rate_percent": float(RR_hom_mismatches_rate_percent),
+            "RA_het_mismatches_rate_percent": float(RA_het_mismatches_rate_percent),
+            "AA_hom_mismatches_rate_percent": float(AA_hom_mismatches_rate_percent),
+            "non_reference_discordance_rate_percent": float(non_reference_discordance_rate_percent),
+            "best_gt_rsquared": float(best_gt_rsquared),
+            "imputed_ds_rsquared": float(imputed_ds_rsquared),
+        }
 
     return parsed_data

@@ -1,10 +1,9 @@
 from itertools import chain
-from typing import Dict
 
 from multiqc.plots import linegraph
 
 
-def plot_qahist(data_by_sample: Dict[str, Dict[str, Dict]], file_type, **plot_args):
+def plot_qahist(data_by_sample: dict[str, dict[str, dict]], file_type, **plot_args):
     """
     Create line graph plot of histogram data for BBMap 'qahist' output.
 
@@ -55,7 +54,7 @@ def plot_qahist(data_by_sample: Dict[str, Dict[str, Dict]], file_type, **plot_ar
     plot_data = []
     for column_type in columns_to_plot:
         y_by_x_by_sample = {}
-        for column, column_name in columns_to_plot[column_type].items():
+        for column in columns_to_plot[column_type]:
             for sample, sample_data in data_by_sample.items():
                 y_by_x = {}
                 for x in all_x:

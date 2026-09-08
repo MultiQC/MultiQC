@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
@@ -87,7 +87,7 @@ ampliconclip_headers = {
 def parse_samtools_ampliconclip(module: BaseMultiqcModule):
     """Find Samtools ampliconclip logs and parse their data"""
 
-    samtools_ampliconclip: Dict = dict()
+    samtools_ampliconclip: dict = {}
     for f in module.find_log_files("samtools/ampliconclip"):
         parsed_data = parse_single_report(f["f"])
         if len(parsed_data) > 0:
@@ -126,7 +126,7 @@ def parse_samtools_ampliconclip(module: BaseMultiqcModule):
         module.general_stats_addcols(samtools_ampliconclip, general_stats_headers, namespace="ampliconclip")
 
     # Make a violin plot
-    keys_counts: Dict[str, Dict[str, Any]] = {
+    keys_counts: dict[str, dict[str, Any]] = {
         key: {
             "shared_key": "read_count",
             "modify": None,
@@ -137,21 +137,21 @@ def parse_samtools_ampliconclip(module: BaseMultiqcModule):
         for key, data in ampliconclip_headers.items()
     }
 
-    data_pct: Dict = dict()
+    data_pct: dict = {}
     for sample, d in samtools_ampliconclip.items():
-        data_pct[sample] = dict()
+        data_pct[sample] = {}
         total = d["ampliconclip_total_reads"]
         if total > 0:
             for metric, cnt in d.items():
                 data_pct[sample][f"{metric}_pct"] = cnt / total * 100
     keys_pct = {
-        f"{metric}_pct": dict(
-            title=header["title"],
-            min=0,
-            max=100,
-            suffix="%",
-            shared_key=None,
-        )
+        f"{metric}_pct": {
+            "title": header["title"],
+            "min": 0,
+            "max": 100,
+            "suffix": "%",
+            "shared_key": None,
+        }
         for metric, header in keys_counts.items()
     }
 
@@ -195,7 +195,7 @@ def parse_single_report(file_obj):
     Take a filename, parse the data assuming it's a ampliconclip file
     Returns a dictionary of metrics to value
     """
-    parsed_data: Dict[str, Optional[int]] = {k: None for k in ampliconclip_headers}
+    parsed_data: dict[str, Optional[int]] = dict.fromkeys(ampliconclip_headers)
 
     source_to_key = {data_dict["source_col"]: data_key for data_key, data_dict in ampliconclip_headers.items()}
     source_to_key["COMMAND"] = None

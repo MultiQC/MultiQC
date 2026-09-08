@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # GroupReadsByUmi
-        n = dict()
+        n = {}
         n["groupreadsbyumi"] = run_group_reads_by_umi(self)
         if n["groupreadsbyumi"] > 0:
             log.info(f"Found {n['groupreadsbyumi']} groupreadsbyumi reports")

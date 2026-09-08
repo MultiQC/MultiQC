@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph
@@ -14,8 +13,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard BaseDistributionByCycleMetrics reports and parse their data"""
 
-    data_by_sample = dict()
-    samplestats_by_sample = dict()
+    data_by_sample = {}
+    samplestats_by_sample = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/basedistributionbycycle", filehandles=True):
@@ -25,10 +24,10 @@ def parse_reports(module):
         # A file can be concatenated from multiple samples, so we need to keep track of
         # the current sample name and header.
         keys = None
-        data_by_read_end: Dict[str, Dict] = defaultdict(dict)
+        data_by_read_end: dict[str, dict] = defaultdict(dict)
         max_cycle_r1 = 0
 
-        def _finalize_sample(data_by_read_end, s_name: str):
+        def _finalize_sample(f, data_by_read_end, s_name: str):
             """
             Populate `data_by_sample` and `samplestats_by_sample`
             """
@@ -54,7 +53,7 @@ def parse_reports(module):
                     "cycle_count": 0,
                 }
                 samplestats_by_sample[s_name] = sample_stats
-                for c, row in data_by_cycle.items():
+                for row in data_by_cycle.values():
                     pct_a, pct_c, pct_g, pct_t, pct_n = row
                     sample_stats["sum_pct_a"] += pct_a
                     sample_stats["sum_pct_c"] += pct_c
@@ -82,7 +81,7 @@ def parse_reports(module):
                 if len(raw_vals) != len(keys):
                     # Finalize previous sample
                     if data_by_read_end:
-                        _finalize_sample(data_by_read_end, s_name)
+                        _finalize_sample(f, data_by_read_end, s_name)
                     # Reset for next sample
                     max_cycle_r1 = 0
                     s_name = None
@@ -109,7 +108,7 @@ def parse_reports(module):
                 data_by_read_end[read_end][cycle] = (pct_a, pct_c, pct_g, pct_t, pct_n)
 
         if data_by_read_end and s_name:
-            _finalize_sample(data_by_read_end, s_name)
+            _finalize_sample(f, data_by_read_end, s_name)
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -151,7 +150,7 @@ def parse_reports(module):
     }
 
     # build list of line graphs
-    linegraph_data: List[Dict] = [{}, {}, {}, {}, {}]
+    linegraph_data: list[dict] = [{}, {}, {}, {}, {}]
     for s_name, cycles in data_by_sample.items():
         for lg, index in zip(linegraph_data, range(5)):
             lg[s_name] = {cycle: tup[index] for cycle, tup in cycles.items()}

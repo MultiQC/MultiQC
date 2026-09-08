@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 from collections.abc import Mapping
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -30,24 +30,24 @@ class BoxPlotConfig(PConfig):
     # None - use config.boxplot_boxpoints; if not set, determine based on config.box_min_threshold_no_points and config.box_min_threshold_outliers
     boxpoints: Union[bool, str, None] = None
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
 
 
 # Type of single box (matching one sample) - can be raw data or statistics
-BoxT = Union[List[Union[int, float]], Dict[str, Union[int, float]]]
+BoxT = Union[list[Union[int, float]], dict[str, Union[int, float]]]
 # Type for statistics dict
-BoxStatsT = Dict[str, Union[int, float]]
+BoxStatsT = dict[str, Union[int, float]]
 
 
 class Dataset(BaseDataset):
-    data: List[BoxT]
-    samples: List[str]
-    data_sorted: Optional[List[BoxT]] = None  # Sorted version of data
-    samples_sorted: Optional[List[str]] = None  # Sorted version of samples
+    data: list[BoxT]
+    samples: list[str]
+    data_sorted: Optional[list[BoxT]] = None  # Sorted version of data
+    samples_sorted: Optional[list[str]] = None  # Sorted version of samples
     is_stats_data: bool = False  # True if data contains pre-calculated statistics
 
-    def sample_names(self) -> List[SampleName]:
+    def sample_names(self) -> list[SampleName]:
         return [SampleName(sample) for sample in self.samples]
 
     @staticmethod
@@ -65,8 +65,8 @@ class Dataset(BaseDataset):
         # Store original order (reversed for box plot display)
         original_data = list(data_by_sample.values())
         original_samples = list(data_by_sample.keys())
-        original_data = list(reversed(original_data))
-        original_samples = list(reversed(original_samples))
+        original_data.reverse()
+        original_samples.reverse()
 
         # Store sorted version if sort_by_median is enabled
         data_sorted = None
@@ -85,7 +85,7 @@ class Dataset(BaseDataset):
                         median_values[sample] = stats_dict.get("median", 0)
                     else:
                         # Calculate median from raw data
-                        raw_values = cast(List[Union[int, float]], values)
+                        raw_values = cast(list[Union[int, float]], values)
                         sorted_values = sorted(raw_values)
                         n = len(sorted_values)
                         median = (
@@ -152,9 +152,9 @@ class Dataset(BaseDataset):
             boxpoints=boxpoints,
             jitter=0.5,
             orientation="h",
-            marker=dict(
-                color="#4899e8",  # just use blue to indicate interactivity
-            ),
+            marker={
+                "color": "#4899e8",  # just use blue to indicate interactivity
+            },
             # to remove the redundant sample name before "median" in the unified hover box
             hoverinfo="x",
         )
@@ -193,7 +193,7 @@ class Dataset(BaseDataset):
                 )
             else:
                 # Use raw data points
-                raw_values = cast(List[Union[int, float]], values)
+                raw_values = cast(list[Union[int, float]], values)
                 fig.add_trace(
                     go.Box(
                         x=raw_values,
@@ -204,7 +204,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        vals_by_sample: Dict[str, BoxT] = {}
+        vals_by_sample: dict[str, BoxT] = {}
         for sample, values in zip(self.samples, self.data):
             if self.is_stats_data:
                 # For statistics data, save the statistics dict
@@ -242,7 +242,7 @@ class Dataset(BaseDataset):
                 mean = stats_dict.get("mean", median)
             else:
                 # Calculate statistics from raw data
-                raw_values = cast(List[Union[int, float]], values)
+                raw_values = cast(list[Union[int, float]], values)
                 sorted_vals = sorted(raw_values)
                 n = len(sorted_vals)
 
@@ -266,7 +266,7 @@ class Dataset(BaseDataset):
 
 
 class BoxPlotInputData(NormalizedPlotInputData):
-    list_of_data_by_sample: List[Mapping[str, BoxT]]
+    list_of_data_by_sample: list[Mapping[str, BoxT]]
     pconfig: BoxPlotConfig
 
     def is_empty(self) -> bool:
@@ -310,7 +310,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         return self.finalize_df(df)
 
     @classmethod
-    def from_df(cls, df: pl.DataFrame, pconfig: Union[Dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: Union[dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
         """
         Load plot data from a DataFrame.
         """
@@ -330,7 +330,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         pconf = cast(BoxPlotConfig, BoxPlotConfig.from_df(df))
 
         # Group by dataset_idx to rebuild data structure
-        list_of_data_by_sample: List[Mapping[str, BoxT]] = []
+        list_of_data_by_sample: list[Mapping[str, BoxT]] = []
         data_labels = []
 
         max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
@@ -411,8 +411,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]],
-        pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+        list_of_data_by_sample: Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]],
+        pconfig: Union[dict[str, Any], BoxPlotConfig, None] = None,
     ) -> "BoxPlotInputData":
         pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
 
@@ -439,18 +439,18 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
 
 class BoxPlot(Plot[Dataset, BoxPlotConfig]):
-    datasets: List[Dataset]
+    datasets: list[Dataset]
     sort_switch_sorted_active: bool = False
 
-    def sample_names(self) -> List[SampleName]:
-        names: List[SampleName] = []
+    def sample_names(self) -> list[SampleName]:
+        names: list[SampleName] = []
         for ds in self.datasets:
             names.extend(ds.sample_names())
         return names
 
     @staticmethod
     def create(
-        list_of_data_by_sample: List[Mapping[str, BoxT]],
+        list_of_data_by_sample: list[Mapping[str, BoxT]],
         pconfig: BoxPlotConfig,
         anchor: Anchor,
     ) -> "BoxPlot":
@@ -475,28 +475,28 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
             boxgroupgap=0.1,
             boxgap=0.2,
             colorway=[],  # no need to color code
-            yaxis=dict(
-                automargin=True,  # to make sure there is enough space for ticks labels
-                categoryorder="trace",  # keep sample order
-                hoverformat=getattr(model.layout.xaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.xaxis, "ticksuffix", None),
+            yaxis={
+                "automargin": True,  # to make sure there is enough space for ticks labels
+                "categoryorder": "trace",  # keep sample order
+                "hoverformat": getattr(model.layout.xaxis, "hoverformat", None),
+                "ticksuffix": getattr(model.layout.xaxis, "ticksuffix", None),
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
-                type="category",
-            ),
-            xaxis=dict(
-                title=dict(text=getattr(getattr(model.layout.yaxis, "title", None), "text", None)),
-                hoverformat=getattr(model.layout.yaxis, "hoverformat", None),
-                ticksuffix=getattr(model.layout.yaxis, "ticksuffix", None),
-            ),
+                "type": "category",
+            },
+            xaxis={
+                "title": {"text": getattr(getattr(model.layout.yaxis, "title", None), "text", None)},
+                "hoverformat": getattr(model.layout.yaxis, "hoverformat", None),
+                "ticksuffix": getattr(model.layout.yaxis, "ticksuffix", None),
+            },
             hovermode="y",
-            hoverlabel=dict(
-                bgcolor="white",
-                font=dict(color="rgba(60,60,60,1)"),
-            ),
+            hoverlabel={
+                "bgcolor": "white",
+                "font": {"color": "rgba(60,60,60,1)"},
+            },
         )
         return BoxPlot(**model.__dict__, sort_switch_sorted_active=pconfig.sort_switch_sorted_active)
 
-    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> list[str]:
         """
         Box plot-specific controls, only for the interactive version.
         """
@@ -538,8 +538,8 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
 
 def plot(
-    list_of_data_by_sample: Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]],
-    pconfig: Union[Dict[str, Any], BoxPlotConfig, None] = None,
+    list_of_data_by_sample: Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]],
+    pconfig: Union[dict[str, Any], BoxPlotConfig, None] = None,
 ) -> Union["BoxPlot", str, None]:
     """
     Plot a box plot. Supports two input formats:

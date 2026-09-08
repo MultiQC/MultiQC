@@ -1,6 +1,6 @@
 import logging
 from copy import copy
-from typing import Dict, Tuple, Union
+from typing import Union
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.ngsbits.utils import parse_qcml_by
@@ -12,8 +12,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits MappingQC reports and parse their data"""
 
-    mappingqc: Dict[str, Dict[str, Union[float, str]]] = dict()
-    mappingqc_keys: Dict[str, Tuple[str, str]] = dict()
+    mappingqc: dict[str, dict[str, Union[float, str]]] = {}
+    mappingqc_keys: dict[str, tuple[str, str]] = {}
 
     for f in module.find_log_files("ngsbits/mappingqc"):
         values, params = parse_qcml_by(f["f"], "qualityParameter")
@@ -39,11 +39,11 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Convert numbers given in megabases to bases
     mappingqc_keys["bases usable"] = ("Bases usable in total.", "")
-    for _, kv in mappingqc.items():
+    for kv in mappingqc.values():
         kv["bases usable"] = kv["bases usable (MB)"] * 1e6
         kv.pop("bases usable (MB)")
 
-    headers: Dict = dict()
+    headers: dict = {}
     headers["bases usable"] = {
         "title": "Usable",
         "description": mappingqc_keys["bases usable"][0],

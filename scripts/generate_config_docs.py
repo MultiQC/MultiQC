@@ -14,7 +14,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union, get_args, get_origin, get_type_hints
+from typing import Any, Literal, Optional, Union, get_args, get_origin, get_type_hints
 
 import yaml
 
@@ -125,12 +125,12 @@ def format_type_annotation(annotation):
         formatted_args = [format_type_annotation(arg) for arg in non_null]
         return f"Union[{', '.join(formatted_args)}]"
 
-    elif origin is list or origin is List:
+    elif origin is list or origin is list:
         if args:
             return f"List[{format_type_annotation(args[0])}]"
         return "List"
 
-    elif origin is dict or origin is Dict:
+    elif origin is dict or origin is dict:
         if len(args) == 2:
             return f"Dict[{format_type_annotation(args[0])}, {format_type_annotation(args[1])}]"
         return "Dict"
@@ -152,9 +152,9 @@ def format_type_annotation(annotation):
         return "float"
     elif annotation is bool:
         return "bool"
-    elif annotation is dict or annotation is Dict:
+    elif annotation is dict or annotation is dict:
         return "Dict"
-    elif annotation is list or annotation is List:
+    elif annotation is list or annotation is list:
         return "List"
     elif annotation is Any:
         return "Any"

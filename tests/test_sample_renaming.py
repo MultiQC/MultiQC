@@ -88,7 +88,7 @@ def test_sample_names_cmdline_integration(tmp_path):
     # Run MultiQC with sample names file
     cmd = ["multiqc", str(tmp_path), "--sample-names", str(sample_names_file), "--filename", "test_report", "--force"]
 
-    result = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True)
+    result = subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, check=False)
 
     # Check that MultiQC ran successfully
     assert result.returncode == 0, f"MultiQC failed with: {result.stderr}"

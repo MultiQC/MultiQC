@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -39,8 +38,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Xenome reports
-        self.percents = dict()
-        self.counts = dict()
+        self.percents = {}
+        self.counts = {}
         for f in self.find_log_files("xengsort"):
             self._parse_log(f)
 
@@ -88,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         Prepare headers and data for a table. Add a section with a table,
         and add a few columns into the general stats.
         """
-        headers: Dict[str, Dict] = {}
+        headers: dict[str, dict] = {}
         table_data = defaultdict(dict)
 
         scale_by_cls = {

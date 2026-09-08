@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any MTNUCRATIO reports
-        self.mtnuc_data = dict()
+        self.mtnuc_data = {}
 
         for f in self.find_log_files("mtnucratio", filehandles=True):
             self.parseJSON(f)

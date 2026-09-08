@@ -27,14 +27,14 @@ class DragenReadMetrics(BaseMultiqcModule):
     def per_seq_quality_plot(self):
         """Create the HTML for the per sequence quality score plot"""
 
-        data = dict()
+        data = {}
         GROUP = "READ MEAN QUALITY"
         MAX_QV = 64
         max_non_zero = 0
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
                 for qv in range(MAX_QV):
                     metric = f"Q{qv} Reads"
@@ -84,15 +84,15 @@ class DragenReadMetrics(BaseMultiqcModule):
     def seq_length_dist_plot(self):
         """Create the HTML for the Sequence Length Distribution plot"""
 
-        data = dict()
+        data = {}
         seq_lengths = set()
         multiple_lenths = False
-        avg_to_range = dict()
+        avg_to_range = {}
         GROUP = "READ LENGTHS"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
 
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
                 for metric, value in group_data.items():
@@ -101,7 +101,7 @@ class DragenReadMetrics(BaseMultiqcModule):
                         data[r_name][avg_pos] = value
                         avg_to_range[avg_pos] = metric.split("bp")[0]
 
-                seq_lengths.update([avg_to_range[k] for k in data[r_name].keys()])
+                seq_lengths.update([avg_to_range[k] for k in data[r_name]])
 
                 if len(set(data[r_name].keys())) > 1:
                     multiple_lenths = True

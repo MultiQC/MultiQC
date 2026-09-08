@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 class DragenTimeMetrics(BaseMultiqcModule):
     def add_time_metrics(self):
-        data_by_sample = dict()
+        data_by_sample = {}
 
         for f in self.find_log_files("dragen/time_metrics"):
             data = parse_time_metrics_file(f)
@@ -93,7 +93,7 @@ def parse_time_metrics_file(f):
     data = {}
     for line in f["f"].splitlines():
         tokens = line.split(",")
-        analysis, _, metric, timestr, seconds = tokens
+        _analysis, _, metric, _timestr, seconds = tokens
         try:
             seconds = float(seconds)
         except ValueError:

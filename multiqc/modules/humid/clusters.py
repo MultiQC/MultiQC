@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     # To store the summary data
-    self.clusters = dict()
+    self.clusters = {}
 
     # Parse the output files
     parse_log_files(self)

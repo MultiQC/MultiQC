@@ -169,7 +169,8 @@ def _type_kind(t):
     Anything else falls into ``other``.
     """
     t = _unwrap_optional(t)
-    origin = typing.get_origin(t)
+    # `or t` so a bare `dict` classifies the same as a parameterised `dict[str, Any]`
+    origin = typing.get_origin(t) or t
     if origin is typing.Union or origin is typing.Literal:
         return "union-or-literal"
     if origin is list:

@@ -27,8 +27,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and parse the sample files
-        self.pangolin_data = dict()
-        self.lineage_colours = dict()
+        self.pangolin_data = {}
+        self.lineage_colours = {}
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
             for s_name in self.pangolin_data:
@@ -249,7 +249,7 @@ def _format_qc_notes(raw: str) -> Optional[str]:
         # e.g. Ambiguous_content:0.03
         split = raw.split(":")
         if len(split) != 2:
-            logging.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
+            log.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
             return None
         proportion_n = float(split[1])
         percent_n = int(proportion_n * 100)

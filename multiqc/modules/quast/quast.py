@@ -143,7 +143,7 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name in self.quast_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name)
-            self.quast_data[s_name] = dict()
+            self.quast_data[s_name] = {}
 
         # Parse remaining stats for each sample
         for line in lines[1:]:
@@ -320,17 +320,17 @@ class MultiqcModule(BaseMultiqcModule):
         """Make a bar plot showing the number and length of contigs for each assembly"""
 
         # Prep the data
-        data = dict()
+        data = {}
         categories = []
         for s_name, d in self.quast_data.items():
-            nums_by_t = dict()
+            nums_by_t = {}
             for k, v in d.items():
                 m = re.match(r"# contigs \(>= (\d+) bp\)", k)
                 if m and v != "-":
                     nums_by_t[int(m.groups()[0])] = int(v)
 
             tresholds = sorted(nums_by_t.keys(), reverse=True)
-            p = dict()
+            p = {}
             cats = []
             for i, t in enumerate(tresholds):
                 if i == 0:
@@ -372,11 +372,11 @@ class MultiqcModule(BaseMultiqcModule):
         data_key = "# predicted genes (>= {} bp)" + ("_partial" if partial else "")
         for s_name, d in self.quast_data.items():
             thresholds = []
-            for k in d.keys():
+            for k in d:
                 m = re.match(pattern, k)
                 if m:
                     thresholds.append(int(m.groups()[0]))
-            thresholds = sorted(list(set(thresholds)))
+            thresholds = sorted(set(thresholds))
             if len(thresholds) < 2:
                 continue
 
@@ -393,7 +393,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             data[s_name] = plot_data
 
-        all_categories = [label for k, label in sorted(list(set(all_categories)))]
+        all_categories = [label for k, label in sorted(set(all_categories))]
 
         if len(all_categories) > 0:
             return bargraph.plot(

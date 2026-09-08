@@ -2,7 +2,7 @@ import logging
 import math
 import os
 import re
-from typing import Dict, List, Tuple, Union
+from typing import Union
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule):
     """Find Qualimap BamQC reports and parse their data"""
 
-    all_general_stats: Dict[str, Dict] = dict()
+    all_general_stats: dict[str, dict] = {}
 
     # General stats - genome_results.txt
     genome_results, general_stats = parse_genome_results(module)
@@ -76,10 +76,10 @@ def parse_reports(module: BaseMultiqcModule):
     return num_parsed
 
 
-def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
+def parse_genome_results(module: BaseMultiqcModule) -> tuple[dict, dict]:
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
-    metrics_by_sample: Dict[str, Dict[str, Union[int, float, str]]] = dict()
-    general_stats: Dict = dict()
+    metrics_by_sample: dict[str, dict[str, Union[int, float, str]]] = {}
+    general_stats: dict = {}
 
     for f in module.find_log_files("qualimap/bamqc/genome_results"):
         int_metrics = {
@@ -107,7 +107,7 @@ def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
         }
 
         value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
-        preparsed_d = dict()
+        preparsed_d = {}
         # Keeping track of the section because "number of mapped reads" occurs both
         # under "Globals" and "Globals inside"
         section = None
@@ -138,7 +138,7 @@ def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
 
         module.add_data_source(f, s_name=s_name, section="genome_results")
 
-        d: Dict[str, Union[int, float, str]] = parse_numerals(
+        d: dict[str, Union[int, float, str]] = parse_numerals(
             preparsed_d,
             float_metrics=float_metrics,
             int_metrics=int_metrics,
@@ -195,10 +195,10 @@ def parse_genome_results(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
     return metrics_by_sample, general_stats
 
 
-def parse_coverage(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
+def parse_coverage(module: BaseMultiqcModule) -> tuple[dict, dict]:
     """Parse the contents of the Qualimap BamQC Coverage Histogram file"""
-    coverage_hist: Dict = dict()
-    general_stats: Dict = dict()
+    coverage_hist: dict = {}
+    general_stats: dict = {}
 
     for f in module.find_log_files("qualimap/bamqc/coverage", filehandles=True):
         # Get the sample name from the parent directory
@@ -209,12 +209,12 @@ def parse_coverage(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
 
         module.add_data_source(f, s_name=s_name, section="coverage_histogram")
 
-        d = dict()
+        d = {}
         for line in f["f"]:
             if line.startswith("#"):
                 continue
             coverage, count = line.split(None, 1)
-            coverage = int(round(float(coverage.replace(",", "."))))
+            coverage = round(float(coverage.replace(",", ".")))
             count = float(count)
             d[coverage] = count
 
@@ -242,10 +242,10 @@ def parse_coverage(module: BaseMultiqcModule) -> Tuple[Dict, Dict]:
     return coverage_hist, general_stats
 
 
-def parse_insert_size(module) -> Tuple[Dict, Dict]:
+def parse_insert_size(module) -> tuple[dict, dict]:
     """Parse the contents of the Qualimap BamQC Insert Size Histogram file"""
-    data_by_sample: Dict = dict()
-    general_stats: Dict = dict()
+    data_by_sample: dict = {}
+    general_stats: dict = {}
 
     for f in module.find_log_files("qualimap/bamqc/insert_size", filehandles=True):
         # Get the sample name from the parent directory
@@ -256,12 +256,12 @@ def parse_insert_size(module) -> Tuple[Dict, Dict]:
 
         module.add_data_source(f, s_name=s_name, section="insert_size_histogram")
 
-        d = dict()
+        d = {}
         for line in f["f"]:
             if line.startswith("#"):
                 continue
             insertsize, count = line.split(None, 1)
-            insertsize = int(round(float(insertsize)))
+            insertsize = round(float(insertsize))
             count = float(count) / 1000000
             if insertsize != 0:
                 d[insertsize] = count
@@ -287,11 +287,11 @@ def parse_insert_size(module) -> Tuple[Dict, Dict]:
     return data_by_sample, general_stats
 
 
-def parse_gc_dist(module) -> Tuple[Dict, Dict, Dict]:
+def parse_gc_dist(module) -> tuple[dict, dict, dict]:
     """Parse the contents of the Qualimap BamQC Mapped Reads GC content distribution file"""
-    gc_content_dist: Dict = dict()
-    gc_by_species: Dict = dict()
-    general_stats: Dict = dict()
+    gc_content_dist: dict = {}
+    gc_by_species: dict = {}
+    general_stats: dict = {}
 
     for f in module.find_log_files("qualimap/bamqc/gc_dist", filehandles=True):
         # Get the sample name from the parent directory
@@ -302,9 +302,9 @@ def parse_gc_dist(module) -> Tuple[Dict, Dict, Dict]:
 
         module.add_data_source(f, s_name=s_name, section="mapped_gc_distribution")
 
-        d = dict()
+        d = {}
         reference_species = None
-        reference_d = dict()
+        reference_d = {}
         avg_gc = 0.0
         for line in f["f"]:
             if line.startswith("#"):
@@ -313,7 +313,7 @@ def parse_gc_dist(module) -> Tuple[Dict, Dict, Dict]:
                     reference_species = sections[2]
                 continue
             sections = line.strip("\n").split("\t", 3)
-            gc = int(round(float(sections[0])))
+            gc = round(float(sections[0]))
             content = float(sections[1])
             avg_gc += gc * content
             d[gc] = content
@@ -403,21 +403,21 @@ minimum depth filter on the fraction of a genome available for analysis."""
 
 def report_sections(
     module: BaseMultiqcModule,
-    threshs: List[int],
-    coverage_hist: Dict,
-    insert_size_hist: Dict,
-    gc_content_dist: Dict,
-    gc_by_species: Dict,
-) -> Dict:
+    threshs: list[int],
+    coverage_hist: dict,
+    insert_size_hist: dict,
+    gc_content_dist: dict,
+    gc_by_species: dict,
+) -> dict:
     """Add results from Qualimap BamQC parsing to the report"""
     # Append to self.sections list
-    general_stats: Dict = {s_name: {} for s_name in coverage_hist}
+    general_stats: dict = {s_name: {} for s_name in coverage_hist}
 
     if len(coverage_hist) > 0:
         # Chew back on histogram to prevent long flat tail
         # (find a sensible max x - lose 1% of longest tail)
         max_x = 20
-        total_bases_by_sample = dict()
+        total_bases_by_sample = {}
         for s_name, d in coverage_hist.items():
             total_bases_by_sample[s_name] = sum(d.values())
             cumulative = 0
@@ -427,7 +427,7 @@ def report_sections(
                     max_x = max(max_x, count)
                     break
 
-        rates_within_threshs = dict()
+        rates_within_threshs = {}
         for s_name, hist in coverage_hist.items():
             total = total_bases_by_sample[s_name]
             # Make a range of depths that isn't stupidly huge for high coverage expts
@@ -614,8 +614,8 @@ def report_sections(
     return general_stats
 
 
-def general_stats_headers(threshs, hidden_threshs) -> Dict:
-    headers = dict()
+def general_stats_headers(threshs, hidden_threshs) -> dict:
+    headers = {}
     headers["avg_gc"] = {
         "title": "% GC",
         "description": "Mean GC content",
@@ -739,8 +739,8 @@ def general_stats_headers(threshs, hidden_threshs) -> Dict:
 
 
 def _calculate_bases_within_thresholds(bases_by_depth, total_size, depth_thresholds):
-    bases_within_threshs = {depth: 0 for depth in depth_thresholds}
-    rates_within_threshs = {depth: None for depth in depth_thresholds}
+    bases_within_threshs = dict.fromkeys(depth_thresholds, 0)
+    rates_within_threshs = dict.fromkeys(depth_thresholds)
 
     dt = sorted(depth_thresholds, reverse=True)
     c = 0

@@ -8,7 +8,7 @@ import hashlib
 # Default logger will be replaced by caller
 import logging
 import re
-from typing import Optional, Tuple, Union
+from typing import ClassVar, Optional, Union
 
 import numpy as np
 import spectra  # type: ignore
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 @functools.lru_cache(128)  # 34 unique colourmaps found using multiqc-test-data
-def cached_spectra_colour_scale(colours: Tuple[str]):
+def cached_spectra_colour_scale(colours: tuple[str]):
     """Caches spectra color scale calls as these are expensive"""
     return spectra.scale(list(colours))
 
@@ -41,7 +41,7 @@ class mqc_colour_scale:
     ###    under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
     ###    CONDITIONS OF ANY KIND, either express or implied. See the License for the
     ###    specific language governing permissions and limitations under the License.
-    COLORBREWER_SCALES = {
+    COLORBREWER_SCALES: ClassVar = {
         # sequential
         "OrRd": ["#fff7ec", "#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#d7301f", "#b30000", "#7f0000"],
         "PuBu": ["#fff7fb", "#ece7f2", "#d0d1e6", "#a6bddb", "#74a9cf", "#3690c0", "#0570b0", "#045a8d", "#023858"],
@@ -395,9 +395,19 @@ class mqc_colour_scale:
         else:
             return mqc_colour_scale.COLORBREWER_SCALES[name]
 
-    qualitative_scales = ["Set2", "Accent", "Set1", "Set3", "Dark2", "Paired", "Pastel2", "Pastel1", "plot_defaults"]
+    qualitative_scales: ClassVar = [
+        "Set2",
+        "Accent",
+        "Set1",
+        "Set3",
+        "Dark2",
+        "Paired",
+        "Pastel2",
+        "Pastel1",
+        "plot_defaults",
+    ]
 
-    html_colors = {
+    html_colors: ClassVar = {
         "black": "#000000",
         "silver": "#C0C0C0",
         "gray": "#808080",

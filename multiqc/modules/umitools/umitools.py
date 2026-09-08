@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Union
+from typing import Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/CGATOxford/UMI-tools/blob/master/LICENSE",
         )
 
-        dedup_data_by_sample = dict()
+        dedup_data_by_sample = {}
         for f in self.find_log_files("umitools/dedup"):
             # Parse the log file for sample name and statistics
             data = self.parse_dedup_logs(f)
@@ -57,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if "version" in data:  # Add version info
                     self.add_software_version(data.pop("version"), f["s_name"])
 
-        extract_data_by_sample = dict()
+        extract_data_by_sample = {}
         for f in self.find_log_files("umitools/extract"):
             # Parse the log file for sample name and statistics
             data = self.parse_extract_logs(f)
@@ -133,7 +133,7 @@ class MultiqcModule(BaseMultiqcModule):
         return f["s_name"]
 
     @staticmethod
-    def parse_dedup_logs(f) -> Dict:
+    def parse_dedup_logs(f) -> dict:
         regexes = [
             (int, "total_umis", r"INFO total_umis (\d+)"),
             (int, "unique_umis", r"INFO #umis (\d+)"),
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
             (str, "version", r"# UMI-tools version: ([\d\.]+)"),
         ]
 
-        data: Dict[str, Union[str, int, float]] = {}
+        data: dict[str, Union[str, int, float]] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
             re_matches = re.search(regex, f["f"])
@@ -170,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
         return data
 
     @staticmethod
-    def parse_extract_logs(f) -> Dict:
+    def parse_extract_logs(f) -> dict:
         regexes = [
             (int, "extract_input_reads", r"INFO Input Reads: (\d+)"),
             (int, "read1_mismatch", r"INFO regex does not match read1: (\d+)"),

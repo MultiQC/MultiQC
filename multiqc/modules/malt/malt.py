@@ -32,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load Malt reports
-        self.malt_data = dict()
+        self.malt_data = {}
 
         for f in self.find_log_files("malt", filehandles=True):
             self.parse_logs(f)

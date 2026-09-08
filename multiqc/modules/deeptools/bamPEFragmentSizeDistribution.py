@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class bamPEFragmentSizeDistributionMixin:
     def parse_bamPEFragmentSizeDistribution(self):
         """Find bamPEFragmentSize output. Supports the --outRawFragmentLengths option"""
-        self.deeptools_bamPEFragmentSizeDistribution = dict()
+        self.deeptools_bamPEFragmentSizeDistribution = {}
         for f in self.find_log_files("deeptools/bamPEFragmentSizeDistribution", filehandles=False):
             parsed_data = self.parseBamPEFDistributionFile(f)
             for k, v in parsed_data.items():
@@ -51,7 +51,7 @@ class bamPEFragmentSizeDistributionMixin:
         return len(self.deeptools_bamPEFragmentSizeDistribution)
 
     def parseBamPEFDistributionFile(self, f):
-        d = dict()
+        d = {}
         lastsample = []
         for line in f["f"].splitlines():
             cols = line.rstrip().split("\t")
@@ -60,7 +60,7 @@ class bamPEFragmentSizeDistributionMixin:
             else:
                 s_name = self.clean_s_name(cols[2].rstrip().split("/")[-1], f)
                 if s_name != lastsample:
-                    d[s_name] = dict()
+                    d[s_name] = {}
                     lastsample = s_name
                 d[s_name].update({self._int(cols[0]): self._int(cols[1])})
 

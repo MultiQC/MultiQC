@@ -3,7 +3,6 @@ http://rseqc.sourceforge.net/#junction-saturation-py"""
 
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -15,13 +14,13 @@ def parse_reports(module: BaseMultiqcModule):
     """Find RSeQC junction_saturation frequency reports and parse their data"""
 
     # Set up vars
-    junction_saturation_all: Dict = dict()
-    junction_saturation_known: Dict = dict()
-    junction_saturation_novel: Dict = dict()
+    junction_saturation_all: dict = {}
+    junction_saturation_known: dict = {}
+    junction_saturation_novel: dict = {}
 
     # Go through files and parse data
     for f in module.find_log_files("rseqc/junction_saturation"):
-        parsed = dict()
+        parsed = {}
         for line in f["f"].splitlines():
             r = re.search(r"^([xyzw])=c\(([\d,]+)\)$", line)
             if r:
@@ -33,9 +32,9 @@ def parse_reports(module: BaseMultiqcModule):
                 if f["s_name"] in junction_saturation_all:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 module.add_data_source(f, section="junction_saturation")
-                junction_saturation_all[f["s_name"]] = dict()
-                junction_saturation_known[f["s_name"]] = dict()
-                junction_saturation_novel[f["s_name"]] = dict()
+                junction_saturation_all[f["s_name"]] = {}
+                junction_saturation_known[f["s_name"]] = {}
+                junction_saturation_novel[f["s_name"]] = {}
                 for k, v in enumerate(parsed["x"]):
                     # Normalise junction counts to the percentage of total junctions (100% of reads)
                     junction_saturation_all[f["s_name"]][v] = 100 * parsed["z"][k] / parsed["z"][-1]

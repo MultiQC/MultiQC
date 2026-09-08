@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -30,8 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/tseemann/snippy/blob/master/LICENSE",
         )
 
-        data_by_sample: Dict[str, Dict] = {}
-        core_data_by_sample: Dict[str, Dict] = {}
+        data_by_sample: dict[str, dict] = {}
+        core_data_by_sample: dict[str, dict] = {}
 
         self.snippy_col = [
             "Variant-COMPLEX",
@@ -147,7 +146,7 @@ class MultiqcModule(BaseMultiqcModule):
         Add the snippy-core data to the general stats.
         """
         # Parse the statistics
-        data: Dict = {}
+        data: dict = {}
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 data[sample] = {}
@@ -163,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Create a report section for the snippy data.
         """
-        bargraph_data: Dict[str, Dict] = {}
+        bargraph_data: dict[str, dict] = {}
         for sample in data_by_sample:
             # Remove the VariantTotal stat
             bargraph_data[sample] = {}
@@ -190,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Create a report section for the snippy-core data.
         """
-        bargraph_data: Dict[str, Dict] = {}
+        bargraph_data: dict[str, dict] = {}
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 bargraph_data[sample] = {}

@@ -10,7 +10,6 @@ import datetime
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
 from github import Auth, Github
 from github.PullRequest import PullRequest
@@ -27,13 +26,13 @@ if not GITHUB_TOKEN:
 
 def run_cmd(cmd):
     print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"Error executing command: {result.stderr}")
     return result
 
 
-def get_milestone_prs(repo, current_tag: str, limit=100) -> List[PullRequest]:
+def get_milestone_prs(repo, current_tag: str, limit=100) -> list[PullRequest]:
     """
     Get PRs for the current milestone using direct milestone filtering.
 
@@ -102,9 +101,9 @@ def main():
     milestones = repo.get_milestones(state="all")
     assert_milestone_exists(milestones, current_tag)
     assert_milestone_exists(milestones, previous_minor_tag)
-    prs: List[PullRequest] = get_milestone_prs(repo, current_tag)
+    prs: list[PullRequest] = get_milestone_prs(repo, current_tag)
 
-    label_to_section: Dict[str, str] = {
+    label_to_section: dict[str, str] = {
         "module: new": "New modules",
         "bug: module": "Module fixes",
         "module: enhancement": "Module updates",
@@ -114,7 +113,7 @@ def main():
         "core: refactoring": "Optimization, refactoring and typing",
         "documentation": "Chores",
     }
-    sections_to_prs: Dict[str, List[PullRequest]] = {
+    sections_to_prs: dict[str, list[PullRequest]] = {
         "New modules": [],
         "Feature updates and improvements": [],
         "Module updates": [],

@@ -8,7 +8,7 @@ import os
 import shutil
 import sys
 from pathlib import Path
-from typing import Callable, List, Optional, TypeVar
+from typing import Callable, Optional, TypeVar
 
 import coloredlogs  # type: ignore
 import rich
@@ -62,9 +62,8 @@ def init_log(log_to_file: bool = False):
         logging.getLogger("httpx").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
-    if config.no_ansi is False:
-        if not sys.stderr.isatty() and not force_term_colors():
-            config.no_ansi = True
+    if config.no_ansi is False and not sys.stderr.isatty() and not force_term_colors():
+        config.no_ansi = True
 
     # Reset margin-bottom to remove the gian gap between lines.
     # See https://github.com/Textualize/rich/issues/3335 for more context
@@ -208,12 +207,11 @@ def remove_file_handler():
 
     global log_tmp_fn
     if log_tmp_fn is not None:
-        if log_tmp_fn.exists():
-            if config.data_dir is not None and Path(config.data_dir).is_dir():
-                try:
-                    shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
-                except OSError:
-                    pass
+        if log_tmp_fn.exists() and config.data_dir is not None and Path(config.data_dir).is_dir():
+            try:
+                shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
+            except OSError:
+                pass
         try:
             os.remove(log_tmp_fn)
         except OSError:
@@ -310,7 +308,7 @@ T = TypeVar("T")
 
 
 def iterate_using_progress_bar(
-    items: List[T],
+    items: list[T],
     desc: str,
     update_fn: Callable[[int, T], None],
     item_to_str_fn: Callable[[T], str] = str,

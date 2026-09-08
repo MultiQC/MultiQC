@@ -333,7 +333,7 @@ def test_grouped_samples_survive_df_roundtrip():
     """
     original = _make_grouped_violin_data()
 
-    section = list(original.dt.section_by_id.values())[0]
+    section = next(iter(original.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     assert len(section.rows_by_sgroup[SampleGroup("SampleA")]) == 3
     assert section.rows_by_sgroup[SampleGroup("SampleA")][0].sample == SampleName("SampleA")
@@ -347,7 +347,7 @@ def test_grouped_samples_survive_df_roundtrip():
     assert row_samples == ["SampleA", "SampleA R1", "SampleA R2"]
 
     reconstructed = ViolinPlotInputData.from_df(df, original.pconfig, original.anchor)
-    section_r = list(reconstructed.dt.section_by_id.values())[0]
+    section_r = next(iter(reconstructed.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section_r.rows_by_sgroup
     group_a = section_r.rows_by_sgroup[SampleGroup("SampleA")]
@@ -412,7 +412,7 @@ def test_grouped_samples_survive_merge():
 
     merged = ViolinPlotInputData.merge(data1, data2)
 
-    section = list(merged.dt.section_by_id.values())[0]
+    section = next(iter(merged.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
@@ -447,7 +447,7 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     loaded = create_plot_input_data_only(plot_input_json)
     assert isinstance(loaded, ViolinPlotInputData)
 
-    section = list(loaded.dt.section_by_id.values())[0]
+    section = next(iter(loaded.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
     assert len(group_a) == 3

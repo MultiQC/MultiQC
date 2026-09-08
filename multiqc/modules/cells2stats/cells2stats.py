@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url=None,
         )
 
-        self.c2s_run_data = dict()
+        self.c2s_run_data = {}
 
         observed_run_names = set()
 

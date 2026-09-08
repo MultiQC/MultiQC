@@ -15,7 +15,7 @@ def parse_reports(self):
     """Find bamtools stats reports and parse their data"""
 
     # Set up vars
-    self.bamtools_stats_data = dict()
+    self.bamtools_stats_data = {}
     regexes = {
         "total_reads": r"Total reads:\s*(\d+)",
         "mapped_reads": r"Mapped reads:\s*(\d+)",
@@ -42,7 +42,7 @@ def parse_reports(self):
 
     # Go through files and parse data using regexes
     for f in self.find_log_files("bamtools/stats"):
-        d = dict()
+        d = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -86,7 +86,7 @@ def parse_reports(self):
     }
     for s_name in self.bamtools_stats_data:
         if s_name not in self.general_stats_data:
-            self.general_stats_data[s_name] = dict()
+            self.general_stats_data[s_name] = {}
         self.general_stats_data[s_name].update(self.bamtools_stats_data[s_name])
 
     # Make dot plot of counts

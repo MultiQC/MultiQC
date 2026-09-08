@@ -10,7 +10,6 @@ import json
 import subprocess
 from pathlib import Path
 from textwrap import dedent
-from typing import Dict
 
 import yaml
 from markdownify import markdownify
@@ -27,7 +26,7 @@ def main():
     OUTPUT_PATH = Path("docs")
 
     # Load search patterns
-    sp_by_mod: Dict[str, Dict] = dict()
+    sp_by_mod: dict[str, dict] = {}
     with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
         for k, v in yaml.safe_load(f).items():
             mod_id = k.split("/")[0]

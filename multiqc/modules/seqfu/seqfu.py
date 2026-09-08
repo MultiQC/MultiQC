@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/telatin/seqfu2/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["stats"] = parse_seqfu_stats(self)

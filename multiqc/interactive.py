@@ -7,7 +7,7 @@ import logging
 from collections import defaultdict
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 from numpy import isin
 
@@ -33,7 +33,7 @@ logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path, List[Union[str, Path]]],
+    *analysis_dir: Union[str, Path, list[Union[str, Path]]],
     verbose: Optional[bool] = None,
     file_list: Optional[bool] = None,
     prepend_dirs: Optional[bool] = None,
@@ -51,7 +51,7 @@ def parse_logs(
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
     config_files: Sequence[Union[str, Path]] = (),
-    module_order: Sequence[Union[str, Dict]] = (),
+    module_order: Sequence[Union[str, dict]] = (),
     extra_fn_clean_exts: Sequence = (),
     extra_fn_clean_trim: Sequence = (),
     preserve_module_raw_data: bool = True,
@@ -108,21 +108,20 @@ def parse_logs(
         logger.warning(e)
 
 
-def list_data_sources() -> List[str]:
+def list_data_sources() -> list[str]:
     """
     Return a list of the data sources that have been loaded.
 
     @return: List of data sources paths from loaded modules
     """
-    file_list = []
-    for mod, sections in report.data_sources.items():
-        for section, sources in sections.items():
-            for sname, source in sources.items():
-                file_list.append(source)
+    file_list: list[str] = []
+    for sections in report.data_sources.values():
+        for sources in sections.values():
+            file_list.extend(sources.values())
     return file_list
 
 
-def list_modules() -> List[str]:
+def list_modules() -> list[str]:
     """
     Return a list of the modules that have been loaded, in order according to config.
 
@@ -131,7 +130,7 @@ def list_modules() -> List[str]:
     return [m.anchor for m in report.modules]
 
 
-def list_samples() -> List[str]:
+def list_samples() -> list[str]:
     """
     Return a list of the samples that have been loaded.
 
@@ -139,36 +138,36 @@ def list_samples() -> List[str]:
     """
     samples = set()
 
-    for _, plot in report.plot_by_id.items():
+    for plot in report.plot_by_id.values():
         if isinstance(plot, Plot):
             for ds in plot.datasets:
                 samples |= set(ds.sample_names())
 
     # Also add samples from report.plot_data
-    for plot_id, plot_dump in report.plot_data.items():
+    for plot_dump in report.plot_data.values():
         if isinstance(plot_dump, dict):
             for ds in plot_dump.get("datasets", []):
                 samples |= set(ds.get("all_samples", []))
 
     # And from general_stats_data
-    for section_key, rows_by_group in report.general_stats_data.items():
-        for s, rows in rows_by_group.items():
+    for rows_by_group in report.general_stats_data.values():
+        for rows in rows_by_group.values():
             for row in rows:
                 samples.add(row.sample)
 
     return sorted(samples)
 
 
-def list_plots() -> Dict:
+def list_plots() -> dict:
     """
     Return plot names that have been loaded, indexed by module and section.
 
     @return: Dict of plot names indexed by module and section
     """
 
-    result: Dict[ModuleId, List] = {}
+    result: dict[ModuleId, list] = {}
     for module in report.modules:
-        result[module.id] = list()
+        result[module.id] = []
         for section in module.sections:
             if not section.plot_anchor:
                 continue
@@ -210,7 +209,7 @@ def get_plot(
     return report.plot_by_id[sec.plot_anchor]
 
 
-def _load_plot(dump: Dict) -> Plot:
+def _load_plot(dump: dict) -> Plot:
     """
     Load a plot and datasets from a JSON dump.
     """
@@ -232,7 +231,7 @@ def _load_plot(dump: Dict) -> Plot:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
 
 
-def get_general_stats_data(sample: Optional[str] = None) -> Dict:
+def get_general_stats_data(sample: Optional[str] = None) -> dict:
     """
     Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
     return only data for that sample.
@@ -241,7 +240,7 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     @return: Dict of general stats data indexed by sample and data key
     """
 
-    data: Dict[str, Dict] = defaultdict(dict)
+    data: dict[str, dict] = defaultdict(dict)
     for section_key, rows_by_group in report.general_stats_data.items():
         header = report.general_stats_headers[section_key]
         for s, rows in rows_by_group.items():
@@ -263,7 +262,7 @@ def get_module_data(
     module: Optional[str] = None,
     sample: Optional[str] = None,
     key: Optional[str] = None,
-) -> Dict:
+) -> dict:
     """
     Return parsed module data, indexed (if available) by data key, then by sample. Module is either
     the module name, or the anchor.
@@ -286,7 +285,7 @@ def get_module_data(
         if not mod:
             raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    data_by_module: Dict[str, Dict] = {}
+    data_by_module: dict[str, dict] = {}
     for m in report.modules:
         if module and (m.name.lower() != module and m.anchor != module):
             continue
@@ -296,14 +295,14 @@ def get_module_data(
                 f"`'{m.name}' raw module data is not available - set `parse_logs(preserve_module_raw_data=True)` to preserve it"
             )
 
-        data_by_key: Dict[str, Dict] = m.saved_raw_data
+        data_by_key: dict[str, dict] = m.saved_raw_data
         if sample:
             data_by_key = {data_key: data_by_sample.get(sample, {}) for data_key, data_by_sample in data_by_key.items()}
         if key:
             if module and key not in m.saved_raw_data:
                 raise ValueError(f"Key '{key}' is not found in module '{module}'")
         elif len(data_by_key) == 1:  # only one key, flatten
-            data_by_key = data_by_key[list(data_by_key.keys())[0]]
+            data_by_key = data_by_key[next(iter(data_by_key.keys()))]
 
         data_by_module[m.anchor] = data_by_key
 
@@ -394,7 +393,7 @@ def write_report(
     exclude_modules: Sequence[str] = (),
     config_files: Sequence[Union[str, Path]] = (),
     custom_css_files: Sequence[str] = (),
-    module_order: Sequence[Union[str, Dict]] = (),
+    module_order: Sequence[Union[str, dict]] = (),
     clean_up=True,
     return_html: bool = False,
 ) -> Optional[str]:

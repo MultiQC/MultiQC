@@ -6,7 +6,7 @@ import re
 import tarfile
 from collections import defaultdict
 from html import escape
-from typing import Any, Dict
+from typing import Any
 
 import humanize
 
@@ -66,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/seqeralabs/tower-cli/blob/master/LICENSE.txt",
         )
 
-        data_by_run: Dict[str, Dict] = defaultdict(dict)
+        data_by_run: dict[str, dict] = defaultdict(dict)
 
         # Parsing the tar-gz dump
         for f in self.find_log_files("seqera_cli/run_dump", filecontents=False):
@@ -128,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
             if d.get("runUrl"):
                 m = run_url_re.search(d["runUrl"])
                 if m:
-                    org, workspace, run = m.groups()
+                    org, workspace, _run = m.groups()
                     d["org"] = org
                     d["workspace"] = workspace
                     d["org_workspace"] = f"{org}/{workspace}"
@@ -210,20 +210,20 @@ class MultiqcModule(BaseMultiqcModule):
         """
         # Collecting categorical values into distinct lists that we want to color code
         # with badges and backgrounds:
-        seqera_versions = list(set(d.get("seqeraVersion") for d in data_by_run.values()))
-        nextflow_versions = list(set(d.get("nextflowVersion") for d in data_by_run.values()))
+        seqera_versions = list({d.get("seqeraVersion") for d in data_by_run.values()})
+        nextflow_versions = list({d.get("nextflowVersion") for d in data_by_run.values()})
         scale = mqc_colour.mqc_colour_scale("Dark2")
         version_colors = [
             {v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(seqera_versions + nextflow_versions)
         ]
-        repositories = list(set(d.get("repository") for d in data_by_run.values()))
+        repositories = list({d.get("repository") for d in data_by_run.values()})
 
         def format_run_url(x):
             runUrl_re = re.compile(r"\/orgs\/([^\/]+)\/workspaces\/([^\/]+)\/watch\/([^\/]+)\/?$")
             if x:
                 m = runUrl_re.search(x)
                 if m:
-                    org, workspace, run = m.groups()
+                    _org, _workspace, run = m.groups()
                     return f'<a href="{escape(x)}" target="_blank">{escape(run)}</a>'
             return str(x)
 
@@ -348,9 +348,9 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-        plot_data: Dict[str, Dict[str, Any]] = dict()
+        plot_data: dict[str, dict[str, Any]] = {}
         for sn, data in data_by_run.items():
-            plot_data[sn] = dict()
+            plot_data[sn] = {}
             if "wallTime" in data:
                 plot_data[sn]["wallTime"] = data["wallTime"] / 60 / 60  # hours
             if "cpuTime" in data is not None:

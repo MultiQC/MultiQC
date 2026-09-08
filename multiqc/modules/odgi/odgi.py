@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 import yaml
 
@@ -88,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse odgi stats data
-        self.odgi_stats_map: Dict = dict()
+        self.odgi_stats_map: dict = {}
         for f in self.find_log_files("odgi", filehandles=True):
             self.parse_odgi_stats_report(f)
 
@@ -293,8 +292,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
         # Some of the headers are quite general and can clash with other modules.
         # Prepend odgi_ to keep them unique
-        prefix_headers: Dict = dict()
-        prefix_data: Dict = dict()
+        prefix_headers: dict = {}
+        prefix_data: dict = {}
         for h, v in headers.items():
             prefix_headers[f"odgi_{h}"] = v
         for s_name, d in self.odgi_stats_map.items():
@@ -407,7 +406,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         if "cons@" in file_name:
             file_name = file_name.split(".")
-            consensus_identifier = list(e for e in file_name if "cons@" in e)
+            consensus_identifier = [e for e in file_name if "cons@" in e]
             return consensus_identifier[0]
         elif "smooth" in file_name:
             return "smooth"

@@ -3,7 +3,7 @@
 import logging
 import re
 from collections.abc import Mapping, Sequence
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -57,7 +57,7 @@ class HeatmapConfig(PConfig):
     xcats_samples: bool = True
     ycats_samples: bool = True
     square: bool = True
-    colstops: List[List] = []
+    colstops: list[list] = []
     reverseColors: bool = Field(False, deprecated="reverse_colors")
     reverse_colors: bool = False
     decimalPlaces: int = Field(2, deprecated="tt_decimals")
@@ -71,7 +71,7 @@ class HeatmapConfig(PConfig):
     cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
     cluster_switch_clustered_active: bool = False
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
 
 
@@ -80,9 +80,9 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
     Represents normalized input data for a heatmap plot.
     """
 
-    rows: List[List[ElemT]]
-    xcats: List[Union[str, int]]
-    ycats: List[Union[str, int]]
+    rows: list[list[ElemT]]
+    xcats: list[Union[str, int]]
+    ycats: list[Union[str, int]]
     pconfig: HeatmapConfig
 
     def is_empty(self) -> bool:
@@ -116,7 +116,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
     @classmethod
     def from_df(
-        cls, df: pl.DataFrame, pconfig: Union[Dict, HeatmapConfig], anchor: Anchor
+        cls, df: pl.DataFrame, pconfig: Union[dict, HeatmapConfig], anchor: Anchor
     ) -> "HeatmapNormalizedInputData":
         """
         Create a HeatmapNormalizedInputData object from a polars DataFrame.
@@ -160,9 +160,9 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         xcats = col_cats_df.select("col_cat").to_series().to_list()
 
         # Create empty matrix with appropriate type annotations
-        rows: List[List[ElemT]] = []
+        rows: list[list[ElemT]] = []
         for _ in range(max_row_idx + 1):
-            row: List[ElemT] = [None] * (max_col_idx + 1)  # type: ignore
+            row: list[ElemT] = [None] * (max_col_idx + 1)  # type: ignore
             rows.append(row)
 
         # Fill matrix with values
@@ -210,9 +210,9 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         ycat_to_idx = {str(cat): i for i, cat in enumerate(all_ycats)}
 
         # Initialize a matrix with None values
-        merged_rows: List[List[ElemT]] = []
+        merged_rows: list[list[ElemT]] = []
         for _ in range(len(all_ycats)):
-            row: List[ElemT] = [None] * len(all_xcats)  # type: ignore
+            row: list[ElemT] = [None] * len(all_xcats)  # type: ignore
             merged_rows.append(row)
 
         # Helper function to fill the matrix from a data source
@@ -259,14 +259,14 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
         xcats: Optional[Sequence[Union[str, int]]] = None,
         ycats: Optional[Sequence[Union[str, int]]] = None,
-        pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
+        pconfig: Union[dict[str, Any], HeatmapConfig, None] = None,
     ) -> "HeatmapNormalizedInputData":
         pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
-        rows: List[List[ElemT]]
+        rows: list[list[ElemT]]
         if isinstance(data, dict):
             # Re-key the dict to be strings
-            rows_str: Dict[str, Dict[str, ElemT]] = {
+            rows_str: dict[str, dict[str, ElemT]] = {
                 str(y): {str(x): value for x, value in value_by_x.items()} for y, value_by_x in data.items()
             }
 
@@ -275,13 +275,13 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
                 ycats = list(rows_str.keys())
             if not xcats:
                 xcats = []
-                for _, value_by_x in rows_str.items():
-                    for x, _ in value_by_x.items():
+                for value_by_x in rows_str.values():
+                    for x in value_by_x:
                         if x not in xcats:
                             xcats.append(x)
             rows = [[rows_str.get(str(y), {}).get(str(x)) for x in xcats] for y in ycats]
         else:
-            rows = cast(List[List[ElemT]], data)
+            rows = cast(list[list[ElemT]], data)
             if ycats is None:
                 ycats = xcats
             if xcats is None:
@@ -315,7 +315,7 @@ def plot(
     data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
     xcats: Optional[Sequence[Union[str, int]]] = None,
     ycats: Optional[Sequence[Union[str, int]]] = None,
-    pconfig: Union[Dict[str, Any], HeatmapConfig, None] = None,
+    pconfig: Union[dict[str, Any], HeatmapConfig, None] = None,
 ) -> Union["HeatmapPlot", str, None]:
     """
     Plot a 2D heatmap.
@@ -334,8 +334,8 @@ def plot(
 
 
 def _cluster_data(
-    rows: List[List[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
-) -> Tuple[List[List[ElemT]], List[int], List[int]]:
+    rows: list[list[ElemT]], cluster_rows: bool = True, cluster_cols: bool = True, method: str = "complete"
+) -> tuple[list[list[ElemT]], list[int], list[int]]:
     """Cluster the heatmap data and return clustered data with new indices"""
     row_idx = list(range(len(rows)))
     col_idx = list(range(len(rows[0])))
@@ -360,12 +360,12 @@ def _cluster_data(
         except Exception as e:
             logger.warning(f"Column clustering failed: {e!s}")
 
-    return cast(List[List[ElemT]], data_array.tolist()), row_idx, col_idx
+    return cast(list[list[ElemT]], data_array.tolist()), row_idx, col_idx
 
 
 class Dataset(BaseDataset):
-    rows: List[List[ElemT]]
-    rows_clustered: Optional[List[List[ElemT]]] = None
+    rows: list[list[ElemT]]
+    rows_clustered: Optional[list[list[ElemT]]] = None
     xcats: Sequence[str]
     ycats: Sequence[str]
     xcats_clustered: Optional[Sequence[str]] = None
@@ -373,8 +373,8 @@ class Dataset(BaseDataset):
     xcats_samples: bool = True
     ycats_samples: bool = True
 
-    def sample_names(self) -> List[SampleName]:
-        snames: List[SampleName] = []
+    def sample_names(self) -> list[SampleName]:
+        snames: list[SampleName] = []
         if self.xcats_samples:
             snames.extend(SampleName(cat) for cat in self.xcats)
         if self.ycats_samples:
@@ -384,7 +384,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        rows: List[List[ElemT]],
+        rows: list[list[ElemT]],
         xcats: Sequence[Union[str, int]],
         ycats: Sequence[Union[str, int]],
         cluster_rows: bool = True,
@@ -440,13 +440,13 @@ class Dataset(BaseDataset):
         )
 
     def save_data_file(self) -> None:
-        row: List[ElemT] = ["."]
+        row: list[ElemT] = ["."]
         if self.xcats:
             row += self.xcats
-        data: List[List[ElemT]] = []
+        data: list[list[ElemT]] = []
         data.append(row)
         for i, row in enumerate(self.rows):
-            new_row: List[ElemT] = []
+            new_row: list[ElemT] = []
             if self.ycats:
                 ycat = self.ycats[i]
                 new_row.append(ycat)
@@ -483,15 +483,15 @@ class Dataset(BaseDataset):
 
 
 class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
-    datasets: List[Dataset]
+    datasets: list[Dataset]
     xcats_samples: bool
     ycats_samples: bool
     min: Optional[float] = None
     max: Optional[float] = None
     cluster_switch_clustered_active: bool = False
 
-    def sample_names(self) -> List[SampleName]:
-        names: List[SampleName] = []
+    def sample_names(self) -> list[SampleName]:
+        names: list[SampleName] = []
         if self.xcats_samples:
             for ds in self.datasets:
                 if ds.xcats:
@@ -516,11 +516,11 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
 
     @staticmethod
     def create(
-        rows: List[List[ElemT]],
+        rows: list[list[ElemT]],
         pconfig: HeatmapConfig,
         anchor: Anchor,
-        xcats: List[Union[str, int]],
-        ycats: List[Union[str, int]],
+        xcats: list[Union[str, int]],
+        ycats: list[Union[str, int]],
     ) -> "HeatmapPlot":
         max_n_rows = 0
         max_n_cols = 0
@@ -541,14 +541,14 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         )
 
         model.layout.update(
-            yaxis=dict(
+            yaxis={
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
-                type="category",
-            ),
-            xaxis=dict(
+                "type": "category",
+            },
+            xaxis={
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
-                type="category",
-            ),
+                "type": "category",
+            },
             showlegend=pconfig.legend,
         )
 
@@ -669,7 +669,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         model.layout.yaxis.autorange = "reversed"  # to make sure the first sample is at the top
         model.layout.yaxis.ticklabelposition = "outside right"
 
-        colorscale: List[Tuple[float, str]] = []
+        colorscale: list[tuple[float, str]] = []
         if pconfig.colstops:
             # A list of 2-element lists where the first element is the
             # normalized color level value (starting at 0 and ending at 1),
@@ -732,7 +732,7 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
             cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
         )
 
-    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> list[str]:
         """
         Heatmap-specific controls, only for the interactive version.
 

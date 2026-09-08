@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Tests for natural sorting of files by clean sample name
 """

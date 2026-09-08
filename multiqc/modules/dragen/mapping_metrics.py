@@ -28,7 +28,7 @@ class DragenMappingMetics(BaseMultiqcModule):
             data_by_phenotype_by_sample[s_name].update(data_by_phenotype)
 
             for phenotype, phenotype_d in data_by_readgroup.items():
-                for rg, data in phenotype_d.items():
+                for rg in phenotype_d:
                     if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                         log.debug(f"Duplicate read group name {rg} found for output prefix {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_readgroup)
@@ -42,7 +42,7 @@ class DragenMappingMetics(BaseMultiqcModule):
         data_by_phenotype_by_sample = self.ignore_samples(data_by_phenotype_by_sample)
 
         # flattening phenotype-sample data by adding a prefix " normal" to the normal samples
-        data_by_sample = dict()
+        data_by_sample = {}
         for sn in data_by_phenotype_by_sample:
             for phenotype in data_by_phenotype_by_sample[sn]:
                 new_sn = sn
@@ -51,7 +51,7 @@ class DragenMappingMetics(BaseMultiqcModule):
                 data_by_sample[new_sn] = data_by_phenotype_by_sample[sn][phenotype]
 
         # flattening phenotype-sample data by adding a prefix " normal" to the normal samples
-        data_by_rg_by_sample_new = dict()
+        data_by_rg_by_sample_new = {}
         for sn in data_by_rg_by_sample:
             for phenotype in data_by_rg_by_sample[sn]:
                 new_sn = sn
@@ -73,7 +73,7 @@ class DragenMappingMetics(BaseMultiqcModule):
 
     def report_mapping_metrics(self, data_by_sample, data_by_rg_by_sample):
         # merging all read group data
-        data_by_rg = dict()
+        data_by_rg = {}
 
         for sname in data_by_rg_by_sample:
             for rg, d in data_by_rg_by_sample[sname].items():
@@ -89,9 +89,9 @@ class DragenMappingMetics(BaseMultiqcModule):
 
         # getting all available metric names to determine table headers
         all_metric_names = set()
-        for sn, d_by_rg in data_by_rg_by_sample.items():
+        for d_by_rg in data_by_rg_by_sample.values():
             for rg, data in d_by_rg.items():
-                for m in data.keys():
+                for m in data:
                     all_metric_names.add(m)
         # and making headers
         genstats_headers, own_tabl_headers = make_headers(all_metric_names, MAPPING_METRICS)
@@ -141,9 +141,9 @@ class DragenMappingMetics(BaseMultiqcModule):
         add_mapped_label = False
         for sample_id, data in data_by_sample.items():
             # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
-            if "rRNA filtered reads" in data.keys():
+            if "rRNA filtered reads" in data:
                 rrna_filtered_reads_key = "rRNA filtered reads"
-            elif "Adjustment of reads matching filter contigs" in data.keys():
+            elif "Adjustment of reads matching filter contigs" in data:
                 rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
             else:
                 rrna_filtered_reads_key = None
@@ -401,7 +401,7 @@ def parse_mapping_metrics_file(f):
         if analysis == "ALIGNING PER RG":
             # setting normal and tumor sample names for future use
             readgroup = fields[1]
-            if readgroup not in data_by_readgroup[phenotype].keys():
+            if readgroup not in data_by_readgroup[phenotype]:
                 data_by_readgroup[phenotype][readgroup] = {}
             if value is not None:
                 data_by_readgroup[phenotype][readgroup][metric] = value
@@ -411,7 +411,7 @@ def parse_mapping_metrics_file(f):
     # adding some missing values that we wanna report for consistency
     # Expand data_by_readgroup to values below phenotype level
     for data in itertools.chain(
-        *[data_by_readgroup[key].values() for key in data_by_readgroup.keys()], data_by_phenotype.values()
+        *[data_by_readgroup[key].values() for key in data_by_readgroup], data_by_phenotype.values()
     ):
         # fixing when deduplication wasn't performed, or running with single-end data
         for field in [

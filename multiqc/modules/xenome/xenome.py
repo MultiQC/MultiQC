@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Union
+from typing import ClassVar, Union
 
 import spectra  # type: ignore
 
@@ -38,10 +38,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Xenome reports
-        self.detail_percents = dict()
-        self.detail_counts = dict()
-        self.summary_percents = dict()
-        self.summary_counts = dict()
+        self.detail_percents = {}
+        self.detail_counts = {}
+        self.summary_percents = {}
+        self.summary_counts = {}
         for f in self.find_log_files("xenome"):
             self._parse_xenome_logs(f)
 
@@ -72,8 +72,8 @@ class MultiqcModule(BaseMultiqcModule):
     def _collect_all_species(summary_data):
         grafts = []
         hosts = []
-        for sn, cnt_by_cls in summary_data.items():
-            s = list(cnt_by_cls)[0]
+        for cnt_by_cls in summary_data.values():
+            s = next(iter(cnt_by_cls))
             if s not in grafts:
                 grafts.append(s)
             s = list(cnt_by_cls)[1]
@@ -142,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
         return pct_by_class, cnt_by_class
 
     # to support multiple species, when running on logs for many unrelated runs
-    COLORS = [
+    COLORS: ClassVar = [
         ("#377eb8", "Blues"),  # blue
         ("#e41a1c", "Reds"),  # red
         ("#4daf4a", "Greens"),  # green
@@ -185,7 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
         Prepare headers and data for a table. Add a section with a table,
         and add a few columns into the general stats.
         """
-        headers: Dict[str, Dict] = {}
+        headers: dict[str, dict] = {}
         table_data = defaultdict(dict)
 
         for sn, data in self.summary_percents.items():

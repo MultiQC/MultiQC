@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from html import escape
-from typing import Any, Dict, List
+from typing import Any, ClassVar
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -68,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
     * `shared_key` - Share color scale with other columns
     """
 
-    _KEYS_MAPPING = {
+    _KEYS_MAPPING: ClassVar = {
         "number_of_reads": "Number of reads",
         "number_of_bases": "Total bases",
         "number_of_bases_aligned": "Total bases aligned",
@@ -101,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any NanoStat reports
-        self.nanostat_data = dict()
+        self.nanostat_data = {}
         self.has_qscores = False
         self.has_aligned = False
         self.has_seq_summary = False
@@ -154,7 +154,7 @@ class MultiqcModule(BaseMultiqcModule):
         To avoid overwriting keys from different modes, keys are given a suffix.
         """
         sname = f["s_name"]
-        nano_stats_by_sname = {sname: dict()}
+        nano_stats_by_sname = {sname: {}}
         for line in f["f"]:
             if line.strip() == "":
                 continue
@@ -171,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # A static header line "Metrics dataset", ignore.
                 pass
 
-            elif key in self._KEYS_MAPPING.keys():
+            elif key in self._KEYS_MAPPING:
                 key = self._KEYS_MAPPING.get(key)
                 if key:
                     nano_stats_by_sname[sname][key] = float(val)
@@ -347,10 +347,10 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add the stat_type suffix
-        headers: Dict[str, ColumnDict] = {}
+        headers: dict[str, ColumnDict] = {}
         for k in headers_base:
             key = f"{k}_{stat_type}"
-            headers[key] = headers_base.get(k, dict()).copy()
+            headers[key] = headers_base.get(k, {}).copy()
 
         # Table config
         table_config = {
@@ -391,13 +391,11 @@ class MultiqcModule(BaseMultiqcModule):
                     return _data_dict[total_key], _stat_type
             return None, None
 
-        q_values: List[int] = []
+        q_values: list[int] = []
         samples_with_same_q_values = []
         samples_with_other_q_values = []  # will be skipped
         for s_name, data_dict in sorted(self.nanostat_data.items()):
-            sample_q_vals = [
-                int(k.strip().replace(">Q", "").split("_")[0]) for k in data_dict.keys() if k.startswith(">Q")
-            ]
+            sample_q_vals = [int(k.strip().replace(">Q", "").split("_")[0]) for k in data_dict if k.startswith(">Q")]
             if q_values and set(sample_q_vals) != set(q_values):
                 samples_with_other_q_values.append(s_name)
                 continue

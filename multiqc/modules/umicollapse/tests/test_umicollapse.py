@@ -53,7 +53,7 @@ UMI collapsing finished in 1077.717 seconds!
 
     keys = data.keys()
     assert len(keys) == 1
-    assert list(keys)[0] == "SRR19887568"
+    assert next(iter(keys)) == "SRR19887568"
 
     assert len(m.sections) == 2
     assert m.sections[0].name == "Deduplicated Reads"

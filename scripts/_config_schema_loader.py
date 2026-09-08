@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import yaml
 
@@ -16,7 +16,7 @@ DEFAULTS_PATH = MULTIQC_DIR / "config_defaults.yaml"
 SEARCH_PATTERNS_PATH = MULTIQC_DIR / "search_patterns.yaml"
 
 
-def load_schema_and_defaults() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+def load_schema_and_defaults() -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Load the JSON schema and config_defaults.yaml.
 
     Returns ``(properties, defaults, schema)``: the top-level ``properties`` dict,
@@ -49,8 +49,8 @@ def load_schema_and_defaults() -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str
 
 
 def load_sections_with_groups(
-    properties: Dict[str, Any],
-) -> Dict[str, Dict[Optional[str], List[str]]]:
+    properties: dict[str, Any],
+) -> dict[str, dict[Optional[str], list[str]]]:
     """Group property names by ``section`` then by ``group``, preserving source order.
 
     Returns a dict keyed by section name, where each value is a dict keyed by
@@ -60,8 +60,8 @@ def load_sections_with_groups(
     duplicate headings in the generated docs and wizard. Fails loudly on any
     property missing a ``section`` tag.
     """
-    out: Dict[str, Dict[Optional[str], List[str]]] = {}
-    untagged: List[str] = []
+    out: dict[str, dict[Optional[str], list[str]]] = {}
+    untagged: list[str] = []
     for prop_name, prop in properties.items():
         section = prop.get("section")
         if section is None:

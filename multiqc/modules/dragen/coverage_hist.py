@@ -112,7 +112,7 @@ def parse_wgs_fine_hist(f):
     """
 
     # first pass to calculate total number of bases to calculate percentages
-    parsed_data = dict()
+    parsed_data = {}
     for line in f["f"].splitlines():
         if line.startswith("Depth,Overall"):
             continue
@@ -125,8 +125,8 @@ def parse_wgs_fine_hist(f):
 
     total_cnt = sum(parsed_data.values())
 
-    data = dict()
-    cum_data = dict()
+    data = {}
+    cum_data = {}
     cum_cnt = 0
     depth_1pc = None
 

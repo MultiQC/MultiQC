@@ -19,7 +19,7 @@ class GatherMixin:
         self.top_n = getattr(config, "sourmash", {}).get("gather", {}).get("top_n", 5)
 
         # find and load gather reports
-        self.gather_raw_data = dict()
+        self.gather_raw_data = {}
         for f in self.find_log_files("sourmash/gather", filehandles=True):
             data = []
             for line in csv.DictReader(f["f"]):
@@ -47,9 +47,9 @@ class GatherMixin:
         self.write_data_file(self.gather_raw_data, "multiqc_sourmash_gather")
 
         # initialize variables to store summarized information
-        self.gather_pct_per_match_all_samples = dict()
-        self.gather_pct_unclassified_per_sample = dict()
-        self.gather_pct_top_five_per_sample = dict()
+        self.gather_pct_per_match_all_samples = {}
+        self.gather_pct_unclassified_per_sample = {}
+        self.gather_pct_top_five_per_sample = {}
         self.gather_top_five_matches = []
 
         # run functions to summarize information
@@ -74,7 +74,7 @@ class GatherMixin:
         percents as values. These values are used to identify the top N matches
         identified across all samples.
         """
-        for s_name, data in self.gather_raw_data.items():
+        for data in self.gather_raw_data.values():
             for row in data:
                 match_name = row["match_name"]
                 # loop over all samples and sum different variables
@@ -139,7 +139,7 @@ class GatherMixin:
 
         # set table data
         tdata = {}
-        for s_name, data in self.gather_raw_data.items():
+        for s_name in self.gather_raw_data:
             tdata[s_name] = {}
             tdata[s_name]["% Unclassified"] = self.gather_pct_unclassified_per_sample[s_name]
             tdata[s_name][f"% Top {self.top_n}"] = self.gather_pct_top_five_per_sample[s_name]
@@ -155,7 +155,7 @@ class GatherMixin:
         pd = []  # plot data
         # A list of categories to be shown as a color on the plot. includes the
         # top genomes, other, and unclassified
-        cats = list()
+        cats = []
         pconfig = {
             "id": "sourmash-gather-top-plot",
             "title": "Sourmash: gather: top genomes",
@@ -178,7 +178,7 @@ class GatherMixin:
             # pull out percents for this match_name from each sample
             for s_name, data in self.gather_raw_data.items():
                 if s_name not in match_data:
-                    match_data[s_name] = dict()
+                    match_data[s_name] = {}
                 if s_name not in pct_shown:
                     pct_shown[s_name] = 0
                 for row in data:

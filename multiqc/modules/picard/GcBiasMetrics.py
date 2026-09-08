@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard GcBiasMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import linegraph
@@ -22,8 +21,8 @@ def parse_reports(module):
     is provided.
     """
 
-    data_by_sample: Dict[str, Dict] = dict()
-    summary_data_by_sample: Dict[str, Dict] = dict()
+    data_by_sample: dict[str, dict] = {}
+    summary_data_by_sample: dict[str, dict] = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/gcbias", filehandles=True):
@@ -57,7 +56,7 @@ def parse_reports(module):
                     # Detail metrics: one line per GC percentage
                     if s_name in data_by_sample:
                         log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                    data_by_sample[s_name] = dict()
+                    data_by_sample[s_name] = {}
                     gc_col = keys.index("GC")
                     cov_col = keys.index("NORMALIZED_COVERAGE")
 
@@ -65,7 +64,7 @@ def parse_reports(module):
                     # Summary metrics - just one line below the header
                     if s_name in summary_data_by_sample:
                         log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                    summary_data_by_sample[s_name] = dict()
+                    summary_data_by_sample[s_name] = {}
                     vals = f["f"].readline().rstrip("\n").split("\t")
                     if len(keys) != len(vals):
                         s_name = None

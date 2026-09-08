@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse meta information. JSON win!
-        self.salmon_meta = dict()
+        self.salmon_meta = {}
         for f in self.find_log_files("salmon/meta"):
             # Get the s_name from the parent directory
             if os.path.basename(f["root"]) in ["aux_info", "aux"]:
@@ -45,13 +45,13 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
         # Parse Fragment Length Distribution logs
-        self.salmon_fld = dict()
+        self.salmon_fld = {}
         for f in self.find_log_files("salmon/fld"):
             # Get the s_name from the parent directory
             if os.path.basename(f["root"]) == "libParams":
                 s_name = os.path.basename(os.path.dirname(f["root"]))
                 s_name = self.clean_s_name(s_name, f)
-                parsed = dict()
+                parsed = {}
                 for i, v in enumerate(f["f"].split()):
                     parsed[i] = float(v)
                 if len(parsed) > 0:
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.salmon_fld[s_name] = parsed
 
         # Parse Library Format Counts information. JSON file expected
-        self.salmon_lfc = dict()
+        self.salmon_lfc = {}
         for f in self.find_log_files("salmon/lfc"):
             s_name = os.path.basename(f["root"])  # lfc file located at root folder
             s_name = self.clean_s_name(s_name, f)
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "description": "Library types",
                     "scale": False,
                     # Hide if all samples have the same value
-                    "hidden": len(set(d.get("library_types") for d in self.salmon_meta.values())) == 1,
+                    "hidden": len({d.get("library_types") for d in self.salmon_meta.values()}) == 1,
                 },
             }
             self.general_stats_addcols(self.salmon_meta, headers)

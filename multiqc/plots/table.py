@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from multiqc.plots.table_object import (
     ColumnDict,
@@ -14,9 +14,9 @@ logger = logging.getLogger(__name__)
 
 
 def plot_with_sections(
-    data: Dict[SectionKey, SectionT],
-    headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]],
-    pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+    data: dict[SectionKey, SectionT],
+    headers: dict[SectionKey, dict[ColumnKey, ColumnDict]],
+    pconfig: Union[dict[str, Any], TableConfig, None] = None,
 ) -> Union["ViolinPlot", str, None]:
     """
     Helper HTML for a violin plot.
@@ -31,8 +31,8 @@ def plot_with_sections(
 
 def plot(
     data: SectionT,
-    headers: Optional[Dict[ColumnKeyT, ColumnDict]] = None,
-    pconfig: Union[Dict[str, Any], TableConfig, None] = None,
+    headers: Optional[dict[ColumnKeyT, ColumnDict]] = None,
+    pconfig: Union[dict[str, Any], TableConfig, None] = None,
 ) -> Union["ViolinPlot", str, None]:
     """Return HTML for a MultiQC table.
     :param data: A list of data dicts

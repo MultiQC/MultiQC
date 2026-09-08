@@ -1,7 +1,7 @@
 import logging
 from collections import defaultdict
 from html import escape
-from typing import Dict, Optional
+from typing import Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse ROC data
-        roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
+        roc_plot_data: dict[str, dict[str, dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             header = f["f"].readline()
             sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
@@ -150,8 +150,9 @@ class MultiqcModule(BaseMultiqcModule):
         def to_padded_str(x):
             short_chrom = self._short_chrom(x)
             try:
-                return "%06d" % short_chrom
-            except TypeError:
+                return f"{short_chrom:06d}"
+            except (TypeError, ValueError):
+                # Not an integer-like chromosome name, sort it by its own string
                 return x
 
         chroms = sorted(roc_plot_data.keys(), key=to_padded_str)
@@ -170,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 1.0,
             "xmin": 0,
             "xmax": 1.5,
-            "data_labels": [{"name": self._short_chrom(c) if self._short_chrom(c) else c} for c in chroms],
+            "data_labels": [{"name": self._short_chrom(c) or c} for c in chroms],
         }
         self.add_section(
             name="Scaled coverage ROC plot",

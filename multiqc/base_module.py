@@ -15,20 +15,7 @@ import textwrap
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
-    cast,
-    overload,
-)
+from typing import Any, Callable, ClassVar, Literal, Optional, TypeVar, Union, cast, overload
 
 import markdown
 import packaging.version
@@ -68,7 +55,7 @@ class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-ExtraFunctionType = Callable[[InputRow, List[Tuple[Optional[str], SampleName, SampleName]]], None]
+ExtraFunctionType = Callable[[InputRow, list[tuple[Optional[str], SampleName, SampleName]]], None]
 
 DataT = TypeVar("DataT")
 SampleNameT = TypeVar("SampleNameT", str, SampleName)
@@ -76,33 +63,33 @@ SampleNameT = TypeVar("SampleNameT", str, SampleName)
 
 @dataclasses.dataclass
 class SampleGroupingConfig:
-    cols_to_weighted_average: Optional[List[Tuple[ColumnKey, ColumnKey]]] = None
-    cols_to_average: Optional[List[ColumnKey]] = None
-    cols_to_sum: Optional[List[ColumnKey]] = None
-    extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    cols_to_weighted_average: Optional[list[tuple[ColumnKey, ColumnKey]]] = None
+    cols_to_average: Optional[list[ColumnKey]] = None
+    cols_to_sum: Optional[list[ColumnKey]] = None
+    extra_functions: Optional[list[ExtraFunctionType]] = dataclasses.field(default_factory=list)
     # Module-supplied groups, mapping group display name -> sample names.
     # When set, takes precedence over `config.table_sample_merge` name patterns
     # (lets modules with authoritative pair / replicate info skip name-guessing).
-    explicit_groups: Optional[Dict[str, List[str]]] = None
+    explicit_groups: Optional[dict[str, list[str]]] = None
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
-    mod_cust_config: Dict[str, Any] = {}
+    mod_cust_config: ClassVar[dict[str, Any]] = {}
     mod_id: Optional[ModuleId] = None
 
     def __init__(
         self,
         name: str = "base",
-        anchor: Union[Anchor, str] = Anchor("base"),
+        anchor: Union[Anchor, str] = Anchor("base"),  # noqa: B008 - Anchor is an immutable str subclass
         target: Optional[str] = None,
-        href: Union[str, List[str], None] = None,
+        href: Union[str, list[str], None] = None,
         info: Optional[str] = None,
         comment: Optional[str] = None,
         extra: Optional[str] = None,
         autoformat: bool = True,
         autoformat_type: str = "markdown",
-        doi: Optional[Union[str, List[str]]] = None,
+        doi: Optional[Union[str, list[str]]] = None,
         license: Optional[str] = None,
         license_url: Optional[str] = None,
     ):
@@ -137,7 +124,7 @@ class BaseMultiqcModule:
         if _cust_extra is not None:
             self.extra = str(_cust_extra)
 
-        self.href: List[str] = [href] if isinstance(href, str) else href or []
+        self.href: list[str] = [href] if isinstance(href, str) else href or []
         _cust_href = self.mod_cust_config.get("href")
         if _cust_href is not None:
             if isinstance(_cust_href, str):
@@ -145,7 +132,7 @@ class BaseMultiqcModule:
             elif isinstance(_cust_href, list):
                 self.href = [str(h) for h in _cust_href]
 
-        self.doi: List[str] = [doi] if isinstance(doi, str) else doi or []
+        self.doi: list[str] = [doi] if isinstance(doi, str) else doi or []
         _cust_doi = self.mod_cust_config.get("doi")
         if _cust_doi is not None:
             if isinstance(_cust_doi, str):
@@ -164,10 +151,10 @@ class BaseMultiqcModule:
         if _cust_license_url is not None:
             self.license_url = str(_cust_license_url)
 
-        self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
+        self.skip_generalstats = self.mod_cust_config.get("generalstats") is False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
+        self.versions: dict[str, list[tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
@@ -204,23 +191,23 @@ class BaseMultiqcModule:
             if autoformat_type == "markdown":
                 self.comment = markdown.markdown(self.comment)
 
-        self.sections: List[Section] = []
+        self.sections: list[Section] = []
 
         self.hidden = False
 
         # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
-        self.__saved_raw_data: Optional[Dict[str, Dict[str, Any]]] = None
+        self.__saved_raw_data: Optional[dict[str, dict[str, Any]]] = None
 
-        self.css: Dict[str, str] = dict()
-        self.js: Dict[str, str] = dict()
+        self.css: dict[str, str] = {}
+        self.js: dict[str, str] = {}
 
         # Get list of all base attributes, so we clean up any added by child modules
-        self._base_attributes = [k for k in dir(self)]
+        self._base_attributes = list(dir(self))
 
     def _get_intro(self):
         doi_html = ""
         if len(self.doi) > 0:
-            doi_links: List[str] = []
+            doi_links: list[str] = []
             for doi in self.doi:
                 # Build the HTML link for the DOI
                 doi_links.append(
@@ -242,7 +229,7 @@ class BaseMultiqcModule:
 
         url_link = ""
         if len(self.href) > 0:
-            url_links: List[str] = []
+            url_links: list[str] = []
             for url in self.href:
                 url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
             url_link = "; ".join(url_links)
@@ -264,7 +251,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self) -> Optional[Dict[str, Dict[str, Any]]]:
+    def saved_raw_data(self) -> Optional[dict[str, dict[str, Any]]]:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -308,18 +295,18 @@ class BaseMultiqcModule:
 
         # Pick up path filters if specified.
         # Allows modules to be called multiple times with different sets of files
-        def get_path_filters(key: str) -> List[str]:
-            pfs: List[str] = []
+        def get_path_filters(key: str) -> list[str]:
+            pfs: list[str] = []
             val = self.mod_cust_config.get(key, [])
-            values: List[str] = val if isinstance(val, list) else [val]
+            values: list[str] = val if isinstance(val, list) else [val]
             pf: str
             for pf in values:
                 pf = pf.removeprefix("./")
                 pfs.append(pf)
             return pfs
 
-        path_filters: List[str] = get_path_filters("path_filters")
-        path_filters_exclude: List[str] = get_path_filters("path_filters_exclude")
+        path_filters: list[str] = get_path_filters("path_filters")
+        path_filters_exclude: list[str] = get_path_filters("path_filters_exclude")
 
         # Get files and sort them by their clean sample names
         module_files = list(report.files.get(ModuleId(sp_key), []))
@@ -434,7 +421,7 @@ class BaseMultiqcModule:
         content: str = "",
         autoformat: bool = True,
         autoformat_type: str = "markdown",
-        statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
+        statuses: Optional[dict[Literal["pass", "warn", "fail"], list[str]]] = None,
         alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
     ):
         """Add a section to the module report output
@@ -563,16 +550,16 @@ class BaseMultiqcModule:
         alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
         autoformat: bool,
         autoformat_type: str,
-    ) -> List[SectionAlert]:
+    ) -> list[SectionAlert]:
         if alerts is None:
             return []
 
-        if isinstance(alerts, (str, SectionAlert)) or isinstance(alerts, Mapping):
+        if isinstance(alerts, (str, SectionAlert, Mapping)):
             alert_items: Sequence[SectionAlertInput] = [alerts]
         else:
             alert_items = alerts
 
-        formatted_alerts: List[SectionAlert] = []
+        formatted_alerts: list[SectionAlert] = []
         for alert in alert_items:
             if isinstance(alert, str):
                 section_alert = SectionAlert(message=alert)
@@ -614,7 +601,7 @@ class BaseMultiqcModule:
         return module_config.get(section_id, True)  # Default True if section not specified
 
     def _generate_status_bar_html(
-        self, status: Dict[Literal["pass", "warn", "fail"], List[str]], section_anchor: str
+        self, status: dict[Literal["pass", "warn", "fail"], list[str]], section_anchor: str
     ) -> str:
         """
         Generate HTML for status bar with pass/warn/fail counts.
@@ -715,7 +702,7 @@ class BaseMultiqcModule:
 
         return None
 
-    def groups_for_sample(self, s_name: SampleName) -> Tuple[SampleGroup, Optional[str]]:
+    def groups_for_sample(self, s_name: SampleName) -> tuple[SampleGroup, Optional[str]]:
         """
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
@@ -724,7 +711,7 @@ class BaseMultiqcModule:
             return SampleGroup(s_name), None
 
         matched_label: Optional[str] = None
-        grouping_exts: List[CleanPatternT]
+        grouping_exts: list[CleanPatternT]
         group_name = SampleGroup(s_name)
         for label, grouping_exts in config.table_sample_merge.items():
             if isinstance(grouping_exts, (str, dict)):
@@ -755,7 +742,7 @@ class BaseMultiqcModule:
 
     def group_samples_names(
         self, samples: Iterable[SampleName]
-    ) -> Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]:
+    ) -> dict[SampleGroup, list[tuple[Optional[str], SampleName, SampleName]]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
@@ -763,12 +750,12 @@ class BaseMultiqcModule:
         :return: a dict where the keys are group names, and the values are lists of tuples,
             of cleaned base names according to the cleaning rules and the original sample names
         """
-        group_by_label: Dict[Optional[str], List[Tuple[SampleGroup, SampleName]]] = defaultdict(list)
+        group_by_label: dict[Optional[str], list[tuple[SampleGroup, SampleName]]] = defaultdict(list)
         for original_name in sorted(samples):
             group_name, label = self.groups_for_sample(original_name)
             group_by_label[label].append((group_name, original_name))
 
-        group_by_merged_name: Dict[SampleGroup, List[Tuple[Optional[str], SampleName]]] = defaultdict(list)
+        group_by_merged_name: dict[SampleGroup, list[tuple[Optional[str], SampleName]]] = defaultdict(list)
         for label, group in group_by_label.items():
             for group_name, original_name in group:
                 group_by_merged_name[group_name].append((label, original_name))
@@ -788,22 +775,22 @@ class BaseMultiqcModule:
 
     def group_samples_and_average_metrics(
         self,
-        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
+        data_by_sample: dict[Union[SampleName, str], dict[Union[ColumnKey, str], ValueT]],
         grouping_config: SampleGroupingConfig,
-    ) -> Dict[SampleGroup, List[InputRow]]:
+    ) -> dict[SampleGroup, list[InputRow]]:
         """
         Group samples and merges numeric metrics by averaging them, optionally normalizing using
         `normalization_metric_name`
         """
 
-        rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
+        rows_by_grouped_samples: dict[SampleGroup, list[InputRow]] = defaultdict(list)
 
         # 1-member entries fall through to the singleton path below: rendering
         # them as a renamed singleton row is rarely what callers want.
-        groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
+        groups_iter: dict[SampleGroup, list[tuple[Optional[str], SampleName, SampleName]]]
         if grouping_config.explicit_groups:
             groups_iter = {}
-            grouped_originals: Set[str] = set()
+            grouped_originals: set[str] = set()
             for gname, members in grouping_config.explicit_groups.items():
                 if len(members) <= 1:
                     continue
@@ -834,7 +821,7 @@ class BaseMultiqcModule:
             merged_row = InputRow(sample=SampleName(g_name), data={})
 
             # Init a dictionary of all cols that would be summed to serve as weights
-            sum_by_col: Dict[ColumnKey, float] = dict()
+            sum_by_col: dict[ColumnKey, float] = {}
 
             if grouping_config.cols_to_weighted_average:
                 for _, weight_col_key in grouping_config.cols_to_weighted_average:
@@ -844,7 +831,7 @@ class BaseMultiqcModule:
                 for col in sum_by_col:
                     for _, _, original_s_name in labels_s_names:
                         val = data_by_sample[original_s_name][col]
-                        if isinstance(val, int) or isinstance(val, float):
+                        if isinstance(val, (int, float)):
                             sum_by_col[col] += float(val)
 
                 for col, weight_col in grouping_config.cols_to_weighted_average:
@@ -855,14 +842,8 @@ class BaseMultiqcModule:
                                 [
                                     float(data_by_sample[original_s_name][col])
                                     * float(data_by_sample[original_s_name][weight_col])
-                                    if (
-                                        isinstance(data_by_sample[original_s_name][col], float)
-                                        or isinstance(data_by_sample[original_s_name][col], int)
-                                    )
-                                    and (
-                                        isinstance(data_by_sample[original_s_name][weight_col], float)
-                                        or isinstance(data_by_sample[original_s_name][weight_col], int)
-                                    )
+                                    if (isinstance(data_by_sample[original_s_name][col], (float, int)))
+                                    and (isinstance(data_by_sample[original_s_name][weight_col], (float, int)))
                                     else 0
                                     for _, _, original_s_name in labels_s_names
                                 ]
@@ -875,10 +856,7 @@ class BaseMultiqcModule:
                     merged_row.data[col] = sum(
                         [
                             float(data_by_sample[original_s_name][col])
-                            if (
-                                isinstance(data_by_sample[original_s_name][col], float)
-                                or isinstance(data_by_sample[original_s_name][col], int)
-                            )
+                            if (isinstance(data_by_sample[original_s_name][col], (float, int)))
                             else 0
                             for _, _, original_s_name in labels_s_names
                         ]
@@ -892,10 +870,7 @@ class BaseMultiqcModule:
                         merged_row.data[col] = sum(
                             [
                                 float(data_by_sample[original_s_name][col])
-                                if (
-                                    isinstance(data_by_sample[original_s_name][col], float)
-                                    or isinstance(data_by_sample[original_s_name][col], int)
-                                )
+                                if (isinstance(data_by_sample[original_s_name][col], (float, int)))
                                 else 0
                                 for _, _, original_s_name in labels_s_names
                             ]
@@ -915,7 +890,7 @@ class BaseMultiqcModule:
 
     def clean_s_name(
         self,
-        s_name: Union[str, List[str]],
+        s_name: Union[str, list[str]],
         f: Union[LoadedFileDict[Any], FileDict],
         root: Optional[str] = None,
         filename: Optional[str] = None,
@@ -940,13 +915,13 @@ class BaseMultiqcModule:
 
     def _clean_s_name(
         self,
-        s_name: Union[str, List[str]],
+        s_name: Union[str, list[str]],
         f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
         root: Optional[str] = None,
         filename: Optional[str] = None,
         search_pattern_key: Optional[str] = None,
-        fn_clean_exts: Optional[List[Union[str, Dict[str, Union[str, List[str]]]]]] = None,
-        fn_clean_trim: Optional[List[str]] = None,
+        fn_clean_exts: Optional[list[Union[str, dict[str, Union[str, list[str]]]]]] = None,
+        fn_clean_trim: Optional[list[str]] = None,
         prepend_dirs: Optional[bool] = None,
     ) -> str:
         """
@@ -1037,8 +1012,8 @@ class BaseMultiqcModule:
         # Prepend sample name with directory
         if prepend_dirs:
             sep = config.prepend_dirs_sep
-            parts: Tuple[str, ...] = Path(root).parts if root else ()
-            dirs: List[str] = [d.strip() for d in parts if d.strip() != ""]
+            parts: tuple[str, ...] = Path(root).parts if root else ()
+            dirs: list[str] = [d.strip() for d in parts if d.strip() != ""]
             if config.prepend_dirs_depth != 0:
                 d_idx = config.prepend_dirs_depth * -1
                 if config.prepend_dirs_depth > 0:
@@ -1050,8 +1025,8 @@ class BaseMultiqcModule:
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            _ext: Union[str, Dict[str, Union[str, List[str]]]]
-            ext: Dict[str, Union[str, List[str]]]
+            _ext: Union[str, dict[str, Union[str, list[str]]]]
+            ext: dict[str, Union[str, list[str]]]
             for _ext in fn_clean_exts:
                 # Go through different filter types
                 if isinstance(_ext, str):
@@ -1063,7 +1038,7 @@ class BaseMultiqcModule:
                 if "module" in ext:
                     if isinstance(ext["module"], str):
                         ext["module"] = [ext["module"]]
-                    if not any([m == self.anchor for m in ext["module"]]):
+                    if not any(m == self.anchor for m in ext["module"]):
                         continue
 
                 pattern = ext.get("pattern", "")
@@ -1132,15 +1107,15 @@ class BaseMultiqcModule:
 
     def ignore_samples(
         self,
-        data: Dict[SampleNameT, DataT],
-        sample_names_ignore: Optional[List[str]] = None,
-        sample_names_ignore_re: Optional[List[str]] = None,
-    ) -> Dict[SampleNameT, DataT]:
+        data: dict[SampleNameT, DataT],
+        sample_names_ignore: Optional[list[str]] = None,
+        sample_names_ignore_re: Optional[list[str]] = None,
+    ) -> dict[SampleNameT, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
             if not isinstance(data, dict):  # type: ignore
                 return data
-            new_data: Dict[SampleNameT, DataT] = dict()
+            new_data: dict[SampleNameT, DataT] = {}
             for s_name, v in data.items():
                 if not self.is_ignore_sample(s_name, sample_names_ignore, sample_names_ignore_re):
                     new_data[s_name] = v
@@ -1151,8 +1126,8 @@ class BaseMultiqcModule:
     @staticmethod
     def is_ignore_sample(
         s_name: Union[str, SampleName],
-        sample_names_ignore: Optional[List[str]] = None,
-        sample_names_ignore_re: Optional[List[str]] = None,
+        sample_names_ignore: Optional[list[str]] = None,
+        sample_names_ignore_re: Optional[list[str]] = None,
     ) -> bool:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
@@ -1175,17 +1150,17 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]],
+        data_by_sample: dict[Union[SampleName, str], dict[Union[ColumnKey, str], ValueT]],
         headers: Optional[
             Union[
                 Mapping[ColumnKey, ColumnDict],
-                Mapping[ColumnKey, Dict[str, Any]],
+                Mapping[ColumnKey, dict[str, Any]],
                 Mapping[str, ColumnDict],
-                Mapping[str, Dict[str, Any]],
+                Mapping[str, dict[str, Any]],
             ]
         ] = None,
         namespace: Optional[str] = None,
-        group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),
+        group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),  # noqa: B008 - never mutated here
     ):
         """Helper function to add to the General Statistics variable.
         Adds to report.general_stats and does not return anything. Fills
@@ -1204,7 +1179,7 @@ class BaseMultiqcModule:
         if self.skip_generalstats:
             return
 
-        rows_by_group: Dict[SampleGroup, List[InputRow]]
+        rows_by_group: dict[SampleGroup, list[InputRow]]
         if config.table_sample_merge or group_samples_config.explicit_groups:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
@@ -1216,11 +1191,11 @@ class BaseMultiqcModule:
                 for sname, data in data_by_sample.items()
             }
 
-        _headers: Dict[ColumnKey, ColumnDict] = {}
+        _headers: dict[ColumnKey, ColumnDict] = {}
 
         # Guess the column headers from the data if not supplied
         if headers is None or len(headers) == 0:
-            column_ids: Set[ColumnKey] = set()
+            column_ids: set[ColumnKey] = set()
             for rows in rows_by_group.values():
                 for row in rows:
                     column_ids.update(row.data.keys())
@@ -1231,15 +1206,15 @@ class BaseMultiqcModule:
             _headers = {ColumnKey(col_id): cast(ColumnDict, col_dict.copy()) for col_id, col_dict in headers.items()}
 
         # Add the module name to the description if not already done
-        for col_id in _headers.keys():
+        for col_id in _headers:
             # Prepend the namespace displayed in the table with the module name
             _col = _headers[col_id]
-            namespace = _col["namespace"] if "namespace" in _col else namespace
+            namespace = _col.get("namespace", namespace)
             _headers[col_id]["namespace"] = self.name
             if namespace:
                 _headers[col_id]["namespace"] = self.name + ": " + str(namespace)
             if "description" not in _headers[col_id]:
-                _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
+                _headers[col_id]["description"] = _col.get("title", col_id)
 
             # Add grouping information to description when grouping is active
             if config.table_sample_merge or group_samples_config.explicit_groups:
@@ -1297,7 +1272,7 @@ class BaseMultiqcModule:
         software_name: Optional[str] = None,
         license: Optional[str] = None,
         license_url: Optional[str] = None,
-        doi: Optional[Union[str, List[str]]] = None,
+        doi: Optional[Union[str, list[str]]] = None,
     ):
         """
         Save software versions for module.
@@ -1349,7 +1324,7 @@ class BaseMultiqcModule:
         software_name: str,
         license: Optional[str] = None,
         license_url: Optional[str] = None,
-        doi: Optional[Union[str, List[str]]] = None,
+        doi: Optional[Union[str, list[str]]] = None,
     ):
         """
         Register FAIR metadata (license, DOI) for a software in the Software Versions
@@ -1408,7 +1383,7 @@ class BaseMultiqcModule:
         # Also save the data to the module instance to enable `get_module_data()` in interactive sessions
         if config.preserve_module_raw_data:
             if self.__saved_raw_data is None:
-                self.__saved_raw_data = dict()
+                self.__saved_raw_data = {}
             self.__saved_raw_data[fn] = data
             report.saved_raw_data[fn] = data
 
@@ -1431,7 +1406,7 @@ class BaseMultiqcModule:
         default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
         default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
         sp_key: Optional[str] = None,
-    ) -> Dict[ColumnKey, ColumnDict]:
+    ) -> dict[ColumnKey, ColumnDict]:
         """
         Get general stats columns for a module based on user configuration.
 
@@ -1450,12 +1425,12 @@ class BaseMultiqcModule:
             Dictionary of headers to add to general stats
         """
         # Get general stats config for this module
-        module_config: Dict[ColumnKey, ColumnDict] = {}
+        module_config: dict[ColumnKey, ColumnDict] = {}
         for k, v in config.general_stats_columns.items():
             if (sp_key and k == sp_key) or k.split("/")[0] in [self.id, self.name]:
-                module_config = cast(Dict[ColumnKey, ColumnDict], v.get("columns", {}))
+                module_config = cast(dict[ColumnKey, ColumnDict], v.get("columns", {}))
                 break
-        general_stats_headers: Dict[ColumnKey, ColumnDict] = {}
+        general_stats_headers: dict[ColumnKey, ColumnDict] = {}
 
         # Check if we have a valid config for this module
         if module_config:
@@ -1466,9 +1441,9 @@ class BaseMultiqcModule:
                     h.update(module_config[ColumnKey(k)] or {})
                     general_stats_headers[ColumnKey(k)] = h
             # Add custom columns that are not in default headers
-            for sp_key, col_conf in module_config.items():
-                if sp_key not in all_headers:
-                    general_stats_headers[ColumnKey(sp_key)] = col_conf
+            for custom_key, col_conf in module_config.items():
+                if custom_key not in all_headers:
+                    general_stats_headers[ColumnKey(custom_key)] = col_conf
 
         elif all_headers:
             # Default behavior - use all headers

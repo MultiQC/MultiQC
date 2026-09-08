@@ -2,7 +2,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any
 
 import multiqc
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,7 +48,7 @@ def avg_x_label(x_label: str) -> int:
     return min_x + ((max_x - min_x) // 2)
 
 
-def get_insert_size_estimate(insert_sizes: List[int]) -> int:
+def get_insert_size_estimate(insert_sizes: list[int]) -> int:
     """
     Given a list of counts, return the cell index with the median count
     :param insert_sizes: List of insert size counts where index represents insert size
@@ -73,7 +73,7 @@ def get_insert_size_estimate(insert_sizes: List[int]) -> int:
     return len(insert_sizes) - 1
 
 
-def prune_sample_dict(sample_dict: Dict[str, Any]):
+def prune_sample_dict(sample_dict: dict[str, Any]):
     """
     Function to remove unused keys from the parsed data. This prevents loading
     them into memory long-term wich reduces memory usage.
@@ -86,9 +86,11 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
         "per_position_quality_distribution_read2",
         "per_tile_quality",
         # Per tile quality is not analysed by multiqc and uses a lot of space
-        "per_tile_quality_read2"
-        # Nanopore metrics for pore data do not have modules yet
-        "nanopore_metrics",
+        (
+            "per_tile_quality_read2"
+            # Nanopore metrics for pore data do not have modules yet
+            "nanopore_metrics"
+        ),
     ]
     for key in keys_to_delete:
         sample_dict.pop(key, None)
@@ -167,9 +169,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(versions) != 1:
             log.warning(f"Multiple Sequali versions found: {','.join(versions)}")
-        max_length = sorted(max_lengths, reverse=True)[0]
+        max_length = max(max_lengths)
         self.max_length = max_length
-        min_length = sorted(min_lengths)[0]
+        min_length = min(min_lengths)
         self.lengths_differ = True
         self.use_xlog = False
         if len(min_lengths) == 1 and len(max_lengths) == 1 and min_length == max_length:
@@ -198,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             total_counts = sum(quality_counts)
             return prod / total_counts
 
-        general_stats = dict()
+        general_stats = {}
         for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
             stats_entry = {
@@ -587,7 +589,7 @@ class MultiqcModule(BaseMultiqcModule):
                 total_bases = sum(count * x_label for x_label, count in zip(x_labels, counts))
                 total_bases = max(total_bases, 1)
 
-                plot_data[1][sample_name] = {x_label: count for x_label, count in zip(x_labels, counts)}
+                plot_data[1][sample_name] = dict(zip(x_labels, counts))
                 # Calculate percentage of bases in each length category for the percentage plot. This is more
                 # informative than percentage of sequences as it takes into account the amount of data (bases).
                 plot_data[0][sample_name] = {
@@ -722,7 +724,7 @@ class MultiqcModule(BaseMultiqcModule):
             sequence_matches = {}
             sequence_counts = defaultdict(lambda: 0)
             sequence_fractions = defaultdict(lambda: 0.0)
-            for sample_data, sample_dict in data.items():
+            for sample_dict in data.values():
                 overrepr_dict = sample_dict.get(key)
                 if overrepr_dict is None:
                     continue

@@ -7,7 +7,7 @@ import uuid
 from collections import defaultdict
 from itertools import chain
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 from natsort import natsorted
 
@@ -203,24 +203,24 @@ class MultiqcModule(BaseMultiqcModule):
         """
         # File cache to avoid reading the same JSON files multiple times
         # Key: resolved file path, Value: parsed JSON data
-        self._file_cache: Dict[str, Any] = {}
+        self._file_cache: dict[str, Any] = {}
 
         # === Run-level data structures ===
         # Populated from <run_output>/RunStats.json
-        self.run_level_data: Dict[str, Any] = {}  # run_name -> full run stats
-        self.run_level_samples: Dict[str, Any] = {}  # sample_id -> sample stats
-        self.run_level_samples_to_project: Dict[str, str] = {}  # sample_id -> project name
+        self.run_level_data: dict[str, Any] = {}  # run_name -> full run stats
+        self.run_level_samples: dict[str, Any] = {}  # sample_id -> sample stats
+        self.run_level_samples_to_project: dict[str, str] = {}  # sample_id -> project name
 
         # === Project-level data structures ===
         # Populated from <run_output>/Samples/<project>/RunStats.json
-        self.project_level_data: Dict[str, Any] = {}  # project_name -> project stats
-        self.project_level_samples: Dict[str, Any] = {}  # sample_id -> sample stats
-        self.project_level_samples_to_project: Dict[str, str] = {}  # sample_id -> project name
+        self.project_level_data: dict[str, Any] = {}  # project_name -> project stats
+        self.project_level_samples: dict[str, Any] = {}  # sample_id -> sample stats
+        self.project_level_samples_to_project: dict[str, str] = {}  # sample_id -> project name
 
         # === Grouping structures for color assignment ===
-        self.group_dict: Dict[str, Any] = {}  # group_name -> list of members
-        self.group_lookup_dict: Dict[str, Any] = {}  # item -> group it belongs to
-        self.project_lookup_dict: Dict[str, Any] = {}  # sample -> project mapping
+        self.group_dict: dict[str, Any] = {}  # group_name -> list of members
+        self.group_lookup_dict: dict[str, Any] = {}  # item -> group it belongs to
+        self.project_lookup_dict: dict[str, Any] = {}  # sample -> project mapping
 
     def _validate_path(self, file_path: Path, base_directory: Path) -> bool:
         """
@@ -246,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             return False
 
-    def _read_json_file(self, file_path: Path, base_directory: Optional[Path] = None) -> Optional[Dict[str, Any]]:
+    def _read_json_file(self, file_path: Path, base_directory: Optional[Path] = None) -> Optional[dict[str, Any]]:
         """
         Read and parse a JSON file with caching.
 
@@ -374,8 +374,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _select_data_by_summary_path(
         self, summary_path: str
-    ) -> Tuple[
-        Dict[str, Any], Dict[str, Any], Dict[str, str], Dict[str, Any], Dict[str, Any], Dict[int, Dict[str, Any]]
+    ) -> tuple[
+        dict[str, Any], dict[str, Any], dict[str, str], dict[str, Any], dict[str, Any], dict[int, dict[str, Any]]
     ]:
         """
         Select the appropriate data sources based on the summary path.
@@ -421,13 +421,13 @@ class MultiqcModule(BaseMultiqcModule):
             raise ModuleNoSamplesFound(error_msg)
 
     def _setup_colors(
-        self, sample_data: Dict[str, Any], samples_to_projects: Dict[str, str], summary_path: str
+        self, sample_data: dict[str, Any], samples_to_projects: dict[str, str], summary_path: str
     ) -> None:
         """Set up color schemes for groups and samples."""
         # Create run and project groups
-        run_groups: Dict[str, List] = defaultdict(list)
-        project_groups: Dict[str, List] = defaultdict(list)
-        ind_sample_groups: Dict[str, List] = defaultdict(list)
+        run_groups: dict[str, list] = defaultdict(list)
+        project_groups: dict[str, list] = defaultdict(list)
+        ind_sample_groups: dict[str, list] = defaultdict(list)
 
         for sample in natsorted(sample_data.keys()):
             run_name, _ = sample.split("__", maxsplit=1)
@@ -455,13 +455,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.palette = self.palette + extra_colors
 
         # Assign colors to groups
-        self.group_color = {
-            group: color for group, color in zip(merged_groups.keys(), self.palette[: len(merged_groups)])
-        }
+        self.group_color = dict(zip(merged_groups.keys(), self.palette[: len(merged_groups)]))
 
         # Assign colors to samples. Prefer the most meaningful grouping available:
         # project (when multiple), then run (when multiple), then per-sample.
-        self.sample_color: Dict[str, str] = {}
+        self.sample_color: dict[str, str] = {}
         for sample_name in natsorted(samples_to_projects.keys()):
             if summary_path == "project_level":
                 sample_color = self.group_color[sample_name]
@@ -481,12 +479,12 @@ class MultiqcModule(BaseMultiqcModule):
     def _generate_plots(
         self,
         summary_path: str,
-        run_data: Dict[str, Any],
-        sample_data: Dict[str, Any],
-        samples_to_projects: Dict[str, str],
-        manifest_data: Dict[str, Any],
-        index_assignment_data: Dict[str, Any],
-        unassigned_sequences: Dict[int, Dict[str, Any]],
+        run_data: dict[str, Any],
+        sample_data: dict[str, Any],
+        samples_to_projects: dict[str, str],
+        manifest_data: dict[str, Any],
+        index_assignment_data: dict[str, Any],
+        unassigned_sequences: dict[int, dict[str, Any]],
     ) -> None:
         """Generate all plots and add sections to the report."""
         # QC metrics table
@@ -523,7 +521,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _extract_run_analysis_name(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         source_info: str = "RunStats.json",
     ) -> Optional[str]:
         """
@@ -551,8 +549,8 @@ class MultiqcModule(BaseMultiqcModule):
         return f"{run_name}-{analysis_id[0:4]}"
 
     def _parse_run_project_data(
-        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, str]]:
+        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> tuple[dict[str, Any], dict[str, Any], dict[str, str]]:
         """
         Parse RunStats.json files to extract run/project and sample-level data.
 
@@ -573,9 +571,9 @@ class MultiqcModule(BaseMultiqcModule):
         Data Flow:
             RunStats.json -> parse -> filter samples by min_polonies -> populate dicts
         """
-        runs_global_data: Dict[str, Any] = {}
-        runs_sample_data: Dict[str, Any] = {}
-        sample_to_project: Dict[str, str] = {}
+        runs_global_data: dict[str, Any] = {}
+        runs_sample_data: dict[str, Any] = {}
+        sample_to_project: dict[str, str] = {}
         if data_source == "":
             return (runs_global_data, runs_sample_data, sample_to_project)
 
@@ -610,7 +608,7 @@ class MultiqcModule(BaseMultiqcModule):
                 sample_id = sample_data["SampleID"]
                 sample_name = sample_data["SampleName"]
                 sample_data["RunName"] = run_name
-                run_analysis_sample_name = "__".join([run_analysis_name, sample_name])
+                run_analysis_sample_name = f"{run_analysis_name}__{sample_name}"
 
                 num_polonies = sample_data["NumPolonies"]
                 if num_polonies < self.min_polonies:
@@ -636,8 +634,8 @@ class MultiqcModule(BaseMultiqcModule):
         return (runs_global_data, runs_sample_data, sample_to_project)
 
     def _extract_manifest_lane_settings(
-        self, run_manifest_data: Dict[str, Any], run_analysis_name: str
-    ) -> Dict[str, Dict[str, Any]]:
+        self, run_manifest_data: dict[str, Any], run_analysis_name: str
+    ) -> dict[str, dict[str, Any]]:
         """
         Extract per-lane settings from a parsed RunManifest.json Settings section.
 
@@ -649,7 +647,7 @@ class MultiqcModule(BaseMultiqcModule):
             Dict[run_lane, settings] where run_lane = "{run_analysis_name} | L{lane_id}"
             and settings contain Indexing, AdapterTrimType, R1/R2AdapterMinimumTrimmedLength
         """
-        result: Dict[str, Dict[str, Any]] = {}
+        result: dict[str, dict[str, Any]] = {}
         if "Settings" not in run_manifest_data:
             return result
         for lane_data in run_manifest_data["Settings"]:
@@ -664,7 +662,7 @@ class MultiqcModule(BaseMultiqcModule):
             indices = []
             indices_cycles = []
             mask_pattern = re.compile(r"^I\d+Mask$")
-            matching_keys = [key for key in lane_data.keys() if mask_pattern.match(key)]
+            matching_keys = [key for key in lane_data if mask_pattern.match(key)]
             for key in matching_keys:
                 for mask_info in lane_data[key]:
                     if mask_info["Read"] not in indices:
@@ -678,8 +676,8 @@ class MultiqcModule(BaseMultiqcModule):
         return result
 
     def _parse_run_manifest(
-        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Dict[str, Any]:
+        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> dict[str, Any]:
         """
         Parse RunManifest.json for run-level analysis to extract lane and adapter settings.
 
@@ -695,7 +693,7 @@ class MultiqcModule(BaseMultiqcModule):
         Returns:
             Dict[run_lane, settings] where run_lane = "{run_name} | L{lane_id}"
         """
-        runs_manifest_data: Dict[str, Dict[str, Any]] = {}
+        runs_manifest_data: dict[str, dict[str, Any]] = {}
 
         if data_source == "":
             return runs_manifest_data
@@ -729,8 +727,8 @@ class MultiqcModule(BaseMultiqcModule):
         return runs_manifest_data
 
     def _parse_run_manifest_in_project(
-        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Dict[str, Any]:
+        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> dict[str, Any]:
         """
         Parse RunManifest.json for project-level analysis.
 
@@ -742,7 +740,7 @@ class MultiqcModule(BaseMultiqcModule):
             + ../../RunManifest.json (run-level manifest)
             -> Extract per-lane settings
         """
-        project_manifest_data: Dict[str, Dict[str, Any]] = {}
+        project_manifest_data: dict[str, dict[str, Any]] = {}
 
         if data_source == "":
             return project_manifest_data
@@ -793,10 +791,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _build_index_assignment_from_stats(
         self,
-        stats_dict: Dict[str, Any],
+        stats_dict: dict[str, Any],
         run_analysis_name: str,
         project: Optional[str] = None,
-    ) -> Tuple[Dict[str, Dict[str, Any]], int]:
+    ) -> tuple[dict[str, dict[str, Any]], int]:
         """
         Build per-run index assignment dict from RunStats SampleStats/Occurrences.
 
@@ -804,13 +802,13 @@ class MultiqcModule(BaseMultiqcModule):
             Tuple of (run_inner_dict, total_polonies). run_inner_dict is
             { merged_expected_sequence -> { SampleID, SamplePolonyCounts, PercentOfPolonies, Index1, Index2, ... } }
         """
-        run_inner: Dict[str, Dict[str, Any]] = {}
+        run_inner: dict[str, dict[str, Any]] = {}
         total_polonies = stats_dict.get("NumPoloniesBeforeTrimming", 0)
         if "SampleStats" not in stats_dict:
             return (run_inner, total_polonies)
         for sample_data in stats_dict["SampleStats"]:
             sample_name = sample_data.get("SampleName")
-            sample_id = "__".join([run_analysis_name, sample_name]) if (run_analysis_name and sample_name) else None
+            sample_id = f"{run_analysis_name}__{sample_name}" if (run_analysis_name and sample_name) else None
             if "Occurrences" not in sample_data:
                 log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
                 continue
@@ -821,7 +819,7 @@ class MultiqcModule(BaseMultiqcModule):
                     log.error(f"Missing data needed to extract index assignment for sample {sample_id}. Skipping.")
                     continue
                 if sample_expected_seq not in run_inner:
-                    entry: Dict[str, Any] = {
+                    entry: dict[str, Any] = {
                         "SampleID": sample_id,
                         "SamplePolonyCounts": 0,
                         "PercentOfPolonies": float("nan"),
@@ -839,8 +837,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _merge_manifest_index_sequences(
         self,
-        sample_to_index_assignment: Dict[str, Any],
-        run_manifest_data: Dict[str, Any],
+        sample_to_index_assignment: dict[str, Any],
+        run_manifest_data: dict[str, Any],
         run_analysis_name: str,
     ) -> None:
         """Merge Index1/Index2 from RunManifest Samples into sample_to_index_assignment (mutates)."""
@@ -851,7 +849,7 @@ class MultiqcModule(BaseMultiqcModule):
             sample_name = sample_data.get("SampleName")
             if run_analysis_name is None or sample_name is None or "Indexes" not in sample_data:
                 continue
-            sample_id = "__".join([run_analysis_name, sample_name])
+            sample_id = f"{run_analysis_name}__{sample_name}"
             for index_data in sample_data["Indexes"]:
                 index_1 = index_data.get("Index1", "")
                 index_2 = index_data.get("Index2", "")
@@ -869,8 +867,8 @@ class MultiqcModule(BaseMultiqcModule):
                 run_data[merged_indices]["Index2"] = index_2
 
     def _parse_run_unassigned_sequences(
-        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Dict[int, Dict[str, Any]]:
+        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> dict[int, dict[str, Any]]:
         """
         Parse unassigned/unknown barcode sequences from run-level data.
 
@@ -881,7 +879,7 @@ class MultiqcModule(BaseMultiqcModule):
             RunStats.json -> Lanes -> UnassignedSequences
             -> Extract: sequence, count, percentage of total polonies
         """
-        run_unassigned_sequences: Dict[int, Dict[str, Any]] = {}
+        run_unassigned_sequences: dict[int, dict[str, Any]] = {}
         if data_source == "":
             return run_unassigned_sequences
 
@@ -931,8 +929,8 @@ class MultiqcModule(BaseMultiqcModule):
         return run_unassigned_sequences
 
     def _parse_index_assignment(
-        self, manifest_data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Dict[str, Any]:
+        self, manifest_data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> dict[str, Any]:
         """
         Parse index assignment statistics for run-level analysis.
 
@@ -944,7 +942,7 @@ class MultiqcModule(BaseMultiqcModule):
             + RunManifest.json -> Samples -> index sequences (Index1, Index2)
             -> Combined index assignment table
         """
-        sample_to_index_assignment: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        sample_to_index_assignment: dict[str, dict[str, dict[str, Any]]] = {}
 
         if manifest_data_source == "":
             return sample_to_index_assignment
@@ -996,8 +994,8 @@ class MultiqcModule(BaseMultiqcModule):
         return sample_to_index_assignment
 
     def _parse_index_assignment_in_project(
-        self, data_source: str, log_files: Optional[List[LoadedFileDict[Any]]] = None
-    ) -> Dict[str, Any]:
+        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+    ) -> dict[str, Any]:
         """
         Parse index assignment statistics for project-level analysis.
 
@@ -1009,7 +1007,7 @@ class MultiqcModule(BaseMultiqcModule):
             + ../../RunManifest.json -> Samples -> index sequences
             -> Combined index assignment table
         """
-        sample_to_index_assignment: Dict[str, Dict[str, Dict[str, Any]]] = {}
+        sample_to_index_assignment: dict[str, dict[str, dict[str, Any]]] = {}
 
         if data_source == "":
             return sample_to_index_assignment
@@ -1066,7 +1064,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return sample_to_index_assignment
 
-    def add_run_plots(self, data: Dict[Any, Any], plot_functions: List[Callable]) -> None:
+    def add_run_plots(self, data: dict[Any, Any], plot_functions: list[Callable]) -> None:
         if not data:
             return
         for func in plot_functions:
@@ -1083,11 +1081,11 @@ class MultiqcModule(BaseMultiqcModule):
                 self.write_data_file(plot_data, f"base2fastq:{plot_name}")
 
     def add_sample_plots(
-        self, data: Dict[str, Any], group_lookup: Dict[str, str], project_lookup: Dict[str, str]
+        self, data: dict[str, Any], group_lookup: dict[str, str], project_lookup: dict[str, str]
     ) -> None:
         if not data:
             return
-        plot_functions: List[Callable] = [
+        plot_functions: list[Callable] = [
             tabulate_sample_stats,
             sequence_content_plot,
             plot_per_cycle_N_content,

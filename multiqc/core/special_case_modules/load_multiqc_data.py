@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Optional, Union, cast
 
 import packaging.version
 import polars as pl
@@ -29,7 +29,7 @@ from multiqc.types import Anchor, PlotType
 log = logging.getLogger(__name__)
 
 
-def create_plot_input_data_only(plot_input_data_dict: Dict) -> NormalizedPlotInputData:
+def create_plot_input_data_only(plot_input_data_dict: dict) -> NormalizedPlotInputData:
     """
     Create only the plot input data object from a dictionary, without creating the plot object.
     """
@@ -106,7 +106,7 @@ def create_plot_from_input_data(plot_input: NormalizedPlotInputData) -> Union[Pl
         return None
 
 
-def load_plot_input(plot_input_data_dict: Dict) -> Tuple[NormalizedPlotInputData, Union[Plot, str, None]]:
+def load_plot_input(plot_input_data_dict: dict) -> tuple[NormalizedPlotInputData, Union[Plot, str, None]]:
     """
     Load plot input data and create plot object from a dictionary.
     This function combines create_plot_input_data_only and create_plot_from_input_data.
@@ -125,7 +125,7 @@ class LoadMultiqcData(BaseMultiqcModule):
         )
 
         # Dictionary to collect all software versions from all parquet files
-        self.collected_software_versions: Dict[str, List[str]] = {}
+        self.collected_software_versions: dict[str, list[str]] = {}
 
         # First, try to find parquet file
         parquet_files = self.find_log_files("multiqc_data")
@@ -178,7 +178,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                         sections.append(Section(**section_data))
 
                     # Convert versions to expected format
-                    versions: Dict[str, List[Tuple[Optional[packaging.version.Version], str]]] = {}
+                    versions: dict[str, list[tuple[Optional[packaging.version.Version], str]]] = {}
                     if "versions" in mod_dict:
                         versions_data = mod_dict.pop("versions")
                         versions = {
@@ -320,7 +320,7 @@ class LoadMultiqcData(BaseMultiqcModule):
             if "software_versions" in metadata:
                 software_versions_data = metadata["software_versions"]
                 log.debug("Loading global software versions data from parquet file")
-                for group_name, group_versions in software_versions_data.items():
+                for group_versions in software_versions_data.values():
                     for software_name, versions_list in group_versions.items():
                         # Collect software versions for later processing
                         if software_name not in self.collected_software_versions:
@@ -384,12 +384,12 @@ class LoadMultiqcData(BaseMultiqcModule):
                     except Exception as e:
                         log.error(f"Error loading plot input data {anchor}: {e}")
                         if config.strict:
-                            raise e
+                            raise
 
         except Exception as e:
             log.error(f"Error loading data from parquet file: {e}")
             if config.strict:
-                raise e
+                raise
 
     def _process_collected_software_versions(self):
         """
@@ -434,4 +434,4 @@ class LoadMultiqcData(BaseMultiqcModule):
             except Exception as e:
                 log.error(f"Error creating plot object for {anchor}: {e}")
                 if config.strict:
-                    raise e
+                    raise

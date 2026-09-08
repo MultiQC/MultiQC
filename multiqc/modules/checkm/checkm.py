@@ -155,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}
 
     def mag_quality_table(self, data_by_sample):
-        lineages = list(set(d.get("Marker lineage") for d in data_by_sample.values()))
+        lineages = list({d.get("Marker lineage") for d in data_by_sample.values()})
         scale = mqc_colour.mqc_colour_scale("Dark2")
         lineages_colors = [{v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(lineages)]
         headers = {

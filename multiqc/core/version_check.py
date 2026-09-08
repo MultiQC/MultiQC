@@ -3,7 +3,7 @@ import os
 import platform
 import re
 import sys
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import requests
 from packaging import version
@@ -35,7 +35,7 @@ def check_version(interactive_function_name: Optional[str] = None):
 
     try:
         # Fetch the version info from the API
-        meta: Dict[str, Union[str, bool, None]] = {
+        meta: dict[str, Union[str, bool, None]] = {
             "version_multiqc": config.short_version,
             "version_python": platform.python_version(),
             "operating_system": platform.system(),
@@ -43,7 +43,7 @@ def check_version(interactive_function_name: Optional[str] = None):
             "is_singularity": os.path.exists("/.singularity.d"),
             "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
             "is_uv": _is_uv_installed(),
-            "is_ci": strtobool(os.getenv("CI", False)),
+            "is_ci": strtobool(os.getenv("CI", "false")),
             "is_notebook": is_running_in_notebook(),
             "interactive_function_name": interactive_function_name,
             "ai_summary": config.ai_summary,

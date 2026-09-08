@@ -237,7 +237,7 @@ class MultiqcModule(BaseMultiqcModule):
         if f["s_name"] in self.bismark_data["bam2nuc"]:
             log.debug(f"Duplicate deduplication sample log found! Overwriting: {f['s_name']}")
         self.add_data_source(f, section="bam2nuc")
-        self.bismark_data["bam2nuc"][f["s_name"]] = dict()
+        self.bismark_data["bam2nuc"][f["s_name"]] = {}
 
         headers = None
         for line in f["f"]:
@@ -258,10 +258,10 @@ class MultiqcModule(BaseMultiqcModule):
         basic stats table at the top of the report"""
 
         headers = {
-            "alignment": dict(),
-            "dedup": dict(),
-            "methextract": dict(),
-            "bam2nuc": dict(),
+            "alignment": {},
+            "dedup": {},
+            "methextract": {},
+            "bam2nuc": {},
         }
         headers["methextract"]["percent_cpg_meth"] = {
             "title": "mCpG",
@@ -382,7 +382,7 @@ class MultiqcModule(BaseMultiqcModule):
         directional = 0
         d_mode = ""
         for sn in self.bismark_data["alignment"].values():
-            if "strand_directional" in sn.keys():
+            if "strand_directional" in sn:
                 directional += 1
         if directional == len(self.bismark_data["alignment"]):
             keys.pop("strand_ctob", None)

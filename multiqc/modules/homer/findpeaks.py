@@ -11,7 +11,7 @@ class FindPeaksReportMixin:
     def parse_homer_findpeaks(self):
         """Find HOMER findpeaks logs and parse their data"""
 
-        self.homer_findpeaks = dict()
+        self.homer_findpeaks = {}
         for f in self.find_log_files("homer/findpeaks", filehandles=True):
             self.parse_find_peaks(f)
 
@@ -57,7 +57,7 @@ class FindPeaksReportMixin:
 
     def parse_find_peaks(self, f):
         """Parse HOMER findPeaks file headers."""
-        parsed_data = dict()
+        parsed_data = {}
         s_name = f["s_name"]
         for line in f["f"]:
             # Start of data

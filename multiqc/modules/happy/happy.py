@@ -25,8 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.happy_raw_sample_names = set()
-        self.happy_indel_data = dict()
-        self.happy_snp_data = dict()
+        self.happy_indel_data = {}
+        self.happy_snp_data = {}
 
         for f in self.find_log_files("happy", filehandles=True):
             self.parse_file(f)

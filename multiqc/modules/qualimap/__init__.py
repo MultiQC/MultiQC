@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 from multiqc import BaseMultiqcModule
 from multiqc.modules.qualimap.qualimap import MultiqcModule
@@ -22,12 +22,12 @@ def parse_version(f) -> Optional[str]:
 
 
 def parse_numerals(
-    preparsed_d: Dict[str, str],
-    float_metrics: Dict[str, str],
-    int_metrics: Dict[str, str],
-    rate_metrics: Dict[str, str],
+    preparsed_d: dict[str, str],
+    float_metrics: dict[str, str],
+    int_metrics: dict[str, str],
+    rate_metrics: dict[str, str],
     fpath: str,
-) -> Dict[str, Union[int, float, str]]:
+) -> dict[str, Union[int, float, str]]:
     """
     Take pre-parsed Qualimap report (keys to string values), and properly parse
     numeral values, taking regional formats into account.
@@ -90,7 +90,7 @@ def parse_numerals(
     if decimalcomma is None:
         log.debug(f"Couldn't determine decimal separator for file {fpath}")
 
-    d: Dict = {}
+    d: dict = {}
     for k, v in preparsed_d.items():
         v = v.strip("X").strip("%")
         if k in float_metrics or k in rate_metrics or k in int_metrics:

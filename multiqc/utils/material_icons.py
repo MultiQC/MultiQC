@@ -8,12 +8,12 @@ across all MultiQC templates and Python code using the Iconify naming scheme.
 import logging
 import re
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
 # Cache for loaded SVG content
-_svg_cache: Dict[str, str] = {}
+_svg_cache: dict[str, str] = {}
 
 
 def get_material_icon_path() -> Path:

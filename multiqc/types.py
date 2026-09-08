@@ -1,7 +1,7 @@
 import dataclasses
 import io
 from enum import Enum
-from typing import ClassVar, Generic, List, NewType, Optional, TypeVar, Union
+from typing import ClassVar, Generic, NewType, Optional, TypeVar, Union
 
 # Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
 from pydantic import BaseModel, Field, field_validator
@@ -27,7 +27,7 @@ class SoftwareVersionMetadata:
 
     license: Optional[str] = None
     license_url: Optional[str] = None
-    doi: List[str] = dataclasses.field(default_factory=list)
+    doi: list[str] = dataclasses.field(default_factory=list)
 
 
 class FileDict(TypedDict):
@@ -89,13 +89,13 @@ class PlotType(Enum):
             return PlotType.SCATTER
         elif val in ["violin", "beeswarm", "violinplot", "violin_plot", "violin plot"]:
             return PlotType.VIOLIN
-        elif val in ["heatmap"]:
+        elif val == "heatmap":
             return PlotType.HEATMAP
-        elif val in ["table"]:
+        elif val == "table":
             return PlotType.TABLE
-        elif val in ["html"]:
+        elif val == "html":
             return PlotType.HTML
-        elif val in ["image"]:
+        elif val == "image":
             return PlotType.IMAGE
         elif val in ["generalstats", "general_stats", "general stats"]:
             return PlotType.GENERALSTATS
@@ -106,9 +106,9 @@ class PlotType(Enum):
 class SampleNameMeta:
     original_name: SampleName
     trimmed_name: Optional[SampleName] = None
-    trimmed_suffixes: List[str] = dataclasses.field(default_factory=list)
+    trimmed_suffixes: list[str] = dataclasses.field(default_factory=list)
     group: Optional[SampleGroup] = None
-    labels: List[str] = dataclasses.field(default_factory=list)
+    labels: list[str] = dataclasses.field(default_factory=list)
 
 
 class SectionAlert(BaseModel):
@@ -116,7 +116,7 @@ class SectionAlert(BaseModel):
 
     message: str
     level: str = "info"
-    affected_samples: List[str] = Field(default_factory=list)
+    affected_samples: list[str] = Field(default_factory=list)
 
     @field_validator("level")
     @classmethod
@@ -144,4 +144,4 @@ class Section(BaseModel):
     plot_anchor: Optional[Anchor] = None
     ai_summary: str = ""
     status_bar_html: str = ""
-    alerts: List[SectionAlert] = Field(default_factory=list)
+    alerts: list[SectionAlert] = Field(default_factory=list)

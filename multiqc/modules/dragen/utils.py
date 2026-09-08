@@ -47,11 +47,11 @@ def make_headers(parsed_metric_ids, metrics):
     own_tabl_headers = {}
 
     for metric in metrics:
-        col = dict(
-            title=metric.title,
-            description=metric.descr,
-            min=0,
-        )
+        col = {
+            "title": metric.title,
+            "description": metric.descr,
+            "min": 0,
+        }
 
         # choosing color based on metric namespace, guessing namespace by unit
         if metric.unit == "reads":
@@ -136,7 +136,7 @@ def make_headers(parsed_metric_ids, metrics):
 
 
 def exist_and_number(data, *metrics):
-    return all(isinstance(data.get(m, None), int) or isinstance(data.get(m, None), float) for m in metrics)
+    return all(isinstance(data.get(m, None), (int, float)) for m in metrics)
 
 
 def check_duplicate_samples(sample_names, logger):

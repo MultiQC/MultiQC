@@ -1,7 +1,7 @@
 import json
 import logging
 import re
-from typing import Dict, Optional
+from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.cellranger_arc.utils import (
@@ -47,19 +47,19 @@ class MultiqcModule(BaseMultiqcModule):
             license="10x Genomics License",
             license_url=None,
         )
-        data_by_sample: Dict[str, Dict] = dict()
-        warnings_by_sample: Dict[str, Dict] = dict()
-        self.warnings_headers: Dict[str, Dict] = dict()
-        self.all_headers: Dict[str, Dict] = dict()
-        self.plots_data_by_sample: Dict[str, Dict] = {
-            "tss": dict(),
-            "insert_size": dict(),
-            "saturation": dict(),
-            "genes": dict(),
+        data_by_sample: dict[str, dict] = {}
+        warnings_by_sample: dict[str, dict] = {}
+        self.warnings_headers: dict[str, dict] = {}
+        self.all_headers: dict[str, dict] = {}
+        self.plots_data_by_sample: dict[str, dict] = {
+            "tss": {},
+            "insert_size": {},
+            "saturation": {},
+            "genes": {},
         }
 
         for f in self.find_log_files("cellranger_arc", filehandles=True):
-            summary: Optional[Dict] = None
+            summary: Optional[dict] = None
             for line in f["f"]:
                 line = line.strip()
                 if line.startswith("const data"):
@@ -89,12 +89,12 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[s_name] = parsed_data
             if len(warnings) > 0:
                 warnings_by_sample[s_name] = warnings
-            for plot_type in self.plots_data_by_sample.keys():
+            for plot_type in self.plots_data_by_sample:
                 self.plots_data_by_sample[plot_type][s_name] = plots_data_by_id[plot_type]
 
         data_by_sample = self.ignore_samples(data_by_sample)
         warnings_by_sample = self.ignore_samples(warnings_by_sample)
-        for k in self.plots_data_by_sample.keys():
+        for k in self.plots_data_by_sample:
             self.plots_data_by_sample[k] = self.ignore_samples(self.plots_data_by_sample[k])
 
         if len(data_by_sample) == 0:
@@ -140,9 +140,9 @@ class MultiqcModule(BaseMultiqcModule):
         2. ATAC metrics (namespace="ATAC") - ATAC-specific metrics
         3. GEX metrics (namespace="GEX") - GEX-specific metrics
         """
-        parsed_data: Dict[str, Dict] = dict()
-        warnings = dict()
-        plots_data_by_id = dict()
+        parsed_data: dict[str, dict] = {}
+        warnings = {}
+        plots_data_by_id = {}
 
         # Parse joint metrics (no namespace prefix)
         joint_data_rows = summary["joint_metrics_table"]["rows"]

@@ -1,7 +1,7 @@
 """MultiQC submodule to parse output from Picard ValidateSamFile"""
 
 import logging
-from typing import List, Tuple, Union
+from typing import Union
 
 from multiqc.plots import table
 from multiqc.plots.plot import Plot
@@ -116,7 +116,7 @@ def _parse_reports_by_type(module):
     type.
     """
 
-    data_by_sample = dict()
+    data_by_sample = {}
 
     for f in module.find_log_files("picard/sam_file_validation", filehandles=True):
         module.add_data_source(f, "ValidateSamFile")
@@ -132,7 +132,7 @@ def _parse_reports_by_type(module):
 
         if "No errors found" in first_line:
             sample_data = _parse_no_error_report()
-        elif first_line.startswith("ERROR") or first_line.startswith("WARNING"):
+        elif first_line.startswith(("ERROR", "WARNING")):
             sample_data = _parse_verbose_report(fh)
         else:
             sample_data = _parse_summary_report(fh)
@@ -289,7 +289,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     status."""
 
     note_html = ['<div class="progress">']
-    pbars: List[Tuple[float, str, str]] = [
+    pbars: list[tuple[float, str, str]] = [
         (float(error_count), "danger", "had errors"),
         (float(only_warning_count), "warning", "had warnings"),
         (float(pass_count), "success", "passed"),

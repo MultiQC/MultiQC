@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def prepare_data(self):
         # Parse logs
-        self.bustools_data = dict()
+        self.bustools_data = {}
         for f in self.find_log_files("bustools", filehandles=True):
             content = json.load(f["f"])
             # In https://github.com/MultiQC/MultiQC/issues/3049 Bustools was changed to "Onlist" instead of "OnWhitelist"
@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {}
         for header, v in self.headers.items():
             if header in general_stats_headers:
-                headers[header] = {key: value for key, value in v.items()}  # deep copy
+                headers[header] = dict(v.items())  # deep copy
                 if header not in ["numRecords", "numUMIs", "percentageReadsOnWhitelist"]:
                     headers[header]["hidden"] = True
         self.general_stats_addcols(self.bustools_data, headers)

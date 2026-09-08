@@ -682,7 +682,7 @@ def make_bed_texts(overall_mean_cov_data, coverage_data):
             else:
                 # Just 1 source file for all samples?
                 if len(bed_sources) == 1:
-                    text_description = "All samples are based on the " + extract_source(list(bed_sources)[0]) + "."
+                    text_description = "All samples are based on the " + extract_source(next(iter(bed_sources))) + "."
 
                 # There are at least 2 source files.
                 else:

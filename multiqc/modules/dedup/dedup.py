@@ -33,13 +33,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any DeDup reports
-        self.dedup_data = dict()
+        self.dedup_data = {}
 
         for f in self.find_log_files("dedup", filehandles=True):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning(f"Error loading file {f['fn']}")
+                log.warning(f"Error loading file {f['fn']}")
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)

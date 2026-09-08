@@ -15,7 +15,7 @@ class DragenGcMetrics(BaseMultiqcModule):
     NAMESPACE = "GC Metrics"
 
     def add_gc_metrics_hist(self):
-        data_by_sample = dict()
+        data_by_sample = {}
 
         for f in self.find_log_files("dragen/gc_metrics"):
             data = parse_gc_metrics_file(f)
@@ -101,7 +101,7 @@ class DragenGcMetrics(BaseMultiqcModule):
         analysis = "GC METRICS SUMMARY"
         summary_data = {}
         for sample_name, sample_data in data_by_sample.items():
-            summary_data[sample_name] = {metric: stat for metric, stat in sample_data[analysis].items()}
+            summary_data[sample_name] = dict(sample_data[analysis].items())
 
         return summary_data
 
@@ -137,9 +137,8 @@ def parse_gc_metrics_file(f):
         # Percentage is currently unused
         if len(tokens) == 4:
             analysis, _, metric, stat = tokens
-            percentage = None
         elif len(tokens) == 5:
-            analysis, _, metric, stat, percentage = tokens
+            analysis, _, metric, stat, _percentage = tokens
         else:
             raise ValueError(f"Unexpected number of tokens in line {line}")
 

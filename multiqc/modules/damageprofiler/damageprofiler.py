@@ -20,11 +20,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Init empty dictionaries
-        self.threepGtoAfreq_data = dict()
-        self.fivepCtoTfreq_data = dict()
-        self.lgdist_fw_data = dict()
-        self.lgdist_rv_data = dict()
-        self.summary_metrics_data = dict()
+        self.threepGtoAfreq_data = {}
+        self.fivepCtoTfreq_data = {}
+        self.lgdist_fw_data = {}
+        self.lgdist_rv_data = {}
+        self.summary_metrics_data = {}
 
         # Find and load JSON file
         for f in self.find_log_files("damageprofiler", filehandles=True):
@@ -149,14 +149,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
-        dict_to_add = dict()
+        dict_to_add = {}
 
-        for key in dict_to_plot.keys():
+        for key in dict_to_plot:
             tmp = dict_to_plot[key]
             pos = [readend + "1", readend + "2"]
             strlist = tmp[:2]
             tuples = list(zip(pos, strlist))
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             # Extract first two elements from list
             dict_to_add[key] = data
 
@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
     def lgdistplot(self, dict_to_use, orientation):
         """Generate a read length distribution plot"""
 
-        data = dict()
+        data = {}
         for s_name in dict_to_use:
             try:
                 data[s_name] = {int(d): int(dict_to_use[s_name][d]) for d in dict_to_use[s_name]}
@@ -230,7 +230,7 @@ class MultiqcModule(BaseMultiqcModule):
     def threeprime_plot(self):
         """Generate a 3' G>A linegraph plot"""
 
-        dict_to_add = dict()
+        dict_to_add = {}
         # Create tuples out of entries
         for key in self.threepGtoAfreq_data:
             pos = list(range(1, len(self.threepGtoAfreq_data.get(key))))
@@ -238,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
             tmp = [i * 100.0 for i in self.threepGtoAfreq_data.get(key)]
             tuples = list(zip(pos, tmp))
             # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             dict_to_add[key] = data
 
         config = {
@@ -258,14 +258,14 @@ class MultiqcModule(BaseMultiqcModule):
     def fiveprime_plot(self):
         """Generate a 5' C>T linegraph plot"""
 
-        dict_to_add = dict()
+        dict_to_add = {}
         # Create tuples out of entries
         for key in self.fivepCtoTfreq_data:
             pos = list(range(1, len(self.fivepCtoTfreq_data.get(key))))
             tmp = [i * 100.0 for i in self.fivepCtoTfreq_data.get(key)]
             tuples = list(zip(pos, tmp))
             # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             dict_to_add[key] = data
 
         config = {

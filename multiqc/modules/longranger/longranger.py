@@ -248,8 +248,8 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Parse the data
-        self.longranger_data = dict()
-        self.paths_dict = dict()
+        self.longranger_data = {}
+        self.paths_dict = {}
         for f in self.find_log_files("longranger/invocation"):
             sid = self.parse_invocation(f["f"])
             self.paths_dict[os.path.basename(f["root"])] = sid
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
             updir, _ = os.path.split(f["root"])
             base_updir = os.path.basename(updir)
             sid = f"longranger#{running_name}"
-            if base_updir in self.paths_dict.keys():
+            if base_updir in self.paths_dict:
                 sid = self.paths_dict[base_updir]
             else:
                 log.debug(f"Did not find _invocation file: {f['fn']}")
@@ -281,10 +281,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.longranger_data, "multiqc_longranger")
 
         # Add a longranger versions column if not all the same
-        longranger_versions = set([d["longranger_version"] for d in self.longranger_data.values()])
+        longranger_versions = {d["longranger_version"] for d in self.longranger_data.values()}
         version_str = ""
         if len(longranger_versions) == 1:
-            version_str = f" All samples were processed using Longranger version {list(longranger_versions)[0]}"
+            version_str = f" All samples were processed using Longranger version {next(iter(longranger_versions))}"
             del self.headers["longranger_version"]
 
         # Write the table
@@ -329,7 +329,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
             except Exception:
                 pass
-        phase_plot_cats = [dict(), dict(), dict()]
+        phase_plot_cats = [{}, {}, {}]
         phase_plot_cats[0]["longest_phase_block"] = {"name": "Longest Phase Block"}
         phase_plot_cats[0]["n50_phase_block"] = {"name": "N50 of Phase Blocks"}
         phase_plot_cats[1]["snps_phased_pct"] = {"name": "% SNPs Phased"}
@@ -381,7 +381,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "dup_reads": dup_reads,
                 "unmapped_reads": unmapped_reads,
             }
-        mapping_counts_cats = dict()
+        mapping_counts_cats = {}
         mapping_counts_cats["unique_reads"] = {"name": "Uniquely Aligned Reads", "color": "#437bb1"}
         mapping_counts_cats["dup_reads"] = {"name": "PCR Duplicate Aligned Reads", "color": "#7cb5ec"}
         mapping_counts_cats["unmapped_reads"] = {"name": "Unaligned Reads", "color": "#7f0000"}
@@ -414,7 +414,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def parse_summary(content):
-        out_dict = dict()
+        out_dict = {}
         lines = content.splitlines()
         data = list(zip(lines[0].strip().split(","), lines[1].strip().split(",")))
         for i, j in data:

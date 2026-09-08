@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/bede/hostile/blob/main/LICENSE",
         )
 
-        data_by_sample = dict()
+        data_by_sample = {}
         for f in self.find_log_files("hostile", filehandles=True):
             try:
                 parsed_entries = json.load(f["f"])
@@ -113,7 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         databases_message = ""
         if len(databases) == 1:
-            databases_message = f"Database index: {list(databases)[0]}"
+            databases_message = f"Database index: {next(iter(databases))}"
         elif len(databases) > 1:
             log.warning(f"Multiple database indices found in data: {', '.join(sorted(databases))}")
             databases_message = (

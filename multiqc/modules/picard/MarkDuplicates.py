@@ -3,7 +3,6 @@
 import logging
 import math
 from collections import defaultdict
-from typing import Dict, List
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -23,7 +22,7 @@ def parse_reports(
     the parameter.
     """
 
-    data_by_sample: Dict = dict()
+    data_by_sample: dict = {}
 
     # Get custom config value
     merge_multiple_libraries: bool = getattr(config, "picard_config", {}).get("markdups_merge_multiple_libraries", True)
@@ -60,18 +59,14 @@ def parse_reports(
         data_by_sample[s_name] = parsed_data
         module.add_data_source(f, s_name, section="DuplicationMetrics")
 
-        # End of metrics table - reset for next sample
-        if len(vals) < 6:
-            return True
-
-        # On to the next library if not merging
-        else:
-            return False
+        # True at the end of the metrics table, so the next sample resets;
+        # False means carry on to the next library
+        return len(vals) < 6
 
     # Go through logs and find Metrics
     for f in module.find_log_files(sp_key, filehandles=True):
         s_name = f["s_name"]
-        parsed_lists: Dict[str, List] = defaultdict(list)
+        parsed_lists: dict[str, list] = defaultdict(list)
         keys = None
         in_stats_block = False
         recompute_merged_metrics = False
@@ -180,7 +175,7 @@ def parse_reports(
         metr["READS_IN_DUPLICATE_UNPAIRED"] = metr["UNPAIRED_READ_DUPLICATES"]
         metr["READS_UNMAPPED"] = metr["UNMAPPED_READS"]
 
-    keys = dict()
+    keys = {}
     keys_r = [
         "READS_IN_UNIQUE_PAIRS",
         "READS_IN_UNIQUE_UNPAIRED",
@@ -288,7 +283,7 @@ def estimate_library_size(d):
         M = 100.0
 
         if uniqueReadPairs >= readPairs or f(m * uniqueReadPairs, uniqueReadPairs, readPairs) < 0:
-            logging.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
+            log.warning("Picard recalculation of ESTIMATED_LIBRARY_SIZE skipped - metrics look wrong")
             return None
 
         # find value of M, large enough to act as other side for bisection method

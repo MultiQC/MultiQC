@@ -550,7 +550,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     )
 
     # Function to include file contents in Jinja template
-    def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
+    def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):  # noqa: B008 - tmp dir is fixed for the run
         try:
             if fdir is None:
                 fdir = ""

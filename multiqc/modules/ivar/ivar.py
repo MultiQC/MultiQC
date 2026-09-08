@@ -26,8 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load iVar trim results
-        self.ivar_data = dict()
-        self.ivar_primers = dict()
+        self.ivar_data = {}
+        self.ivar_primers = {}
         for f in self.find_log_files("ivar/trim", filehandles=True):
             self.parse_ivar(f)
 
@@ -71,8 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         }
         primer_regex = re.compile(r"^(.*)(?:\t+)(\d+$)")
-        parsed_data = dict()
-        primers = dict()
+        parsed_data = {}
+        primers = {}
         for line in f["f"]:
             # Search count regexes for stats
             for k, count_regex in count_regexes.items():

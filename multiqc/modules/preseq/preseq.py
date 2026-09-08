@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -94,8 +94,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Preseq reports
-        reads_data = dict()
-        bases_data = dict()
+        reads_data = {}
+        bases_data = {}
         for f in self.find_log_files("preseq"):
             try:
                 sample_data_raw, sample_data_is_bases = _parse_preseq_logs(f)
@@ -136,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
         if reads_data:
             self._make_preseq_length_trimmed_plot(reads_data, False)
 
-    def _make_preseq_length_trimmed_plot(self, data_raw: Dict[str, Dict[float, float]], is_basepairs: bool) -> None:
+    def _make_preseq_length_trimmed_plot(self, data_raw: dict[str, dict[float, float]], is_basepairs: bool) -> None:
         """Generate the preseq plot.
 
         For Y axis, plot coverages if `config.preseq.read_length` and `config.preseq.genome_size`
@@ -155,21 +155,21 @@ class MultiqcModule(BaseMultiqcModule):
 
         max_y_raw, max_sn = max((max(sd.values()), sn) for sn, sd in data_raw.items())
 
-        data: Dict[str, Dict[float, float]]
+        data: dict[str, dict[float, float]]
         max_y: float
         max_yx: float
         if counts_in_1x is not None:
             # Convert counts (base pairs) -> depths
             d_covs = {sn: _counts_to_coverages(sample_data, counts_in_1x) for sn, sample_data in data_raw.items()}
             # Prepare final dataset for plotting
-            data = dict()
+            data = {}
             for sn, s_d_covs in zip(d_cnts, d_covs.values()):
                 keys = s_d_covs.keys()
                 values = s_d_covs.values()
                 data[sn] = dict(zip(keys, values))
 
             # Count maximum values to draw the "ideal" line
-            max_y_cov = list(_counts_to_coverages({max_y_raw: max_y_raw}, counts_in_1x).items())[0][0]
+            max_y_cov = next(iter(_counts_to_coverages({max_y_raw: max_y_raw}, counts_in_1x).items()))[0]
             max_y = max_y_cov
             max_yx = max_y_cov
 
@@ -178,7 +178,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Prepare final dataset for plotting
             data = d_cnts
             # Count maximum values to draw the "ideal" line
-            max_y_cnt = list(_modify_raw_data({max_y_raw: max_y_raw}, is_basepairs).items())[0][0]
+            max_y_cnt = next(iter(_modify_raw_data({max_y_raw: max_y_raw}, is_basepairs).items()))[0]
             max_y = max_y_cnt
             max_yx = max_y_cnt
 
@@ -225,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
             max_y *= 0.8
             max_yx *= 0.8
             max_x = 0.0
-            for x in sorted(list(data[max_sn].keys())):
+            for x in sorted(data[max_sn].keys()):
                 max_x = max(max_x, x)
                 if data[max_sn][x] > max_y and x > real_vals_all.get(max_sn, 0) and x > real_vals_unq.get(max_sn, 0):
                     break
@@ -267,12 +267,10 @@ class MultiqcModule(BaseMultiqcModule):
                         cols = line.strip().split()  # Split on any whitespace
                         sn = self.clean_s_name(cols[0], f)
                         if sn in sample_names:
-                            if len(cols) >= 2:
-                                if cols[1].isdigit():
-                                    real_counts_total[sn] = int(cols[1])
-                            if len(cols) >= 3:
-                                if cols[2].isdigit():
-                                    real_counts_unique[sn] = int(cols[2])
+                            if len(cols) >= 2 and cols[1].isdigit():
+                                real_counts_total[sn] = int(cols[1])
+                            if len(cols) >= 3 and cols[2].isdigit():
+                                real_counts_unique[sn] = int(cols[2])
             except OSError as e:
                 log.error(f"Error loading real counts file {real_counts_file_name}: {e!s}")
             else:
@@ -281,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
         return real_counts_total, real_counts_unique
 
 
-def _parse_preseq_logs(f) -> Tuple[Dict[float, float], bool]:
+def _parse_preseq_logs(f) -> tuple[dict[float, float], bool]:
     """Go through log file looking for preseq output"""
 
     lines = f["f"].splitlines()
@@ -297,7 +295,7 @@ def _parse_preseq_logs(f) -> Tuple[Dict[float, float], bool]:
     else:
         raise ValueError(f"First line of preseq file does not look right: {header}")
 
-    data: Dict[float, float] = dict()
+    data: dict[float, float] = {}
     for line in lines:
         s = line.split()
         # Sometimes the Expected_distinct count drops to 0, not helpful
@@ -325,7 +323,7 @@ def _modify_raw_val(val: float, is_basepairs: bool) -> float:
     return float(val) * (config.base_count_multiplier if is_basepairs else config.read_count_multiplier)
 
 
-def _counts_to_coverages(sample_data: Dict[float, float], counts_in_1x: float) -> Dict[float, float]:
+def _counts_to_coverages(sample_data: dict[float, float], counts_in_1x: float) -> dict[float, float]:
     """If the user specified read length and genome size in the config,
     convert the raw counts/bases into the depth of coverage.
     """
@@ -368,7 +366,7 @@ def _calc_count_in_1x(data_is_basepairs: bool) -> Optional[float]:
     return None
 
 
-def _prepare_labels(is_basepairs: bool, max_y: float, x_axis: str, y_axis: str) -> Tuple[str, str, str, str, str, str]:
+def _prepare_labels(is_basepairs: bool, max_y: float, x_axis: str, y_axis: str) -> tuple[str, str, str, str, str, str]:
     cov_suffix = "x"
 
     cov_lbl: str = ""
@@ -441,19 +439,19 @@ def _real_counts_to_plot_series(
     x_suffix,
     y_suffix,
     y_tt_lbl,
-) -> List[Series]:
+) -> list[Series]:
     scale = mqc_colour.mqc_colour_scale("plot_defaults")
     series = []
     for si, sn in enumerate(sorted(data.keys())):
-        series_config = dict(
-            color=scale.get_colour(si),
-            showlegend=False,
-            marker=Marker(
+        series_config = {
+            "color": scale.get_colour(si),
+            "showlegend": False,
+            "marker": Marker(
                 symbol="diamond",
                 line_color="black",
                 width=1,
             ),
-        )
+        }
         if sn in xs_by_sample:
             x = float(xs_by_sample[sn])
             if sn in yx_by_sample:

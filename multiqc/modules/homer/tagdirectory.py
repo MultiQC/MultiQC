@@ -255,7 +255,7 @@ class TagDirReportMixin:
 
     def parse_twoCol_file(self, f):
         """Parse HOMER tagdirectory GCcontent file."""
-        parsed_data = dict()
+        parsed_data = {}
         firstline = True
         for line in f["f"]:
             if firstline:  # skip first line
@@ -271,7 +271,7 @@ class TagDirReportMixin:
 
     def parse_restriction_dist(self, f):
         """Parse HOMER tagdirectory petagRestrictionDistribution file."""
-        parsed_data = dict()
+        parsed_data = {}
         firstline = True
         for line in f["f"]:
             if firstline:  # skip first line
@@ -290,7 +290,7 @@ class TagDirReportMixin:
 
     def parse_length_dist(self, f):
         """Parse HOMER tagdirectory tagLengthDistribution file."""
-        parsed_data = dict()
+        parsed_data = {}
         firstline = True
         for line in f["f"]:
             if firstline:  # skip first line
@@ -307,7 +307,7 @@ class TagDirReportMixin:
     def parse_tag_info(self, f):
         """Parse HOMER tagdirectory taginfo.txt file to extract statistics in the first 11 lines."""
         # General Stats Table
-        tag_info = dict()
+        tag_info = {}
         for line in f["f"]:
             s = line.split("=")
             if len(s) > 1:
@@ -338,9 +338,8 @@ class TagDirReportMixin:
             # skip header
             if "=" in line or len(s) != 3:
                 continue
-            if convChr:
-                if any(x in key for x in remove):
-                    continue
+            if convChr and any(x in key for x in remove):
+                continue
             try:
                 vU = float(s[1].strip())
                 vT = float(s[2].strip())
@@ -354,7 +353,7 @@ class TagDirReportMixin:
 
     def parse_FreqDist(self, f):
         """Parse HOMER tagdirectory petag.FreqDistribution_1000 file."""
-        parsed_data = dict()
+        parsed_data = {}
         firstline = True
         for line in f["f"]:
             if firstline:
@@ -374,7 +373,7 @@ class TagDirReportMixin:
 
     def parse_FreqDist_interChr(self, f):
         """Parse HOMER tagdirectory petag.FreqDistribution_1000 file to get inter-chromosomal interactions."""
-        parsed_data = dict()
+        parsed_data = {}
         firstline = True
         for line in f["f"]:
             if firstline:

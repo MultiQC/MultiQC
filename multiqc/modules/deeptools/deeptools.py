@@ -64,9 +64,9 @@ class MultiqcModule(
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-        n = dict()
+        self.general_stats_headers = {}
+        self.general_stats_data = {}
+        n = {}
 
         # plotCorrelation
         n["plotCorrelation"] = self.parse_plotCorrelation()
@@ -145,4 +145,4 @@ class MultiqcModule(
         """Avoids Python3 error:
         ValueError: invalid literal for self._int() with base 10: '1.0'
         """
-        return int(round(float(val)))
+        return round(float(val))

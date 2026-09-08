@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping
 from io import BufferedReader
-from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, TypeVar, Union, cast
+from typing import Any, Optional, TypedDict, TypeVar, Union, cast
 
 import markdown
 import yaml
@@ -26,19 +26,19 @@ log = logging.getLogger(__name__)
 
 
 class CcDict(BaseModel):
-    config: Dict[str, Any] = {}
-    data: Union[Dict[str, Any], List[Dict[str, Any]], str] = {}
+    config: dict[str, Any] = {}
+    data: Union[dict[str, Any], list[dict[str, Any]], str] = {}
 
 
 class ParsedDict(TypedDict, total=False):
     id: str
     plot_type: Optional[str]
-    data: Union[str, Dict[str, Dict[str, Any]]]
-    config: Dict[str, Any]
+    data: Union[str, dict[str, dict[str, Any]]]
+    config: dict[str, Any]
     section_name: Optional[str]
 
 
-def custom_module_classes() -> List[BaseMultiqcModule]:
+def custom_module_classes() -> list[BaseMultiqcModule]:
     """
     MultiQC Custom Content class. This module does a lot of different
     things depending on the input and is as flexible as possible.
@@ -51,10 +51,10 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     # up many different types of data from many different sources.
     # Second level keys should be 'config' and 'data'. Data key should then
     # contain sample names, and finally data.
-    ccdict_by_id: Dict[ModuleId, CcDict] = {}
+    ccdict_by_id: dict[ModuleId, CcDict] = {}
 
     # Dictionary to hold search patterns - start with those defined in the config
-    search_pattern_keys: List[ModuleId] = [ModuleId("custom_content")]
+    search_pattern_keys: list[ModuleId] = [ModuleId("custom_content")]
 
     # First - find files using patterns described in the config
     mod_cust_config = {}
@@ -162,7 +162,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                 # Render Markdown content to HTML for custom content sections
                 md_raw: str = str(f["f"])
                 # Support optional YAML front-matter fenced by '---' lines
-                md_config: Dict[str, Any] = {}
+                md_config: dict[str, Any] = {}
                 if md_raw.lstrip().startswith("---"):
                     # Attempt to parse front-matter
                     front_end = md_raw.find("\n---", 3)
@@ -191,8 +191,8 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
             if parsed_dict is not None:
-                parsed_item: Union[str, Dict, List, None] = parsed_dict.get("data", {})
-                parsed_item_with_clean_sn: Dict[str, Dict[str, Any]] = {}
+                parsed_item: Union[str, dict, list, None] = parsed_dict.get("data", {})
+                parsed_item_with_clean_sn: dict[str, dict[str, Any]] = {}
                 if isinstance(parsed_item, dict):
                     # Run sample-name cleaning on the data keys
                     for sn, val_by_metric in parsed_item.items():
@@ -221,7 +221,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
-                m_config: Optional[Dict[str, Any]]
+                m_config: Optional[dict[str, Any]]
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 c_id: ModuleId
@@ -253,7 +253,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
                 # Add information about the file to the config dict
                 if "files" not in m_config:
-                    m_config["files"] = dict()
+                    m_config["files"] = {}
                 m_config["files"].update({s_name: {"fn": f["fn"], "root": f["root"]}})
 
                 # Guess file format if not given
@@ -319,7 +319,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         raise ModuleNoSamplesFound
 
     # Go through each data type
-    parsed_modules: Dict[ModuleId, MultiqcModule] = dict()
+    parsed_modules: dict[ModuleId, MultiqcModule] = {}
     mod_id: ModuleId
     for mod_id, ccdict in ccdict_by_id.items():
         # General Stats
@@ -328,18 +328,18 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
         if plot_type == PlotType.GENERALSTATS:
             assert isinstance(ccdict.data, dict), ccdict.data
             if (gs_headers := ccdict.config.get("headers", ccdict.config.get("pconfig", {}))) is None:
-                headers_set: Set[str] = set()
+                headers_set: set[str] = set()
                 for _hd in ccdict.data.values():
                     headers_set.update(_hd.keys())
                 headers = list(headers_set)
                 headers.sort()
-                gs_headers = dict()
+                gs_headers = {}
                 for h in headers:
-                    gs_headers[h] = dict()
+                    gs_headers[h] = {}
 
             # Headers is a list of dicts
             if isinstance(gs_headers, list):
-                gs_headers_dict = dict()
+                gs_headers_dict = {}
                 for gs_header in gs_headers:
                     for col_id, col_data in gs_header.items():
                         gs_headers_dict[col_id] = col_data
@@ -402,7 +402,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
     mod_order = [x for x in mod_order for x in [x, re.sub("-module$", "", x), f"{x}-module"]]
     # remove duplicates, but keep order
     mod_order = list(dict.fromkeys(mod_order))
-    modules__not_in_order: List[BaseMultiqcModule] = [
+    modules__not_in_order: list[BaseMultiqcModule] = [
         parsed_mod for parsed_mod in parsed_modules.values() if parsed_mod.anchor not in mod_order
     ]
     modules_in_order = [
@@ -417,7 +417,7 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
 
     # If we only have General Stats columns then there are no module outputs
     if len(sorted_modules) == 0:
-        cfgs: List[Dict] = []
+        cfgs: list[dict] = []
         for ccdict in ccdict_by_id.values():
             assert isinstance(ccdict.config, dict)
             cfgs.append(ccdict.config)
@@ -521,7 +521,7 @@ class MultiqcModule(BaseMultiqcModule):
             if plot_type is None:
                 log.warning(f"Error: custom content plot type '{_pt}' not recognised for content ID {section_id}")
 
-        plot_datasets: List[Any]  # to save after rendering
+        plot_datasets: list[Any]  # to save after rendering
 
         # Heatmap
         if plot_type == PlotType.HEATMAP:
@@ -592,12 +592,12 @@ class MultiqcModule(BaseMultiqcModule):
             elif plot_type == PlotType.BOX:
                 from multiqc.plots.box import BoxT
 
-                box_data = cast(Union[Mapping[str, BoxT], List[Mapping[str, BoxT]]], plot_datasets)
+                box_data = cast(Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]], plot_datasets)
                 plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
             elif plot_type == PlotType.VIOLIN:
-                violin_data = cast(List[Tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
+                violin_data = cast(list[tuple[SectionKey, Mapping[str, Any]]], plot_datasets)
                 plot = violin.plot(violin_data, pconfig=violin.TableConfig(**pconfig))  # type: ignore
 
             # Raw HTML
@@ -640,10 +640,10 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
 
-def _find_file_header(f: LoadedFileDict[str]) -> Tuple[Optional[Dict[str, Any]], List[str]]:
+def _find_file_header(f: LoadedFileDict[str]) -> tuple[Optional[dict[str, Any]], list[str]]:
     # Collect commented out header lines
-    hlines: List[str] = []
-    other_lines: List[str] = []
+    hlines: list[str] = []
+    other_lines: list[str] = []
     line: str
     for line in f["f"].splitlines():
         if line.startswith("#"):
@@ -684,7 +684,7 @@ def _find_file_header(f: LoadedFileDict[str]) -> Tuple[Optional[Dict[str, Any]],
             + f"be parsed to a dict, got {type(hconfig)}: {hconfig}",
             "custom_content",
         )
-    return cast(Dict[str, Any], hconfig), other_lines
+    return cast(dict[str, Any], hconfig), other_lines
 
 
 def _find_html_file_header(f):
@@ -711,7 +711,7 @@ def _guess_file_format(f):
     e.g. if tab, all 10 lines should have x columns when split by tab.
     Returns: csv | tsv | spaces   (spaces by default if all else fails)
     """
-    filename, file_extension = os.path.splitext(f["fn"])
+    _filename, _file_extension = os.path.splitext(f["fn"])
     tabs = []
     commas = []
     spaces = []
@@ -767,12 +767,12 @@ def unquote(s: T) -> T:
 
 def isnumber(val: Any) -> bool:
     """Check if a value is a number"""
-    return isinstance(val, float) or isinstance(val, int)
+    return isinstance(val, (float, int))
 
 
 def _parse_txt(
-    f, conf: Dict, non_header_lines: List[str]
-) -> Tuple[Union[str, Dict, List, None], Dict, Optional[PlotType]]:
+    f, conf: dict, non_header_lines: list[str]
+) -> tuple[Union[str, dict, list, None], dict, Optional[PlotType]]:
     """
     Parse data and optionally guess plot type
     """
@@ -791,7 +791,7 @@ def _parse_txt(
 
     # Check for special case - HTML
     if plot_type == PlotType.HTML:
-        lines: List[str] = []
+        lines: list[str] = []
         for line in non_header_lines:
             if line:
                 lines.append(line)
@@ -799,8 +799,8 @@ def _parse_txt(
 
     # Not HTML, need to parse data
     ncols = None
-    matrix_str: List[List[str]] = []
-    row_str: List[str]
+    matrix_str: list[list[str]] = []
+    row_str: list[str]
     for line in non_header_lines:
         if line.rstrip():
             row_str = [cell.strip() for cell in line.rstrip("\n").split(sep)]
@@ -816,7 +816,7 @@ def _parse_txt(
                 return None, conf, plot_type
 
     # Convert values to floats if we can
-    matrix: List[List[Union[str, float, int]]] = []
+    matrix: list[list[Union[str, float, int]]] = []
     first_row_all_strings = True
     inner_cells_all_numeric = True
     v_str: str
@@ -850,7 +850,7 @@ def _parse_txt(
     # General stat info files - expected to have at least 2 rows (first row always being the header)
     # and have at least 2 columns (first column always being sample name)
     if plot_type == PlotType.GENERALSTATS and len(matrix) >= 2 and ncols and ncols >= 2:
-        data_ddict: Dict[str, Dict] = defaultdict(dict)
+        data_ddict: dict[str, dict] = defaultdict(dict)
         for i, row in enumerate(matrix[1:], 1):
             for j, v in enumerate(row[1:], 1):
                 s_name = matrix_str[i][0]
@@ -864,12 +864,12 @@ def _parse_txt(
     if plot_type == PlotType.HEATMAP:
         conf["xcats"] = matrix_str[0][1:]
         conf["ycats"] = [row_str[0] for row_str in matrix_str[1:]]
-        data_list: List = [row[1:] for row in matrix[1:]]
+        data_list: list = [row[1:] for row in matrix[1:]]
         return data_list, conf, plot_type
 
     # Header row of strings box plot
     if first_row_all_strings and plot_type == PlotType.BOX:
-        box_ddict: Dict[str, List[float]] = dict()
+        box_ddict: dict[str, list[float]] = {}
         for sidx, s_name in enumerate(matrix_str[0]):
             box_ddict[s_name] = []
             for row in matrix[1:]:
@@ -883,10 +883,10 @@ def _parse_txt(
 
     # Header row of strings, or configured as table
     if first_row_all_strings or plot_type in [PlotType.TABLE, PlotType.VIOLIN]:
-        data_ddict = dict()
+        data_ddict = {}
         for i, row in enumerate(matrix[1:], 1):
             s_name = matrix_str[i][0]
-            data_ddict[s_name] = dict()
+            data_ddict[s_name] = {}
             for j, v in enumerate(row[1:]):
                 col_name = matrix_str[0][j + 1]
                 data_ddict[s_name][col_name] = v
@@ -906,7 +906,7 @@ def _parse_txt(
         if plot_type in [PlotType.BAR, PlotType.TABLE, PlotType.VIOLIN]:
             return data_ddict, conf, plot_type
         else:
-            data_ddict = dict()  # reset
+            data_ddict = {}  # reset
 
     # Scatter plot: first row is str : num : num
     if (
@@ -919,7 +919,7 @@ def _parse_txt(
         plot_type = PlotType.SCATTER
 
     if plot_type == PlotType.SCATTER:
-        dicts: Dict[str, Dict[str, float]] = dict()
+        dicts: dict[str, dict[str, float]] = {}
         for i, row in enumerate(matrix):
             try:
                 dicts[matrix_str[i][0]] = {"x": float(row[1]), "y": float(row[2])}
@@ -951,7 +951,7 @@ def _parse_txt(
 
             # Data structure is the same
             if plot_type in [PlotType.LINE, PlotType.BAR]:
-                data_dict: Dict = dict()
+                data_dict: dict = {}
                 for row in matrix:
                     data_dict[unquote(row[0])] = unquote(row[1])
                 return {f["s_name"]: data_dict}, conf, plot_type
@@ -961,15 +961,15 @@ def _parse_txt(
         plot_type = PlotType.LINE
 
     if plot_type == PlotType.LINE:
-        data_ddict = dict()
+        data_ddict = {}
         # If the first row has empty first column, it's the header - use it as x-axis labels
-        x_vals: List[Union[str, float, int]] = []
+        x_vals: list[Union[str, float, int]] = []
         if matrix_str[0][0].strip() == "":
             x_vals = [str(unquote(v)) for v in matrix.pop(0)[1:]]
         # Use 1..n range for x values
         for i, row in enumerate(matrix):
             s_name = str(unquote(row[0]))
-            data_ddict[s_name] = dict()
+            data_ddict[s_name] = {}
             for i, v in enumerate(row[1:]):
                 try:
                     x_val = x_vals[i]

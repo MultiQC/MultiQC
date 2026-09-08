@@ -37,7 +37,7 @@ def parse_reports(module):
     does pairwise comparisons between samples at the level selected by `--CROSSCHECK_BY`.
     """
 
-    row_by_number = dict()
+    row_by_number = {}
     found_reports = []
 
     # Go through logs and find Metrics
@@ -103,7 +103,7 @@ def parse_reports(module):
     module.write_data_file(row_by_number, f"{module.anchor}_crosscheckfingerprints")
 
     # Add a per-sample table
-    status_by_sample = dict()
+    status_by_sample = {}
     sorted_by_left_sample = sorted(row_by_number.values(), key=lambda r: r["LEFT_SAMPLE"])
     for left_sample, values in groupby(sorted_by_left_sample, key=lambda r: r["LEFT_SAMPLE"]):
         values = list(values)

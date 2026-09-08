@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 import tracemalloc
-from typing import Callable, Dict, List, Union
+from typing import Callable, Union
 
 import rich
 from importlib_metadata import EntryPoint
@@ -26,7 +26,7 @@ def trace_memory(stage: str):
         logger.warning(f"Memory {stage}: {mem_current:,d}b, peak: {mem_peak:,d}b")
 
 
-def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
+def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
     """
     Execute the modules that have been found and loaded.
     """
@@ -39,23 +39,23 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
     mod_dicts_in_order = [
         m
         for m in mod_dicts_in_order
-        if list(m.keys())[0].lower() in non_empty_modules
+        if next(iter(m.keys())).lower() in non_empty_modules
         # Always run custom content, as it can have data purely from a MultiQC config file (no search files)
-        or list(m.keys())[0].lower() == "custom_content"
+        or next(iter(m.keys())).lower() == "custom_content"
     ]
 
     # Handle repeated modules: check anchors for possible duplicates. Modules with same anchor
     # will be merged into one module, so need to make sure they are different for repeated modules.
     for mod_dict in mod_dicts_in_order:
-        mod_id, mod_cust_config = list(mod_dict.items())[0]
+        mod_id, mod_cust_config = next(iter(mod_dict.items()))
         anchor = mod_cust_config.get("anchor") or mod_id
         anchor = Anchor(report.save_htmlid(str(anchor)))
         if anchor != mod_id:
             mod_cust_config["anchor"] = anchor
 
     # Special-case software_versions module must be run in the end
-    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0].lower() != "software_versions"]
-    mod_names = [list(m.keys())[0] for m in mod_dicts_in_order]
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if next(iter(m.keys())).lower() != "software_versions"]
+    mod_names = [next(iter(m.keys())) for m in mod_dicts_in_order]
     if not required_logs_found(mod_names):
         raise RunError()
 
@@ -69,13 +69,13 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
         if config.profile_memory:
             tracemalloc.start()
 
-        this_module: str = list(mod_dict.keys())[0]
+        this_module: str = next(iter(mod_dict.keys()))
         logger.debug(f"Running module: {this_module}")
-        mod_cust_config = list(mod_dict.values())[0] or {}
+        mod_cust_config = next(iter(mod_dict.values())) or {}
         # noinspection PyBroadException
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
-            module_initializer: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
+            module_initializer: Callable[[], Union[BaseMultiqcModule, list[BaseMultiqcModule]]] = entry_point.load()
             # Attributes stashed on the loaded entry point for the module to pick up.
             # setattr() used to hide this from mypy; ruff rewrites that away, so the
             # ignores now say plainly what is going on.
@@ -84,7 +84,7 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
-            these_modules: Union[BaseMultiqcModule, List[BaseMultiqcModule]] = module_initializer()
+            these_modules: Union[BaseMultiqcModule, list[BaseMultiqcModule]] = module_initializer()
             # END RUN MODULE
             # *********************************************
 
@@ -127,14 +127,19 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
                 # Crash quickly in the strict mode. This can be helpful for interactive debugging of modules.
                 raise
 
-            # Flag the error, but carry on
-            class CustomTraceback:
-                type, value, traceback = sys.exc_info()
+            # Flag the error, but carry on.
+            # `exc_type` is read in the methods below rather than assigned in the class
+            # body: class scope is not visible to methods, so the old `type` attribute
+            # resolved to the builtin and put the literal word "type" in the issue title.
+            # B023 is silenced because this class is instantiated and rendered inside
+            # this same loop iteration, so late binding cannot bite.
+            exc_name = type(sys.exc_info()[1]).__name__
 
+            class CustomTraceback:
                 def __rich_console__(self, console: rich.console.Console, options: rich.console.ConsoleOptions):
                     issue_url = (
                         f"https://github.com/MultiQC/MultiQC/issues/new?template=bug_report.md&title="
-                        f"{this_module}%20module%20-%20{type.__name__}"
+                        f"{this_module}%20module%20-%20{exc_name}"  # noqa: B023
                     )
                     err_msg = (
                         f"Please copy this log and report it at [bright_blue][link={issue_url}]"

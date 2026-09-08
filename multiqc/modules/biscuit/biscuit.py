@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.biscuit_data["read_avg_retention_rate"]
         )
 
-        n_samples = max([len(self.biscuit_data[k]) for k in self.biscuit_data.keys()])
+        n_samples = max([len(self.biscuit_data[k]) for k in self.biscuit_data])
         if n_samples == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {n_samples} samples")
@@ -652,10 +652,10 @@ class MultiqcModule(BaseMultiqcModule):
     def chart_retention_readpos(self):
         """Charts _*RetentionByReadPos.txt"""
         pd = [
-            dict([(s_name, dd["1"]) for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()]),
-            dict([(s_name, dd["2"]) for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()]),
-            dict([(s_name, dd["1"]) for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()]),
-            dict([(s_name, dd["2"]) for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()]),
+            {s_name: dd["1"] for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()},
+            {s_name: dd["2"] for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()},
+            {s_name: dd["1"] for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()},
+            {s_name: dd["2"] for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()},
         ]
 
         pconfig = {
@@ -898,7 +898,7 @@ def parse_covdist(f, fn):
         fields = line.split()
         data[int(float(fields[0]))] = int(float(fields[1]))
 
-    covs = sorted([k for k in data])[:31]
+    covs = sorted(data)[:31]
     _ccov_cnt = sum(data.values())
 
     ccov_cnts = []

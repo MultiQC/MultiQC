@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from collections import Counter, defaultdict
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -50,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/OpenGene/fastp/blob/master/LICENSE",
         )
 
-        data_by_sample = dict()
+        data_by_sample = {}
         for f in self.find_log_files("fastp", filehandles=True):
             s_name, parsed_json = self.parse_fastp_log(f)
             if not s_name:
@@ -66,14 +66,14 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(data_by_sample)} reports")
 
         # Find and load any fastp reports
-        self.fastp_data = dict()
-        self.fastp_duplication_plotdata = dict()
-        self.fastp_insert_size_data = dict()
-        self.fastp_all_data = dict()
-        self.fastp_qual_plotdata = dict()
-        self.fastp_gc_content_data = dict()
-        self.fastp_n_content_data = dict()
-        self.fastp_overrepresented_sequences = dict()
+        self.fastp_data = {}
+        self.fastp_duplication_plotdata = {}
+        self.fastp_insert_size_data = {}
+        self.fastp_all_data = {}
+        self.fastp_qual_plotdata = {}
+        self.fastp_gc_content_data = {}
+        self.fastp_n_content_data = {}
+        self.fastp_overrepresented_sequences = {}
         for k in [
             "read1_before_filtering",
             "read2_before_filtering",
@@ -81,10 +81,10 @@ class MultiqcModule(BaseMultiqcModule):
             "read2_after_filtering",
             "merged_and_filtered",
         ]:
-            self.fastp_qual_plotdata[k] = dict()
-            self.fastp_gc_content_data[k] = dict()
-            self.fastp_n_content_data[k] = dict()
-            self.fastp_overrepresented_sequences[k] = dict()
+            self.fastp_qual_plotdata[k] = {}
+            self.fastp_gc_content_data[k] = {}
+            self.fastp_n_content_data[k] = {}
+            self.fastp_overrepresented_sequences[k] = {}
         for s_name, parsed_json in data_by_sample.items():
             self.process_parsed_data(parsed_json, s_name)
 
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.fastp_overrepresented_sequences_plot(),
         )
 
-    def parse_fastp_log(self, f) -> Tuple[Optional[str], Dict]:
+    def parse_fastp_log(self, f) -> tuple[Optional[str], dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])
@@ -245,7 +245,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_data_source(f, s_name)
         return s_name, parsed_json
 
-    def process_parsed_data(self, parsed_json: Dict, s_name: str):
+    def process_parsed_data(self, parsed_json: dict, s_name: str):
         """Process the JSON extracted from logs"""
 
         self.fastp_data[s_name] = {}
@@ -615,7 +615,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Top overrepresented sequences across all samples
         top_n = getattr(config, "fastp_config", {}).get("top_overrepresented_sequences", 20)
         top_seqs = cnt_by_seq.most_common(top_n)
-        table_data: Dict[str, Dict[str, Any]] = {
+        table_data: dict[str, dict[str, Any]] = {
             seq: {
                 "sequence": seq,
                 "total_percent": pct_by_seq[seq],

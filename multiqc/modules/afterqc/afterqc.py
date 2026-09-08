@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -28,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Afterqc reports
-        self.afterqc_data: Dict = dict()
+        self.afterqc_data: dict = {}
         for f in self.find_log_files("afterqc", filehandles=True):
             self.parse_afterqc_log(f)
 

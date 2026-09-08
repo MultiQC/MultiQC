@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Any, Callable, Dict, List, NewType, Optional, Set, Tuple, TypedDict, Union, cast
+from typing import Any, Callable, NewType, Optional, TypedDict, Union, cast
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -29,7 +29,7 @@ class TableConfig(PConfig):
     namespace: str = ""
     save_file: bool = False
     raw_data_fn: Optional[str] = None
-    defaultsort: Optional[List[Dict[str, str]]] = None
+    defaultsort: Optional[list[dict[str, str]]] = None
     sortRows: bool = Field(True, deprecated="sort_rows")
     sort_rows: bool = True
     only_defined_headers: bool = True
@@ -42,7 +42,7 @@ class TableConfig(PConfig):
     rows_are_samples: bool = True
     flat_if_very_large: bool = False
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)
 
 
@@ -92,9 +92,9 @@ class ColumnDict(TypedDict, total=False):
     shared_key: Optional[str]
     tt_decimals: Optional[int]
     suffix: Optional[str]
-    cond_formatting_colours: List[Dict[str, str]]
-    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]]
-    bgcols: Dict[str, str]
+    cond_formatting_colours: list[dict[str, str]]
+    cond_formatting_rules: dict[str, list[dict[str, Union[str, int, float]]]]
+    bgcols: dict[str, str]
     bars_zero_centrepoint: bool
     modify: Optional[Callable[[ValueT], ValueT]]
     format: Optional[Union[str, Callable[[ValueT], str]]]
@@ -126,9 +126,9 @@ class ColumnMeta(ValidatedConfig):
     shared_key: Optional[str] = None
     tt_decimals: Optional[int] = None
     suffix: Optional[str] = None
-    cond_formatting_colours: List[Dict[str, str]] = []
-    cond_formatting_rules: Dict[str, List[Dict[str, Union[str, int, float]]]] = {}
-    bgcols: Dict[str, str] = {}
+    cond_formatting_colours: list[dict[str, str]] = []
+    cond_formatting_rules: dict[str, list[dict[str, Union[str, int, float]]]] = {}
+    bgcols: dict[str, str] = {}
     bars_zero_centrepoint: bool = False
     modify: Optional[Callable[[ValueT], ValueT]] = None
     format: Optional[Union[str, Callable[[ValueT], str]]] = None
@@ -167,10 +167,9 @@ class ColumnMeta(ValidatedConfig):
             col_dict["rid"] = col_dict["clean_rid"]
 
         # Additionally override the header config assuming rid is used (for legacy docs)
-        if header_config:
-            if col_config := header_config.get(col_dict["clean_rid"], {}):
-                for custom_k, custom_v in col_config.items():
-                    col_dict[custom_k] = custom_v  # type: ignore
+        if header_config and (col_config := header_config.get(col_dict["clean_rid"], {})):
+            for custom_k, custom_v in col_config.items():
+                col_dict[custom_k] = custom_v  # type: ignore
 
         # Applying defaults presets for data keys if shared_key is set to base_count or read_count
         shared_key = col_dict.get("shared_key", None)
@@ -206,7 +205,7 @@ class ColumnMeta(ValidatedConfig):
         for _id in [table_anchor, pconfig.id]:  # Back-compatibility using pconfig.id instead of table_anchor
             if config_dict := config.custom_plot_config.get(_id):
                 for cpc_k, cpc_v in config_dict.items():
-                    if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields.keys():
+                    if isinstance(cpc_k, str) and cpc_k in ColumnMeta.model_fields:
                         col_dict[cpc_k] = cpc_v  # type: ignore
                 break
 
@@ -290,7 +289,7 @@ class ColumnMeta(ValidatedConfig):
 
         return col
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table", "column"), **data)
 
 
@@ -300,7 +299,7 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Optional[ExtValueT]] = Field(default_factory=dict)
+    data: dict[ColumnKey, Optional[ExtValueT]] = Field(default_factory=dict)
 
     def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
         super().__init__(
@@ -322,7 +321,7 @@ class Row(BaseModel):
     """
 
     sample: SampleName
-    data: Dict[ColumnKey, Cell] = dict()
+    data: dict[ColumnKey, Cell] = {}
 
 
 class TableSection(BaseModel):
@@ -330,8 +329,8 @@ class TableSection(BaseModel):
     Table section class. Holds configuration for a single section in a table.
     """
 
-    column_by_key: Dict[ColumnKey, ColumnMeta]
-    rows_by_sgroup: Dict[SampleGroup, List[Row]] = defaultdict(list)
+    column_by_key: dict[ColumnKey, ColumnMeta]
+    rows_by_sgroup: dict[SampleGroup, list[Row]] = defaultdict(list)
 
 
 SECTION_COLORS = [
@@ -346,7 +345,7 @@ SECTION_COLORS = [
     "153,153,153",  # Grey
 ]
 
-col_anchors_by_table: Dict[Anchor, Set[ColumnAnchor]] = defaultdict(set)
+col_anchors_by_table: dict[Anchor, set[ColumnAnchor]] = defaultdict(set)
 
 
 class DataTable(BaseModel):
@@ -359,8 +358,8 @@ class DataTable(BaseModel):
     anchor: Anchor
     pconfig: TableConfig
 
-    section_by_id: Dict[SectionKey, TableSection]
-    headers_in_order: Dict[float, List[Tuple[int, ColumnKey]]]
+    section_by_id: dict[SectionKey, TableSection]
+    headers_in_order: dict[float, list[tuple[int, ColumnKey]]]
 
     def is_empty(self) -> bool:
         """
@@ -372,11 +371,11 @@ class DataTable(BaseModel):
 
     @staticmethod
     def create(
-        data: Dict[SectionKey, SectionT],
+        data: dict[SectionKey, SectionT],
         table_id: str,
         table_anchor: Anchor,
         pconfig: TableConfig,
-        headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]],
+        headers: dict[SectionKey, dict[ColumnKey, ColumnDict]],
     ) -> "DataTable":
         """Prepare data for use in a table or plot"""
         # Violin plot's PConfig does this for the plot ID. We also do that second turn time for
@@ -390,9 +389,9 @@ class DataTable(BaseModel):
         input_section_key: SectionKey
         input_section: SectionT
         input_group: GroupT
-        unified_sections__with_nulls: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]] = {}
+        unified_sections__with_nulls: dict[SectionKey, dict[SampleGroup, list[InputRow]]] = {}
         for input_section_key, input_section in data.items():
-            rows_by_group: Dict[SampleGroup, List[InputRow]] = {}
+            rows_by_group: dict[SampleGroup, list[InputRow]] = {}
             for g_name, input_group in input_section.items():
                 g_name = SampleGroup(str(g_name))  # Make sure sample names are strings
                 if isinstance(input_group, dict):  # just one row, defined as a mapping from metric to value
@@ -407,16 +406,16 @@ class DataTable(BaseModel):
         del data
 
         # Go through each table section and create a list of Section objects
-        sections: Dict[SectionKey, TableSection] = {}
+        sections: dict[SectionKey, TableSection] = {}
         for sec_idx, (section_key, rows_by_sname__with_nulls) in enumerate(unified_sections__with_nulls.items()):
-            header_by_key: Union[Dict[ColumnKey, ColumnDict], Dict[str, ColumnDict]] = (
-                headers.get(SectionKey(section_key)) or dict()
+            header_by_key: Union[dict[ColumnKey, ColumnDict], dict[str, ColumnDict]] = (
+                headers.get(SectionKey(section_key)) or {}
             )
             if not header_by_key:
                 pconfig.only_defined_headers = False
 
-            column_by_key: Dict[ColumnKey, ColumnMeta] = dict()
-            col_dict_by_key_copy: Dict[ColumnKey, ColumnDict] = _get_or_create_headers(
+            column_by_key: dict[ColumnKey, ColumnMeta] = {}
+            col_dict_by_key_copy: dict[ColumnKey, ColumnDict] = _get_or_create_headers(
                 rows_by_sname__with_nulls, header_by_key, pconfig
             )
             for col_key, col_dict in col_dict_by_key_copy.items():
@@ -453,13 +452,13 @@ class DataTable(BaseModel):
 
         del unified_sections__with_nulls
 
-        shared_keys: Dict[str, Dict[str, Union[int, float]]] = _collect_shared_keys(sections)
+        shared_keys: dict[str, dict[str, Union[int, float]]] = _collect_shared_keys(sections)
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
         # So the final ordering is:
         #   placement > section > explicit_ordering
         # Of course, the user can shuffle these manually.
-        headers_in_order: Dict[float, List[Tuple[int, ColumnKey]]] = defaultdict(list)
+        headers_in_order: dict[float, list[tuple[int, ColumnKey]]] = defaultdict(list)
         for sec_idx, section in enumerate(sections.values()):
             for col_key, column in section.column_by_key.items():
                 if column.shared_key is not None:
@@ -491,12 +490,12 @@ class DataTable(BaseModel):
             pconfig=pconfig,
         )
 
-    def get_headers_in_order(self, keep_hidden: bool = True) -> List[Tuple[int, ColumnKey, ColumnMeta]]:
+    def get_headers_in_order(self, keep_hidden: bool = True) -> list[tuple[int, ColumnKey, ColumnMeta]]:
         """
         Gets the headers in the order they want to be displayed.
         Returns a list of triplets: (bucket_idx, key, header_info)
         """
-        res: List[Tuple[int, ColumnKey, ColumnMeta]] = list()
+        res: list[tuple[int, ColumnKey, ColumnMeta]] = []
         # Scan through self.headers_in_order and just bolt on the actual header info
         placement: float
         for placement in sorted(self.headers_in_order.keys()):
@@ -576,10 +575,10 @@ class DataTable(BaseModel):
 
 
 def _get_or_create_headers(
-    rows_by_sample: Dict[SampleGroup, List[InputRow]],
+    rows_by_sample: dict[SampleGroup, list[InputRow]],
     header_by_key: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
     pconfig: TableConfig,
-) -> Dict[ColumnKey, ColumnDict]:
+) -> dict[ColumnKey, ColumnDict]:
     """
     Process and populate headers, if missing or incomplete.
     """
@@ -587,11 +586,11 @@ def _get_or_create_headers(
     header_by_key_copy = {ColumnKey(k): h for k, h in header_by_key.items()}
     if not pconfig.only_defined_headers:
         # Get additional header keys from the data
-        col_ids: List[ColumnKey] = list(header_by_key_copy.keys())
+        col_ids: list[ColumnKey] = list(header_by_key_copy.keys())
         # Get the keys from the data
-        for _, rows in rows_by_sample.items():
+        for rows in rows_by_sample.values():
             for row in rows:
-                for col_id in row.data.keys():
+                for col_id in row.data:
                     if col_id not in col_ids:
                         col_ids.append(col_id)
 
@@ -601,12 +600,12 @@ def _get_or_create_headers(
                 header_by_key_copy[col_id] = {}
 
     # Check that we have some data in each column
-    empties: List[ColumnKey] = list()
+    empties: list[ColumnKey] = []
     for col_id in header_by_key_copy:
         n = 0
-        for _, rows in rows_by_sample.items():
+        for rows in rows_by_sample.values():
             for row in rows:
-                if col_id in row.data.keys():
+                if col_id in row.data:
                     n += 1
 
         if n == 0:
@@ -682,7 +681,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
                 # If format is decimal and value is float, try rounding to int first
                 if isinstance(val, float) and "d" in fmt:
                     try:
-                        val = int(round(val))
+                        val = round(val)
                     except (ValueError, OverflowError):
                         pass
                 valstr = fmt.format(val)
@@ -697,7 +696,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
 def _determine_dmin_and_dmax(
     column: ColumnMeta,
     col_key: ColumnKey,
-    rows_by_sample: Dict[SampleGroup, List[Row]],
+    rows_by_sample: dict[SampleGroup, list[Row]],
 ) -> None:
     """
     Work out max and min value in a column if not given, to support color scale.
@@ -719,7 +718,7 @@ def _determine_dmin_and_dmax(
 
     # Figure out the min / max if not supplied
     if set_dmax or set_dmin:
-        for _, rows in rows_by_sample.items():
+        for rows in rows_by_sample.values():
             v_by_col = rows[0].data
             try:
                 val = v_by_col[col_key].mod if v_by_col[col_key].mod is not None else v_by_col[col_key].raw
@@ -742,11 +741,11 @@ def _determine_dmin_and_dmax(
                 column.dmax = column.dmin + float(column.minrange)
 
 
-def _collect_shared_keys(sections: Dict[SectionKey, TableSection]) -> Dict[str, Dict[str, Union[int, float]]]:
+def _collect_shared_keys(sections: dict[SectionKey, TableSection]) -> dict[str, dict[str, Union[int, float]]]:
     # Collect settings for shared keys
-    shared_keys: Dict[str, Dict[str, Union[int, float]]] = defaultdict(lambda: dict())
-    for _, section in sections.items():
-        for _, column in section.column_by_key.items():
+    shared_keys: dict[str, dict[str, Union[int, float]]] = defaultdict(dict)
+    for section in sections.values():
+        for column in section.column_by_key.values():
             sk: Optional[str] = column.shared_key
             if sk is not None:
                 sk_dmax: Optional[float] = shared_keys[sk].get("dmax")
@@ -774,7 +773,7 @@ def render_html(
     module_anchor: Anchor,
     section_anchor: Anchor,
     add_control_panel: bool = True,
-) -> Tuple[str, str]:
+) -> tuple[str, str]:
     """
     Build HTML for a MultiQC table, and HTML for the modal for configuring the table.
     :param dt: MultiQC datatable object
@@ -782,20 +781,20 @@ def render_html(
     :param add_control_panel: whether to add the control panel with buttons above the table
     """
 
-    col_to_th: Dict[ColumnAnchor, str] = dict()
-    col_to_modal_headers: Dict[ColumnAnchor, str] = dict()
-    col_to_hidden: Dict[ColumnAnchor, bool] = dict()
-    group_to_sample_to_anchor_to_td: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, str]]] = defaultdict(
+    col_to_th: dict[ColumnAnchor, str] = {}
+    col_to_modal_headers: dict[ColumnAnchor, str] = {}
+    col_to_hidden: dict[ColumnAnchor, bool] = {}
+    group_to_sample_to_anchor_to_td: dict[SampleGroup, dict[SampleName, dict[ColumnAnchor, str]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_anchor_to_val: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, ValueT]]] = defaultdict(
+    group_to_sample_to_anchor_to_val: dict[SampleGroup, dict[SampleName, dict[ColumnAnchor, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sample_to_nice_name_to_val: Dict[SampleGroup, Dict[SampleName, Dict[str, ValueT]]] = defaultdict(
+    group_to_sample_to_nice_name_to_val: dict[SampleGroup, dict[SampleName, dict[str, ValueT]]] = defaultdict(
         lambda: defaultdict(dict)
     )
-    group_to_sorting_to_anchor_to_val: Dict[SampleGroup, Dict[ColumnAnchor, ValueT]] = defaultdict(dict)
-    group_to_sample_to_anchor_to_empty: Dict[SampleGroup, Dict[SampleName, Dict[ColumnAnchor, bool]]] = defaultdict(
+    group_to_sorting_to_anchor_to_val: dict[SampleGroup, dict[ColumnAnchor, ValueT]] = defaultdict(dict)
+    group_to_sample_to_anchor_to_empty: dict[SampleGroup, dict[SampleName, dict[ColumnAnchor, bool]]] = defaultdict(
         lambda: defaultdict(dict)
     )
     # empty_cells: Dict[ColumnKeyT, str] = dict()
@@ -861,7 +860,7 @@ def render_html(
             )
 
         # Collect conditional formatting config
-        cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]] = {}
+        cond_formatting_rules: dict[str, dict[str, list[dict[str, Union[str, int, float]]]]] = {}
         if header.cond_formatting_rules:
             cond_formatting_rules[col_anchor] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
@@ -984,7 +983,7 @@ def render_html(
                     sorting_val = val
 
                 # Categorical background colours supplied
-                if isinstance(val, str) and val in header.bgcols.keys():
+                if isinstance(val, str) and val in header.bgcols:
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
                         f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}" {col}>{valstr}</td>'
@@ -1019,7 +1018,7 @@ def render_html(
 
         # Remove header if we don't have any filled cells for it
         sum_vals = 0
-        for g, rows_by_sample in group_to_sample_to_anchor_to_td.items():
+        for rows_by_sample in group_to_sample_to_anchor_to_td.values():
             sum_vals += sum([len(rows) for rows in rows_by_sample.values()])
         if sum_vals == 0:
             if header.hidden:
@@ -1034,7 +1033,7 @@ def render_html(
     # Buttons above the table
     if not config.simple_output and add_control_panel:
         # Copy Table Button
-        buttons: List[str] = []
+        buttons: list[str] = []
 
         buttons.append(
             f"""
@@ -1206,7 +1205,7 @@ def render_html(
     non_trivial_groups_present = any(len(group_to_sample_to_anchor_to_td[g_name]) > 1 for g_name in t_row_group_names)
 
     for g_name in t_row_group_names:
-        group_classes: List[str] = []
+        group_classes: list[str] = []
         # Hide the row if all cells are empty or hidden
         all_samples_empty = True
         for s_name in group_to_sample_to_anchor_to_td[g_name]:
@@ -1217,7 +1216,7 @@ def render_html(
             group_classes.append("row-empty")
         esc_g_name = escape(g_name)
         for number_in_group, s_name in enumerate(group_to_sample_to_anchor_to_td[g_name]):
-            tr_classes: List[str] = []
+            tr_classes: list[str] = []
             prefix = ""
             if non_trivial_groups_present:
                 caret_cls = ""
@@ -1253,7 +1252,7 @@ def render_html(
     # Save the raw values to a file if requested
     if dt.pconfig.save_file:
         fname = dt.pconfig.raw_data_fn or f"multiqc_{dt.anchor}"
-        flatten_raw_vals: Dict[str, Dict[str, ValueT]] = {}
+        flatten_raw_vals: dict[str, dict[str, ValueT]] = {}
         for g_name, g_data in group_to_sample_to_anchor_to_val.items():
             for s_name, s_data in g_data.items():
                 flatten_raw_vals[str(s_name)] = {str(k): v for k, v in s_data.items()}
@@ -1340,7 +1339,7 @@ def _get_sortlist_js(dt: DataTable) -> str:
         return ""
 
     headers = dt.get_headers_in_order()
-    sortlist: List[Tuple[int, int]] = []
+    sortlist: list[tuple[int, int]] = []
 
     # defaultsort is a list of {column, direction} objects
     col1_header = dt.pconfig.col1_header

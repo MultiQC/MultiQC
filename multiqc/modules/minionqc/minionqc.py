@@ -34,9 +34,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any minionqc reports
-        self.minionqc_raw_data = dict()  # main dataset in original YAML format
-        self.minionqc_data = dict()  # main dataset. Stats from all reads
-        self.qfilt_data = dict()  # Stats from quality filtered reads
+        self.minionqc_raw_data = {}  # main dataset in original YAML format
+        self.minionqc_data = {}  # main dataset. Stats from all reads
+        self.qfilt_data = {}  # Stats from quality filtered reads
         self.q_threshold_list = set()  # quality thresholds
         for f in self.find_log_files("minionqc", filehandles=True):
             # get sample name
@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # get q value threshold used for reads
         q_threshold = None
-        for k in summary_dict.keys():
+        for k in summary_dict:
             if k.startswith("Q>="):
                 q_threshold = k
 

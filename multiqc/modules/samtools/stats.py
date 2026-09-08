@@ -1,6 +1,6 @@
 import logging
 import re
-from typing import Dict, Optional, Tuple
+from typing import Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, violin
@@ -13,12 +13,12 @@ HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 # Note: used by the hifi_trimmer module
-def parse_samtools_stats_lines(file_contents: str) -> Tuple[Dict, Optional[str], Optional[str]]:
+def parse_samtools_stats_lines(file_contents: str) -> tuple[dict, Optional[str], Optional[str]]:
     """Parse `SN` rows from samtools stats output into a normalized dict.
     Also extract samtools and htslib versions if present on the header line.
     Returns a tuple: (parsed_data, samtools_version, htslib_version)
     """
-    parsed_data: Dict = {}
+    parsed_data: dict = {}
     samtools_version: Optional[str] = None
     htslib_version: Optional[str] = None
 
@@ -53,11 +53,11 @@ def parse_samtools_stats_lines(file_contents: str) -> Tuple[Dict, Optional[str],
 def parse_samtools_stats(module: BaseMultiqcModule):
     """Find Samtools stats logs and parse their data"""
 
-    samtools_stats: Dict = dict()
-    insert_size_hist: Dict = dict()
+    samtools_stats: dict = {}
+    insert_size_hist: dict = {}
     for f in module.find_log_files("samtools/stats"):
         parsed_data, samtools_version, htslib_version = parse_samtools_stats_lines(f["f"])
-        insert_sizes: Dict[int, float] = {}
+        insert_sizes: dict[int, float] = {}
         for line in f["f"].splitlines():
             if not line.startswith("IS"):
                 continue
@@ -138,7 +138,7 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "min": 0,
             "suffix": "%",
             "scale": "RdYlGn",
-            "hidden": True if (max([x["reads_mapped_and_paired"] for x in samtools_stats.values()]) == 0) else False,
+            "hidden": (max([x["reads_mapped_and_paired"] for x in samtools_stats.values()]) == 0),
         },
         "reads_MQ0_percent": {
             "title": "% MapQ 0 reads",

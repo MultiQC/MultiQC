@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HiCUP summary reports
-        self.hicup_data = dict()
+        self.hicup_data = {}
         for f in self.find_log_files("hicup"):
             self.parse_hicup_logs(f)
 

@@ -38,7 +38,7 @@ def test_data_parsed(data_dir):
         config.preserve_module_raw_data = True
         m = MultiqcModule()
         assert m.saved_raw_data is not None
-        assert len(list(m.saved_raw_data.values())[0]) == NUM_SAMPLES_PER_FILE[path.name]
+        assert len(next(iter(m.saved_raw_data.values()))) == NUM_SAMPLES_PER_FILE[path.name]
 
 
 def test_empty_file_parsing(data_dir):
@@ -61,8 +61,8 @@ def test_use_filename_as_sample_name(data_dir):
     config.use_filename_as_sample_name = True
     m = MultiqcModule()
     assert m.saved_raw_data is not None
-    assert len(list(m.saved_raw_data.values())[0]) == NUM_SAMPLES_PER_FILE[path.name]
-    assert m._clean_s_name(path.name) in list(m.saved_raw_data.values())[0]
+    assert len(next(iter(m.saved_raw_data.values()))) == NUM_SAMPLES_PER_FILE[path.name]
+    assert m._clean_s_name(path.name) in next(iter(m.saved_raw_data.values()))
 
 
 def test_all_same_length():

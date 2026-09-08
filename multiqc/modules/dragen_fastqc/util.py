@@ -30,9 +30,8 @@ def parse_fastqc_metrics_file(f):
         tokens = line.split(",")
         if len(tokens) == 4:
             group, mate, metric, value = line.split(",")
-            percentage = None
         elif len(tokens) == 5:
-            group, mate, metric, value, percentage = line.split(",")
+            group, mate, metric, value, _percentage = line.split(",")
         else:
             raise ValueError(f"Unexpected number of values in line {line}")
 
@@ -55,8 +54,8 @@ def parse_fastqc_metrics_file(f):
 
 
 def initialize_dataset(s_name):
-    data = dict()
-    data[s_name] = dict()
+    data = {}
+    data[s_name] = {}
     for mate in _VALID_MATES:
         data[s_name][mate] = defaultdict(lambda: defaultdict(int))
     return data

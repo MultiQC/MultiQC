@@ -29,9 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/pcingola/SnpEff/blob/master/LICENSE.md",
         )
 
-        self.snpeff_data = dict()
-        self.snpeff_section_totals = dict()
-        self.snpeff_qualities = dict()
+        self.snpeff_data = {}
+        self.snpeff_section_totals = {}
+        self.snpeff_qualities = {}
 
         for f in self.find_log_files("snpeff", filehandles=True):
             self.parse_snpeff_log(f)
@@ -178,13 +178,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             if line[:1] == "#":
                 section = line
-                self.snpeff_section_totals[section] = dict()
+                self.snpeff_section_totals[section] = {}
                 continue
             s = line.split(",")
 
             # Quality values / counts
             if section == "# Quality":
-                quals = dict()
+                quals = {}
                 if line.startswith("Values"):
                     values = [int(c) for c in line.split(",")[1:]]
                     counts = f["f"].readline()
@@ -200,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Everything else
             elif section in keys:
-                if keys[section] == "all" or any([k in s[0].strip() for k in keys[section]]):
+                if keys[section] == "all" or any(k in s[0].strip() for k in keys[section]):
                     if len(s) < 2:
                         continue
                     key = s[0].strip()
@@ -262,7 +262,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
-        pkeys = dict()
+        pkeys = {}
         for k in sorted_keys:
             key = k.replace("_", " ").title().replace("Utr", "UTR")
             if key == "None":
@@ -287,7 +287,7 @@ class MultiqcModule(BaseMultiqcModule):
         sorted_keys = sorted(keys, reverse=True, key=keys.get)
 
         # Make nicer label names
-        pkeys = dict()
+        pkeys = {}
         for k in sorted_keys:
             pkeys[k] = {"name": k.replace("_", " ").title().replace("Utr", "UTR")}
 
@@ -307,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["MODIFIER", "LOW", "MODERATE", "HIGH"]
 
         # Make nicer label names
-        pkeys = dict()
+        pkeys = {}
         for k in keys:
             pkeys[k] = {"name": k.title()}
 
@@ -328,7 +328,7 @@ class MultiqcModule(BaseMultiqcModule):
         keys = ["SILENT", "MISSENSE", "NONSENSE"]
 
         # Make nicer label names
-        pkeys = dict()
+        pkeys = {}
         for k in keys:
             pkeys[k] = {"name": k.title()}
 

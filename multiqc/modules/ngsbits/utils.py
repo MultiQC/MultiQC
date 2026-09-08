@@ -1,15 +1,15 @@
 import re
 import xml.etree.ElementTree
-from typing import Dict, Tuple, Union
+from typing import Union
 
 
-def parse_qcml_by(qcml_contents: str, tag: str) -> Tuple[Dict[str, Union[float, str]], Dict[str, Tuple[str, str]]]:
+def parse_qcml_by(qcml_contents: str, tag: str) -> tuple[dict[str, Union[float, str]], dict[str, tuple[str, str]]]:
     """Parse a qcML file and return key-value pairs from the quality parameter entries."""
     root = xml.etree.ElementTree.fromstring(qcml_contents)
-    values: Dict[str, Union[float, str]] = dict()
-    params: Dict[str, Tuple[str, str]] = dict()
+    values: dict[str, Union[float, str]] = {}
+    params: dict[str, tuple[str, str]] = {}
 
-    for qp in root.findall(".//{http://www.prime-xs.eu/ms/qcml}%s" % tag):
+    for qp in root.findall(f".//{{http://www.prime-xs.eu/ms/qcml}}{tag}"):
         # skip n/a values
         if qp.attrib["value"].startswith("n/a"):
             continue

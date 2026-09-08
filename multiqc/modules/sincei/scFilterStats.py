@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class scFilterStatsMixin:
     def parse_scFilterStats(self):
         """Find scFilterStats output."""
-        self.sincei_scFilterStats = dict()
+        self.sincei_scFilterStats = {}
         for f in self.find_log_files("sincei/scFilterStats", filehandles=True):
             parsed_data = self.parsescFilterStatsFile(f)
             for k, v in parsed_data.items():
@@ -31,7 +31,7 @@ class scFilterStatsMixin:
             # Write data to file
             self.write_data_file(self.sincei_scFilterStats, "sincei_read_filtering")
 
-            header = dict()
+            header = {}
             header["N Entries"] = {
                 "title": "N entries",
                 "description": "Median number of entries sampled from the file",
@@ -150,13 +150,13 @@ class scFilterStatsMixin:
 
             test_dict = group_median_by_cell_prefix(self.sincei_scFilterStats, kys[0])
             out = {}
-            for k in test_dict.keys():
+            for k in test_dict:
                 out[k] = dict.fromkeys(kys)
                 for p in kys:
                     dv = group_median_by_cell_prefix(self.sincei_scFilterStats, p)
                     out[k].update(dv[k])
 
-            tdata = dict()
+            tdata = {}
             for k, v in out.items():
                 tdata[k] = {
                     "SampleName": k,
@@ -252,7 +252,7 @@ class scFilterStatsMixin:
             log.warning(
                 f"{f['fn']} was initially flagged as the tabular output from scFilterStats, but that seems to not be the case. Skipping..."
             )
-            return dict()
+            return {}
 
         d = {}
         for row in reader:

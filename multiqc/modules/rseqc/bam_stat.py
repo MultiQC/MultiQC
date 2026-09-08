@@ -3,7 +3,6 @@ http://rseqc.sourceforge.net/#bam-stat-py"""
 
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
@@ -15,7 +14,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC bam_stat reports and parse their data"""
 
     # Set up vars
-    bam_stat_data = dict()
+    bam_stat_data = {}
     regexes = {
         "total_records": r"Total records:\s*(\d+)",
         "qc_failed": r"QC failed:\s*(\d+)",
@@ -38,7 +37,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Go through files and parse data using regexes
     for f in module.find_log_files("rseqc/bam_stat"):
-        d: Dict = dict()
+        d: dict = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -102,7 +101,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         "modify": lambda x: x * config.read_count_multiplier,
         "suffix": config.read_count_prefix,
     }
-    keys = dict()
+    keys = {}
     keys["total_records"] = dict(defaults, title="Total records")
     keys["qc_failed"] = dict(defaults, title="QC failed")
     keys["optical_pcr_duplicate"] = dict(defaults, title="Duplicates", description="Optical/PCR duplicate")

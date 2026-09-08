@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load reports
-        self.filtlong_data = dict()
+        self.filtlong_data = {}
 
         # Find all files for filtlong
         for f in self.find_log_files("filtlong", filehandles=True):

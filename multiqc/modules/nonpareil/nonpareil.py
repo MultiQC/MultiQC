@@ -1,5 +1,4 @@
 import logging
-from typing import List
 
 import numpy as np
 
@@ -51,7 +50,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.plot_colours = getattr(config, "nonpareil", {}).get("plot_colours", "Paired")
 
         # Read JSON file
-        self.data_by_sample = dict()
+        self.data_by_sample = {}
         for f in self.find_log_files("nonpareil", filehandles=True):
             json_parsed = self.parse_nonpareil_json(f)
             common_samples = set(json_parsed).intersection(self.data_by_sample)
@@ -108,9 +107,9 @@ class MultiqcModule(BaseMultiqcModule):
             data["y.p75"] = [x * 100 for x in data["y.p75"]]
             data["y.p25"] = [x * 100 for x in data["y.p25"]]
             # Prepare plot data
-            data["observed"] = {x: y for x, y in zip(data["x.adj"], data["y.cov"])}
+            data["observed"] = dict(zip(data["x.adj"], data["y.cov"]))
             if data["has.model"]:
-                data["model"] = {x: y for x, y in zip(data["x.model"], data["y.model"])}
+                data["model"] = dict(zip(data["x.model"], data["y.model"]))
             else:
                 modelR = data["modelR"]
                 assert isinstance(modelR, list) and len(modelR) == 0, "there is no model, but modelR is not empty"
@@ -331,11 +330,11 @@ class MultiqcModule(BaseMultiqcModule):
     def nonpareil_redundancy_plot(self):
         """Make the redundancy plot for nonpareil"""
 
-        extra_series_config = dict(
-            dash="dash",
-            width=2,
-            showlegend=False,
-        )
+        extra_series_config = {
+            "dash": "dash",
+            "width": 2,
+            "showlegend": False,
+        }
 
         data_colors_default = mqc_colour.mqc_colour_scale().get_colours(self.plot_colours)
         data_colors = {
@@ -348,10 +347,10 @@ class MultiqcModule(BaseMultiqcModule):
             {"name": "Observed"},
             {"name": "Model"},
         ]
-        data_plot = list()
-        extra_series: List[List[Series]] = []
+        data_plot = []
+        extra_series: list[list[Series]] = []
         for idx, dataset in enumerate(data_labels):
-            data_plot.append(dict())
+            data_plot.append({})
             extra_series.append([])
             for s_name, data in self.data_by_sample.items():
                 if dataset["name"] == "Observed":
