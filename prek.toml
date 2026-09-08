@@ -2,7 +2,7 @@
 # See https://prek.j178.dev for more information.
 #:schema https://www.schemastore.org/prek.json
 
-minimum_pre_commit_version = "2.9.2"
+minimum_prek_version = "0.4.12"
 
 [[repos]]
 repo = "meta"
