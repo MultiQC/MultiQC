@@ -172,6 +172,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/wdecoster/cramino",
             info="Quick quality assessment of aligned or unaligned long-read sequencing data in BAM/CRAM format",
             doi="10.1093/bioinformatics/btad311",
+            license="MIT License",
+            license_url="https://github.com/wdecoster/cramino/blob/master/LICENSE",
         )
 
         self.cfg = read_config()
