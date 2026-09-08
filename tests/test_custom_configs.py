@@ -10,6 +10,15 @@ import multiqc
 from multiqc.core.update_config import ClConfig
 
 
+def without_trailing_whitespace(text: str) -> str:
+    """Drop trailing whitespace from every line.
+
+    The Jinja templates emit lines of pure indentation, which linting strips out of
+    this file but not out of the rendered report, so compare without it.
+    """
+    return "\n".join(line.rstrip() for line in text.splitlines())
+
+
 @pytest.fixture
 def sample_data_file(tmp_path: Path) -> Path:
     """Create a simple custom content data file for generating reports."""
@@ -122,7 +131,7 @@ custom_logo_url: "https://customlogo.com"
 
       </a>"""
 
-        assert expected_logo_html in report_html
+        assert without_trailing_whitespace(expected_logo_html) in without_trailing_whitespace(report_html)
 
     def test_custom_logo_svg_in_html(self, data_dir, sample_data_file: Path, tmp_path: Path) -> None:
         """Verify custom SVG logo appears with correct MIME type."""
@@ -154,4 +163,4 @@ custom_logo_url: "https://customlogo.com"
 
       </a>"""
 
-        assert expected_logo_html in report_html
+        assert without_trailing_whitespace(expected_logo_html) in without_trailing_whitespace(report_html)
