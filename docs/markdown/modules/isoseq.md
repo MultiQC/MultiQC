@@ -43,4 +43,3 @@ isoseq/refine-json:
   contents: '"num_reads_fl"'
   fn: '*.json'
 ```
-    

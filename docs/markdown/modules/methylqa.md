@@ -28,4 +28,3 @@ methylqa:
   fn: '*.report'
   shared: true
 ```
-    

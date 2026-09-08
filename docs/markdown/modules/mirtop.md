@@ -35,4 +35,3 @@ isomiR-SEA, sRNAbench, Prost! as well as BAM files.
 mirtop:
   fn: '*_mirtop_stats.log'
 ```
-    

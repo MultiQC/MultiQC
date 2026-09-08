@@ -51,4 +51,3 @@ metaphlan:
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
   fn: '*.txt'
 ```
-    

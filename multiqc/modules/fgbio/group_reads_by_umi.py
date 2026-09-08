@@ -45,7 +45,7 @@ def run_group_reads_by_umi(module: BaseMultiqcModule) -> int:
             Reads are grouped by template, and then templates are sorted by the 5' mapping positions
             of the reads from the template, used from earliest mapping position to latest.
             Reads that have the same end positions are then sub-grouped by UMI sequence.
-    
+
             The histogram shows tag family size counts or percentages.
             """,
             plot=linegraph.plot([fgbio_umi_data, fgbio_umi_data_normed], config),

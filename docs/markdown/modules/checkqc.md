@@ -32,4 +32,3 @@ checkqc:
   contents: instrument_and_reagent_type
   fn: '*.json'
 ```
-    

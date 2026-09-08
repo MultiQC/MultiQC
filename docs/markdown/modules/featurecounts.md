@@ -39,4 +39,3 @@ featurecounts:
   fn: '*.summary'
   shared: true
 ```
-    

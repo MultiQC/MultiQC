@@ -41,4 +41,3 @@ adapterremoval:
   fn: '*.settings'
   num_lines: 1
 ```
-    

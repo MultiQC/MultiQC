@@ -45,4 +45,3 @@ Note: The old `trimmomatic.s_name_filenames` option is deprecated and will be re
 trimmomatic:
   contents_re: ^Trimmomatic
 ```
-    

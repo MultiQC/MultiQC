@@ -43,4 +43,3 @@ glimpse/err_spl:
   fn: '*.error.spl.txt.gz'
   num_lines: 1
 ```
-    

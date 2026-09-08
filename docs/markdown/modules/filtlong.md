@@ -48,4 +48,3 @@ filtlong:
   contents_re: .*Filtering long reads.*
   num_lines: 5
 ```
-    

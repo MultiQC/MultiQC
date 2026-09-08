@@ -122,7 +122,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
         module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
         module_md_path.parent.mkdir(parents=True, exist_ok=True)
         with module_md_path.open("w") as fh:
-            fh.write(text)
+            fh.write(text.rstrip() + "\n")
         print(f"Generated {module_md_path}")
 
     mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
@@ -154,13 +154,8 @@ import MultiqcModules from "@site/src/components/MultiqcModules";
 <MultiqcModules
 modules={{{str(json.dumps(modules_data))}}}
 />
-
-    """
+"""
         )
-
-    # Format markdown files
-    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules/*.md"], check=True)
-    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules.mdx"], check=True)
 
 
 if __name__ == "__main__":

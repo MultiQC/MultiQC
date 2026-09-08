@@ -53,4 +53,3 @@ sourmash/gather:
   contents: intersect_bp,f_orig_query,f_match,f_unique_to_query,f_unique_weighted,
   num_lines: 1
 ```
-    

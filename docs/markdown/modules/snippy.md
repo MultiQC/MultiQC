@@ -40,4 +40,3 @@ snippy/snippy-core:
   contents_re: ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV
   num_lines: 1
 ```
-    

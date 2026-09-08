@@ -73,4 +73,3 @@ vcftools/tstv_by_qual:
 vcftools/tstv_summary:
   fn: '*.TsTv.summary'
 ```
-    

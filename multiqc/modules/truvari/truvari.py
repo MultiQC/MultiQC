@@ -223,35 +223,35 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             Bargraph of SV call classifications from the perspectives of the *comp* and
             *base* ("truth") VCFs. Four different groups of calls are shown:
-    
+
             #### Comp
             Compares TP and FP calls in the *comp* VCF relative the *base*. The
             classifications are:
-    
+
             - **TP**: Comp call matches a base call
             - **FP**: Comp call does not match a base call
-    
+
             #### Base
             Compares TP and FN calls in the *base* VCF relative the *comp*. The
             classifications are:
-    
+
             - **TP**: Base call matches a comp call
             - **FN**: Base call does not match a comp call
-    
+
             #### TP (comp) GT
             Compares TP calls in the *comp* VCF relative to the *base* VCF for
             matching genotypes. The classifications are:
-    
+
             - **Match**: TP call in comp has matching genotype in base
             - **No match**: TP call in comp does not have matching genotype in base
-    
+
             #### TP (base) GT
             Compares TP calls in the *base* VCF relative to the *comp* VCF for
             matching genotypes. The classifications are:
-    
+
             - **Match**: TP call in base has matching genotype in comp
             - **No match**: TP call in base does not have matching genotype in comp
-    
+
             For more information, see the [truvari bench wiki](https://github.com/acenglish/truvari/wiki/bench)
             """,
             plot=bargraph.plot(bar_data, bar_categories, pconfig=bar_config),
@@ -287,17 +287,17 @@ class MultiqcModule(BaseMultiqcModule):
             Scatter plot of precision vs. recall comparing SV calls between two VCFs,
             one truth set ("base") and one to be evaluated ("comp"). The precision and
             recall values are calculated as follows:
-    
+
             - **Precision**: TP-comp / (TP-comp + FP)
             - **Recall**: TP-base / (TP-base + FN)
-    
+
             The TP, FP, and FN values are intrun defined as follows:
-    
+
             - **TP (base)**: Number of matching calls from the base ('truth') VCF
             - **TP (comp)**: Number of matching calls from the comp VCF
             - **FP**: Number of non-matching calls from the comp VCF
             - **FN**: Number of non-matching calls from the base ('truth') VCF
-    
+
             For more information, see the [truvari bench wiki](https://github.com/acenglish/truvari/wiki/bench)
             """,
             plot=scatter.plot(scatter_data, scatter_config),

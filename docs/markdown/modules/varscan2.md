@@ -46,4 +46,3 @@ varscan2/mpileup2snp:
   contents: Only SNPs will be reported
   num_lines: 10
 ```
-    

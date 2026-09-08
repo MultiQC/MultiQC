@@ -42,4 +42,3 @@ xenome:
   contents: "B\tG\tH\tM\tcount\tpercent\tclass"
   num_lines: 2
 ```
-    

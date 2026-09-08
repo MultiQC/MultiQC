@@ -88,4 +88,3 @@ qualimap/rnaseq/html:
 qualimap/rnaseq/rnaseq_results:
   fn: rnaseq_qc_results.txt
 ```
-    

@@ -34,4 +34,3 @@ bakta:
   contents: 'Bakta:'
   fn: '*.txt'
 ```
-    

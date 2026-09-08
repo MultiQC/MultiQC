@@ -57,4 +57,3 @@ jcvi:
   contents: '     o    % GC    % of genome    Average size (bp)    Median size (bp)    Number    Total
     length (Mb)'
 ```
-    

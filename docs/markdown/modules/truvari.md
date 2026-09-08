@@ -35,4 +35,3 @@ truvari/bench:
   fn: log.txt
   num_lines: 10
 ```
-    

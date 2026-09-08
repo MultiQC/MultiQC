@@ -52,4 +52,3 @@ seqkit/stats:
   contents_re: ^file\s+format\s+type\s+num_seqs\s+sum_len
   num_lines: 1
 ```
-    

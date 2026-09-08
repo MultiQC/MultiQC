@@ -45,4 +45,3 @@ ngsbits/readqc:
 ngsbits/samplegender:
 - fn: '*_ngsbits_sex.tsv'
 ```
-    

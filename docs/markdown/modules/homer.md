@@ -59,4 +59,3 @@ homer/genomeGCcontent:
 homer/tagInfo:
   fn: tagInfo.txt
 ```
-    

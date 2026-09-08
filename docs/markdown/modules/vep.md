@@ -49,4 +49,3 @@ vep/vep_txt:
   max_filesize: 100000
   num_lines: 1
 ```
-    

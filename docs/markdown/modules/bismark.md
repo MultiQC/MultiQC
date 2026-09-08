@@ -37,4 +37,3 @@ bismark/m_bias:
 bismark/meth_extract:
   fn: '*_splitting_report.txt'
 ```
-    

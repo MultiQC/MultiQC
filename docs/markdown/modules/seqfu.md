@@ -48,4 +48,3 @@ seqfu/stats:
   contents: "File\t#Seq\tTotal bp\tAvg\tN50\tN75\tN90\tauN\tMin\tMax"
   num_lines: 1
 ```
-    

@@ -58,4 +58,3 @@ cellranger/vdj_html:
   fn: '*.html'
   num_lines: 20
 ```
-    

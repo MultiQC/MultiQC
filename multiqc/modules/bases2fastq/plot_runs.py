@@ -659,7 +659,7 @@ def plot_base_quality_hist(run_data, color_dict):
     anchor = "bq_hist"
     description = "Histogram of run base qualities"
     helptext = """
-    Run base qualities histogram, summarised by bases and reads. 
+    Run base qualities histogram, summarised by bases and reads.
     Use tabs to switch between the views:\n
         - Quality Per Base: distribution of base qualities.\n
         - Quality Per Read: distribution of read qualities.\n

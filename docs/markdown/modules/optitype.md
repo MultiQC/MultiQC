@@ -33,4 +33,3 @@ optitype:
   contents: "\tA1\tA2\tB1\tB2\tC1\tC2\tReads\tObjective"
   num_lines: 1
 ```
-    

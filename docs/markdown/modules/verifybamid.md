@@ -64,4 +64,3 @@ This was designed to work with verifyBamID 1.1.3 January 2018
 verifybamid/selfsm:
   fn: '*.selfSM'
 ```
-    

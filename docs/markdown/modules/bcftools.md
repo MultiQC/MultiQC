@@ -46,4 +46,3 @@ in the resulting plot.
 bcftools/stats:
   contents: This file was produced by bcftools stats
 ```
-    
