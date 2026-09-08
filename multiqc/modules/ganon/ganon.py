@@ -2,7 +2,6 @@
 
 import logging
 import re
-from typing import Optional, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -26,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/pirovc/ganon/blob/master/LICENSE",
         )
 
-        data_by_sample: dict[str, dict[str, Union[str, int, float, None]]] = {}
+        data_by_sample: dict[str, dict[str, str | int | float | None]] = {}
         for f in self.find_log_files("ganon"):
             s_name, data = self.parse_log(f)
             if not s_name:
@@ -51,10 +50,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.violin_average_matches(data_by_sample)
         self.barplot_taxonomic_entries(data_by_sample)
 
-    def parse_log(self, f) -> tuple[Optional[str], dict[str, Union[str, int, float, None]]]:
+    def parse_log(self, f) -> tuple[str | None, dict[str, str | int | float | None]]:
         s_name = None
         version = None
-        data: dict[str, Union[str, int, float, None]] = {}
+        data: dict[str, str | int | float | None] = {}
         for line in f["f"].splitlines():
             if s_name is None:  # We are somewhere in the file header
                 if version is None:

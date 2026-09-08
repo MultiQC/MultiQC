@@ -2,7 +2,6 @@ import ast
 import logging
 import math
 import re
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -128,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             stats["version"] = version_match.group(1)
         return stats
 
-    def parse_distancelaw(self, f) -> Optional[dict[str, dict[int, float]]]:
+    def parse_distancelaw(self, f) -> dict[str, dict[int, float]] | None:
         """Parse a hicstuff distance-law TSV file.
 
         Returns a dict mapping chromosome name -> {start_bp: p_s}, or None if no

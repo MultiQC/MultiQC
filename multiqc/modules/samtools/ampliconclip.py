@@ -1,6 +1,5 @@
 import logging
-import re
-from typing import Any, Optional
+from typing import Any
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import violin
@@ -195,7 +194,7 @@ def parse_single_report(file_obj):
     Take a filename, parse the data assuming it's a ampliconclip file
     Returns a dictionary of metrics to value
     """
-    parsed_data: dict[str, Optional[int]] = dict.fromkeys(ampliconclip_headers)
+    parsed_data: dict[str, int | None] = dict.fromkeys(ampliconclip_headers)
 
     source_to_key = {data_dict["source_col"]: data_key for data_key, data_dict in ampliconclip_headers.items()}
     source_to_key["COMMAND"] = None

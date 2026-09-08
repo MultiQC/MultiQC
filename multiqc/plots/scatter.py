@@ -6,7 +6,7 @@ import logging
 import math
 from collections import defaultdict
 from collections.abc import Mapping
-from typing import Any, Optional, Union, cast
+from typing import Any, Union, cast
 
 import numpy as np
 import polars as pl
@@ -22,21 +22,21 @@ logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    categories: Optional[list[str]] = None  # x-axis labels
-    groups: Optional[list[str]] = None  # color groups
-    extra_series: Union[dict[str, Any], list[dict[str, Any]], list[list[dict[str, Any]]], None] = None
-    marker_size: Optional[int] = None
-    marker_line_width: Optional[int] = None
-    color: Optional[str] = None
-    opacity: Optional[float] = None
-    marker_symbol: Optional[str] = None
+    categories: list[str] | None = None  # x-axis labels
+    groups: list[str] | None = None  # color groups
+    extra_series: dict[str, Any] | list[dict[str, Any]] | list[list[dict[str, Any]]] | None = None
+    marker_size: int | None = None
+    marker_line_width: int | None = None
+    color: str | None = None
+    opacity: float | None = None
+    marker_symbol: str | None = None
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
-ValueT = Union[str, float, int]
+ValueT = str | float | int
 PointT = dict[str, ValueT]
 
 
@@ -98,8 +98,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        data: Union[dict[str, Any], list[dict[str, Any]]],
-        pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
+        data: dict[str, Any] | list[dict[str, Any]],
+        pconfig: Mapping[str, Any] | ScatterConfig | None = None,
     ) -> "ScatterNormalizedInputData":
         pconf: ScatterConfig = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
 
@@ -148,9 +148,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
     @classmethod
-    def from_df(
-        cls, df: pl.DataFrame, pconfig: Union[dict, ScatterConfig], anchor: Anchor
-    ) -> "ScatterNormalizedInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | ScatterConfig, anchor: Anchor) -> "ScatterNormalizedInputData":
         """
         Create a ScatterNormalizedInputData object from a polars DataFrame.
         """
@@ -216,8 +214,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
 
 def plot(
-    data: Union[dict[str, Any], list[dict[str, Any]]],
-    pconfig: Union[Mapping[str, Any], ScatterConfig, None],
+    data: dict[str, Any] | list[dict[str, Any]],
+    pconfig: Mapping[str, Any] | ScatterConfig | None,
 ) -> Union["ScatterPlot", str, None]:
     """
     Plot a scatter plot with X,Y data.
@@ -357,7 +355,7 @@ class Dataset(BaseDataset):
             params = copy.deepcopy(self.trace_params)
             marker = params.pop("marker")
             if color:
-                marker["color"] = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
+                marker["color"] = mqc_colour.color_to_rgb_string(cast(str | None, el.get("color")))
 
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
@@ -388,7 +386,7 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-    def get_x_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_x_range(self) -> tuple[Any | None, Any | None]:
         if not self.points:
             return None, None
         xmax, xmin = None, None
@@ -404,7 +402,7 @@ class Dataset(BaseDataset):
                 xmin = x
         return xmin, xmax
 
-    def get_y_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_y_range(self) -> tuple[Any | None, Any | None]:
         if not self.points:
             return None, None
         ymax, ymin = None, None

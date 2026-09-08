@@ -1,7 +1,7 @@
 import json
 import logging
 from collections import defaultdict
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -87,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         auto_group_pairs = getattr(config, "trim_galore_config", {}).get("auto_group_pairs", True)
         self._pair_display_by_key: dict[tuple[str, ...], str] = {}
-        explicit_groups: Optional[dict[str, list[str]]] = None
+        explicit_groups: dict[str, list[str]] | None = None
         if auto_group_pairs:
             explicit_groups, self._pair_display_by_key = self._derive_auto_groups(data_by_sample)
 
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
 
-    def _parse_log(self, f) -> Optional[tuple[str, dict[str, Any], tuple[str, ...]]]:
+    def _parse_log(self, f) -> tuple[str, dict[str, Any], tuple[str, ...]] | None:
         try:
             payload = json.load(f["f"])
         except json.JSONDecodeError as e:
@@ -244,7 +244,7 @@ class MultiqcModule(BaseMultiqcModule):
     def _general_stats_table(
         self,
         data_by_sample: dict[str, dict[str, Any]],
-        explicit_groups: Optional[dict[str, list[str]]] = None,
+        explicit_groups: dict[str, list[str]] | None = None,
     ) -> None:
         gen_stats: dict[str, dict[ColumnKey, Any]] = {}
         for s_name, payload in data_by_sample.items():

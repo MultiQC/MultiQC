@@ -14,7 +14,6 @@ from multiqc.plots.box import BoxPlot
 from multiqc.plots.heatmap import HeatmapPlot
 from multiqc.plots.linegraph import LinePlot
 from multiqc.plots.scatter import ScatterPlot
-from multiqc.plots.table_object import Cell
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError

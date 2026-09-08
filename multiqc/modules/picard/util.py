@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from typing import Optional, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
@@ -25,7 +24,7 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
     """
     all_data = {}
     assert len(formats) == len(headers)
-    sample_data: Optional[dict] = None
+    sample_data: dict | None = None
 
     # Go through logs and find Metrics
     for f in module.find_log_files(program_key, filehandles=True):
@@ -79,8 +78,8 @@ def read_histogram(module, program_key, headers, formats, picard_tool, sentieon_
 
 def is_line_right_before_table(
     line: str,
-    picard_class: Union[None, str, list[str]] = None,
-    sentieon_algo: Optional[str] = None,
+    picard_class: None | str | list[str] = None,
+    sentieon_algo: str | None = None,
 ) -> bool:
     """
     Picard logs from different samples can be concatenated together, so the module
@@ -112,10 +111,10 @@ def extract_sample_name(
     mod: BaseMultiqcModule,
     line: str,
     f: LoadedFileDict[str],
-    picard_tool: Union[str, list[str]],
-    sentieon_algo: Optional[str] = None,
-    picard_opt: Union[None, str, list[str]] = None,
-) -> Optional[str]:
+    picard_tool: str | list[str],
+    sentieon_algo: str | None = None,
+    picard_opt: None | str | list[str] = None,
+) -> str | None:
     """
     Historically, MultiQC supported Picard tools QC outputs merged together into
     one file from different samples and tools. In order to handle this correctly,
@@ -182,7 +181,7 @@ def extract_sample_name(
     return None
 
 
-def multiply_hundred(val: Union[str, float]) -> Union[str, float]:
+def multiply_hundred(val: str | float) -> str | float:
     try:
         val = float(val) * 100
     except ValueError:

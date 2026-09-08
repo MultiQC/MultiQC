@@ -2,7 +2,6 @@ import logging
 import os
 import re
 from copy import deepcopy
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -256,7 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def parse_star_genecounts_report(f) -> Optional[dict[str, dict[str, int]]]:
+def parse_star_genecounts_report(f) -> dict[str, dict[str, int]] | None:
     """Parse a STAR gene counts output file"""
     # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
     keys = ["N_unmapped", "N_multimapping", "N_noFeature", "N_ambiguous"]
@@ -343,7 +342,7 @@ def star_alignment_chart(data_by_sample):
     return bargraph.plot(data_by_sample, keys, pconfig)
 
 
-def parse_star_report(contents: str) -> Optional[dict[str, float]]:
+def parse_star_report(contents: str) -> dict[str, float] | None:
     """Parse the final STAR log file."""
 
     regexes = {

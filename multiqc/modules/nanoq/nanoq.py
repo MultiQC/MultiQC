@@ -1,12 +1,13 @@
+import itertools
 import logging
 import re
 from collections import defaultdict
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Any, Callable, Union
+from typing import Any
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.utils import mqc_colour
 
@@ -293,7 +294,7 @@ def get_ranges_from_cumsum(
     """Calculate ranges from cumulative sum data"""
     keys = [f"<{formatter(thresholds[0])}"]
     ranges = {keys[0]: total - data[thresholds[0]]}
-    for th, next_th in zip(thresholds[:-1], thresholds[1:]):
+    for th, next_th in itertools.pairwise(thresholds):
         key = formatter(f"{th}-{next_th}")
         keys.append(key)
         ranges[key] = data[th] - data[next_th]
@@ -305,7 +306,7 @@ def get_ranges_from_cumsum(
     return ranges, keys
 
 
-def bp_formatter(key: Union[int, str]) -> str:
+def bp_formatter(key: int | str) -> str:
     """Format bp values"""
     key = str(key)
     numbers = [int(x) for x in re.findall(r"\d+", key)]

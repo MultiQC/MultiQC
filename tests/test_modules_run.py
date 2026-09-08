@@ -1,6 +1,6 @@
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Union
 
 import pytest
 
@@ -45,7 +45,7 @@ def test_all_modules(module_id, entry_point, data_dir):
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
 
-    module_cls: Callable[[], Union[BaseMultiqcModule, list[BaseMultiqcModule]]] = entry_point.load()
+    module_cls: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
     _module = module_cls()
     for m in _module if isinstance(_module, list) else [_module]:
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0
@@ -89,7 +89,7 @@ def test_ignore_samples(module_id, entry_point, data_dir):
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
 
-    module_cls: Callable[[], Union[BaseMultiqcModule, list[BaseMultiqcModule]]] = entry_point.load()
+    module_cls: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
     with pytest.raises(ModuleNoSamplesFound):
         _module = module_cls()
 

@@ -38,7 +38,7 @@ dependencies = [
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
-requires-python = ">=3.9, !=3.14.1"
+requires-python = ">=3.10, !=3.14.1"
 authors = [
     { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
     { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
@@ -327,8 +327,6 @@ extend-exclude = ["CHANGELOG.md"]
 # behaviour change rather than a cleanup. Each is worth revisiting on its own.
 ignore = [
   "F401",    # unused-import: modules re-export names for the public API
-  "FA100",   # wants `from __future__ import annotations`, which code_checks.py forbids.
-             # Moot once 3.9 support goes and PEP 604 syntax can be written directly
   "N999",    # module and file names deliberately match the tool or subcommand they
              # support, so that Picard's MarkDuplicates output leads to
              # picard/MarkDuplicates.py. Renaming would also break entry points,
@@ -341,7 +339,7 @@ ignore = [
              # condition, which a merged `and` chain would strand or lose; ruff declines
              # to fix them for the same reason
   "PYI019",  # its fix imports typing_extensions, which is not a dependency. Resolves
-             # itself when 3.9 support goes and `typing.Self` becomes available
+             # itself at 3.11, when `typing.Self` becomes available
 ]
 
 [tool.ruff.lint.per-file-ignores]

@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Optional
 
 from multiqc.plots import linegraph
 
@@ -18,9 +17,9 @@ def parse_reports(module):
     return parsed_samples
 
 
-def _parse_metrics(module) -> dict[str, dict[str, dict[str, Optional[float]]]]:
+def _parse_metrics(module) -> dict[str, dict[str, dict[str, float | None]]]:
     # data_by_sample[sample][orientation] = {col: value}
-    data_by_sample: dict[str, dict[str, dict[str, Optional[float]]]] = {}
+    data_by_sample: dict[str, dict[str, dict[str, float | None]]] = {}
 
     for f in module.find_log_files("riker/isize_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -45,7 +44,7 @@ def _parse_metrics(module) -> dict[str, dict[str, dict[str, Optional[float]]]]:
 
     # Pick the FR orientation when present (the typical Illumina library), else the
     # first available orientation; there is always at least one row per sample.
-    primary_data: dict[str, dict[str, Optional[float]]] = {}
+    primary_data: dict[str, dict[str, float | None]] = {}
     for s_name, by_orient in data_by_sample.items():
         primary_data[s_name] = by_orient.get("FR", next(iter(by_orient.values())))
 

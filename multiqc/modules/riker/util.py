@@ -2,7 +2,7 @@
 
 import logging
 from collections.abc import Iterator
-from typing import Optional, TextIO
+from typing import TextIO
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def to_int(value: str) -> int:
         return int(float(value))
 
 
-def to_float(value: str) -> Optional[float]:
+def to_float(value: str) -> float | None:
     """
     Parse a float metric column, treating an empty or blank cell as missing.
 

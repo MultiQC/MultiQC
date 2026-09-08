@@ -1,7 +1,6 @@
 import copy
 import fnmatch
 import logging
-from typing import Union
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import linegraph, table
@@ -131,7 +130,7 @@ def summary_table(module, data_by_sample):
 
 
 def lineplot_per_region(module, data_by_sample: dict):
-    tabs: dict[str, dict[str, Union[str, int]]] = {
+    tabs: dict[str, dict[str, str | int]] = {
         "numreads": {
             "title": "Mapped reads per region",
             "name": "Reads",
@@ -254,7 +253,7 @@ EXPECTED_COLUMNS = [
 ]
 
 
-def parse_single_report(f) -> dict[str, dict[str, Union[int, float]]]:
+def parse_single_report(f) -> dict[str, dict[str, int | float]]:
     """
     Example:
     #rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq

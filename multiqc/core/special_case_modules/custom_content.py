@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping
 from io import BufferedReader
-from typing import Any, Optional, TypedDict, TypeVar, Union, cast
+from typing import Any, TypedDict, TypeVar, cast
 
 import markdown
 import yaml
@@ -27,15 +27,15 @@ log = logging.getLogger(__name__)
 
 class CcDict(BaseModel):
     config: dict[str, Any] = {}
-    data: Union[dict[str, Any], list[dict[str, Any]], str] = {}
+    data: dict[str, Any] | list[dict[str, Any]] | str = {}
 
 
 class ParsedDict(TypedDict, total=False):
     id: str
-    plot_type: Optional[str]
-    data: Union[str, dict[str, dict[str, Any]]]
+    plot_type: str | None
+    data: str | dict[str, dict[str, Any]]
     config: dict[str, Any]
-    section_name: Optional[str]
+    section_name: str | None
 
 
 def custom_module_classes() -> list[BaseMultiqcModule]:
@@ -117,7 +117,7 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
             f_extension = os.path.splitext(f["fn"])[1]
 
             # YAML and JSON files are the easiest
-            parsed_dict: Optional[ParsedDict] = None
+            parsed_dict: ParsedDict | None = None
             if f_extension == ".yaml" or f_extension == ".yml":
                 try:
                     parsed_dict = yaml.safe_load(f["f"])
@@ -191,7 +191,7 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
                     parsed_dict.update(ccdict_by_id[config_custom_data_id].config)  # type: ignore
 
             if parsed_dict is not None:
-                parsed_item: Union[str, dict, list, None] = parsed_dict.get("data", {})
+                parsed_item: str | dict | list | None = parsed_dict.get("data", {})
                 parsed_item_with_clean_sn: dict[str, dict[str, Any]] = {}
                 if isinstance(parsed_item, dict):
                     # Run sample-name cleaning on the data keys
@@ -221,7 +221,7 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
             # txt, csv, tsv etc
             else:
                 # Look for configuration details in the header
-                m_config: Optional[dict[str, Any]]
+                m_config: dict[str, Any] | None
                 m_config, non_header_lines = _find_file_header(f)
                 s_name = None
                 c_id: ModuleId
@@ -357,11 +357,11 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
             mod_id = cast(ModuleId, ccdict.config.get("parent_id", ccdict.config.get("id", mod_id)))
             section_id: SectionId = cast(SectionId, ccdict.config.get("section_id", ccdict.config.get("id", mod_id)))
 
-            mod_anchor: Optional[Anchor] = None
+            mod_anchor: Anchor | None = None
             if "parent_anchor" in ccdict.config:
                 mod_anchor = ccdict.config["parent_anchor"]
 
-            section_anchor: Optional[Anchor] = None
+            section_anchor: Anchor | None = None
             if "section_anchor" in ccdict.config:
                 section_anchor = ccdict.config["section_anchor"]
             elif "anchor" in ccdict.config:
@@ -486,7 +486,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.intro = self._get_intro()
 
     def add_cc_section(self, section_id: SectionId, section_anchor: Anchor, ccdict: CcDict):
-        plot: Optional[Union[Plot[Any, Any], str]] = None
+        plot: Plot[Any, Any] | str | None = None
         content = None
 
         # Set section and plot id and anchor
@@ -511,7 +511,7 @@ class MultiqcModule(BaseMultiqcModule):
         if section_name == self.name:
             section_name = ""
 
-        plot_type: Optional[PlotType] = None
+        plot_type: PlotType | None = None
         _pt = ccdict.config.get("plot_type")
         if _pt is None:
             log.warning(f"'plot_type' value is not sepcified for content ID '{section_id}'")
@@ -591,7 +591,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif plot_type == PlotType.BOX:
                 from multiqc.plots.box import BoxT
 
-                box_data = cast(Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]], plot_datasets)
+                box_data = cast(Mapping[str, BoxT] | list[Mapping[str, BoxT]], plot_datasets)
                 plot = box.plot(box_data, pconfig=box.BoxPlotConfig(**pconfig))
 
             # Violin plot
@@ -639,7 +639,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
 
-def _find_file_header(f: LoadedFileDict[str]) -> tuple[Optional[dict[str, Any]], list[str]]:
+def _find_file_header(f: LoadedFileDict[str]) -> tuple[dict[str, Any] | None, list[str]]:
     # Collect commented out header lines
     hlines: list[str] = []
     other_lines: list[str] = []
@@ -769,9 +769,7 @@ def isnumber(val: Any) -> bool:
     return isinstance(val, (float, int))
 
 
-def _parse_txt(
-    f, conf: dict, non_header_lines: list[str]
-) -> tuple[Union[str, dict, list, None], dict, Optional[PlotType]]:
+def _parse_txt(f, conf: dict, non_header_lines: list[str]) -> tuple[str | dict | list | None, dict, PlotType | None]:
     """
     Parse data and optionally guess plot type
     """
@@ -783,8 +781,8 @@ def _parse_txt(
     if conf.get("file_format") == "tsv":
         sep = "\t"
 
-    plot_type: Optional[PlotType] = None
-    _pt: Optional[str] = conf.get("plot_type")
+    plot_type: PlotType | None = None
+    _pt: str | None = conf.get("plot_type")
     if _pt is not None:
         plot_type = PlotType.from_str(_pt)
 
@@ -815,11 +813,11 @@ def _parse_txt(
                 return None, conf, plot_type
 
     # Convert values to floats if we can
-    matrix: list[list[Union[str, float, int]]] = []
+    matrix: list[list[str | float | int]] = []
     first_row_all_strings = True
     inner_cells_all_numeric = True
     v_str: str
-    v: Union[str, float, int]
+    v: str | float | int
     for i, row_str in enumerate(matrix_str):
         matrix.append([])
         for j, v_str in enumerate(row_str):
@@ -962,7 +960,7 @@ def _parse_txt(
     if plot_type == PlotType.LINE:
         data_ddict = {}
         # If the first row has empty first column, it's the header - use it as x-axis labels
-        x_vals: list[Union[str, float, int]] = []
+        x_vals: list[str | float | int] = []
         if matrix_str[0][0].strip() == "":
             x_vals = [str(unquote(v)) for v in matrix.pop(0)[1:]]
         # Use 1..n range for x values

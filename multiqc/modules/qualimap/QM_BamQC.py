@@ -2,7 +2,6 @@ import logging
 import math
 import os
 import re
-from typing import Union
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
@@ -78,7 +77,7 @@ def parse_reports(module: BaseMultiqcModule):
 
 def parse_genome_results(module: BaseMultiqcModule) -> tuple[dict, dict]:
     """Parse the contents of the Qualimap BamQC genome_results.txt file"""
-    metrics_by_sample: dict[str, dict[str, Union[int, float, str]]] = {}
+    metrics_by_sample: dict[str, dict[str, int | float | str]] = {}
     general_stats: dict = {}
 
     for f in module.find_log_files("qualimap/bamqc/genome_results"):
@@ -138,7 +137,7 @@ def parse_genome_results(module: BaseMultiqcModule) -> tuple[dict, dict]:
 
         module.add_data_source(f, s_name=s_name, section="genome_results")
 
-        d: dict[str, Union[int, float, str]] = parse_numerals(
+        d: dict[str, int | float | str] = parse_numerals(
             preparsed_d,
             float_metrics=float_metrics,
             int_metrics=int_metrics,

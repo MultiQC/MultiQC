@@ -7,9 +7,6 @@ import logging
 from collections import defaultdict
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Optional, Union
-
-from numpy import isin
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -33,25 +30,25 @@ logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path, list[Union[str, Path]]],
-    verbose: Optional[bool] = None,
-    file_list: Optional[bool] = None,
-    prepend_dirs: Optional[bool] = None,
-    dirs_depth: Optional[int] = None,
-    fn_clean_sample_names: Optional[bool] = None,
-    require_logs: Optional[bool] = None,
-    use_filename_as_sample_name: Optional[bool] = None,
-    strict: Optional[bool] = None,
-    quiet: Optional[bool] = None,
-    no_ansi: Optional[bool] = None,
-    profile_runtime: Optional[bool] = None,
-    no_version_check: Optional[bool] = None,
+    *analysis_dir: str | Path | list[str | Path],
+    verbose: bool | None = None,
+    file_list: bool | None = None,
+    prepend_dirs: bool | None = None,
+    dirs_depth: int | None = None,
+    fn_clean_sample_names: bool | None = None,
+    require_logs: bool | None = None,
+    use_filename_as_sample_name: bool | None = None,
+    strict: bool | None = None,
+    quiet: bool | None = None,
+    no_ansi: bool | None = None,
+    profile_runtime: bool | None = None,
+    no_version_check: bool | None = None,
     ignore: Sequence[str] = (),
     ignore_samples: Sequence[str] = (),
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[Union[str, Path]] = (),
-    module_order: Sequence[Union[str, dict]] = (),
+    config_files: Sequence[str | Path] = (),
+    module_order: Sequence[str | dict] = (),
     extra_fn_clean_exts: Sequence = (),
     extra_fn_clean_trim: Sequence = (),
     preserve_module_raw_data: bool = True,
@@ -188,7 +185,7 @@ def list_plots() -> dict:
 def get_plot(
     module: str,
     section: str,
-) -> Union[Plot, str, None]:
+) -> Plot | str | None:
     """
     Get plot Object by module name and section ID.
 
@@ -231,7 +228,7 @@ def _load_plot(dump: dict) -> Plot:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
 
 
-def get_general_stats_data(sample: Optional[str] = None) -> dict:
+def get_general_stats_data(sample: str | None = None) -> dict:
     """
     Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
     return only data for that sample.
@@ -259,9 +256,9 @@ def get_general_stats_data(sample: Optional[str] = None) -> dict:
 
 
 def get_module_data(
-    module: Optional[str] = None,
-    sample: Optional[str] = None,
-    key: Optional[str] = None,
+    module: str | None = None,
+    sample: str | None = None,
+    key: str | None = None,
 ) -> dict:
     """
     Return parsed module data, indexed (if available) by data key, then by sample. Module is either
@@ -328,7 +325,7 @@ def add_custom_content_section(
     anchor,
     description="",
     content_before_plot="",
-    plot: Optional[Union[Plot, str]] = None,
+    plot: Plot | str | None = None,
     content="",
     comment="",
     helptext="",
@@ -366,37 +363,37 @@ def add_custom_content_section(
 
 
 def write_report(
-    title: Optional[str] = None,
-    report_comment: Optional[str] = None,
-    template: Optional[str] = None,
-    output_dir: Optional[Union[str, Path]] = None,
-    filename: Optional[str] = None,
-    make_data_dir: Optional[bool] = None,
-    data_format: Optional[str] = None,
-    zip_data_dir: Optional[bool] = None,
-    force: Optional[bool] = None,
-    overwrite: Optional[bool] = None,
-    make_report: Optional[bool] = None,
-    export_plots: Optional[bool] = None,
-    plots_force_flat: Optional[bool] = None,
-    plots_force_interactive: Optional[bool] = None,
-    strict: Optional[bool] = None,
-    development: Optional[bool] = None,
-    make_pdf: Optional[bool] = None,
-    no_megaqc_upload: Optional[bool] = None,
-    quiet: Optional[bool] = None,
-    verbose: Optional[bool] = None,
-    no_ansi: Optional[bool] = None,
-    profile_runtime: Optional[bool] = None,
-    no_version_check: Optional[bool] = None,
+    title: str | None = None,
+    report_comment: str | None = None,
+    template: str | None = None,
+    output_dir: str | Path | None = None,
+    filename: str | None = None,
+    make_data_dir: bool | None = None,
+    data_format: str | None = None,
+    zip_data_dir: bool | None = None,
+    force: bool | None = None,
+    overwrite: bool | None = None,
+    make_report: bool | None = None,
+    export_plots: bool | None = None,
+    plots_force_flat: bool | None = None,
+    plots_force_interactive: bool | None = None,
+    strict: bool | None = None,
+    development: bool | None = None,
+    make_pdf: bool | None = None,
+    no_megaqc_upload: bool | None = None,
+    quiet: bool | None = None,
+    verbose: bool | None = None,
+    no_ansi: bool | None = None,
+    profile_runtime: bool | None = None,
+    no_version_check: bool | None = None,
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[Union[str, Path]] = (),
+    config_files: Sequence[str | Path] = (),
     custom_css_files: Sequence[str] = (),
-    module_order: Sequence[Union[str, dict]] = (),
+    module_order: Sequence[str | dict] = (),
     clean_up=True,
     return_html: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """
     Render HTML from parsed module data, and write a report and data files to disk.
 
@@ -466,7 +463,7 @@ def write_report(
     return html_content if return_html else None
 
 
-def load_config(config_file: Union[str, Path]):
+def load_config(config_file: str | Path):
     """
     Load config on top of the current config from a MultiQC config file.
 

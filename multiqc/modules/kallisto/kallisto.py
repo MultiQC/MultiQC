@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from typing import Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -56,10 +55,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(plot=self.kallisto_alignment_plot(kallisto_data))
 
     def parse_kallisto_log(self, f, kallisto_data: dict):
-        s_name: Optional[str] = None
-        total_reads: Optional[float] = None
-        pseudo_aligned_reads: Optional[float] = None
-        frag_length: Optional[float] = None
+        s_name: str | None = None
+        total_reads: float | None = None
+        pseudo_aligned_reads: float | None = None
+        frag_length: float | None = None
         for line in f["f"]:
             # Get input filename
             m = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", line)

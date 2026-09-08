@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from multiqc import config
 
@@ -9,7 +8,7 @@ log = logging.getLogger(__name__)
 def table_data_and_headers(
     rows_list: list[tuple[str, str]],
     help: list[tuple[str, list[str]]],
-    namespace: Optional[str] = None,
+    namespace: str | None = None,
 ) -> tuple[dict, dict]:
     """Update the data dict and headers dict
 

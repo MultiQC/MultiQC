@@ -3,7 +3,7 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
@@ -70,13 +70,13 @@ def parse_reports(module: BaseMultiqcModule) -> set[str]:
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
-        s_name: Optional[str] = f["s_name"]
-        keys: Optional[list[str]] = None
-        commadecimal: Optional[bool] = None
+        s_name: str | None = f["s_name"]
+        keys: list[str] | None = None
+        commadecimal: bool | None = None
         baits: set[str] = set()
 
         for line in f["f"]:
-            maybe_s_name: Optional[str] = util.extract_sample_name(
+            maybe_s_name: str | None = util.extract_sample_name(
                 module,
                 line,
                 f,

@@ -1,6 +1,3 @@
-from typing import Union
-
-
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
     for _str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
@@ -9,13 +6,13 @@ def clean_title_case(col_id):
 
 
 def populate_data_and_headers(
-    headers_to_update: dict[str, dict[str, Union[int, str, float, None]]],
+    headers_to_update: dict[str, dict[str, int | str | float | None]],
     new_data,
     new_headers,
     colors,
     prefix,
     int_cols=(),
-) -> dict[str, Union[int, str, float, None]]:
+) -> dict[str, int | str | float | None]:
     """
     Populate the data dict and headers dict.
 
@@ -75,7 +72,7 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
-def transform_data(data: dict[str, list]) -> dict[str, Union[int, str, float]]:
+def transform_data(data: dict[str, list]) -> dict[str, int | str | float]:
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
     return dict(zip(data["x"], data["y"]))

@@ -3,7 +3,7 @@
 import logging
 import re
 from collections.abc import Mapping, Sequence
-from typing import Any, Optional, Union, cast
+from typing import Any, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -43,7 +43,7 @@ def _convert_hex8_to_rgba(color: str) -> str:
 
 
 # Define element types for the heatmap
-ElemT = Union[str, float, int, None]
+ElemT = str | float | int | None
 
 
 class HeatmapConfig(PConfig):
@@ -52,8 +52,8 @@ class HeatmapConfig(PConfig):
     xlab: str = "x"
     ylab: str = "y"
     zlab: str = "z"
-    min: Union[float, int, None] = None
-    max: Union[float, int, None] = None
+    min: float | int | None = None
+    max: float | int | None = None
     xcats_samples: bool = True
     ycats_samples: bool = True
     square: bool = True
@@ -63,15 +63,15 @@ class HeatmapConfig(PConfig):
     decimalPlaces: int = Field(2, deprecated="tt_decimals")
     tt_decimals: int = 2
     legend: bool = True
-    datalabels: Optional[bool] = Field(None, deprecated="display_values")
-    display_values: Optional[bool] = None
+    datalabels: bool | None = Field(None, deprecated="display_values")
+    display_values: bool | None = None
     angled_xticks: bool = True
     cluster_rows: bool = True
     cluster_cols: bool = True
     cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
     cluster_switch_clustered_active: bool = False
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("heatmap",), **data)
 
 
@@ -81,8 +81,8 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
     """
 
     rows: list[list[ElemT]]
-    xcats: list[Union[str, int]]
-    ycats: list[Union[str, int]]
+    xcats: list[str | int]
+    ycats: list[str | int]
     pconfig: HeatmapConfig
 
     def is_empty(self) -> bool:
@@ -115,9 +115,7 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
         return self.finalize_df(df)
 
     @classmethod
-    def from_df(
-        cls, df: pl.DataFrame, pconfig: Union[dict, HeatmapConfig], anchor: Anchor
-    ) -> "HeatmapNormalizedInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | HeatmapConfig, anchor: Anchor) -> "HeatmapNormalizedInputData":
         """
         Create a HeatmapNormalizedInputData object from a polars DataFrame.
         """
@@ -256,10 +254,10 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
-        xcats: Optional[Sequence[Union[str, int]]] = None,
-        ycats: Optional[Sequence[Union[str, int]]] = None,
-        pconfig: Union[dict[str, Any], HeatmapConfig, None] = None,
+        data: Sequence[Sequence[ElemT]] | Mapping[str | int, Mapping[str | int, ElemT]],
+        xcats: Sequence[str | int] | None = None,
+        ycats: Sequence[str | int] | None = None,
+        pconfig: dict[str, Any] | HeatmapConfig | None = None,
     ) -> "HeatmapNormalizedInputData":
         pconf = cast(HeatmapConfig, HeatmapConfig.from_pconfig_dict(pconfig))
 
@@ -312,10 +310,10 @@ class HeatmapNormalizedInputData(NormalizedPlotInputData):
 
 
 def plot(
-    data: Union[Sequence[Sequence[ElemT]], Mapping[Union[str, int], Mapping[Union[str, int], ElemT]]],
-    xcats: Optional[Sequence[Union[str, int]]] = None,
-    ycats: Optional[Sequence[Union[str, int]]] = None,
-    pconfig: Union[dict[str, Any], HeatmapConfig, None] = None,
+    data: Sequence[Sequence[ElemT]] | Mapping[str | int, Mapping[str | int, ElemT]],
+    xcats: Sequence[str | int] | None = None,
+    ycats: Sequence[str | int] | None = None,
+    pconfig: dict[str, Any] | HeatmapConfig | None = None,
 ) -> Union["HeatmapPlot", str, None]:
     """
     Plot a 2D heatmap.
@@ -365,11 +363,11 @@ def _cluster_data(
 
 class Dataset(BaseDataset):
     rows: list[list[ElemT]]
-    rows_clustered: Optional[list[list[ElemT]]] = None
+    rows_clustered: list[list[ElemT]] | None = None
     xcats: Sequence[str]
     ycats: Sequence[str]
-    xcats_clustered: Optional[Sequence[str]] = None
-    ycats_clustered: Optional[Sequence[str]] = None
+    xcats_clustered: Sequence[str] | None = None
+    ycats_clustered: Sequence[str] | None = None
     xcats_samples: bool = True
     ycats_samples: bool = True
 
@@ -385,8 +383,8 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         rows: list[list[ElemT]],
-        xcats: Sequence[Union[str, int]],
-        ycats: Sequence[Union[str, int]],
+        xcats: Sequence[str | int],
+        ycats: Sequence[str | int],
         cluster_rows: bool = True,
         cluster_cols: bool = True,
         cluster_method: str = "complete",
@@ -421,7 +419,7 @@ class Dataset(BaseDataset):
 
     def create_figure(
         self,
-        layout: Optional[go.Layout] = None,
+        layout: go.Layout | None = None,
         is_log: bool = False,
         is_pct: bool = False,
         **kwargs,
@@ -486,8 +484,8 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
     datasets: list[Dataset]
     xcats_samples: bool
     ycats_samples: bool
-    min: Optional[float] = None
-    max: Optional[float] = None
+    min: float | None = None
+    max: float | None = None
     cluster_switch_clustered_active: bool = False
 
     def sample_names(self) -> list[SampleName]:
@@ -519,8 +517,8 @@ class HeatmapPlot(Plot[Dataset, HeatmapConfig]):
         rows: list[list[ElemT]],
         pconfig: HeatmapConfig,
         anchor: Anchor,
-        xcats: list[Union[str, int]],
-        ycats: list[Union[str, int]],
+        xcats: list[str | int],
+        ycats: list[str | int],
     ) -> "HeatmapPlot":
         max_n_rows = 0
         max_n_cols = 0

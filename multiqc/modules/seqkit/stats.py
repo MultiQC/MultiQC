@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from seqkit stats"""
 
 import logging
-from typing import Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, table
@@ -250,7 +249,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     return len(seqkit_stats)
 
 
-def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = None) -> dict[str, dict]:
+def parse_stats_report(file_content: str, fallback_sample_name: str | None = None) -> dict[str, dict]:
     """
     Parse seqkit stats output file.
 

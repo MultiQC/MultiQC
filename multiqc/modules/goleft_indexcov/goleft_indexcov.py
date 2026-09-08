@@ -1,7 +1,6 @@
 import logging
 from collections import defaultdict
 from html import escape
-from typing import Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -120,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bin_plot(bin_plot_data, bin_plot_data_empty_samples)
 
     @staticmethod
-    def _short_chrom(chrom: str) -> Optional[str]:
+    def _short_chrom(chrom: str) -> str | None:
         """Plot standard chromosomes + X, sorted numerically.
 
         Allows specification from a list of chromosomes via config

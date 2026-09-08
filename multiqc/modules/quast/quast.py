@@ -1,3 +1,4 @@
+import itertools
 import logging
 import re
 
@@ -386,7 +387,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot_data = {highest_cat[1]: d[data_key.format(highest_threshold)]}
 
             # converting >=T1, >=T2,.. into 0-T1, T1-T2,..
-            for low, high in zip(thresholds[:-1], thresholds[1:]):
+            for low, high in itertools.pairwise(thresholds):
                 cat = (low, f"{low}-{high} bp")
                 all_categories.append(cat)
                 plot_data[cat[1]] = d[data_key.format(low)] - d[data_key.format(high)]

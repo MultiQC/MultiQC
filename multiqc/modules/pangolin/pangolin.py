@@ -1,6 +1,5 @@
 import csv
 import logging
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -239,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.pangolin_data, headers, table_config)
 
 
-def _format_qc_notes(raw: str) -> Optional[str]:
+def _format_qc_notes(raw: str) -> str | None:
     """
     Parses QC notes, they appear to come from:
     https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97

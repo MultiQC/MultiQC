@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -88,7 +87,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the featureCounts log file."""
         file_names: list[str] = []
         parsed_data: dict[str, list[int]] = {}
-        split_sep: Optional[str] = "\t"
+        split_sep: str | None = "\t"
         for line in f["f"].splitlines():
             this_row: list[int] = []
 

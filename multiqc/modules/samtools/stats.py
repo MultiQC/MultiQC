@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, violin
@@ -13,14 +12,14 @@ HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
 # Note: used by the hifi_trimmer module
-def parse_samtools_stats_lines(file_contents: str) -> tuple[dict, Optional[str], Optional[str]]:
+def parse_samtools_stats_lines(file_contents: str) -> tuple[dict, str | None, str | None]:
     """Parse `SN` rows from samtools stats output into a normalized dict.
     Also extract samtools and htslib versions if present on the header line.
     Returns a tuple: (parsed_data, samtools_version, htslib_version)
     """
     parsed_data: dict = {}
-    samtools_version: Optional[str] = None
-    htslib_version: Optional[str] = None
+    samtools_version: str | None = None
+    htslib_version: str | None = None
 
     for line in file_contents.splitlines():
         # Version/header line

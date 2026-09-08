@@ -3,7 +3,6 @@ import os
 import platform
 import re
 import sys
-from typing import Optional, Union
 
 import requests
 from packaging import version
@@ -28,14 +27,14 @@ def _is_uv_installed() -> bool:
     return False
 
 
-def check_version(interactive_function_name: Optional[str] = None):
+def check_version(interactive_function_name: str | None = None):
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is True:
         return
 
     try:
         # Fetch the version info from the API
-        meta: dict[str, Union[str, bool, None]] = {
+        meta: dict[str, str | bool | None] = {
             "version_multiqc": config.short_version,
             "version_python": platform.python_version(),
             "operating_system": platform.system(),

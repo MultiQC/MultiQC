@@ -13,8 +13,9 @@ Output: docs/markdown/config_schema.md
 import json
 import re
 import sys
+import types
 from pathlib import Path
-from typing import Any, Literal, Optional, Union, get_args, get_origin, get_type_hints
+from typing import Any, Literal, Union, get_args, get_origin, get_type_hints
 
 import yaml
 
@@ -116,7 +117,9 @@ def format_type_annotation(annotation):
     origin = get_origin(annotation)
     args = get_args(annotation)
 
-    if origin is Union:
+    # types.UnionType covers `str | None` on Python 3.10 to 3.13, where get_origin()
+    # does not report typing.Union
+    if origin in (Union, types.UnionType):
         # Drop the None branch; nearly every config field is Optional, so the
         # Optional[...] wrapper is noise in the rendered docs.
         non_null = [arg for arg in args if arg is not type(None)]

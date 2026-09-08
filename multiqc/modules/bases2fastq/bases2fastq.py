@@ -5,9 +5,10 @@ import random
 import re
 import uuid
 from collections import defaultdict
+from collections.abc import Callable
 from itertools import chain
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from natsort import natsorted
 
@@ -246,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
             return False
 
-    def _read_json_file(self, file_path: Path, base_directory: Optional[Path] = None) -> Optional[dict[str, Any]]:
+    def _read_json_file(self, file_path: Path, base_directory: Path | None = None) -> dict[str, Any] | None:
         """
         Read and parse a JSON file with caching.
 
@@ -523,7 +524,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         data: dict[str, Any],
         source_info: str = "RunStats.json",
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Extract and validate run_analysis_name from data dict.
 
@@ -549,7 +550,7 @@ class MultiqcModule(BaseMultiqcModule):
         return f"{run_name}-{analysis_id[0:4]}"
 
     def _parse_run_project_data(
-        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> tuple[dict[str, Any], dict[str, Any], dict[str, str]]:
         """
         Parse RunStats.json files to extract run/project and sample-level data.
@@ -676,7 +677,7 @@ class MultiqcModule(BaseMultiqcModule):
         return result
 
     def _parse_run_manifest(
-        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> dict[str, Any]:
         """
         Parse RunManifest.json for run-level analysis to extract lane and adapter settings.
@@ -727,7 +728,7 @@ class MultiqcModule(BaseMultiqcModule):
         return runs_manifest_data
 
     def _parse_run_manifest_in_project(
-        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> dict[str, Any]:
         """
         Parse RunManifest.json for project-level analysis.
@@ -793,7 +794,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         stats_dict: dict[str, Any],
         run_analysis_name: str,
-        project: Optional[str] = None,
+        project: str | None = None,
     ) -> tuple[dict[str, dict[str, Any]], int]:
         """
         Build per-run index assignment dict from RunStats SampleStats/Occurrences.
@@ -867,7 +868,7 @@ class MultiqcModule(BaseMultiqcModule):
                 run_data[merged_indices]["Index2"] = index_2
 
     def _parse_run_unassigned_sequences(
-        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> dict[int, dict[str, Any]]:
         """
         Parse unassigned/unknown barcode sequences from run-level data.
@@ -929,7 +930,7 @@ class MultiqcModule(BaseMultiqcModule):
         return run_unassigned_sequences
 
     def _parse_index_assignment(
-        self, manifest_data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, manifest_data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> dict[str, Any]:
         """
         Parse index assignment statistics for run-level analysis.
@@ -994,7 +995,7 @@ class MultiqcModule(BaseMultiqcModule):
         return sample_to_index_assignment
 
     def _parse_index_assignment_in_project(
-        self, data_source: str, log_files: Optional[list[LoadedFileDict[Any]]] = None
+        self, data_source: str, log_files: list[LoadedFileDict[Any]] | None = None
     ) -> dict[str, Any]:
         """
         Parse index assignment statistics for project-level analysis.

@@ -1,7 +1,6 @@
 """Parse riker `alignment` (alignment-metrics.txt) outputs."""
 
 import logging
-from typing import Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, table
@@ -32,7 +31,7 @@ _INT_COLS = {
 
 def parse_reports(module):
     # data_by_sample[sample][category] -> dict of metrics
-    data_by_sample: dict[str, dict[str, dict[str, Optional[float]]]] = {}
+    data_by_sample: dict[str, dict[str, dict[str, float | None]]] = {}
 
     for f in module.find_log_files("riker/alignment", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -43,7 +42,7 @@ def parse_reports(module):
             s_name = module.clean_s_name(sample, f)
 
             try:
-                parsed: dict[str, Optional[float]] = {
+                parsed: dict[str, float | None] = {
                     col: (to_int(val) if col in _INT_COLS else to_float(val)) for col, val in row.items()
                 }
             except (TypeError, ValueError) as e:
@@ -60,7 +59,7 @@ def parse_reports(module):
     module.add_software_version(None)
 
     # Pull the `pair` row (or fall back to the first available category) for general stats.
-    pair_data: dict[str, dict[str, Optional[float]]] = {}
+    pair_data: dict[str, dict[str, float | None]] = {}
     for s_name, by_cat in data_by_sample.items():
         pair_data[s_name] = by_cat.get("pair", next(iter(by_cat.values())))
 

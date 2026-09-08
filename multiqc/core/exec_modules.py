@@ -3,7 +3,7 @@ import sys
 import time
 import traceback
 import tracemalloc
-from typing import Callable, Union
+from collections.abc import Callable
 
 import rich
 from importlib_metadata import EntryPoint
@@ -75,7 +75,7 @@ def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
         # noinspection PyBroadException
         try:
             entry_point: EntryPoint = config.avail_modules[this_module]
-            module_initializer: Callable[[], Union[BaseMultiqcModule, list[BaseMultiqcModule]]] = entry_point.load()
+            module_initializer: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
             # Attributes stashed on the loaded entry point for the module to pick up.
             # setattr() used to hide this from mypy; ruff rewrites that away, so the
             # ignores now say plainly what is going on.
@@ -84,7 +84,7 @@ def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
 
             # *********************************************
             # RUN MODULE. Heavy part. Run module logic to parse logs and prepare plot data.
-            these_modules: Union[BaseMultiqcModule, list[BaseMultiqcModule]] = module_initializer()
+            these_modules: BaseMultiqcModule | list[BaseMultiqcModule] = module_initializer()
             # END RUN MODULE
             # *********************************************
 

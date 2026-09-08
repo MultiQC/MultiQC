@@ -8,7 +8,7 @@ import json
 import logging
 import os
 from re import Pattern
-from typing import Any, Optional
+from typing import Any
 
 import polars as pl
 from pydantic import ValidationError  # type: ignore
@@ -81,7 +81,7 @@ def flush_to_parquet() -> None:
     existing_other_rows = existing_df.filter(pl.col("type") != "table_row") if not existing_df.is_empty() else None
 
     # Process wide tables - merge all buffered wide tables by sample
-    merged_wide_tables: Optional[pl.DataFrame] = None
+    merged_wide_tables: pl.DataFrame | None = None
     if _pending_wide_tables:
         # Get existing table rows
         existing_table_rows = existing_df.filter(pl.col("type") == "table_row") if not existing_df.is_empty() else None
@@ -127,7 +127,7 @@ def flush_to_parquet() -> None:
     _pending_wide_tables = []
 
 
-def get_report_metadata(df: pl.DataFrame) -> Optional[dict[str, Any]]:
+def get_report_metadata(df: pl.DataFrame) -> dict[str, Any] | None:
     """
     Extract all report metadata from the parquet file.
 

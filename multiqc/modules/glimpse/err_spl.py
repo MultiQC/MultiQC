@@ -4,7 +4,6 @@ import gzip
 import logging
 import os
 from collections import defaultdict
-from typing import Union
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import table
@@ -40,7 +39,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     Find Glimpse concordance by samples logs and parse their data
     """
 
-    metrics_by_var_by_sample: dict[str, dict[str, dict[str, Union[int, float]]]] = {}
+    metrics_by_var_by_sample: dict[str, dict[str, dict[str, int | float]]] = {}
     for f in module.find_log_files("glimpse/err_spl", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
             lines = [line.decode() for line in f_gz.readlines()]
@@ -192,7 +191,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     }
 
     # Keep only items from all variants (SNPs + indels)
-    gcsv_by_sample: dict[str, dict[str, Union[int, float]]] = defaultdict(dict)
+    gcsv_by_sample: dict[str, dict[str, int | float]] = defaultdict(dict)
     for sample, metrics_by_var in metrics_by_var_by_sample.items():
         for var, metrics in metrics_by_var.items():
             if var == "GCsV":
@@ -221,7 +220,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
     return n_reports_found
 
 
-def parse_err_spl_report(lines) -> dict[str, dict[str, dict[str, Union[int, float]]]]:
+def parse_err_spl_report(lines) -> dict[str, dict[str, dict[str, int | float]]]:
     """
     Example:
     #Genotype concordance by sample (SNPs)
@@ -236,7 +235,7 @@ def parse_err_spl_report(lines) -> dict[str, dict[str, dict[str, Union[int, floa
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data: dict[str, dict[str, dict[str, Union[int, float]]]] = {}
+    parsed_data: dict[str, dict[str, dict[str, int | float]]] = {}
     expected_header = "#Genotype concordance by sample (SNPs)\n"
     if lines[0] != expected_header:
         log.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")

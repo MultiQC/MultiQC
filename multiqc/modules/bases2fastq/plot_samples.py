@@ -1,9 +1,8 @@
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from natsort import natsorted
 
-from multiqc import config
-from multiqc.plots import bargraph, linegraph, table
+from multiqc.plots import linegraph, table
 from multiqc.plots.table_object import ColumnDict
 from multiqc.types import SectionAlert
 
@@ -21,7 +20,7 @@ def _drop_low_samples(data: dict[str, dict[Any, float]], threshold: float = 0.0)
     return natsorted(dropped)
 
 
-def _filtered_samples_alert(dropped: list[str], metric: str, threshold_label: str) -> Optional[SectionAlert]:
+def _filtered_samples_alert(dropped: list[str], metric: str, threshold_label: str) -> SectionAlert | None:
     if not dropped:
         return None
     n = len(dropped)

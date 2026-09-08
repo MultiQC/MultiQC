@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -69,7 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed data to file
         self.write_data_file(self.ribodetector, "multiqc_ribodetector")
 
-    def parse_ribodetector_log(self, f) -> Optional[dict]:
+    def parse_ribodetector_log(self, f) -> dict | None:
         """Parse a RiboDetector log file."""
         data: dict = {}
 

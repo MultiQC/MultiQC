@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph

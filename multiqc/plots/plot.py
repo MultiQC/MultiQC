@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 check_plotly_version()
 
 
-def _get_series_label(plot_type: PlotType, series_label: Union[str, bool]) -> str:
+def _get_series_label(plot_type: PlotType, series_label: str | bool) -> str:
     """
     Get the appropriate series label for a plot type.
     If series_label is the default "samples", return a plot type-specific label.
@@ -102,13 +102,13 @@ class FlatLine(ValidatedConfig):
     Extra X=const or Y=const line added to the plot
     """
 
-    value: Union[float, int]
-    colour: Optional[str] = Field(None, deprecated="color")
-    color: Optional[str] = None
+    value: float | int
+    colour: str | None = Field(None, deprecated="color")
+    color: str | None = None
     width: int = 2
-    dashStyle: Optional[str] = Field(None, deprecated="dash")
-    dash: Optional[str] = None
-    label: Optional[Union[str, dict[str, Any]]] = None
+    dashStyle: str | None = Field(None, deprecated="dash")
+    dash: str | None = None
+    label: str | dict[str, Any] | None = None
 
     @classmethod
     def parse_label(cls, value: Any, path_in_cfg: tuple[str, ...]) -> Any:
@@ -121,7 +121,7 @@ class FlatLine(ValidatedConfig):
             return value["text"]
         return value
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         path_in_cfg = path_in_cfg or ("FlatLine",)
         if "dashStyle" in data:
             data["dash"] = convert_dash_style(data.pop("dashStyle"), path_in_cfg=path_in_cfg + ("dash",))
@@ -135,12 +135,12 @@ class LineBand(ValidatedConfig):
     Extra X1-X2 or Y1-Y2 band added to the plot
     """
 
-    from_: Union[float, int]
-    to: Union[float, int]
-    color: Optional[str] = None
+    from_: float | int
+    to: float | int
+    color: str | None = None
     opacity: float = Field(1.0, ge=0.0, le=1.0)
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data: Any):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data: Any):
         path_in_cfg = path_in_cfg or ("LineBand",)
         super().__init__(**data, path_in_cfg=path_in_cfg)
 
@@ -148,71 +148,71 @@ class LineBand(ValidatedConfig):
 class PConfig(ValidatedConfig):
     id: str
     title: str
-    subtitle: Optional[str] = None
-    anchor: Optional[Anchor] = None  # unlike id, has to be globally unique
-    table_title: Optional[str] = Field(None, deprecated="title")
-    height: Optional[int] = None
-    width: Optional[int] = None
+    subtitle: str | None = None
+    anchor: Anchor | None = None  # unlike id, has to be globally unique
+    table_title: str | None = Field(None, deprecated="title")
+    height: int | None = None
+    width: int | None = None
     square: bool = False
-    logswitch: Optional[bool] = False
+    logswitch: bool | None = False
     logswitch_active: bool = False  # log scale is active
     logswitch_label: str = "Log10"
-    cpswitch: Optional[bool] = True
+    cpswitch: bool | None = True
     cpswitch_c_active: bool = True  # percentage scale is _not_ active
     cpswitch_counts_label: str = "Counts"
     cpswitch_percent_label: str = "Percentages"
-    xLog: Optional[bool] = Field(None, deprecated="xlog")
-    yLog: Optional[bool] = Field(None, deprecated="ylog")
+    xLog: bool | None = Field(None, deprecated="xlog")
+    yLog: bool | None = Field(None, deprecated="ylog")
     xlog: bool = False
     ylog: bool = False
-    data_labels: list[Union[str, dict[str, Any]]] = []
-    xTitle: Optional[str] = Field(None, deprecated="xlab")
-    yTitle: Optional[str] = Field(None, deprecated="ylab")
-    xlab: Optional[str] = None
-    ylab: Optional[str] = None
-    xsuffix: Optional[str] = None
-    ysuffix: Optional[str] = None
-    tt_suffix: Optional[str] = None
-    xLabFormat: Optional[bool] = Field(None, deprecated="xlab_format")
-    yLabFormat: Optional[bool] = Field(None, deprecated="ylab_format")
-    xLabelFormat: Optional[bool] = Field(None, deprecated="xlab_format")
-    yLabelFormat: Optional[bool] = Field(None, deprecated="ylab_format")
-    xlab_format: Optional[str] = None
-    ylab_format: Optional[str] = None
-    tt_label: Optional[str] = None
-    xDecimals: Optional[int] = Field(None, deprecated="x_decimals")
-    yDecimals: Optional[int] = Field(None, deprecated="y_decimals")
-    decimalPlaces: Optional[int] = Field(None, deprecated="tt_decimals")
-    x_decimals: Optional[int] = None
-    y_decimals: Optional[int] = None
-    tt_decimals: Optional[int] = None
-    xmin: Optional[Union[float, int]] = None
-    xmax: Optional[Union[float, int]] = None
-    ymin: Optional[Union[float, int]] = None
-    ymax: Optional[Union[float, int]] = None
-    xFloor: Optional[Union[float, int]] = Field(None, deprecated="x_clipmin")
-    xCeiling: Optional[Union[float, int]] = Field(None, deprecated="x_clipmax")
-    yFloor: Optional[Union[float, int]] = Field(None, deprecated="y_clipmin")
-    yCeiling: Optional[Union[float, int]] = Field(None, deprecated="y_clipmax")
-    x_clipmin: Optional[Union[float, int]] = None
-    x_clipmax: Optional[Union[float, int]] = None
-    y_clipmin: Optional[Union[float, int]] = None
-    y_clipmax: Optional[Union[float, int]] = None
+    data_labels: list[str | dict[str, Any]] = []
+    xTitle: str | None = Field(None, deprecated="xlab")
+    yTitle: str | None = Field(None, deprecated="ylab")
+    xlab: str | None = None
+    ylab: str | None = None
+    xsuffix: str | None = None
+    ysuffix: str | None = None
+    tt_suffix: str | None = None
+    xLabFormat: bool | None = Field(None, deprecated="xlab_format")
+    yLabFormat: bool | None = Field(None, deprecated="ylab_format")
+    xLabelFormat: bool | None = Field(None, deprecated="xlab_format")
+    yLabelFormat: bool | None = Field(None, deprecated="ylab_format")
+    xlab_format: str | None = None
+    ylab_format: str | None = None
+    tt_label: str | None = None
+    xDecimals: int | None = Field(None, deprecated="x_decimals")
+    yDecimals: int | None = Field(None, deprecated="y_decimals")
+    decimalPlaces: int | None = Field(None, deprecated="tt_decimals")
+    x_decimals: int | None = None
+    y_decimals: int | None = None
+    tt_decimals: int | None = None
+    xmin: float | int | None = None
+    xmax: float | int | None = None
+    ymin: float | int | None = None
+    ymax: float | int | None = None
+    xFloor: float | int | None = Field(None, deprecated="x_clipmin")
+    xCeiling: float | int | None = Field(None, deprecated="x_clipmax")
+    yFloor: float | int | None = Field(None, deprecated="y_clipmin")
+    yCeiling: float | int | None = Field(None, deprecated="y_clipmax")
+    x_clipmin: float | int | None = None
+    x_clipmax: float | int | None = None
+    y_clipmin: float | int | None = None
+    y_clipmax: float | int | None = None
     save_data_file: bool = True
-    showlegend: Optional[bool] = None
-    xMinRange: Optional[Union[float, int]] = Field(None, deprecated="x_minrange")
-    yMinRange: Optional[Union[float, int]] = Field(None, deprecated="y_minrange")
-    x_minrange: Optional[Union[float, int]] = None
-    y_minrange: Optional[Union[float, int]] = None
-    xPlotBands: Optional[list[LineBand]] = Field(None, deprecated="x_bands")
-    yPlotBands: Optional[list[LineBand]] = Field(None, deprecated="y_bands")
-    xPlotLines: Optional[list[FlatLine]] = Field(None, deprecated="x_lines")
-    yPlotLines: Optional[list[FlatLine]] = Field(None, deprecated="y_lines")
-    x_bands: Optional[list[LineBand]] = None
-    y_bands: Optional[list[LineBand]] = None
-    x_lines: Optional[list[FlatLine]] = None
-    y_lines: Optional[list[FlatLine]] = None
-    series_label: Union[str, bool] = "samples"
+    showlegend: bool | None = None
+    xMinRange: float | int | None = Field(None, deprecated="x_minrange")
+    yMinRange: float | int | None = Field(None, deprecated="y_minrange")
+    x_minrange: float | int | None = None
+    y_minrange: float | int | None = None
+    xPlotBands: list[LineBand] | None = Field(None, deprecated="x_bands")
+    yPlotBands: list[LineBand] | None = Field(None, deprecated="y_bands")
+    xPlotLines: list[FlatLine] | None = Field(None, deprecated="x_lines")
+    yPlotLines: list[FlatLine] | None = Field(None, deprecated="y_lines")
+    x_bands: list[LineBand] | None = None
+    y_bands: list[LineBand] | None = None
+    x_lines: list[FlatLine] | None = None
+    y_lines: list[FlatLine] | None = None
+    series_label: str | bool = "samples"
     flat_if_very_large: bool = True
 
     @classmethod
@@ -236,7 +236,7 @@ class PConfig(ValidatedConfig):
         d = json.loads(df.select("pconfig").row(0)[0])
         return cls(path_in_cfg=(), **d)
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data: Any):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data: Any):
         path_in_cfg = path_in_cfg or ()
         _path_component = "pconfig"
         if id := data.get("id"):
@@ -251,7 +251,7 @@ class PConfig(ValidatedConfig):
             self.title = self.id.replace("_", " ").title()
 
         # Allow user to overwrite any given config for this plot
-        per_tab_overrides: Optional[dict[Any, Any]] = None
+        per_tab_overrides: dict[Any, Any] | None = None
         if self.id in config.custom_plot_config:
             user_cpc = dict(config.custom_plot_config[self.id])
             # Per-tab overrides (e.g. for multi-data_labels plots) are nested under
@@ -270,12 +270,12 @@ class PConfig(ValidatedConfig):
 
         # Normalize data labels to ensure they are unique and consistent.
         if self.data_labels and len(self.data_labels) > 1:
-            data_labels: list[Union[str, dict[str, Any]]] = []
+            data_labels: list[str | dict[str, Any]] = []
             for idx, _ in enumerate(self.data_labels):
-                data_label: Union[str, dict[str, Union[str, dict[str, str]]]] = (
+                data_label: str | dict[str, str | dict[str, str]] = (
                     self.data_labels[idx] if idx < len(self.data_labels) else {}
                 )
-                dconfig: dict[str, Union[str, dict[str, str]]] = (
+                dconfig: dict[str, str | dict[str, str]] = (
                     data_label if isinstance(data_label, dict) else {"name": data_label}
                 )
                 label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
@@ -361,7 +361,7 @@ class PConfig(ValidatedConfig):
             else:
                 self.data_labels[idx] = parsed_override
 
-    def _resolve_tab_index(self, key: Any, name_to_index: dict[str, int]) -> Optional[int]:
+    def _resolve_tab_index(self, key: Any, name_to_index: dict[str, int]) -> int | None:
         """
         Resolve a `custom_plot_config[<id>]["data_labels"]` key to a data_labels index,
         logging a warning and returning None on miss. Accepts a tab name (str) or a
@@ -437,14 +437,14 @@ class BaseDataset(BaseModel):
         """
         raise NotImplementedError
 
-    def get_x_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_x_range(self) -> tuple[Any | None, Any | None]:
         return None, None
 
-    def get_y_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_y_range(self) -> tuple[Any | None, Any | None]:
         return None, None
 
     @staticmethod
-    def fmt_value_for_llm(value: Union[float, str, None]) -> str:
+    def fmt_value_for_llm(value: float | str | None) -> str:
         if isinstance(value, str):
             return value
         if value is None:
@@ -505,7 +505,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
 
     @classmethod
     def from_df(
-        cls: type[NormalizedPlotInputDataT], df: pl.DataFrame, pconfig: Union[dict, PConfigT], anchor: Anchor
+        cls: type[NormalizedPlotInputDataT], df: pl.DataFrame, pconfig: dict | PConfigT, anchor: Anchor
     ) -> NormalizedPlotInputDataT:
         """
         Abstract method to parse a dataframe (i.e. stored in parquet files)
@@ -661,8 +661,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     flat: bool = False
     defer_render: bool = False
 
-    section_anchor: Optional[Anchor] = None
-    module_anchor: Optional[Anchor] = None
+    section_anchor: Anchor | None = None
+    module_anchor: Anchor | None = None
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -697,11 +697,11 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         pconfig: PConfigT,
         anchor: Anchor,
         n_series_per_dataset: list[int],
-        id: Optional[str] = None,
-        axis_controlled_by_switches: Optional[list[str]] = None,
-        default_tt_label: Optional[str] = None,
+        id: str | None = None,
+        axis_controlled_by_switches: list[str] | None = None,
+        default_tt_label: str | None = None,
         defer_render_if_large: bool = True,
-        n_samples_per_dataset: Optional[list[int]] = None,
+        n_samples_per_dataset: list[int] | None = None,
     ) -> "Plot[DatasetT, PConfigT]":
         """
         Initialize a plot model with the given configuration, but without data.
@@ -841,10 +841,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if len(n_series_per_dataset) > 1:
                 dataset.uid += f"_{idx + 1}"
 
-            data_label: Union[str, dict[str, Union[str, dict[str, str]]]] = (
+            data_label: str | dict[str, str | dict[str, str]] = (
                 pconfig.data_labels[idx] if idx < len(pconfig.data_labels) else {}
             )
-            dconfig: dict[str, Union[str, dict[str, str]]] = (
+            dconfig: dict[str, str | dict[str, str]] = (
                 data_label if isinstance(data_label, dict) else {"name": data_label}
             )
             label = dconfig.get("name", dconfig.get("label", str(idx + 1)))
@@ -1048,7 +1048,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if new_shapes:
                 dataset.layout["shapes"] = list(dataset.layout.get("shapes", [])) + new_shapes
 
-    def show(self, dataset_id: Union[int, str] = 0, flat: bool = False, **kwargs):
+    def show(self, dataset_id: int | str = 0, flat: bool = False, **kwargs):
         """
         Show the plot in an interactive environment such as Jupyter notebook.
 
@@ -1078,7 +1078,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             return fig
 
     @staticmethod
-    def _proc_save_args(filename: str, flat: Optional[bool]) -> tuple[str, bool]:
+    def _proc_save_args(filename: str, flat: bool | None) -> tuple[str, bool]:
         if isinstance(filename, (Path, str)):
             if Path(filename).suffix.lower() == ".html":
                 if flat is not None and flat is True:
@@ -1090,7 +1090,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 flat = True
         return filename, flat
 
-    def save(self, filename, dataset_id: Union[int, str] = 0, flat=None, **kwargs):
+    def save(self, filename, dataset_id: int | str = 0, flat=None, **kwargs):
         """
         Save the plot to a file. Will write an HTML with an interactive plot -
         unless flat=True is specified, in which case will write a PNG file.
@@ -1121,7 +1121,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
     def get_figure(
         self,
-        dataset_id: Union[int, str],
+        dataset_id: int | str,
         is_log: bool = False,
         is_pct: bool = False,
         flat: bool = False,
@@ -1194,7 +1194,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         self,
         module_anchor: Anchor,
         section_anchor: Anchor,
-        plots_dir_name: Optional[str] = None,
+        plots_dir_name: str | None = None,
     ) -> str:
         """
         Build and add the plot data to the report, return an HTML wrapper.
@@ -1269,8 +1269,8 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         self,
         module_anchor: Anchor,
         section_anchor: Anchor,
-        embed_in_html: Optional[bool] = None,
-        plots_dir_name: Optional[str] = None,
+        embed_in_html: bool | None = None,
+        plots_dir_name: str | None = None,
     ) -> str:
         embed_in_html = embed_in_html if embed_in_html is not None else not config.development
         if not embed_in_html and plots_dir_name is None:
@@ -1352,10 +1352,10 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         self,
         cls: str,
         label: str,
-        data_attrs: Optional[dict[str, str]] = None,
-        attrs: Optional[dict[str, str]] = None,
+        data_attrs: dict[str, str] | None = None,
+        attrs: dict[str, str] | None = None,
         pressed: bool = False,
-        style: Optional[str] = None,
+        style: str | None = None,
     ) -> str:
         """
         Build a switch button for the plot.
@@ -1638,7 +1638,7 @@ def _export_plot(fig, plot_path, write_kwargs):
     return True
 
 
-def _export_plot_to_buffer(fig, write_kwargs) -> Optional[str]:
+def _export_plot_to_buffer(fig, write_kwargs) -> str | None:
     try:
         # Prepare figure with solid backgrounds for export (only if currently transparent)
         fig = _prepare_figure_for_export(fig)
@@ -1668,10 +1668,10 @@ _plot_export_batch_results: dict[int, bool] = {}  # Mapping of plot_path to succ
 def fig_to_static_html(
     fig: go.Figure,
     active: bool = True,
-    export_plots: Optional[bool] = None,
-    embed_in_html: Optional[bool] = None,
-    plots_dir_name: Optional[str] = None,
-    file_name: Optional[str] = None,
+    export_plots: bool | None = None,
+    embed_in_html: bool | None = None,
+    plots_dir_name: str | None = None,
+    file_name: str | None = None,
     batch_processing: bool = True,
 ) -> str:
     """
@@ -1891,7 +1891,7 @@ def rename_deprecated_highcharts_keys(conf: dict) -> dict:
 def _dataset_layout(
     pconfig: PConfig,
     dconfig: dict,
-    default_tt_label: Optional[str] = None,
+    default_tt_label: str | None = None,
 ) -> tuple[dict, dict]:
     """
     Given plot config and dataset config, set layout and trace params.
@@ -1932,7 +1932,7 @@ def _dataset_layout(
             if pconfig.xlab.endswith(f" ({suf.strip()})"):
                 xsuffix = suf
 
-    tt_label: Optional[str] = None
+    tt_label: str | None = None
     if pconfig.tt_label is not None:
         # Clean the hover tooltip label, add missing <br> into the beginning, populate suffixes if missing
         tt_label = pconfig.tt_label
@@ -2061,7 +2061,7 @@ def split_long_string(s: str, max_width=80) -> list[str]:
     return lines
 
 
-def convert_dash_style(dash_style: Optional[str], path_in_cfg: tuple[str, ...]) -> Optional[str]:
+def convert_dash_style(dash_style: str | None, path_in_cfg: tuple[str, ...]) -> str | None:
     """Convert dash style from Highcharts to Plotly"""
     if dash_style is None:
         return None

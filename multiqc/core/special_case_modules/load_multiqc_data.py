@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional, Union, cast
+from typing import Any, cast
 
 import packaging.version
 import polars as pl
@@ -17,13 +17,13 @@ from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, Section
 from multiqc.core import plot_data_store
 from multiqc.core.software_versions import parse_version, sort_versions
-from multiqc.plots.bargraph import BarPlot, BarPlotInputData
-from multiqc.plots.box import BoxPlot, BoxPlotInputData
-from multiqc.plots.heatmap import HeatmapNormalizedInputData, HeatmapPlot
-from multiqc.plots.linegraph import LinePlot, LinePlotNormalizedInputData
+from multiqc.plots.bargraph import BarPlotInputData
+from multiqc.plots.box import BoxPlotInputData
+from multiqc.plots.heatmap import HeatmapNormalizedInputData
+from multiqc.plots.linegraph import LinePlotNormalizedInputData
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
-from multiqc.plots.scatter import ScatterNormalizedInputData, ScatterPlot
-from multiqc.plots.violin import ViolinPlot, ViolinPlotInputData
+from multiqc.plots.scatter import ScatterNormalizedInputData
+from multiqc.plots.violin import ViolinPlotInputData
 from multiqc.types import Anchor, PlotType
 
 log = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ def create_plot_input_data_only(plot_input_data_dict: dict) -> NormalizedPlotInp
     return plot_input
 
 
-def create_plot_from_input_data(plot_input: NormalizedPlotInputData) -> Union[Plot, str, None]:
+def create_plot_from_input_data(plot_input: NormalizedPlotInputData) -> Plot | str | None:
     """
     Create a plot object from plot input data.
     """
@@ -106,7 +106,7 @@ def create_plot_from_input_data(plot_input: NormalizedPlotInputData) -> Union[Pl
         return None
 
 
-def load_plot_input(plot_input_data_dict: dict) -> tuple[NormalizedPlotInputData, Union[Plot, str, None]]:
+def load_plot_input(plot_input_data_dict: dict) -> tuple[NormalizedPlotInputData, Plot | str | None]:
     """
     Load plot input data and create plot object from a dictionary.
     This function combines create_plot_input_data_only and create_plot_from_input_data.
@@ -139,7 +139,7 @@ class LoadMultiqcData(BaseMultiqcModule):
             # After all files are loaded and merged, create plot objects once
             self._create_plot_objects()
 
-    def load_parquet_file(self, path: Union[str, Path]):
+    def load_parquet_file(self, path: str | Path):
         """
         Load a multiqc.parquet file containing all report data.
         """
@@ -178,7 +178,7 @@ class LoadMultiqcData(BaseMultiqcModule):
                         sections.append(Section(**section_data))
 
                     # Convert versions to expected format
-                    versions: dict[str, list[tuple[Optional[packaging.version.Version], str]]] = {}
+                    versions: dict[str, list[tuple[packaging.version.Version | None, str]]] = {}
                     if "versions" in mod_dict:
                         versions_data = mod_dict.pop("versions")
                         versions = {

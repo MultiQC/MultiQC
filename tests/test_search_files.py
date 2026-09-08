@@ -3,7 +3,6 @@ Tests for discovering and excluding files
 """
 
 from pathlib import Path
-from typing import Union
 
 import pytest
 import yaml
@@ -35,7 +34,7 @@ def _test_search_files(
     search_patterns: dict,
     analysis_dir: Path,
     extra_config: dict,
-    expected_paths_by_module: dict[str, set[Union[Path, str]]],
+    expected_paths_by_module: dict[str, set[Path | str]],
 ):
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())

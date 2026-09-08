@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-from typing import Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.cellranger.utils import parse_bcknee_data, set_hidden_cols, transform_data, update_dict
@@ -29,7 +28,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
     count_warnings_headers: dict[str, dict] = {}
 
     for f in module.find_log_files("cellranger/count_html", filehandles=True):
-        summary: Optional[dict] = None
+        summary: dict | None = None
         for line in f["f"]:
             line = line.strip()
             if line.startswith("const data"):

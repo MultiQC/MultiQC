@@ -5,7 +5,6 @@ from collections import defaultdict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc.plots.bargraph import CatDataDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)

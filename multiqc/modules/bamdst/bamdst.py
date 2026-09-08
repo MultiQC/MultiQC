@@ -4,7 +4,6 @@ import logging
 import math
 import os
 from collections import defaultdict
-from typing import Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -137,8 +136,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = _read_config()
-        data_by_sample: dict[str, dict[str, Union[float, int]]] = {}
-        data_by_chromosome_by_sample: dict[str, dict[str, dict[str, Union[float, str]]]] = {}
+        data_by_sample: dict[str, dict[str, float | int]] = {}
+        data_by_chromosome_by_sample: dict[str, dict[str, dict[str, float | str]]] = {}
         for f in self.find_log_files("bamdst/coverage"):
             if data := self._parse_coverage_report(f):
                 data_by_sample[f["s_name"]] = data
@@ -161,7 +160,7 @@ class MultiqcModule(BaseMultiqcModule):
         if data_by_chromosome_by_sample:
             self._build_per_chrom_plot(data_by_chromosome_by_sample)
 
-    def _parse_coverage_report(self, f: LoadedFileDict) -> dict[str, Union[float, int]]:
+    def _parse_coverage_report(self, f: LoadedFileDict) -> dict[str, float | int]:
         """
         Parse one coverage report.
         """
@@ -214,8 +213,8 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_data_source(f, s_name=s_name, section="coverage table")
         return data
 
-    def _parse_chromosomes_report(self, path: str, s_name: str) -> dict[str, dict[str, Union[float, str]]]:
-        data_by_contig: dict[str, dict[str, Union[float, str]]] = defaultdict(dict)
+    def _parse_chromosomes_report(self, path: str, s_name: str) -> dict[str, dict[str, float | str]]:
+        data_by_contig: dict[str, dict[str, float | str]] = defaultdict(dict)
         with open(path) as fh:
             reader: csv.DictReader = csv.DictReader(fh, delimiter="\t")
             for row in reader:

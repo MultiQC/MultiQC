@@ -7,8 +7,9 @@ import logging
 import os
 import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional, TypeVar
+from typing import TypeVar
 
 import coloredlogs  # type: ignore
 import rich
@@ -22,10 +23,10 @@ from multiqc import config
 from multiqc.core import tmp_dir
 from multiqc.utils.util_functions import is_running_in_notebook
 
-log_tmp_fn: Optional[Path] = None
-log_file_handler: Optional[logging.FileHandler] = None
+log_tmp_fn: Path | None = None
+log_file_handler: logging.FileHandler | None = None
 
-rich_console: Optional[rich.console.Console] = None
+rich_console: rich.console.Console | None = None
 
 logger = logging.getLogger()  # root logger
 

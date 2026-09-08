@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -50,7 +50,7 @@ def load_schema_and_defaults() -> tuple[dict[str, Any], dict[str, Any], dict[str
 
 def load_sections_with_groups(
     properties: dict[str, Any],
-) -> dict[str, dict[Optional[str], list[str]]]:
+) -> dict[str, dict[str | None, list[str]]]:
     """Group property names by ``section`` then by ``group``, preserving source order.
 
     Returns a dict keyed by section name, where each value is a dict keyed by
@@ -60,7 +60,7 @@ def load_sections_with_groups(
     duplicate headings in the generated docs and wizard. Fails loudly on any
     property missing a ``section`` tag.
     """
-    out: dict[str, dict[Optional[str], list[str]]] = {}
+    out: dict[str, dict[str | None, list[str]]] = {}
     untagged: list[str] = []
     for prop_name, prop in properties.items():
         section = prop.get("section")

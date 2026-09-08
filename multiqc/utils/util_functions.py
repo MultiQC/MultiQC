@@ -8,7 +8,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel
@@ -17,8 +17,8 @@ logger = logging.getLogger(__name__)
 
 
 def rmtree_with_retries(
-    path: Union[str, Path, None],
-    _logger: Optional[logging.Logger] = None,
+    path: str | Path | None,
+    _logger: logging.Logger | None = None,
     max_retries: int = 10,
 ):
     """

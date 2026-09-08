@@ -1,7 +1,6 @@
 import base64
 import dataclasses
 import errno
-import io
 import logging
 import os
 import re
@@ -12,7 +11,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 import jinja2
 
@@ -51,9 +50,9 @@ class OutputPaths:
 
     to_stdout: bool = False
 
-    report_path: Optional[Path] = None
-    data_dir: Optional[Path] = None
-    plots_dir: Optional[Path] = None
+    report_path: Path | None = None
+    data_dir: Path | None = None
+    plots_dir: Path | None = None
 
     data_dir_overwritten: bool = False
     plots_dir_overwritten: bool = False
@@ -81,7 +80,7 @@ def get_image_mime_type(path: str) -> str:
     return mime_types[ext]
 
 
-def write_results(return_html: bool = False) -> Optional[str]:
+def write_results(return_html: bool = False) -> str | None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -362,7 +361,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
 
-def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
+def _render_general_stats_table(plots_dir_name: str) -> Plot | None:
     """
     Construct HTML for the general stats table.
     """
@@ -491,7 +490,7 @@ def _move_exported_plots(plots_dir: Path):
         logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
-def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html: bool = False) -> Optional[str]:
+def _write_html_report(to_stdout: bool, report_path: Path | None, return_html: bool = False) -> str | None:
     """
     Render and write report HTML to disk
     """
@@ -643,7 +642,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     return report_output if return_html else None
 
 
-def _write_pdf(report_path: Path) -> Optional[Path]:
+def _write_pdf(report_path: Path) -> Path | None:
     pdf_path = report_path.with_suffix(".pdf")
     pandoc_call = [
         "pandoc",

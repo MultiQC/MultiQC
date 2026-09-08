@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -122,9 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
         if species_minimizer_dup_by_top_taxon_by_sample:
             self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, species_minimizer_dup_by_top_taxon_by_sample)
 
-    def sample_total_readcounts(
-        self, rows_by_sample: dict[str, list[dict[str, Union[str, int, float]]]]
-    ) -> dict[str, int]:
+    def sample_total_readcounts(self, rows_by_sample: dict[str, list[dict[str, str | int | float]]]) -> dict[str, int]:
         """Compute the total read counts for each sample"""
         total_cnt_by_sample: dict[str, int] = {}
 
@@ -155,8 +153,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get top taxa in most specific taxa rank that we have
         top_taxa: list[str] = []
-        top_rank_code: Optional[str] = None
-        top_rank_name: Optional[str] = None
+        top_rank_code: str | None = None
+        top_rank_name: str | None = None
         for rank_code, rank_name in MultiqcModule.T_RANKS.items():
             if rank_code not in pct_by_taxon_by_rank:
                 continue
@@ -339,7 +337,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Taxa rank {SPECIES_CODE} not found, skipping taxa duplication heatmap")
             return
 
-        dup_by_taxon_by_sample: dict[str, dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
+        dup_by_taxon_by_sample: dict[str, dict[str, int | None]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
         # not all samples have minimizers data, and we want to find top 5 species across those that have
         _taxa_in_samples_with_minimizers = set()
@@ -424,7 +422,7 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i + 1} has less than 6 fields: {line}")
             return {}, {}
 
-        minimizer: Optional[str] = None
+        minimizer: str | None = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (

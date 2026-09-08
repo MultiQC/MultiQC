@@ -4,9 +4,8 @@ import json
 import logging
 import os
 from collections import defaultdict
-from typing import Union
 
-from multiqc import BaseMultiqcModule, config
+from multiqc import BaseMultiqcModule
 from multiqc.modules.spaceranger.utils import populate_data_and_headers, set_hidden_cols, transform_data
 from multiqc.plots import linegraph, table
 
@@ -18,15 +17,15 @@ def parse_count_html(module: BaseMultiqcModule):
     Space Ranger count report parser
     """
 
-    general_stats_data: dict[str, dict[str, Union[str, float, int, None]]] = defaultdict()
-    summary_data_by_sample: dict[str, dict[str, Union[str, float, int, None]]] = defaultdict()
-    warnings_data_by_sample: dict[str, dict[str, Union[str, float, int, None]]] = defaultdict(lambda: defaultdict())
+    general_stats_data: dict[str, dict[str, str | float | int | None]] = defaultdict()
+    summary_data_by_sample: dict[str, dict[str, str | float | int | None]] = defaultdict()
+    warnings_data_by_sample: dict[str, dict[str, str | float | int | None]] = defaultdict(lambda: defaultdict())
 
     plots_data: dict[str, dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
     plots_conf: dict[str, dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
 
     warnings_headers: dict = {}
-    summary_headers: dict[str, dict[str, Union[str, float, int, None]]] = {
+    summary_headers: dict[str, dict[str, str | float | int | None]] = {
         "reads": {
             "rid": "count_data_reads",
             "title": "Reads",
@@ -34,7 +33,7 @@ def parse_count_html(module: BaseMultiqcModule):
             "shared_key": "read_count",
         }
     }
-    general_stats_headers: dict[str, dict[str, Union[str, float, int, None]]] = {
+    general_stats_headers: dict[str, dict[str, str | float | int | None]] = {
         "reads": {
             "rid": "count_genstats_reads",
             "title": "Reads",

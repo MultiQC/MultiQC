@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-from typing import Union
 
 from multiqc.plots import bargraph, table
 
@@ -40,12 +39,12 @@ def parse_samtools_markdup(module) -> int:
     # Superfluous function call to confirm that it is used in this module
     module.add_software_version(None)
 
-    val_by_metric_by_sample: dict[str, dict[str, Union[int, float]]] = {}
+    val_by_metric_by_sample: dict[str, dict[str, int | float]] = {}
     for s_name, raw_d in raw_by_sample.items():
         if len(raw_d) == 0:
             continue
 
-        d: dict[str, Union[int, float]] = {}
+        d: dict[str, int | float] = {}
         val_by_metric_by_sample[s_name] = d
         rename_map = {
             "READ": "read",
@@ -73,7 +72,7 @@ def parse_samtools_markdup(module) -> int:
                     d["optical_duplicate_distance"] = int(m.group(1))
 
         # Derive more metrics from counts
-        n_reads: Union[int, float] = d["paired"] + d["single"]
+        n_reads: int | float = d["paired"] + d["single"]
         d["duplicate_optical_total"] = d["duplicate_pair_optical"] + d["duplicate_single_optical"]
         d["duplicate_optical_fraction"] = d["duplicate_optical_total"] / n_reads if n_reads > 0 else 0.0
         d["duplicate_fraction"] = d["duplicate_total"] / n_reads if n_reads > 0 else 0.0

@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from collections import Counter, defaultdict
-from typing import Any, Optional
+from typing import Any
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -173,7 +173,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=self.fastp_overrepresented_sequences_plot(),
         )
 
-    def parse_fastp_log(self, f) -> tuple[Optional[str], dict]:
+    def parse_fastp_log(self, f) -> tuple[str | None, dict]:
         """Parse the JSON output from fastp and save the summary statistics"""
         try:
             parsed_json = json.load(f["f"])

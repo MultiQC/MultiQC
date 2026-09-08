@@ -1,6 +1,5 @@
 import logging
 import xml.etree.cElementTree
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.ngsbits.utils import parse_qcml_by
@@ -28,7 +27,7 @@ def check_paired_end(qcml_contents: str) -> bool:
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits ReadQC reports and parse their data"""
 
-    readqc: dict[str, dict[str, Union[int, float, str, bool]]] = {}
+    readqc: dict[str, dict[str, int | float | str | bool]] = {}
     readqc_keys: dict[str, tuple[str, str]] = {}
 
     for f in module.find_log_files("ngsbits/readqc"):

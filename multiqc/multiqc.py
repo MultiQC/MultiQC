@@ -10,7 +10,6 @@ import subprocess
 import sys
 import time
 import traceback
-from typing import Optional
 
 import rich_click as click
 
@@ -557,7 +556,7 @@ class RunResult:
     * optionally, the HTML report content if return_html=True was specified
     """
 
-    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: Optional[str] = None):
+    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: str | None = None):
         self.sys_exit_code = sys_exit_code
         self.message = message
         self.html_content = html_content
@@ -566,7 +565,7 @@ class RunResult:
 def run(
     *analysis_dir,
     clean_up: bool = True,
-    cfg: Optional[ClConfig] = None,
+    cfg: ClConfig | None = None,
     interactive: bool = True,
     return_html: bool = False,
 ) -> RunResult:

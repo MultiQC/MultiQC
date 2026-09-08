@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
@@ -24,7 +23,7 @@ def parse_reports(module):
 
 
 def _parse_metrics(module) -> set:
-    data_by_sample: dict[str, dict[str, Optional[float]]] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
 
     for f in module.find_log_files("riker/wgs_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):

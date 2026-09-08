@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -60,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         # general statistics table
         self.add_stats_table()
 
-    def parse_whatshap_stats(self, f: LoadedFileDict) -> tuple[str, dict[str, dict[str, Union[int, float]]]]:
+    def parse_whatshap_stats(self, f: LoadedFileDict) -> tuple[str, dict[str, dict[str, int | float]]]:
         """Parse WhatsHap stats file"""
 
         def parse_numeric_values(data):

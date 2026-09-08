@@ -8,7 +8,6 @@ across all MultiQC templates and Python code using the Iconify naming scheme.
 import logging
 import re
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ def get_material_icon_path() -> Path:
     return Path(__file__).parent / "material_icons"
 
 
-def load_svg_content(icon_name: str) -> Optional[str]:
+def load_svg_content(icon_name: str) -> str | None:
     """
     Load SVG content for a given Material Design Icon.
 
@@ -52,9 +51,7 @@ def load_svg_content(icon_name: str) -> Optional[str]:
         return None
 
 
-def get_material_icon(
-    icon_name: str, size: int = 24, color: Optional[str] = None, class_name: Optional[str] = None
-) -> str:
+def get_material_icon(icon_name: str, size: int = 24, color: str | None = None, class_name: str | None = None) -> str:
     """
     Get a Material Design Icon as HTML SVG.
 
@@ -94,7 +91,7 @@ def get_material_icon(
     return svg_content
 
 
-def get_material_icon_js(icon_name: str, size: int = 24, color: Optional[str] = None) -> str:
+def get_material_icon_js(icon_name: str, size: int = 24, color: str | None = None) -> str:
     """
     Get a Material Design Icon as JavaScript string for embedding in JS files.
 

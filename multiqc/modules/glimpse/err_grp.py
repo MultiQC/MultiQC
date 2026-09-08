@@ -3,7 +3,6 @@
 import gzip
 import logging
 import os
-from typing import Union
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -36,7 +35,7 @@ EXPECTED_COLUMNS = [
 def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
     """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
-    metrics_by_idn_by_var_by_sample: dict[str, dict[str, dict[str, dict[str, Union[int, float, str]]]]] = {}
+    metrics_by_idn_by_var_by_sample: dict[str, dict[str, dict[str, dict[str, int | float | str]]]] = {}
     for f in module.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
             lines = [line.decode().rstrip() for line in f_gz.readlines()]
@@ -146,7 +145,7 @@ def accuracy_plot(module, data):
     )
 
 
-def parse_err_grp_report(lines) -> dict[str, dict[str, dict[str, Union[int, float, str]]]]:
+def parse_err_grp_report(lines) -> dict[str, dict[str, dict[str, int | float | str]]]:
     """
     Example:
     #Genotype concordance by allele frequency bin (SNPs)
@@ -160,7 +159,7 @@ def parse_err_grp_report(lines) -> dict[str, dict[str, dict[str, Union[int, floa
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data: dict[str, dict[str, dict[str, Union[int, float, str]]]] = {}
+    parsed_data: dict[str, dict[str, dict[str, int | float | str]]] = {}
     expected_header = "#Genotype concordance by allele frequency bin (SNPs)"
     if lines[0] != expected_header:
         log.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")

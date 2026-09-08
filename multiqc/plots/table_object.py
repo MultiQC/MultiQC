@@ -6,11 +6,11 @@ import logging
 import math
 import re
 from collections import defaultdict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from html import escape
 from pathlib import Path
-from typing import Any, Callable, NewType, Optional, TypedDict, Union, cast
+from typing import Any, NewType, TypedDict
 
 from natsort import natsorted
 from pydantic import BaseModel, Field
@@ -28,28 +28,28 @@ logger = logging.getLogger(__name__)
 class TableConfig(PConfig):
     namespace: str = ""
     save_file: bool = False
-    raw_data_fn: Optional[str] = None
-    defaultsort: Optional[list[dict[str, str]]] = None
+    raw_data_fn: str | None = None
+    defaultsort: list[dict[str, str]] | None = None
     sortRows: bool = Field(True, deprecated="sort_rows")
     sort_rows: bool = True
     only_defined_headers: bool = True
     col1_header: str = "Sample Name"
     no_beeswarm: bool = Field(False, deprecated="no_violin")
     no_violin: bool = False
-    scale: Union[str, bool] = "GnBu"
-    min: Optional[Union[int, float]] = None
+    scale: str | bool = "GnBu"
+    min: int | float | None = None
     parse_numeric: bool = True
     rows_are_samples: bool = True
     flat_if_very_large: bool = False
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table",), **data)
 
 
 ColumnAnchor = NewType("ColumnAnchor", str)  # Unique within a table
 
 
-ValueT = Union[int, float, str, bool]
+ValueT = int | float | str | bool
 
 
 @dataclass
@@ -59,10 +59,10 @@ class Cell:
     fmt: str
 
 
-ExtValueT = Union[int, float, str, bool, Cell]
+ExtValueT = int | float | str | bool | Cell
 
 
-def is_valid_value(val: Union[ExtValueT, None]) -> bool:
+def is_valid_value(val: ExtValueT | None) -> bool:
     """
     Run time check if the value is valid for a table cell. Duplicates the type hint, but
     used in case if a module ignores type checking.
@@ -75,29 +75,29 @@ class ColumnDict(TypedDict, total=False):
     clean_rid: ColumnAnchor  # can differ when rid is provided by user
     title: str
     description: str
-    scale: Union[str, bool]
+    scale: str | bool
     hidden: bool
     placement: float
     namespace: str
-    color: Optional[str]
-    colour: Optional[str]  # deprecated
-    max: Optional[float]
-    dmax: Optional[float]
-    min: Optional[float]
-    dmin: Optional[float]
-    ceiling: Optional[float]
-    floor: Optional[float]
-    minrange: Optional[float]
-    minRange: Optional[float]  # deprecated
-    shared_key: Optional[str]
-    tt_decimals: Optional[int]
-    suffix: Optional[str]
+    color: str | None
+    colour: str | None  # deprecated
+    max: float | None
+    dmax: float | None
+    min: float | None
+    dmin: float | None
+    ceiling: float | None
+    floor: float | None
+    minrange: float | None
+    minRange: float | None  # deprecated
+    shared_key: str | None
+    tt_decimals: int | None
+    suffix: str | None
     cond_formatting_colours: list[dict[str, str]]
-    cond_formatting_rules: dict[str, list[dict[str, Union[str, int, float]]]]
+    cond_formatting_rules: dict[str, list[dict[str, str | int | float]]]
     bgcols: dict[str, str]
     bars_zero_centrepoint: bool
-    modify: Optional[Callable[[ValueT], ValueT]]
-    format: Optional[Union[str, Callable[[ValueT], str]]]
+    modify: Callable[[ValueT], ValueT] | None
+    format: str | Callable[[ValueT], str] | None
 
 
 class ColumnMeta(ValidatedConfig):
@@ -109,29 +109,29 @@ class ColumnMeta(ValidatedConfig):
     clean_rid: ColumnAnchor  # can differ when rid is provided by user
     title: str
     description: str
-    scale: Union[str, bool]
+    scale: str | bool
     hidden: bool = False
     placement: float = 1000
     namespace: str = ""
-    colour: Optional[str] = Field(None, deprecated="color")
-    color: Optional[str] = None
-    max: Optional[float] = None
-    dmax: Optional[float] = None
-    min: Optional[float] = None
-    dmin: Optional[float] = None
-    ceiling: Optional[float] = None
-    floor: Optional[float] = None
-    minRange: Optional[float] = Field(None, deprecated="minrange")
-    minrange: Optional[float] = None
-    shared_key: Optional[str] = None
-    tt_decimals: Optional[int] = None
-    suffix: Optional[str] = None
+    colour: str | None = Field(None, deprecated="color")
+    color: str | None = None
+    max: float | None = None
+    dmax: float | None = None
+    min: float | None = None
+    dmin: float | None = None
+    ceiling: float | None = None
+    floor: float | None = None
+    minRange: float | None = Field(None, deprecated="minrange")
+    minrange: float | None = None
+    shared_key: str | None = None
+    tt_decimals: int | None = None
+    suffix: str | None = None
     cond_formatting_colours: list[dict[str, str]] = []
-    cond_formatting_rules: dict[str, list[dict[str, Union[str, int, float]]]] = {}
+    cond_formatting_rules: dict[str, list[dict[str, str | int | float]]] = {}
     bgcols: dict[str, str] = {}
     bars_zero_centrepoint: bool = False
-    modify: Optional[Callable[[ValueT], ValueT]] = None
-    format: Optional[Union[str, Callable[[ValueT], str]]] = None
+    modify: Callable[[ValueT], ValueT] | None = None
+    format: str | Callable[[ValueT], str] | None = None
 
     @staticmethod
     def create(
@@ -289,7 +289,7 @@ class ColumnMeta(ValidatedConfig):
 
         return col
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("table", "column"), **data)
 
 
@@ -299,18 +299,18 @@ class InputRow(BaseModel):
     """
 
     sample: SampleName
-    data: dict[ColumnKey, Optional[ExtValueT]] = Field(default_factory=dict)
+    data: dict[ColumnKey, ExtValueT | None] = Field(default_factory=dict)
 
-    def __init__(self, sample: SampleName, data: Mapping[Union[str, ColumnKey], Any]):
+    def __init__(self, sample: SampleName, data: Mapping[str | ColumnKey, Any]):
         super().__init__(
             sample=sample,
             data={ColumnKey(k): v for k, v in data.items() if is_valid_value(v)},
         )
 
 
-ColumnKeyT = Union[str, ColumnKey]
-GroupKeyT = Union[str, SampleGroup]
-GroupT = Union[Mapping[ColumnKeyT, Optional[ExtValueT]], InputRow, Sequence[InputRow]]
+ColumnKeyT = str | ColumnKey
+GroupKeyT = str | SampleGroup
+GroupT = Mapping[ColumnKeyT, ExtValueT | None] | InputRow | Sequence[InputRow]
 SectionT = Mapping[GroupKeyT, GroupT]
 
 
@@ -408,7 +408,7 @@ class DataTable(BaseModel):
         # Go through each table section and create a list of Section objects
         sections: dict[SectionKey, TableSection] = {}
         for sec_idx, (section_key, rows_by_sname__with_nulls) in enumerate(unified_sections__with_nulls.items()):
-            header_by_key: Union[dict[ColumnKey, ColumnDict], dict[str, ColumnDict]] = (
+            header_by_key: dict[ColumnKey, ColumnDict] | dict[str, ColumnDict] = (
                 headers.get(SectionKey(section_key)) or {}
             )
             if not header_by_key:
@@ -452,7 +452,7 @@ class DataTable(BaseModel):
 
         del unified_sections__with_nulls
 
-        shared_keys: dict[str, dict[str, Union[int, float]]] = _collect_shared_keys(sections)
+        shared_keys: dict[str, dict[str, int | float]] = _collect_shared_keys(sections)
 
         # Overwrite shared key settings and at the same time assign to buckets for sorting
         # So the final ordering is:
@@ -576,7 +576,7 @@ class DataTable(BaseModel):
 
 def _get_or_create_headers(
     rows_by_sample: dict[SampleGroup, list[InputRow]],
-    header_by_key: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
+    header_by_key: Mapping[str, ColumnDict] | Mapping[ColumnKey, ColumnDict],
     pconfig: TableConfig,
 ) -> dict[ColumnKey, ColumnDict]:
     """
@@ -661,7 +661,7 @@ def _process_and_format_value(val: ExtValueT, column: ColumnMeta, parse_numeric:
     # them. A callable `format` is module-authored and may legitimately return HTML, so
     # it overwrites this and is responsible for escaping its own inputs.
     valstr = escape(str(val))
-    fmt: Union[None, str, Callable[[ValueT], str]] = column.format
+    fmt: None | str | Callable[[ValueT], str] = column.format
     if fmt is None:
         if isinstance(val, float):
             fmt = "{:,.1f}"
@@ -741,14 +741,14 @@ def _determine_dmin_and_dmax(
                 column.dmax = column.dmin + float(column.minrange)
 
 
-def _collect_shared_keys(sections: dict[SectionKey, TableSection]) -> dict[str, dict[str, Union[int, float]]]:
+def _collect_shared_keys(sections: dict[SectionKey, TableSection]) -> dict[str, dict[str, int | float]]:
     # Collect settings for shared keys
-    shared_keys: dict[str, dict[str, Union[int, float]]] = defaultdict(dict)
+    shared_keys: dict[str, dict[str, int | float]] = defaultdict(dict)
     for section in sections.values():
         for column in section.column_by_key.values():
-            sk: Optional[str] = column.shared_key
+            sk: str | None = column.shared_key
             if sk is not None:
-                sk_dmax: Optional[float] = shared_keys[sk].get("dmax")
+                sk_dmax: float | None = shared_keys[sk].get("dmax")
                 if sk_dmax is not None and column.dmax is not None:
                     shared_keys[sk]["dmax"] = max(column.dmax, sk_dmax)
                 elif sk_dmax is None and column.dmax is not None:
@@ -756,7 +756,7 @@ def _collect_shared_keys(sections: dict[SectionKey, TableSection]) -> dict[str, 
                 else:
                     pass
 
-                sk_dmin: Optional[float] = shared_keys[sk].get("dmin")
+                sk_dmin: float | None = shared_keys[sk].get("dmin")
                 if sk_dmin is not None and column.dmin is not None:
                     shared_keys[sk]["dmin"] = min(column.dmin, sk_dmin)
                 elif sk_dmin is None and column.dmin is not None:
@@ -860,7 +860,7 @@ def render_html(
             )
 
         # Collect conditional formatting config
-        cond_formatting_rules: dict[str, dict[str, list[dict[str, Union[str, int, float]]]]] = {}
+        cond_formatting_rules: dict[str, dict[str, list[dict[str, str | int | float]]]] = {}
         if header.cond_formatting_rules:
             cond_formatting_rules[col_anchor] = header.cond_formatting_rules
         cond_formatting_rules.update(config.table_cond_formatting_rules)
@@ -1274,7 +1274,7 @@ def render_html(
     return html, modal
 
 
-def _configuration_modal(table_anchor: str, title: str, trows: str, violin_anchor: Optional[str] = None) -> str:
+def _configuration_modal(table_anchor: str, title: str, trows: str, violin_anchor: str | None = None) -> str:
     data = f"data-table-anchor='{table_anchor}'"
     if violin_anchor is not None:
         data += f" data-violin-anchor='{violin_anchor}'"

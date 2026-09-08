@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from multiqc import config, report
 from multiqc.core.file_search import include_or_exclude_modules
@@ -77,7 +76,7 @@ def order_modules_and_sections():
     if len(config.report_section_order) > 0:
         # Go through each module
         for midx, mod in enumerate(report.modules):
-            section_id_order: dict[Union[Anchor, SectionId, ModuleId], int] = {}
+            section_id_order: dict[Anchor | SectionId | ModuleId, int] = {}
             # Get a list of the section anchors
             idx = 10
             for s in mod.sections:

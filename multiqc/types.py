@@ -25,8 +25,8 @@ class SoftwareVersionMetadata:
     citation DOI(s).
     """
 
-    license: Optional[str] = None
-    license_url: Optional[str] = None
+    license: str | None = None
+    license_url: str | None = None
     doi: list[str] = dataclasses.field(default_factory=list)
 
 
@@ -36,7 +36,7 @@ class FileDict(TypedDict):
     sp_key: str
 
 
-FT = TypeVar("FT", bound=Union[str, io.IOBase, None])
+FT = TypeVar("FT", bound=str | io.IOBase | None)
 
 
 class LoadedFileDict(TypedDict, Generic[FT]):
@@ -105,9 +105,9 @@ class PlotType(Enum):
 @dataclasses.dataclass
 class SampleNameMeta:
     original_name: SampleName
-    trimmed_name: Optional[SampleName] = None
+    trimmed_name: SampleName | None = None
     trimmed_suffixes: list[str] = dataclasses.field(default_factory=list)
-    group: Optional[SampleGroup] = None
+    group: SampleGroup | None = None
     labels: list[str] = dataclasses.field(default_factory=list)
 
 
@@ -141,7 +141,7 @@ class Section(BaseModel):
     content: str = ""
     plot: str = ""
     print_section: bool = True
-    plot_anchor: Optional[Anchor] = None
+    plot_anchor: Anchor | None = None
     ai_summary: str = ""
     status_bar_html: str = ""
     alerts: list[SectionAlert] = Field(default_factory=list)

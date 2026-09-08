@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -49,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.frames_data: dict[str, dict[str, dict[str, float]]] = {}
         self.metaprofile_start_data: dict[str, dict[int, float]] = {}
         self.metaprofile_stop_data: dict[str, dict[int, float]] = {}
-        self.rna_reference_data: Optional[dict[str, float]] = None
+        self.rna_reference_data: dict[str, float] | None = None
 
         # Parse all file types
         self.parse_psite_region_files()
@@ -100,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
         if self.metaprofile_stop_data:
             self.write_data_file(self.metaprofile_stop_data, "multiqc_ribowaltz_metaprofile_stop")
 
-    def detect_delimiter(self, line: str) -> Optional[str]:
+    def detect_delimiter(self, line: str) -> str | None:
         """Auto-detect delimiter from header line"""
         if "\t" in line:
             return "\t"

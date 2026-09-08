@@ -13,9 +13,9 @@ import os
 import re
 import textwrap
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, ClassVar, Literal, Optional, TypeVar, Union, cast, overload
+from typing import Any, ClassVar, Literal, TypeVar, cast, overload
 
 import markdown
 import packaging.version
@@ -48,14 +48,14 @@ from multiqc.types import (
 )
 
 logger = logging.getLogger(__name__)
-SectionAlertInput = Union[str, Mapping[str, Any], SectionAlert]
+SectionAlertInput = str | Mapping[str, Any] | SectionAlert
 
 
 class ModuleNoSamplesFound(Exception):
     """Module checked all input files but couldn't find any data to use"""
 
 
-ExtraFunctionType = Callable[[InputRow, list[tuple[Optional[str], SampleName, SampleName]]], None]
+ExtraFunctionType = Callable[[InputRow, list[tuple[str | None, SampleName, SampleName]]], None]
 
 DataT = TypeVar("DataT")
 SampleNameT = TypeVar("SampleNameT", str, SampleName)
@@ -63,35 +63,35 @@ SampleNameT = TypeVar("SampleNameT", str, SampleName)
 
 @dataclasses.dataclass
 class SampleGroupingConfig:
-    cols_to_weighted_average: Optional[list[tuple[ColumnKey, ColumnKey]]] = None
-    cols_to_average: Optional[list[ColumnKey]] = None
-    cols_to_sum: Optional[list[ColumnKey]] = None
-    extra_functions: Optional[list[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    cols_to_weighted_average: list[tuple[ColumnKey, ColumnKey]] | None = None
+    cols_to_average: list[ColumnKey] | None = None
+    cols_to_sum: list[ColumnKey] | None = None
+    extra_functions: list[ExtraFunctionType] | None = dataclasses.field(default_factory=list)
     # Module-supplied groups, mapping group display name -> sample names.
     # When set, takes precedence over `config.table_sample_merge` name patterns
     # (lets modules with authoritative pair / replicate info skip name-guessing).
-    explicit_groups: Optional[dict[str, list[str]]] = None
+    explicit_groups: dict[str, list[str]] | None = None
 
 
 class BaseMultiqcModule:
     # Custom options from user config that can overwrite base module values
     mod_cust_config: ClassVar[dict[str, Any]] = {}
-    mod_id: Optional[ModuleId] = None
+    mod_id: ModuleId | None = None
 
     def __init__(
         self,
         name: str = "base",
-        anchor: Union[Anchor, str] = Anchor("base"),  # noqa: B008 - Anchor is an immutable str subclass
-        target: Optional[str] = None,
-        href: Union[str, list[str], None] = None,
-        info: Optional[str] = None,
-        comment: Optional[str] = None,
-        extra: Optional[str] = None,
+        anchor: Anchor | str = Anchor("base"),  # noqa: B008 - Anchor is an immutable str subclass
+        target: str | None = None,
+        href: str | list[str] | None = None,
+        info: str | None = None,
+        comment: str | None = None,
+        extra: str | None = None,
         autoformat: bool = True,
         autoformat_type: str = "markdown",
-        doi: Optional[Union[str, list[str]]] = None,
-        license: Optional[str] = None,
-        license_url: Optional[str] = None,
+        doi: str | list[str] | None = None,
+        license: str | None = None,
+        license_url: str | None = None,
     ):
         validation.reset()
 
@@ -141,12 +141,12 @@ class BaseMultiqcModule:
                 self.doi = [str(d) for d in _cust_doi]
 
         # Software license, shown in the Software Versions section for FAIR reporting
-        self.license: Optional[str] = license
+        self.license: str | None = license
         _cust_license = self.mod_cust_config.get("license")
         if _cust_license is not None:
             self.license = str(_cust_license)
 
-        self.license_url: Optional[str] = license_url
+        self.license_url: str | None = license_url
         _cust_license_url = self.mod_cust_config.get("license_url")
         if _cust_license_url is not None:
             self.license_url = str(_cust_license_url)
@@ -154,7 +154,7 @@ class BaseMultiqcModule:
         self.skip_generalstats = self.mod_cust_config.get("generalstats") is False
 
         # List of software version(s) for module. Don't append directly, use add_software_version()
-        self.versions: dict[str, list[tuple[Optional[packaging.version.Version], str]]] = defaultdict(list)
+        self.versions: dict[str, list[tuple[packaging.version.Version | None, str]]] = defaultdict(list)
 
         # Specific module level config to overwrite (e.g. config.bcftools, config.fastqc)
         config.update({self.id: self.mod_cust_config.get("custom_config", {})})
@@ -196,7 +196,7 @@ class BaseMultiqcModule:
         self.hidden = False
 
         # Saved raw data. Written only if `preserve_module_raw_data` is set to `True`
-        self.__saved_raw_data: Optional[dict[str, dict[str, Any]]] = None
+        self.__saved_raw_data: dict[str, dict[str, Any]] | None = None
 
         self.css: dict[str, str] = {}
         self.js: dict[str, str] = {}
@@ -251,7 +251,7 @@ class BaseMultiqcModule:
                 delattr(self, key)
 
     @property
-    def saved_raw_data(self) -> Optional[dict[str, dict[str, Any]]]:
+    def saved_raw_data(self) -> dict[str, dict[str, Any]] | None:
         """
         Wrapper to give access to private __saved_raw_data. We could have just called __saved_raw_data without the
         underscore: saved_raw_data, and that would work just fine. But users might override saved_raw_data in
@@ -267,7 +267,7 @@ class BaseMultiqcModule:
     @overload
     def find_log_files(
         self, sp_key: str, filecontents: Literal[False] = False, filehandles: Literal[True] = True
-    ) -> Union[Iterable[LoadedFileDict[io.TextIOWrapper]], Iterable[LoadedFileDict[io.BufferedReader]]]: ...
+    ) -> Iterable[LoadedFileDict[io.TextIOWrapper]] | Iterable[LoadedFileDict[io.BufferedReader]]: ...
 
     @overload
     def find_log_files(
@@ -276,12 +276,12 @@ class BaseMultiqcModule:
 
     def find_log_files(
         self, sp_key: str, filecontents: bool = True, filehandles: bool = False
-    ) -> Union[
-        Iterable[LoadedFileDict[str]],
-        Iterable[LoadedFileDict[io.BufferedReader]],  # image file
-        Iterable[LoadedFileDict[io.TextIOWrapper]],  # text file
-        Iterable[LoadedFileDict[None]],
-    ]:
+    ) -> (
+        Iterable[LoadedFileDict[str]]
+        | Iterable[LoadedFileDict[io.BufferedReader]]
+        | Iterable[LoadedFileDict[io.TextIOWrapper]]
+        | Iterable[LoadedFileDict[None]]
+    ):
         """
         Return matches log files of interest.
         :param sp_key: Search pattern key specified in config
@@ -367,7 +367,7 @@ class BaseMultiqcModule:
 
             if filehandles or filecontents:
                 try:
-                    fh: Union[io.BufferedReader, io.TextIOWrapper, None]
+                    fh: io.BufferedReader | io.TextIOWrapper | None
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
@@ -410,19 +410,19 @@ class BaseMultiqcModule:
 
     def add_section(
         self,
-        name: Optional[str] = None,
-        anchor: Optional[Union[str, Anchor]] = None,
-        id: Optional[Union[str, SectionId]] = None,
+        name: str | None = None,
+        anchor: str | Anchor | None = None,
+        id: str | SectionId | None = None,
         description: str = "",
         comment: str = "",
         helptext: str = "",
         content_before_plot: str = "",
-        plot: Optional[Union[Plot[Any, Any], str]] = None,
+        plot: Plot[Any, Any] | str | None = None,
         content: str = "",
         autoformat: bool = True,
         autoformat_type: str = "markdown",
-        statuses: Optional[dict[Literal["pass", "warn", "fail"], list[str]]] = None,
-        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
+        statuses: dict[Literal["pass", "warn", "fail"], list[str]] | None = None,
+        alerts: SectionAlertInput | Sequence[SectionAlertInput] | None = None,
     ):
         """Add a section to the module report output
 
@@ -547,7 +547,7 @@ class BaseMultiqcModule:
 
     def _format_section_alerts(
         self,
-        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
+        alerts: SectionAlertInput | Sequence[SectionAlertInput] | None,
         autoformat: bool,
         autoformat_type: str,
     ) -> list[SectionAlert]:
@@ -676,7 +676,7 @@ class BaseMultiqcModule:
         return html
 
     @staticmethod
-    def _clean_fastq_pair(r1: str, r2: str) -> Optional[str]:
+    def _clean_fastq_pair(r1: str, r2: str) -> str | None:
         """
         Try trimming r1 and r2 as paired FASTQ file names.
         """
@@ -702,7 +702,7 @@ class BaseMultiqcModule:
 
         return None
 
-    def groups_for_sample(self, s_name: SampleName) -> tuple[SampleGroup, Optional[str]]:
+    def groups_for_sample(self, s_name: SampleName) -> tuple[SampleGroup, str | None]:
         """
         Takes a sample name and returns a trimmed name and groups it's assigned to.
         based on the patterns in config.sample_merge_groups.
@@ -710,7 +710,7 @@ class BaseMultiqcModule:
         if not config.table_sample_merge:
             return SampleGroup(s_name), None
 
-        matched_label: Optional[str] = None
+        matched_label: str | None = None
         grouping_exts: list[CleanPatternT]
         group_name = SampleGroup(s_name)
         for label, grouping_exts in config.table_sample_merge.items():
@@ -742,7 +742,7 @@ class BaseMultiqcModule:
 
     def group_samples_names(
         self, samples: Iterable[SampleName]
-    ) -> dict[SampleGroup, list[tuple[Optional[str], SampleName, SampleName]]]:
+    ) -> dict[SampleGroup, list[tuple[str | None, SampleName, SampleName]]]:
         """
         Group sample name according to a named set of patterns defined in
         the config.sample_merge_groups dictionary.
@@ -750,12 +750,12 @@ class BaseMultiqcModule:
         :return: a dict where the keys are group names, and the values are lists of tuples,
             of cleaned base names according to the cleaning rules and the original sample names
         """
-        group_by_label: dict[Optional[str], list[tuple[SampleGroup, SampleName]]] = defaultdict(list)
+        group_by_label: dict[str | None, list[tuple[SampleGroup, SampleName]]] = defaultdict(list)
         for original_name in sorted(samples):
             group_name, label = self.groups_for_sample(original_name)
             group_by_label[label].append((group_name, original_name))
 
-        group_by_merged_name: dict[SampleGroup, list[tuple[Optional[str], SampleName]]] = defaultdict(list)
+        group_by_merged_name: dict[SampleGroup, list[tuple[str | None, SampleName]]] = defaultdict(list)
         for label, group in group_by_label.items():
             for group_name, original_name in group:
                 group_by_merged_name[group_name].append((label, original_name))
@@ -775,7 +775,7 @@ class BaseMultiqcModule:
 
     def group_samples_and_average_metrics(
         self,
-        data_by_sample: dict[Union[SampleName, str], dict[Union[ColumnKey, str], ValueT]],
+        data_by_sample: dict[SampleName | str, dict[ColumnKey | str, ValueT]],
         grouping_config: SampleGroupingConfig,
     ) -> dict[SampleGroup, list[InputRow]]:
         """
@@ -787,7 +787,7 @@ class BaseMultiqcModule:
 
         # 1-member entries fall through to the singleton path below: rendering
         # them as a renamed singleton row is rarely what callers want.
-        groups_iter: dict[SampleGroup, list[tuple[Optional[str], SampleName, SampleName]]]
+        groups_iter: dict[SampleGroup, list[tuple[str | None, SampleName, SampleName]]]
         if grouping_config.explicit_groups:
             groups_iter = {}
             grouped_originals: set[str] = set()
@@ -890,10 +890,10 @@ class BaseMultiqcModule:
 
     def clean_s_name(
         self,
-        s_name: Union[str, list[str]],
-        f: Union[LoadedFileDict[Any], FileDict],
-        root: Optional[str] = None,
-        filename: Optional[str] = None,
+        s_name: str | list[str],
+        f: LoadedFileDict[Any] | FileDict,
+        root: str | None = None,
+        filename: str | None = None,
     ) -> str:
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
@@ -915,14 +915,14 @@ class BaseMultiqcModule:
 
     def _clean_s_name(
         self,
-        s_name: Union[str, list[str]],
-        f: Optional[Union[LoadedFileDict[Any], FileDict]] = None,
-        root: Optional[str] = None,
-        filename: Optional[str] = None,
-        search_pattern_key: Optional[str] = None,
-        fn_clean_exts: Optional[list[Union[str, dict[str, Union[str, list[str]]]]]] = None,
-        fn_clean_trim: Optional[list[str]] = None,
-        prepend_dirs: Optional[bool] = None,
+        s_name: str | list[str],
+        f: LoadedFileDict[Any] | FileDict | None = None,
+        root: str | None = None,
+        filename: str | None = None,
+        search_pattern_key: str | None = None,
+        fn_clean_exts: list[str | dict[str, str | list[str]]] | None = None,
+        fn_clean_trim: list[str] | None = None,
+        prepend_dirs: bool | None = None,
     ) -> str:
         """
         Helper function to take a long file name(s) and strip back to one clean sample name. Somewhat arbitrary.
@@ -1025,8 +1025,8 @@ class BaseMultiqcModule:
 
         if config.fn_clean_sample_names:
             # Split then take first section to remove everything after these matches
-            _ext: Union[str, dict[str, Union[str, list[str]]]]
-            ext: dict[str, Union[str, list[str]]]
+            _ext: str | dict[str, str | list[str]]
+            ext: dict[str, str | list[str]]
             for _ext in fn_clean_exts:
                 # Go through different filter types
                 if isinstance(_ext, str):
@@ -1108,8 +1108,8 @@ class BaseMultiqcModule:
     def ignore_samples(
         self,
         data: dict[SampleNameT, DataT],
-        sample_names_ignore: Optional[list[str]] = None,
-        sample_names_ignore_re: Optional[list[str]] = None,
+        sample_names_ignore: list[str] | None = None,
+        sample_names_ignore_re: list[str] | None = None,
     ) -> dict[SampleNameT, DataT]:
         """Strip out samples which match `sample_names_ignore`"""
         try:
@@ -1125,9 +1125,9 @@ class BaseMultiqcModule:
 
     @staticmethod
     def is_ignore_sample(
-        s_name: Union[str, SampleName],
-        sample_names_ignore: Optional[list[str]] = None,
-        sample_names_ignore_re: Optional[list[str]] = None,
+        s_name: str | SampleName,
+        sample_names_ignore: list[str] | None = None,
+        sample_names_ignore_re: list[str] | None = None,
     ) -> bool:
         """Should a sample name be ignored?"""
         sample_names_ignore = sample_names_ignore or config.sample_names_ignore
@@ -1150,16 +1150,13 @@ class BaseMultiqcModule:
 
     def general_stats_addcols(
         self,
-        data_by_sample: dict[Union[SampleName, str], dict[Union[ColumnKey, str], ValueT]],
-        headers: Optional[
-            Union[
-                Mapping[ColumnKey, ColumnDict],
-                Mapping[ColumnKey, dict[str, Any]],
-                Mapping[str, ColumnDict],
-                Mapping[str, dict[str, Any]],
-            ]
-        ] = None,
-        namespace: Optional[str] = None,
+        data_by_sample: dict[SampleName | str, dict[ColumnKey | str, ValueT]],
+        headers: Mapping[ColumnKey, ColumnDict]
+        | Mapping[ColumnKey, dict[str, Any]]
+        | Mapping[str, ColumnDict]
+        | Mapping[str, dict[str, Any]]
+        | None = None,
+        namespace: str | None = None,
         group_samples_config: SampleGroupingConfig = SampleGroupingConfig(),  # noqa: B008 - never mutated here
     ):
         """Helper function to add to the General Statistics variable.
@@ -1242,11 +1239,11 @@ class BaseMultiqcModule:
 
     def add_data_source(
         self,
-        f: Optional[LoadedFileDict[Any]] = None,
-        s_name: Optional[str] = None,
-        path: Optional[Union[str, Path]] = None,
-        module: Optional[str] = None,
-        section: Optional[str] = None,
+        f: LoadedFileDict[Any] | None = None,
+        s_name: str | None = None,
+        path: str | Path | None = None,
+        module: str | None = None,
+        section: str | None = None,
     ):
         if f is None and path is None:
             lint_error(f"add_data_source needs f or path to be set, got: {locals()}")
@@ -1267,12 +1264,12 @@ class BaseMultiqcModule:
 
     def add_software_version(
         self,
-        version: Optional[str] = None,
-        sample: Optional[str] = None,
-        software_name: Optional[str] = None,
-        license: Optional[str] = None,
-        license_url: Optional[str] = None,
-        doi: Optional[Union[str, list[str]]] = None,
+        version: str | None = None,
+        sample: str | None = None,
+        software_name: str | None = None,
+        license: str | None = None,
+        license_url: str | None = None,
+        doi: str | list[str] | None = None,
     ):
         """
         Save software versions for module.
@@ -1322,9 +1319,9 @@ class BaseMultiqcModule:
     def _add_software_metadata(
         self,
         software_name: str,
-        license: Optional[str] = None,
-        license_url: Optional[str] = None,
-        doi: Optional[Union[str, list[str]]] = None,
+        license: str | None = None,
+        license_url: str | None = None,
+        doi: str | list[str] | None = None,
     ):
         """
         Register FAIR metadata (license, DOI) for a software in the Software Versions
@@ -1355,7 +1352,7 @@ class BaseMultiqcModule:
             if d not in meta.doi:
                 meta.doi.append(d)
 
-    def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
+    def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: str | None = None):
         """Saves raw data to a dictionary for downstream use, then redirects
         to report.write_data_file() to create the file in the report directory"""
 
@@ -1402,10 +1399,10 @@ class BaseMultiqcModule:
 
     def get_general_stats_headers(
         self,
-        all_headers: Union[Mapping[str, ColumnDict], Mapping[ColumnKey, ColumnDict]],
-        default_shown: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
-        default_hidden: Optional[Union[Sequence[str], Sequence[ColumnKey]]] = None,
-        sp_key: Optional[str] = None,
+        all_headers: Mapping[str, ColumnDict] | Mapping[ColumnKey, ColumnDict],
+        default_shown: Sequence[str] | Sequence[ColumnKey] | None = None,
+        default_hidden: Sequence[str] | Sequence[ColumnKey] | None = None,
+        sp_key: str | None = None,
     ) -> dict[ColumnKey, ColumnDict]:
         """
         Get general stats columns for a module based on user configuration.

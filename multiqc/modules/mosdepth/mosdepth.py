@@ -1,7 +1,7 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Optional, Union, cast
+from typing import cast
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -68,7 +68,7 @@ def genstats_cov_thresholds(cum_fraction_by_cov: dict[int, float], threshs: list
     return genstats
 
 
-def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
+def calc_median_coverage(cum_fraction_by_cov) -> float | None:
     median_cov = None
     for this_cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
         if cum_fraction >= 0.5:
@@ -187,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = read_config()
-        genstats_by_sample: dict[str, dict[str, Union[int, float]]] = defaultdict(dict)  # mean coverage
+        genstats_by_sample: dict[str, dict[str, int | float]] = defaultdict(dict)  # mean coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
@@ -308,7 +308,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.write_data_file(perchrom_avg_by_sample, "mosdepth_perchrom")
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_by_sample.values()])
-                perchrom_plot: Optional[Union[Plot, str]]
+                perchrom_plot: Plot | str | None
                 if num_contigs > 1:
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_by_sample,
@@ -441,7 +441,7 @@ class MultiqcModule(BaseMultiqcModule):
         dict[str, dict],
         dict[str, dict],
         dict[str, tuple[float, float]],
-        dict[str, dict[str, Union[float, int, None]]],
+        dict[str, dict[str, float | int | None]],
     ]:
         """
         Two types of coverage distributions are parsed: global and region.
@@ -471,7 +471,7 @@ class MultiqcModule(BaseMultiqcModule):
             dict
         )  # per chromosome average coverage
         xy_cov_by_sample: dict[str, tuple[float, float]] = {}
-        genstats_by_sample: dict[str, dict[str, Union[float, int, None]]] = {}
+        genstats_by_sample: dict[str, dict[str, float | int | None]] = {}
 
         threshs, _hidden_threshs = config.get_cov_thresholds("mosdepth_config")
 
@@ -573,8 +573,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Additionally, collect X and Y counts if we have them
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
-            x_cov: Optional[float] = None
-            y_cov: Optional[float] = None
+            x_cov: float | None = None
+            y_cov: float | None = None
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
                 if self.cfg.get("xchr"):
                     if str(self.cfg["xchr"]) == str(contig):

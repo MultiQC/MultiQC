@@ -2,9 +2,7 @@
 Tests for natural sorting of files by clean sample name
 """
 
-import os
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.types import FileDict, ModuleId

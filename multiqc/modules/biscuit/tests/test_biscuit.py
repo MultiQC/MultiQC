@@ -1,7 +1,5 @@
 import pytest
 
-from multiqc import config, report
-from multiqc.modules.biscuit import MultiqcModule
 from multiqc.utils import testing
 
 # NOTE: These tests could be fleshed out more (more inputs, more error cases, etc.)

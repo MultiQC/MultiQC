@@ -1,7 +1,6 @@
 """Parse riker `hybcap` outputs (hybcap-metrics.txt)."""
 
 import logging
-from typing import Optional
 
 from multiqc import config
 from multiqc.plots import linegraph, table
@@ -16,7 +15,7 @@ TARGET_COVERAGE_LEVELS = [1, 10, 20, 30, 50, 100, 250, 500, 1000]
 
 
 def parse_reports(module):
-    data_by_sample: dict[str, dict[str, Optional[float]]] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
     panel_by_sample: dict[str, str] = {}
 
     for f in module.find_log_files("riker/hybcap_metrics", filehandles=True):

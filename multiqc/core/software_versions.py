@@ -4,7 +4,7 @@ import logging
 import os
 from collections import defaultdict
 from collections.abc import Sequence
-from typing import Any, Optional
+from typing import Any
 
 import packaging.version
 import yaml
@@ -179,8 +179,8 @@ def validate_software_versions(versions_config: dict[str, Any]) -> dict[str, dic
 
 
 def sort_versions(
-    ver_and_verstr: Sequence[tuple[Optional[packaging.version.Version], str]],
-) -> list[tuple[Optional[packaging.version.Version], str]]:
+    ver_and_verstr: Sequence[tuple[packaging.version.Version | None, str]],
+) -> list[tuple[packaging.version.Version | None, str]]:
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
     objects.
@@ -199,7 +199,7 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str) -> Optional[packaging.version.Version]:
+def parse_version(version: str) -> packaging.version.Version | None:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.

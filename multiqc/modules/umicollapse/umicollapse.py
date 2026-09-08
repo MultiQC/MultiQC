@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -91,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             (int, "dedup_output_reads", r"Number of reads after deduplicating\t(\d+)"),
         ]
 
-        data: dict[str, Union[str, int, float]] = {}
+        data: dict[str, str | int | float] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
             comp_regex = re.compile(regex)

@@ -3,7 +3,6 @@
 import logging
 from html import escape
 from textwrap import dedent
-from typing import Optional
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -14,7 +13,7 @@ from multiqc.utils.material_icons import get_material_icon
 log = logging.getLogger(__name__)
 
 
-def _license_html(meta: Optional[SoftwareVersionMetadata]) -> str:
+def _license_html(meta: SoftwareVersionMetadata | None) -> str:
     """Render the License table cell, linking the license name to its URL if available."""
     if meta is None or (not meta.license and not meta.license_url):
         return ""
@@ -24,7 +23,7 @@ def _license_html(meta: Optional[SoftwareVersionMetadata]) -> str:
     return str(label)
 
 
-def _doi_html(meta: Optional[SoftwareVersionMetadata]) -> str:
+def _doi_html(meta: SoftwareVersionMetadata | None) -> str:
     """Render the DOI table cell as one or more links to doi.org."""
     if meta is None or not meta.doi:
         return ""

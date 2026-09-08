@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
@@ -10,7 +9,7 @@ log = logging.getLogger(__name__)
 def parse_reports(self: BaseMultiqcModule) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
-    samplegender_data: dict[str, dict[str, Union[float, str]]] = {}
+    samplegender_data: dict[str, dict[str, float | str]] = {}
     for f in self.find_log_files("ngsbits/samplegender"):
         self.add_data_source(f)
         s_name = f["s_name"]
@@ -87,12 +86,12 @@ def parse_reports(self: BaseMultiqcModule) -> int:
     return len(samplegender_data)
 
 
-def parse_file(f: str) -> dict[str, Union[float, str]]:
+def parse_file(f: str) -> dict[str, float | str]:
     """
     Parses a single SampleGender TSV file content and returns a dictionary
     with the relevant data from columns 2-5.
     """
-    parsed_data: dict[str, Union[float, str]] = {}
+    parsed_data: dict[str, float | str] = {}
     lines = f.splitlines()
 
     if len(lines) < 2:

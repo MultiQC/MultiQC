@@ -6,7 +6,7 @@ import math
 import os
 import random
 from collections.abc import Mapping, Sequence
-from typing import Any, Generic, Literal, Optional, TypeVar, Union, cast
+from typing import Any, Generic, Literal, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -35,32 +35,32 @@ logger = logging.getLogger(__name__)
 KeyT = TypeVar("KeyT", int, str, float)
 ValT = TypeVar("ValT", int, str, float, None)
 XToYDictT = Mapping[KeyT, ValT]
-DatasetT = Mapping[Union[str, SampleName], XToYDictT[KeyT, ValT]]
+DatasetT = Mapping[str | SampleName, XToYDictT[KeyT, ValT]]
 
 
 class Marker(ValidatedConfig):
-    symbol: Optional[str] = None
-    color: Optional[str] = None
-    line_color: Optional[str] = None
-    fill_color: Optional[str] = None
+    symbol: str | None = None
+    color: str | None = None
+    line_color: str | None = None
+    fill_color: str | None = None
     width: int = 1
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("Marker",), **data)
 
 
 class Series(ValidatedConfig, Generic[KeyT, ValT]):
     name: str = Field(default_factory=lambda: f"series-{random.randint(1000000, 9999999)}")
     pairs: list[tuple[KeyT, ValT]]
-    color: Optional[str] = None
+    color: str | None = None
     width: int = 2
-    dash: Optional[str] = None
+    dash: str | None = None
     showlegend: bool = True
-    marker: Optional[Marker] = None
+    marker: Marker | None = None
     # Store additional trace parameters that should be passed to Plotly
     extra_trace_params: dict[str, Any] = Field(default_factory=dict)
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         path_in_cfg = path_in_cfg or ("Series",)
 
         if "dashStyle" in data:
@@ -91,53 +91,53 @@ class Series(ValidatedConfig, Generic[KeyT, ValT]):
         if self.dash is not None:
             self.dash = convert_dash_style(self.dash, path_in_cfg=path_in_cfg + ("dash",))
 
-    def get_x_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_x_range(self) -> tuple[Any | None, Any | None]:
         xs = [x[0] for x in self.pairs]
         if len(xs) > 0:
             return min(xs), max(xs)  # type: ignore
         return None, None
 
-    def get_y_range(self) -> tuple[Optional[Any], Optional[Any]]:
+    def get_y_range(self) -> tuple[Any | None, Any | None]:
         ys = [x[1] for x in self.pairs if x[1] is not None]
         if len(ys) > 0:
             return min(ys), max(ys)  # type: ignore
         return None, None
 
 
-SeriesT = Union[Series, dict[str, Any]]
+SeriesT = Series | dict[str, Any]
 
 
 AxisStr = Literal["xaxis", "yaxis"]
 
 
 class LinePlotConfig(PConfig):
-    xlab: Optional[str] = None
-    ylab: Optional[str] = None
+    xlab: str | None = None
+    ylab: str | None = None
     categories: bool = False
-    smooth_points: Optional[int] = 500
-    smooth_points_sumcounts: Union[bool, list[bool], None] = None
-    extra_series: Optional[Union[Series, list[Series], list[list[Series]]]] = None
-    style: Optional[Literal["lines", "lines+markers"]] = None
+    smooth_points: int | None = 500
+    smooth_points_sumcounts: bool | list[bool] | None = None
+    extra_series: Series | list[Series] | list[list[Series]] | None = None
+    style: Literal["lines", "lines+markers"] | None = None
     hide_empty: bool = Field(True)
     colors: dict[str, str] = {}
     dash_styles: dict[str, str] = {}
     hovertemplates: dict[str, str] = {}
     legend_groups: dict[str, str] = {}
-    axis_controlled_by_switches: Optional[list[AxisStr]] = None
+    axis_controlled_by_switches: list[AxisStr] | None = None
 
     @classmethod
     def parse_extra_series(
         cls,
-        data: Union[SeriesT, list[SeriesT], list[list[SeriesT]]],
+        data: SeriesT | list[SeriesT] | list[list[SeriesT]],
         path_in_cfg: tuple[str, ...],
-    ) -> Union[Series, list[Series], list[list[Series]]]:
+    ) -> Series | list[Series] | list[list[Series]]:
         if isinstance(data, list):
             if isinstance(data[0], list):
                 return [[Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in ds] for ds in data]  # type: ignore
             return [Series(path_in_cfg=path_in_cfg, **d) if isinstance(d, dict) else d for d in data]  # type: ignore
         return Series(path_in_cfg=path_in_cfg, **data) if isinstance(data, dict) else data  # type: ignore
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("lineplot",), **data)
 
 
@@ -147,7 +147,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
     def sample_names(self) -> list[SampleName]:
         return [SampleName(line.name) for line in self.lines]
 
-    def get_x_range(self) -> tuple[Optional[KeyT], Optional[KeyT]]:
+    def get_x_range(self) -> tuple[KeyT | None, KeyT | None]:
         if not self.lines:
             return None, None
         xmax, xmin = None, None
@@ -159,7 +159,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
                 xmax = max(xmax, _xmax) if xmax is not None else _xmax  # type: ignore
         return xmin, xmax
 
-    def get_y_range(self) -> tuple[Optional[ValT], Optional[ValT]]:
+    def get_y_range(self) -> tuple[ValT | None, ValT | None]:
         if not self.lines:
             return None, None
         ymax, ymin = None, None
@@ -258,7 +258,7 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
         return fig
 
     def save_data_file(self) -> None:
-        y_by_x_by_sample: dict[str, dict[Union[float, str], Any]] = {}
+        y_by_x_by_sample: dict[str, dict[float | str, Any]] = {}
         last_cats = None
         shared_cats = True
         for series in self.lines:
@@ -386,7 +386,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
     @classmethod
     def from_df(
-        cls, df: pl.DataFrame, pconfig: Union[dict, LinePlotConfig], anchor: Anchor
+        cls, df: pl.DataFrame, pconfig: dict | LinePlotConfig, anchor: Anchor
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig
         if cls.df_is_empty(df):
@@ -407,7 +407,7 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
         # Reconstruct data structure using efficient grouping
         datasets: list[list[Series[KeyT, ValT]]] = []
-        data_labels: list[Union[str, dict[str, Any]]] = []
+        data_labels: list[str | dict[str, Any]] = []
         sample_names: list[SampleName] = []
         sample_names_set: set = set()
 
@@ -490,8 +490,8 @@ class LinePlotNormalizedInputData(NormalizedPlotInputData[LinePlotConfig], Gener
 
     @staticmethod
     def create(
-        data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
-        pconfig: Union[dict[str, Any], LinePlotConfig, None] = None,
+        data: DatasetT[KeyT, ValT] | Sequence[DatasetT[KeyT, ValT]],
+        pconfig: dict[str, Any] | LinePlotConfig | None = None,
     ) -> "LinePlotNormalizedInputData[KeyT, ValT]":
         pconf: LinePlotConfig = cast(LinePlotConfig, LinePlotConfig.from_pconfig_dict(pconfig))
 
@@ -650,7 +650,7 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
 
         # Add extra annotation data series
         if pconf.extra_series:
-            ess: Union[Series[Any, Any], list[Series[Any, Any]], list[list[Series[Any, Any]]]] = pconf.extra_series
+            ess: Series[Any, Any] | list[Series[Any, Any]] | list[list[Series[Any, Any]]] = pconf.extra_series
             list_of_list_of_series: list[list[Series[Any, Any]]]
             if isinstance(ess, list):
                 if isinstance(ess[0], list):
@@ -703,8 +703,8 @@ class LinePlot(Plot[Dataset[KeyT, ValT], LinePlotConfig], Generic[KeyT, ValT]):
 
 
 def plot(
-    data: Union[DatasetT[KeyT, ValT], Sequence[DatasetT[KeyT, ValT]]],
-    pconfig: Union[dict[str, Any], LinePlotConfig, None] = None,
+    data: DatasetT[KeyT, ValT] | Sequence[DatasetT[KeyT, ValT]],
+    pconfig: dict[str, Any] | LinePlotConfig | None = None,
 ) -> Union["LinePlot", str, None]:
     """
     Plot a line graph with X,Y data.
@@ -728,7 +728,7 @@ def remove_nones_and_empty_dicts(d: Mapping[Any, Any]) -> dict[Any, Any]:
 
 def _make_series_dict(
     pconfig: LinePlotConfig,
-    data_label: Union[dict[str, Any], str, None],
+    data_label: dict[str, Any] | str | None,
     s: str,
     y_by_x: XToYDictT[KeyT, ValT],
 ) -> Series[KeyT, ValT]:

@@ -5,6 +5,8 @@ Better validation of configs. Build on top of Pydantic, but prints more helpful 
 import inspect
 import logging
 import re
+import types
+import typing
 from collections import defaultdict
 from typing import Any
 
@@ -229,9 +231,13 @@ class ValidatedConfig(BaseModel):
                 except TypeCheckError as e:
                     annotation = expected_type
                     try:  # try casting to expected type?
-                        if expected_type is not None:
-                            if expected_type.__name__ in ["Optional", "Union"]:
-                                expected_type = expected_type.__args__[0]
+                        # Unwrap Optional/Union to its first member before casting.
+                        # Checked with get_origin() rather than __name__: a PEP 604
+                        # union (`str | None`) is a types.UnionType on Python 3.10 to
+                        # 3.13 and has no __name__ at all, so name sniffing would raise
+                        # AttributeError here and silently skip the cast.
+                        if typing.get_origin(expected_type) in (typing.Union, types.UnionType):
+                            expected_type = typing.get_args(expected_type)[0]
                         val = expected_type(val)  # type: ignore
                         # A parameterised generic such as list[Literal["xaxis"]] is
                         # callable and builds a list of invalid members without

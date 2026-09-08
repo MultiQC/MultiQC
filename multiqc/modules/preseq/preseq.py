@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 import numpy as np
 
@@ -7,7 +6,6 @@ from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph
 from multiqc.plots.linegraph import LinePlotConfig, Marker, Series
-from multiqc.plots.plot import PConfig
 from multiqc.utils import mqc_colour
 
 log = logging.getLogger(__name__)
@@ -149,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
         d_cnts = {sn: _modify_raw_data(sample_data, is_basepairs) for sn, sample_data in data_raw.items()}
 
         # Plot depths of counts
-        counts_in_1x: Optional[float] = _calc_count_in_1x(is_basepairs)
+        counts_in_1x: float | None = _calc_count_in_1x(is_basepairs)
         x_axis = getattr(config, "preseq", {}).get("x_axis", "counts")
         y_axis = getattr(config, "preseq", {}).get("y_axis", "coverage" if counts_in_1x is not None else "counts")
 
@@ -334,7 +332,7 @@ def _count_to_coverage(val: float, counts_in_1x: float) -> float:
     return val / counts_in_1x
 
 
-def _calc_count_in_1x(data_is_basepairs: bool) -> Optional[float]:
+def _calc_count_in_1x(data_is_basepairs: bool) -> float | None:
     """Read length and genome size from the config and calculate
     the approximate number of counts (or base pairs) in 1x of depth
     """

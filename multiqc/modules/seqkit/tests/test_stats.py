@@ -1,7 +1,5 @@
 """Tests for the seqkit stats module"""
 
-import pytest
-
 from multiqc.modules.seqkit.stats import parse_stats_report
 
 # Sample seqkit stats output with all columns (--all --tabular)

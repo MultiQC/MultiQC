@@ -1,6 +1,3 @@
-from typing import Union
-
-
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
     for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
@@ -64,10 +61,10 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
-def parse_bcknee_data(data, s_name, max_idx=1000) -> dict[str, dict[str, Union[int, str, float]]]:
+def parse_bcknee_data(data, s_name, max_idx=1000) -> dict[str, dict[str, int | str | float]]:
     """parse data for bc knee plot from dict"""
 
-    value_dict: dict[str, dict[str, Union[int, str, float]]] = {}
+    value_dict: dict[str, dict[str, int | str | float]] = {}
     for idx, data_series in enumerate(data):
         if idx > max_idx:
             break
@@ -81,7 +78,7 @@ def parse_bcknee_data(data, s_name, max_idx=1000) -> dict[str, dict[str, Union[i
     return value_dict
 
 
-def transform_data(data: dict[str, list]) -> dict[str, Union[int, str, float]]:
+def transform_data(data: dict[str, list]) -> dict[str, int | str | float]:
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
     value_dict = {}

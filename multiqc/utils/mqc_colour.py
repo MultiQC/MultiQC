@@ -8,7 +8,7 @@ import hashlib
 # Default logger will be replaced by caller
 import logging
 import re
-from typing import ClassVar, Optional, Union
+from typing import ClassVar
 
 import numpy as np
 import spectra  # type: ignore
@@ -232,8 +232,8 @@ class mqc_colour_scale:
     def __init__(
         self,
         name="GnBu",
-        minval: Optional[Union[float, int, str]] = None,
-        maxval: Optional[Union[float, int, str]] = None,
+        minval: float | str | None = None,
+        maxval: float | str | None = None,
         id=None,
     ):
         """Initialise class with a colour scale"""
@@ -284,10 +284,10 @@ class mqc_colour_scale:
 
     def get_colour(
         self,
-        val: Optional[Union[float, str]],
+        val: float | str | None,
         colformat: str = "hex",
         lighten: float = 0.3,
-        source: Optional[str] = None,
+        source: str | None = None,
     ) -> str:
         """Given a value, return a colour within the colour scale"""
 
@@ -559,7 +559,7 @@ class mqc_colour_scale:
     }
 
 
-def color_to_rgb_string(color: Optional[str]) -> str:
+def color_to_rgb_string(color: str | None) -> str:
     """
     Convert a color to RGB format suitable for Plotly-JS.
 

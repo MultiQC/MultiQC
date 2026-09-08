@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Mapping
 from itertools import islice
 from pathlib import Path
-from typing import Optional, TypedDict, Union
+from typing import TypedDict
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.table_object import ColumnDict, InputRow, ValueT
+from multiqc.plots.table_object import ColumnDict, InputRow
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 
@@ -26,38 +26,38 @@ class BaseMetrics(BaseModel):
     clusters: int = 0
     perfect_index_reads: int = 0
     one_mismatch_index_reads: int = 0
-    percent_clusters: Optional[float] = None
-    percent_perfect_index_reads: Optional[float] = None
-    percent_one_mismatch_index_reads: Optional[float] = None
-    yield_: Optional[int] = None
-    percent_yield: Optional[float] = None
-    yield_q30: Optional[int] = None
-    percent_yield_q30: Optional[float] = None
-    mean_quality: Optional[float] = None
+    percent_clusters: float | None = None
+    percent_perfect_index_reads: float | None = None
+    percent_one_mismatch_index_reads: float | None = None
+    yield_: int | None = None
+    percent_yield: float | None = None
+    yield_q30: int | None = None
+    percent_yield_q30: float | None = None
+    mean_quality: float | None = None
     top_unknown_barcodes: dict[str, int] = {}
-    depth: Optional[float] = None
+    depth: float | None = None
     # used to re-calculate mean_quality
-    quality_score_sum: Optional[float] = None
+    quality_score_sum: float | None = None
     # re-calculated yield from demux stats where it is not provided explicitly and is calculated from # Reads
     # and Read Length:
     calculated_yield: int = 0
     # used to re-calculate mean_quality from demux stats where Yield is not provided explicitly and is
     # calculated from # Reads and Read Length
-    calculated_qscore_sum: Optional[float] = None
+    calculated_qscore_sum: float | None = None
 
 
 class ChunkMetrics(BaseMetrics):
     """Data for one chunk (single run, single lane, single sample)"""
 
-    index: Optional[str] = None
-    sample_project: Optional[str] = None
+    index: str | None = None
+    sample_project: str | None = None
 
 
 class SampleSummary(BaseMetrics):
     """Data for a sample across all runs and lanes"""
 
-    index: Optional[str] = None
-    sample_project: Optional[str] = None
+    index: str | None = None
+    sample_project: str | None = None
     lanes: dict[str, ChunkMetrics] = {}
 
 
@@ -366,7 +366,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     @functools.lru_cache
-    def _get_genome_size() -> Optional[int]:
+    def _get_genome_size() -> int | None:
         gs = getattr(config, "bclconvert", {}).get("genome_size")
         if gs:
             try:
@@ -394,7 +394,7 @@ class MultiqcModule(BaseMultiqcModule):
         return ncount == 1
 
     @staticmethod
-    def _get_r2_length(root: ElementTree.Element) -> Optional[str]:
+    def _get_r2_length(root: ElementTree.Element) -> str | None:
         for element in root.findall("./Run/Reads/Read"):
             if element.get("Number") != "1" and element.get("IsIndexedRead") == "N":
                 return element.get("NumCycles")
@@ -1059,7 +1059,7 @@ class MultiqcModule(BaseMultiqcModule):
     def get_bar_data_from_counts(
         self,
         data_by_lane: Mapping[str, LaneSummary],
-        total_runs: Optional[int] = None,
+        total_runs: int | None = None,
     ) -> dict[str, dict[str, int]]:
         # For per-lane stats we fetch undetermined reads, too.
         bar_data: dict[str, dict[str, int]] = {}

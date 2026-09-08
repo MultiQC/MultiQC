@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard ValidateSamFile"""
 
 import logging
-from typing import Union
 
 from multiqc.plots import table
 from multiqc.plots.plot import Plot
@@ -305,7 +304,7 @@ def _generate_overview_note(pass_count, only_warning_count, error_count, total_c
     return "\n".join(note_html)
 
 
-def _generate_detailed_table(data) -> Union[Plot, str]:
+def _generate_detailed_table(data) -> Plot | str:
     """
     Generates and returns the HTML table that overviews the details found.
     """

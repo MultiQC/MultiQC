@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Any, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
@@ -65,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.ataqv_data, "multiqc_ataqv")
 
-    def parse_ataqv_json(self, f) -> Optional[dict]:
+    def parse_ataqv_json(self, f) -> dict | None:
         """Parse ataqv JSON report"""
         try:
             content = json.loads(f["f"])

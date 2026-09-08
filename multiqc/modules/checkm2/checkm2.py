@@ -1,7 +1,6 @@
 import csv
 import logging
 from io import StringIO
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table

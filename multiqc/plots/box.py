@@ -5,7 +5,7 @@ import json
 import logging
 from collections import OrderedDict
 from collections.abc import Mapping
-from typing import Any, Optional, Union, cast
+from typing import Any, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -28,23 +28,23 @@ class BoxPlotConfig(PConfig):
     # "all" - show all data points
     # "outliers" - show only outliers
     # None - use config.boxplot_boxpoints; if not set, determine based on config.box_min_threshold_no_points and config.box_min_threshold_outliers
-    boxpoints: Union[bool, str, None] = None
+    boxpoints: bool | str | None = None
 
-    def __init__(self, path_in_cfg: Optional[tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("boxplot",), **data)
 
 
 # Type of single box (matching one sample) - can be raw data or statistics
-BoxT = Union[list[Union[int, float]], dict[str, Union[int, float]]]
+BoxT = list[int | float] | dict[str, int | float]
 # Type for statistics dict
-BoxStatsT = dict[str, Union[int, float]]
+BoxStatsT = dict[str, int | float]
 
 
 class Dataset(BaseDataset):
     data: list[BoxT]
     samples: list[str]
-    data_sorted: Optional[list[BoxT]] = None  # Sorted version of data
-    samples_sorted: Optional[list[str]] = None  # Sorted version of samples
+    data_sorted: list[BoxT] | None = None  # Sorted version of data
+    samples_sorted: list[str] | None = None  # Sorted version of samples
     is_stats_data: bool = False  # True if data contains pre-calculated statistics
 
     def sample_names(self) -> list[SampleName]:
@@ -54,7 +54,7 @@ class Dataset(BaseDataset):
     def create(
         dataset: BaseDataset,
         data_by_sample: Mapping[str, BoxT],
-        pconfig: Optional[BoxPlotConfig] = None,
+        pconfig: BoxPlotConfig | None = None,
     ) -> "Dataset":
         # Detect if we have statistics data or raw data
         is_stats_data = False
@@ -85,7 +85,7 @@ class Dataset(BaseDataset):
                         median_values[sample] = stats_dict.get("median", 0)
                     else:
                         # Calculate median from raw data
-                        raw_values = cast(list[Union[int, float]], values)
+                        raw_values = cast(list[int | float], values)
                         sorted_values = sorted(raw_values)
                         n = len(sorted_values)
                         median = (
@@ -123,7 +123,7 @@ class Dataset(BaseDataset):
         )
 
         # Determine boxpoints based on PConfig first, then global config, then dynamic logic
-        boxpoints: Union[bool, str] = "outliers"
+        boxpoints: bool | str = "outliers"
 
         if is_stats_data:
             # For statistics data, we can't show individual points
@@ -193,7 +193,7 @@ class Dataset(BaseDataset):
                 )
             else:
                 # Use raw data points
-                raw_values = cast(list[Union[int, float]], values)
+                raw_values = cast(list[int | float], values)
                 fig.add_trace(
                     go.Box(
                         x=raw_values,
@@ -242,7 +242,7 @@ class Dataset(BaseDataset):
                 mean = stats_dict.get("mean", median)
             else:
                 # Calculate statistics from raw data
-                raw_values = cast(list[Union[int, float]], values)
+                raw_values = cast(list[int | float], values)
                 sorted_vals = sorted(raw_values)
                 n = len(sorted_vals)
 
@@ -310,7 +310,7 @@ class BoxPlotInputData(NormalizedPlotInputData):
         return self.finalize_df(df)
 
     @classmethod
-    def from_df(cls, df: pl.DataFrame, pconfig: Union[dict, BoxPlotConfig], anchor: Anchor) -> "BoxPlotInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | BoxPlotConfig, anchor: Anchor) -> "BoxPlotInputData":
         """
         Load plot data from a DataFrame.
         """
@@ -411,8 +411,8 @@ class BoxPlotInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        list_of_data_by_sample: Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]],
-        pconfig: Union[dict[str, Any], BoxPlotConfig, None] = None,
+        list_of_data_by_sample: Mapping[str, BoxT] | list[Mapping[str, BoxT]],
+        pconfig: dict[str, Any] | BoxPlotConfig | None = None,
     ) -> "BoxPlotInputData":
         pconf: BoxPlotConfig = cast(BoxPlotConfig, BoxPlotConfig.from_pconfig_dict(pconfig))
 
@@ -538,8 +538,8 @@ class BoxPlot(Plot[Dataset, BoxPlotConfig]):
 
 
 def plot(
-    list_of_data_by_sample: Union[Mapping[str, BoxT], list[Mapping[str, BoxT]]],
-    pconfig: Union[dict[str, Any], BoxPlotConfig, None] = None,
+    list_of_data_by_sample: Mapping[str, BoxT] | list[Mapping[str, BoxT]],
+    pconfig: dict[str, Any] | BoxPlotConfig | None = None,
 ) -> Union["BoxPlot", str, None]:
     """
     Plot a box plot. Supports two input formats:

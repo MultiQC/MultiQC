@@ -3,7 +3,6 @@ Super Special-Case MultiQC module to produce report section on MultiQC performan
 """
 
 import logging
-from typing import Union
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -106,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         file_search_counts: dict[str, int] = {k: len(paths) for k, paths in report.file_search_stats.items()}
 
-        pdata: dict[SampleName, dict[CatName, Union[int, float]]] = {}
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         pcats: dict[CatName, dict[str, str]] = {}
         for key in sorted(
             file_search_counts.keys(),
@@ -156,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
     def search_pattern_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: dict[SampleName, dict[CatName, Union[int, float]]] = {}
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in sorted(report.runtimes.sp.keys(), key=lambda k: report.runtimes.sp[k], reverse=True):
             pdata[SampleName(key)] = {CatName(key): report.runtimes.sp[key]}
 
@@ -198,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
     def module_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: dict[SampleName, dict[CatName, Union[int, float]]] = {}
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.runtimes.mods:
             pdata[SampleName(key)] = {CatName(key): report.runtimes.mods[key]}
 
@@ -228,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Section with a bar plot showing the memory usage of each module
         """
-        pdata: dict[SampleName, dict[CatName, Union[int, float]]] = {}
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.peak_memory_bytes_per_module:
             pdata[SampleName(key)] = {CatName(key): report.peak_memory_bytes_per_module[key] / 1024 / 1024}
         for key in report.diff_memory_bytes_per_module:

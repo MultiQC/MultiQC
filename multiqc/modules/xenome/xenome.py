@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import ClassVar, Union
+from typing import ClassVar
 
 import spectra  # type: ignore
 
@@ -163,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
         c = spectra.html(code)
         return scale.lighten_colour(c, lighten)
 
-    def _get_color(self, cls: Union[str, int], lighten=1.0, return_scale=False) -> str:
+    def _get_color(self, cls: str | int, lighten=1.0, return_scale=False) -> str:
         if not isinstance(cls, int) and cls in self.all_species:
             cls = self.all_species.index(cls)
         if isinstance(cls, int):

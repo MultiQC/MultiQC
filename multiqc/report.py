@@ -14,14 +14,13 @@ import logging
 import mimetypes
 import os
 import re
-import shutil
 import sys
 import time
 from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path, PosixPath
-from typing import Any, Optional, TextIO, Union
+from typing import Any, Optional, TextIO
 
 import yaml
 from dotenv import load_dotenv
@@ -78,14 +77,14 @@ initialized = False
 multiqc_command: str
 creation_date: datetime
 top_modules: list[dict[str, dict[str, str]]]
-module_order: list[dict[str, dict[str, Union[str, list[str]]]]]
+module_order: list[dict[str, dict[str, str | list[str]]]]
 modules: list["BaseMultiqcModule"]  # list of BaseMultiqcModule objects
-general_stats_plot: Optional[ViolinPlot]
+general_stats_plot: ViolinPlot | None
 general_stats_html: str
 lint_errors: list[str]
 num_flat_plots: int
 some_plots_are_deferred: bool
-last_found_file: Optional[str]
+last_found_file: str | None
 runtimes: Runtimes
 peak_memory_bytes_per_module: dict[str, int]
 diff_memory_bytes_per_module: dict[str, int]
@@ -112,12 +111,12 @@ ai_pseudonym_map_base64: str = ""
 
 # Following fields are preserved between interactive runs
 data_sources: dict[str, dict[str, dict[str, Any]]]
-html_ids_by_scope: dict[Optional[str], set[Anchor]] = defaultdict(set)
+html_ids_by_scope: dict[str | None, set[Anchor]] = defaultdict(set)
 
 # relative paths to parquet files to combine data from previous runs
 plot_input_data: dict[Anchor, NormalizedPlotInputData] = {}
 # plot objects to retried when plots are rendered, for ai, and for interactive use
-plot_by_id: dict[Anchor, Union[Plot[Any, Any], str]] = {}
+plot_by_id: dict[Anchor, Plot[Any, Any] | str] = {}
 # plot dumps to embed in html and load with js
 plot_data: dict[Anchor, dict[str, Any]] = {}
 
@@ -312,13 +311,13 @@ class SearchFile:
         self.path: Path = path
         self.filename = path.name
         self.root = path.parent
-        self._filehandle: Optional[TextIO] = None
-        self._iterator: Optional[Iterator[tuple[int, str]]] = None
+        self._filehandle: TextIO | None = None
+        self._iterator: Iterator[tuple[int, str]] | None = None
         self._blocks: list[tuple[int, str]] = []  # cache of read blocks with line count found in each block
-        self._filesize: Optional[int] = None
+        self._filesize: int | None = None
 
     @property
-    def filesize(self) -> Optional[int]:
+    def filesize(self) -> int | None:
         if self._filesize is None:
             try:
                 self._filesize = os.path.getsize(self.path)
@@ -447,14 +446,14 @@ def is_searching_in_source_dir(path: Path) -> bool:
 
 
 class SearchPattern(BaseModel):
-    fn: Optional[str] = None
-    fn_re: Optional[re.Pattern] = None
+    fn: str | None = None
+    fn_re: re.Pattern | None = None
     contents: set[str] = Field(default_factory=set)
     contents_re: set[re.Pattern] = Field(default_factory=set)
-    num_lines: Optional[int] = None
+    num_lines: int | None = None
     shared: bool = False
     skip: bool = False
-    max_filesize: Optional[int] = None
+    max_filesize: int | None = None
     exclude_fn: set[str] = Field(default_factory=set)
     exclude_fn_re: set[re.Pattern] = Field(default_factory=set)
     exclude_contents: set[str] = Field(default_factory=set)
@@ -886,7 +885,7 @@ def clean_htmlid(html_id: str) -> str:
     return html_id_clean
 
 
-def save_htmlid(html_id: str, skiplint: bool = False, scope: Optional[str] = None) -> str:
+def save_htmlid(html_id: str, skiplint: bool = False, scope: str | None = None) -> str:
     """Take a HTML ID, sanitise for HTML, check for duplicates and save.
     Returns sanitised, unique ID"""
 
@@ -945,14 +944,10 @@ def compress_json(data):
 
 
 def write_data_file(
-    data: Union[
-        Mapping[str, Any],
-        Sequence[Mapping[str, Any]],
-        Sequence[Sequence[Any]],
-    ],
+    data: Mapping[str, Any] | Sequence[Mapping[str, Any]] | Sequence[Sequence[Any]],
     fn: str,
     sort_cols: bool = False,
-    data_format: Optional[str] = None,
+    data_format: str | None = None,
 ):
     """
     Write a data file to the report directory. Will do nothing
@@ -1086,7 +1081,7 @@ def multiqc_dump_json(data_dir: Path):
                     val = getattr(sys.modules[__name__], name)
                     if name == "general_stats_data":
                         # Flattening sample groups for export
-                        flattened_sections: dict[SectionKey, dict[SampleName, dict[ColumnKey, Optional[ValueT]]]] = {}
+                        flattened_sections: dict[SectionKey, dict[SampleName, dict[ColumnKey, ValueT | None]]] = {}
                         for section_key, section in general_stats_data.items():
                             fl_sec = {}
                             for rows in section.values():

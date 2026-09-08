@@ -13,7 +13,7 @@ import re
 import zipfile
 from collections import Counter
 from pathlib import Path
-from typing import Any, Literal, Optional, TypedDict, Union
+from typing import Any, Literal, TypedDict
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.fastqc_data: dict[SampleName, Any] = {}
-        self.order_of_duplication_levels: list[Union[float, str]] = []
+        self.order_of_duplication_levels: list[float | str] = []
         self._tools_found: set[str] = set()
 
         # Find and parse unzipped FastQC reports
@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
                     self.fastqc_data[s_name][section].append(row)
                     # Special case - need to remember order of duplication keys
                     if section == "sequence_duplication_levels":
-                        level: Union[float, str]
+                        level: float | str
                         try:
                             level = float(s[0])
                         except ValueError:
@@ -417,7 +417,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate the average sequence length (Basic Statistics gives a range)
         total_read_count = sum(d["count"] for d in sequence_length_distributions)
-        median: Optional[int] = None
+        median: int | None = None
         running_read_count = 0
         running_bp_sum = 0
         for d in sequence_length_distributions:
@@ -478,7 +478,7 @@ class MultiqcModule(BaseMultiqcModule):
             # Zero reads
             hide_seq_length = True
 
-        def _summarize_statues(merged_row: InputRow, group_s_names: list[tuple[Optional[str], SampleName, SampleName]]):
+        def _summarize_statues(merged_row: InputRow, group_s_names: list[tuple[str | None, SampleName, SampleName]]):
             # Add count of fail statuses
             _num_statuses = 0
             _num_fails = 0
@@ -871,7 +871,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Try to find and plot a theoretical GC line
-        theoretical_gc: Optional[list[tuple[float, float]]] = None
+        theoretical_gc: list[tuple[float, float]] | None = None
         theoretical_gc_raw = None
         theoretical_gc_name = None
         for f in self.find_log_files("fastqc/theoretical_gc"):
@@ -1076,11 +1076,11 @@ class MultiqcModule(BaseMultiqcModule):
     def seq_dup_levels_plot(self, section_statuses: dict[SampleName, str]):
         """Create the HTML for the Sequence Duplication Levels plot"""
 
-        data: dict[SampleName, dict[Union[float, str], Any]] = {}
+        data: dict[SampleName, dict[float | str, Any]] = {}
         max_dup_val = 0
         for s_name in self.fastqc_data:
             try:
-                thisdata: dict[Union[float, str], Union[float, str]] = {}
+                thisdata: dict[float | str, float | str] = {}
                 for d in self.fastqc_data[s_name]["sequence_duplication_levels"]:
                     thisdata[d["duplication_level"]] = d["percentage_of_total"]
                     max_dup_val = max(max_dup_val, d["percentage_of_total"])
@@ -1211,7 +1211,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         plot = None
-        alerts: Optional[SectionAlert] = None
+        alerts: SectionAlert | None = None
         # Check if any samples have more than 1% overrepresented sequences, else don't make plot.
         if max([x["total_overrepresented"] for x in data_by_sample.values()]) < 1:
             alerts = SectionAlert(
@@ -1383,7 +1383,7 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         plot = None
-        alerts: Optional[SectionAlert] = None
+        alerts: SectionAlert | None = None
         if low_adapter_series:
             n = len(low_adapter_series)
             low_adapter_samples = sorted({series.rsplit(" - ", 1)[0] for series in low_adapter_series})
@@ -1508,7 +1508,7 @@ class MultiqcModule(BaseMultiqcModule):
         return colours
 
 
-def _range_bp_to_num(bp: Union[str, int], method: Literal["start", "median", "mean"]) -> Union[int, float]:
+def _range_bp_to_num(bp: str | int, method: Literal["start", "median", "mean"]) -> int | float:
     """
     Helper function - FastQC often gives base pair ranges (e.g. 10-15) which are not helpful when plotting.
     This function returns either the median or the start of the interval. If not a range, just returns the int.

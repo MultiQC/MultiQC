@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from RSeQC read_distribution.py
 http://rseqc.sourceforge.net/#read-distribution-py"""
 
+import itertools
 import logging
 import re
 
@@ -85,7 +86,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         (prefix, big, small, suffix)
         for prefix in prefixes
         for suffix in suffixes
-        for big, small in zip(sizes, sizes[1:])
+        for big, small in itertools.pairwise(sizes)
     ]
 
     for sample_name, sample in read_dist.items():

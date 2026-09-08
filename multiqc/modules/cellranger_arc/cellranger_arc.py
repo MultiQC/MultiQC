@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.modules.cellranger_arc.utils import (
@@ -59,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         for f in self.find_log_files("cellranger_arc", filehandles=True):
-            summary: Optional[dict] = None
+            summary: dict | None = None
             for line in f["f"]:
                 line = line.strip()
                 if line.startswith("const data"):

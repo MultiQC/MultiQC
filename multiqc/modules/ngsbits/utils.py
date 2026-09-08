@@ -1,12 +1,11 @@
 import re
 import xml.etree.ElementTree
-from typing import Union
 
 
-def parse_qcml_by(qcml_contents: str, tag: str) -> tuple[dict[str, Union[float, str]], dict[str, tuple[str, str]]]:
+def parse_qcml_by(qcml_contents: str, tag: str) -> tuple[dict[str, float | str], dict[str, tuple[str, str]]]:
     """Parse a qcML file and return key-value pairs from the quality parameter entries."""
     root = xml.etree.ElementTree.fromstring(qcml_contents)
-    values: dict[str, Union[float, str]] = {}
+    values: dict[str, float | str] = {}
     params: dict[str, tuple[str, str]] = {}
 
     for qp in root.findall(f".//{{http://www.prime-xs.eu/ms/qcml}}{tag}"):

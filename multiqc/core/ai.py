@@ -5,7 +5,7 @@ import math
 import os
 import re
 from textwrap import indent
-from typing import Any, NamedTuple, Optional, TypeVar, Union
+from typing import Any, NamedTuple, TypeVar
 
 import requests
 import yaml
@@ -167,24 +167,24 @@ PROMPT_FULL = f"""\
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
-    detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
+    detailed_analysis: str | None = Field(description="Detailed analysis", default=None)
 
 
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    thread_id: Optional[str] = None
+    thread_id: str | None = None
 
 
 ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.name: str
         self.title: str
         self.model: str
-        self.api_key: Optional[str] = api_key
+        self.api_key: str | None = api_key
         self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
         self.prompt_full = config.ai_prompt_full or PROMPT_FULL
 
@@ -237,7 +237,7 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, url: str, headers: dict[str, Any], body: dict[str, Any], retries: Optional[int] = None
+        self, url: str, headers: dict[str, Any], body: dict[str, Any], retries: int | None = None
     ) -> dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
@@ -287,7 +287,7 @@ class Client:
 
 
 class OpenAiClient(Client):
-    def __init__(self, api_key: str, endpoint: Optional[str] = None):
+    def __init__(self, api_key: str, endpoint: str | None = None):
         super().__init__(api_key)
 
         if endpoint:
@@ -326,7 +326,7 @@ class OpenAiClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str, extra_options: Optional[dict[str, Any]] = None) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: dict[str, Any] | None = None) -> ApiResponse:
         is_reasoning = is_reasoning_model(self.model)
 
         if is_reasoning:
@@ -537,12 +537,12 @@ class SeqeraClient(Client):
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     class ApiResponse(NamedTuple):
-        content: Union[str, dict[str, str]]
+        content: str | dict[str, str]
         model: str
-        thread_id: Optional[str] = None
+        thread_id: str | None = None
 
     def _send_request(
-        self, prompt: str, report_content: str, extra_options: Optional[dict[str, Any]] = None
+        self, prompt: str, report_content: str, extra_options: dict[str, Any] | None = None
     ) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
             f"{config.seqera_api_url}/internal-ai/report-summary",
@@ -605,7 +605,7 @@ class SeqeraClient(Client):
             raise
 
 
-def check_bedrock_availability() -> tuple[bool, Optional[str]]:
+def check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Public function to check if AWS Bedrock is available and usable.
     Can be used for diagnostics.
@@ -616,7 +616,7 @@ def check_bedrock_availability() -> tuple[bool, Optional[str]]:
     return _check_bedrock_availability()
 
 
-def _check_bedrock_availability() -> tuple[bool, Optional[str]]:
+def _check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Check if AWS Bedrock is available and usable.
 
@@ -634,7 +634,7 @@ def _check_bedrock_availability() -> tuple[bool, Optional[str]]:
 
         # Get the current region
         session = boto3.Session()
-        region: Optional[str] = session.region_name
+        region: str | None = session.region_name
 
         # If no region is set, try to get it from the client
         if not region:
@@ -716,7 +716,7 @@ def _check_bedrock_availability() -> tuple[bool, Optional[str]]:
             return False, f"Error creating Bedrock client: {e}"
 
 
-def _auto_detect_provider() -> Optional[str]:
+def _auto_detect_provider() -> str | None:
     """
     Auto-detect AI provider based on available environment variables.
 
@@ -749,7 +749,7 @@ def _auto_detect_provider() -> Optional[str]:
     return None
 
 
-def get_llm_client() -> Optional[Client]:
+def get_llm_client() -> Client | None:
     if not config.ai_summary:
         return None
 
@@ -849,20 +849,20 @@ def _strip_html(text: str) -> str:
 
 class AiToolMetadata(BaseModel):
     name: str
-    info: Optional[str] = None
-    href: Optional[str] = None
-    comment: Optional[str] = None
+    info: str | None = None
+    href: str | None = None
+    comment: str | None = None
 
 
 class AiSectionMetadata(BaseModel):
     name: str
     module_anchor: Anchor
-    description: Optional[str] = None
-    comment: Optional[str] = None
-    helptext: Optional[str] = None
-    plot_anchor: Optional[Anchor] = None
-    content: Optional[str] = None
-    content_before_plot: Optional[str] = None
+    description: str | None = None
+    comment: str | None = None
+    helptext: str | None = None
+    plot_anchor: Anchor | None = None
+    content: str | None = None
+    content_before_plot: str | None = None
 
 
 class AiReportMetadata(BaseModel):
@@ -934,7 +934,7 @@ def deanonymize_sample_names(text: str) -> str:
     return text
 
 
-def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Client] = None) -> tuple[str, bool]:
+def build_prompt(metadata: AiReportMetadata, system_prompt, client: Client | None = None) -> tuple[str, bool]:
     # Account for system message, plus leave 10% buffer
     max_tokens = client.max_tokens() if client is not None else math.inf
 

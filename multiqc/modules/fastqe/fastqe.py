@@ -2,7 +2,6 @@
 # https://github.com/fastqe/fastqe/issues/11
 import logging
 from html import escape
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -103,7 +102,7 @@ Each will appear as a separate column in the table.
 
         self.write_data_file(fastqe_data, "multiqc_fastqe")
 
-    def _parse_fastqe_log(self, f) -> Optional[dict[str, dict[str, str]]]:
+    def _parse_fastqe_log(self, f) -> dict[str, dict[str, str]] | None:
         """Parse FastQE TSV: Filename\\tStatistic\\tQualities -> {sample: {stat: emoji}}"""
         data: dict[str, dict[str, str]] = {}
 

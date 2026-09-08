@@ -1,5 +1,4 @@
 import logging
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -85,8 +84,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.general_stats_addcols(haplocheck_data, headers)
 
-    def parse_logs(self, f: str) -> dict[str, dict[str, Union[float, str]]]:
-        parsed_data: dict[str, dict[str, Union[float, str]]] = {}
+    def parse_logs(self, f: str) -> dict[str, dict[str, float | str]]:
+        parsed_data: dict[str, dict[str, float | str]] = {}
         file_content = f["f"]
         lines = file_content.strip().splitlines()
 

@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Optional
 
 from multiqc.plots import linegraph
 
@@ -23,7 +22,7 @@ def parse_reports(module):
 
 
 def _parse_summary(module) -> set:
-    data_by_sample: dict[str, dict[str, Optional[float]]] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
 
     for f in module.find_log_files("riker/gcbias_summary", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
