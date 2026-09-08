@@ -1042,8 +1042,9 @@ samtools/coverage:
   contents: "#rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq"
   num_lines: 10
 samtools/markdup_txt:
-  contents:
+  contents_re:
     - "^COMMAND:"
+  contents:
     - "samtools markdup"
   num_lines: 2
 samtools/markdup_json:
