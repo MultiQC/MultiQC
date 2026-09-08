@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/vep/vep.py
 Determines the effect of variants on genes, transcripts and protein sequences, as well as regulatory regions.
 
 [https://www.ensembl.org/info/docs/tools/vep/index.html](https://www.ensembl.org/info/docs/tools/vep/index.html)
+
+DOI: [10.1186/s13059-016-0974-4](https://doi.org/10.1186/s13059-016-0974-4)
+
+[Apache License 2.0](https://github.com/Ensembl/ensembl-vep/blob/main/LICENSE)
 :::
 
 MultiQC parses the Ensembl VEP summary statistics stored in either HTML or plain text format.

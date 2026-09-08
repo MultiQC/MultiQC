@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/varscan2/varscan2.py
 Variant detection in massively parallel sequencing data.
 
 [http://dkoboldt.github.io/varscan/](http://dkoboldt.github.io/varscan/)
+
+DOI: [10.1101/gr.129684.111](https://doi.org/10.1101/gr.129684.111), [10.1093/bioinformatics/btp373](https://doi.org/10.1093/bioinformatics/btp373)
+
+[Free for non-commercial use](https://sourceforge.net/projects/varscan/)
 :::
 
 VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome

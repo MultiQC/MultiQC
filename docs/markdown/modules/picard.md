@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/picard/picard.py
 Tools for manipulating high-throughput sequencing data.
 
 [http://broadinstitute.github.io/picard/](http://broadinstitute.github.io/picard/)
+
+[MIT License](https://github.com/broadinstitute/picard/blob/master/LICENSE.txt)
 :::
 
 Supported commands:

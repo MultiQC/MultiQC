@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/prinseqplusplus/prinse
 C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and metagenomic reads.
 
 [https://github.com/Adrian-Cantu/PRINSEQ-plus-plus](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus)
+
+DOI: [10.7287/peerj.preprints.27553v1](https://doi.org/10.7287/peerj.preprints.27553v1)
+
+[GNU General Public License v2.0](https://github.com/Adrian-Cantu/PRINSEQ-plus-plus/blob/master/LICENSE)
 :::
 
 This module requires that PRINSEQ++ has been run with the flag `-VERBOSE 1`.

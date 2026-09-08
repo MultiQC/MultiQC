@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/librarian/librarian.py
 Predicts the sequencing library type from the base composition of a FastQ file.
 
 [https://github.com/DesmondWillowbrook/Librarian](https://github.com/DesmondWillowbrook/Librarian)
+
+DOI: [10.12688/f1000research.125325.1](https://doi.org/10.12688/f1000research.125325.1)
+
+[GNU General Public License v3.0](https://github.com/DesmondWillowbrook/Librarian/blob/master/COPYING)
 :::
 
 Librarian reads from high throughput sequencing experiments show base compositions that are

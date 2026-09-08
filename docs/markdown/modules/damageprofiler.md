@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/damageprofiler/damagep
 DNA damage pattern retrieval for ancient DNA analysis.
 
 [https://github.com/Integrative-Transcriptomics/DamageProfiler](https://github.com/Integrative-Transcriptomics/DamageProfiler)
+
+DOI: [10.1093/bioinformatics/btab190](https://doi.org/10.1093/bioinformatics/btab190)
+
+[GNU General Public License v3.0](https://github.com/Integrative-Transcriptomics/DamageProfiler/blob/master/LICENSE)
 :::
 
 ### File search patterns

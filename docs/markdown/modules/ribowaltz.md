@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/ribowaltz/ribowaltz.py
 Computes P-site offsets and performs quality control for ribosome profiling data.
 
 [https://github.com/LabTranslationalArchitectomics/riboWaltz](https://github.com/LabTranslationalArchitectomics/riboWaltz)
+
+DOI: [10.1371/journal.pcbi.1006169](https://doi.org/10.1371/journal.pcbi.1006169)
+
+[MIT License](https://github.com/LabTranslationalArchitectomics/riboWaltz/blob/master/LICENSE)
 :::
 
 riboWaltz computes P-site offsets and performs quality control for ribosome profiling data.

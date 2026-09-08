@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/deacon/deacon.py
 Search and depletion of FASTA/FASTQ files and streams using accelerated minimizer matching.
 
 [https://github.com/bede/deacon](https://github.com/bede/deacon)
+
+DOI: [https://doi.org/10.1101/2025.06.09.658732](https://doi.org/https://doi.org/10.1101/2025.06.09.658732)
+
+[MIT License](https://github.com/bede/deacon/blob/main/LICENSE)
 :::
 
 [Deacon](https://github.com/bede/deacon) filters DNA sequences in FASTA/Q files and streams

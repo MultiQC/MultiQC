@@ -35,6 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
             "Additionally, the AdapterRemoval may be used to recover a consensus adapter sequence for "
             "paired-ended data, for which this information is not available.",
             doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/mikkelschubert/adapterremoval/blob/main/LICENSE",
         )
 
         self.__read_type = None

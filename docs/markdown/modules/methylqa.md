@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/methylqa/methylqa.py
 Methylation sequencing data quality assessment tool.
 
 [http://methylqa.sourceforge.net/](http://methylqa.sourceforge.net/)
+
+DOI: [10.1016/j.ymeth.2014.10.032](https://doi.org/10.1016/j.ymeth.2014.10.032)
 :::
 
 ### File search patterns

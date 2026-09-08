@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/afterqc/afterqc.py
 Automatic filtering, trimming, error removing, and quality control for FastQ data.
 
 [https://github.com/OpenGene/AfterQC](https://github.com/OpenGene/AfterQC)
+
+DOI: [10.1186/s12859-017-1469-3](https://doi.org/10.1186/s12859-017-1469-3)
+
+[MIT License](https://github.com/OpenGene/AfterQC/blob/master/LICENSE)
 :::
 
 AfterQC goes through all FastQ files in a folder and outputs three folders: good, bad and QC folders,

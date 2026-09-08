@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/haplocheck/haplocheck.
 Detects in-sample contamination in mtDNA or WGS sequencing studies by analyzing the mitchondrial content.
 
 [https://github.com/genepi/haplocheck/](https://github.com/genepi/haplocheck/)
+
+DOI: [10.1101/gr.256545.119](https://doi.org/10.1101/gr.256545.119)
+
+[MIT License](https://github.com/genepi/haplocheck/blob/master/LICENSE)
 :::
 
 ### File search patterns

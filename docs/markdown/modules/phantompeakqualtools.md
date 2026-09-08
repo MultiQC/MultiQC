@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/phantompeakqualtools/p
 Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.
 
 [https://www.encodeproject.org/software/phantompeakqualtools](https://www.encodeproject.org/software/phantompeakqualtools)
+
+DOI: [10.1101/gr.136184.111](https://doi.org/10.1101/gr.136184.111), [10.1038/nbt.1508](https://doi.org/10.1038/nbt.1508)
+
+[BSD 3-Clause License](https://github.com/kundajelab/phantompeakqualtools/blob/master/LICENSE)
 :::
 
 Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation)

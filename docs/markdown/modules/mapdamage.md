@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/mapdamage/mapdamage.py
 Tracks and quantifies damage patterns in ancient DNA sequences.
 
 [https://github.com/ginolhac/mapDamage](https://github.com/ginolhac/mapDamage)
+
+DOI: [https://doi.org/10.1093/bioinformatics/btt193](https://doi.org/https://doi.org/10.1093/bioinformatics/btt193)
+
+[MIT License](https://github.com/ginolhac/mapDamage/blob/main/LICENSE.txt)
 :::
 
 This module parses the base `misincorporation` output.

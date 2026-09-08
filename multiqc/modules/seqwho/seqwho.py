@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Determines FASTQ(A) sequencing file source protocol and the species of origin, "
             "to check that the composition of the library is expected.",
             # doi=""
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DaehwanKimLab/Seqwho/blob/master/LICENSE",
         )
 
         # Find and load any SeqWho reports

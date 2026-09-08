@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/sompy/sompy.py
 Benchmarks somatic variant calls against gold standard truth datasets.
 
 [https://github.com/Illumina/hap.py/blob/master/doc/sompy.md](https://github.com/Illumina/hap.py/blob/master/doc/sompy.md)
+
+[BSD 2-Clause License](https://github.com/Illumina/hap.py/blob/master/LICENSE.txt)
 :::
 
 ### File search patterns

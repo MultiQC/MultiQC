@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/fastp/fastp.py
 All-in-one FASTQ preprocessor (QC, adapters, trimming, filtering, splitting...).
 
 [https://github.com/OpenGene/fastp](https://github.com/OpenGene/fastp)
+
+DOI: [10.1093/bioinformatics/bty560](https://doi.org/10.1093/bioinformatics/bty560)
+
+[MIT License](https://github.com/OpenGene/fastp/blob/master/LICENSE)
 :::
 
 Fastp goes through fastq files in a folder and perform a series of quality control and filtering.

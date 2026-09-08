@@ -17,15 +17,19 @@ File path for the source of this content: multiqc/modules/sylphtax/sylphtax.py
 Taxonomic profiling of metagenomic reads.
 
 [https://sylph-docs.github.io/](https://sylph-docs.github.io/), [https://sylph-docs.github.io/sylph-tax/](https://sylph-docs.github.io/sylph-tax/)
+
+DOI: [10.1038/s41587-024-02412-y](https://doi.org/10.1038/s41587-024-02412-y)
+
+[MIT License](https://github.com/bluenote-1577/sylph-tax/blob/main/LICENSE)
 :::
 
 The module supports outputs from sylphtax, that look like the following:
 
 ```tsv
-clade_name  relative_abundance      sequence_abundance      ANI (if strain-level)
-d__Bacteria 100.00010000000002      99.99999999999999       NA
-d__Bacteria|p__Bacillota    24.640800000000002      18.712699999999998      NA
-d__Bacteria|p__Bacillota_A  47.333499999999994      52.5969 NA
+clade_name	relative_abundance	sequence_abundance	ANI (if strain-level)
+d__Bacteria	100.00010000000002	99.99999999999999	NA
+d__Bacteria|p__Bacillota	24.640800000000002	18.712699999999998	NA
+d__Bacteria|p__Bacillota_A	47.333499999999994	52.5969	NA
 ```
 
 A bar graph is generated that shows the relative abundance for each sample that

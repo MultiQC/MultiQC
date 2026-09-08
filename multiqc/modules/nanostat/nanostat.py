@@ -95,6 +95,8 @@ class MultiqcModule(BaseMultiqcModule):
             extra="Programs are part of the NanoPack family for summarising results of sequencing on Oxford Nanopore "
             "methods (MinION, PromethION etc.)",
             doi="10.1093/bioinformatics/bty149",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/wdecoster/nanostat/blob/master/LICENSE",
         )
 
         # Find and load any NanoStat reports

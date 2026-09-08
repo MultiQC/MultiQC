@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/trim_galore/trim_galor
 Quality and adapter trimming for next-generation sequencing data, with special handling for RRBS libraries.
 
 [https://github.com/FelixKrueger/TrimGalore](https://github.com/FelixKrueger/TrimGalore)
+
+DOI: [10.5281/zenodo.5127898](https://doi.org/10.5281/zenodo.5127898)
+
+[GNU General Public License v3.0](https://github.com/FelixKrueger/TrimGalore/blob/master/LICENSE)
 :::
 
 [Trim Galore](https://github.com/FelixKrueger/TrimGalore) provides

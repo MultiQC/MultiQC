@@ -11,17 +11,13 @@ VERSION_REGEX = r"Fastq_screen version: ([\d\.]+)"
 
 class MultiqcModule(BaseMultiqcModule):
     """
-    By default, the module creates a plot that emulates the FastQ Screen output
-    with blue and red stacked bars showing unique and multimapping read counts.
-    This plot only works for a handful of samples however, so if
-    `# samples * # organisms >= 160`, a simpler stacked barplot is shown. This
-    is also shown when generating flat-image plots.
+    The module creates a stacked bar plot showing, for each sample, the number of
+    reads mapped to each of the screened organisms. Reads that align to more than
+    one genome are grouped into a "Multiple Genomes" category, and unmapped reads
+    into "No hits".
 
-    To always show this style of plot, add the following line to a MultiQC config file:
-
-    ```yaml
-    fastqscreen_simpleplot: true
-    ```
+    If any samples were run in bisulfite mode, an additional stacked bar plot breaks
+    the reads down by methylation status.
     """
 
     def __init__(self):
@@ -32,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Screens a library of sequences in FastQ format against a set of sequence databases "
             "to see if the composition of the library matches with what you expect.",
             doi="10.12688/f1000research.15931.2",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/StevenWingett/FastQ-Screen/blob/master/license.txt",
         )
 
         # Find and load any FastQ Screen reports

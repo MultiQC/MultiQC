@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/biobambam2/biobambam2.
 Tools for early stage alignment file processing.
 
 [https://gitlab.com/german.tischler/biobambam2](https://gitlab.com/german.tischler/biobambam2)
+
+DOI: [10.1186/1751-0473-9-13](https://doi.org/10.1186/1751-0473-9-13)
+
+[GNU General Public License v3.0](https://gitlab.com/german.tischler/biobambam2/-/blob/master/COPYING)
 :::
 
 Currently, the biobambam2 module only processes output from the `bamsormadup` command.

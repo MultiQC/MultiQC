@@ -74,7 +74,7 @@ function mqc_save_config(name, clear, as_default) {
       $("#mqc_loadconfig_form select option:contains('" + name + "')").remove();
       // Add new name to load select box and select it
       $("#mqc_loadconfig_form select")
-        .prepend(`<option>${name + as_default ? " [default]" : ""}</option>`)
+        .prepend($("<option>").text(name + (as_default ? " [default]" : "")))
         .val(name + (as_default ? " [default]" : ""));
       // Success message
       $('<p class="bg-success-subtle text-success-emphasis p-2" id="mqc-save-success">Settings saved.</p>')
@@ -120,7 +120,7 @@ function mqc_clear_default_config() {
         var name = $('#mqc_loadconfig_form select option:contains("default")').text();
         $('#mqc_loadconfig_form select option:contains("default")').remove();
         name = name.replace(" [default]", "");
-        $("#mqc_loadconfig_form select").append(`<option>${name}</option>`).val(name);
+        $("#mqc_loadconfig_form select").append($("<option>").text(name)).val(name);
       });
   } catch (e) {
     console.log("Could not access localStorage");
@@ -145,9 +145,7 @@ function populate_mqc_saveselect() {
           name = name + " [default]";
           default_name = name;
         }
-        $("#mqc_loadconfig_form select")
-          .append("<option>" + name + "</option>")
-          .val(name);
+        $("#mqc_loadconfig_form select").append($("<option>").text(name)).val(name);
       }
       // Set the selected select option
       if (default_name !== false) {

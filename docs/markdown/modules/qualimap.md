@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/qualimap/qualimap.py
 Quality control of alignment data and its derivatives like feature counts.
 
 [http://qualimap.bioinfo.cipf.es/](http://qualimap.bioinfo.cipf.es/)
+
+DOI: [10.1093/bioinformatics/btv566](https://doi.org/10.1093/bioinformatics/btv566), [10.1093/bioinformatics/bts503](https://doi.org/10.1093/bioinformatics/bts503)
+
+[GNU General Public License v2.0](https://bitbucket.org/kokonech/qualimap/src/master/LICENSE)
 :::
 
 The module supports the Qualimap commands `BamQC` and `RNASeq`.

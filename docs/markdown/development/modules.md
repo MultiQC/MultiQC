@@ -322,8 +322,17 @@ class MultiqcModule(BaseMultiqcModule):
           href="https://www.awesome_bioinfo.com/mymodule",
           info="Example analysis module used for writing documentation.",
           doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
+          license="MIT License",
+          license_url="https://opensource.org/license/mit",
         )
 ```
+
+Like `doi`, the `license` and `license_url` arguments are optional but expected
+for every module. The CI linter (`code_checks.py`) checks that both are present
+in each module, so declare the license of the tool the module wraps (see
+[Adding license and DOI information](#adding-license-and-doi-information)
+below). If the license is genuinely unknown or the tool is proprietary, pass
+`license=None` and `license_url=None` with a short code comment explaining why.
 
 The `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
@@ -344,6 +353,8 @@ super().__init__(
          "- *Fast* processing\n\n"
          "See the [documentation](https://www.awesome_bioinfo.com/docs) for more details.",
     doi="01.2345/journal/abc123",
+    license="MIT License",
+    license_url="https://opensource.org/license/mit",
 )
 
 The available arguments when initialising a module as follows:
@@ -353,6 +364,8 @@ The available arguments when initialising a module as follows:
 - `href` - Link(s) to the homepage for the tool
 - `info` - Very short description text about the tool. Supports markdown formatting when `autoformat=True` and `autoformat_type="markdown"` (default). Can include **bold** text, *italic* text, [links](https://example.com), lists, and other markdown features.
 - `doi` - One or more publication DOIs (can be a string or a list)
+- `license` - Human readable name of the tool's software license (e.g. `"MIT License"`), or `None` if unknown or proprietary. Checked by CI, like `doi`.
+- `license_url` - URL to the license text, or `None`.
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
@@ -847,6 +860,63 @@ for line in f.splitlines():
 
     ...  # rest of file parsing
 ```
+
+#### Adding license and DOI information
+
+To make reports more FAIR compliant, the module header shows the software
+license (a linked name, just after the DOI), and the _Software Versions_
+section shows the license and citation DOI(s) as extra columns. This
+information is hardcoded in the module, either in the module constructor (in
+which case it applies to the module's software) or per software in the
+`self.add_software_version()` call.
+
+Like `doi`, `license` and `license_url` are optional constructor arguments, but
+the CI linter (`code_checks.py`) checks that both are present in every module,
+so they should always be set. The DOI is taken from the `doi` argument that
+modules already pass to the constructor.
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://github.com/example/toolname",
+    info="Universal RNA-seq aligner.",
+    doi="10.1093/bioinformatics/bts635",
+    license="MIT License",
+    license_url="https://opensource.org/license/mit",
+)
+```
+
+If the license is genuinely unknown or the tool is proprietary, pass `None` for
+both and add a short code comment explaining why, rather than guessing:
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://example.com/toolname",
+    info="Proprietary sequencing analysis tool.",
+    # License could not be determined
+    license=None,
+    license_url=None,
+)
+```
+
+When a module reports versions for several tools, the license and DOI can be
+set separately for each of them:
+
+```python
+self.add_software_version(
+    version.group(1),
+    sample=f["s_name"],
+    software_name="htslib",
+    license="MIT License",
+    doi="10.1093/gigascience/giab007",
+)
+```
+
+The License and DOI columns are only shown when at least one software provides
+that information.
 
 Even if the logs does not contain any version information, you should still
 add a superfluous `self.add_software_version()` call to the module. This
@@ -1454,6 +1524,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/bioinformatics-centre/qualalyser/",
             info="Reports read quality and length from sequencing data",
             doi="10.21105/joss.02991",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any Qualalyser reports

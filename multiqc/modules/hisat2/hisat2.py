@@ -35,6 +35,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/hisat2/",
             info="Maps DNA or RNA reads against a genome or a population of genomes",
             doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DaehwanKimLab/hisat2/blob/master/LICENSE",
         )
 
         # Find and load any HISAT2 reports

@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/hifiasm/hifiasm.py
 Haplotype-resolved assembler for accurate Hifi reads.
 
 [https://github.com/chhylp123/hifiasm](https://github.com/chhylp123/hifiasm)
+
+DOI: [10.1038/s41592-020-01056-5](https://doi.org/10.1038/s41592-020-01056-5)
+
+[MIT License](https://github.com/chhylp123/hifiasm/blob/master/LICENSE)
 :::
 
 ### File search patterns

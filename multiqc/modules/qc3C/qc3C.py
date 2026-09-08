@@ -145,6 +145,8 @@ class MultiqcModule(BaseMultiqcModule):
             their experimental aims.
             """,
             doi="10.1371/journal.pcbi.1008839",
+            license="GNU Affero General Public License v3.0",
+            license_url="https://github.com/cerebis/qc3C/blob/master/LICENSE",
         )
 
         self.qc3c_data: Dict[str, Dict] = defaultdict(dict)

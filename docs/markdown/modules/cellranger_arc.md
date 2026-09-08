@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/cellranger_arc/cellran
 Analyzes single-cell multiome ATAC and gene expression data produced by 10X Genomics.
 
 [https://www.10xgenomics.com/support/software/cell-ranger-arc/latest](https://www.10xgenomics.com/support/software/cell-ranger-arc/latest)
+
+DOI: [10.1038/ncomms14049](https://doi.org/10.1038/ncomms14049)
+
+10x Genomics License
 :::
 
 The module summarizes the main information from Cell Ranger ARC which is useful for QC:

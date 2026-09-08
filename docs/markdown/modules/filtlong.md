@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/filtlong/filtlong.py
 Filters long reads by quality.
 
 [https://github.com/rrwick/Filtlong](https://github.com/rrwick/Filtlong)
+
+[GNU General Public License v3.0](https://github.com/rrwick/Filtlong/blob/main/LICENSE)
 :::
 
 It can take a set of long reads and produce a smaller, better subset. It uses both read length (longer is better) and read identity (higher is better) when choosing which reads pass the filter.

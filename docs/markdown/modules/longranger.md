@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/longranger/longranger.
 Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, and structural variant calling.
 
 [https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger](https://support.10xgenomics.com/genome-exome/software/pipelines/latest/what-is-long-ranger)
+
+DOI: [10.1101/gr.234443.118](https://doi.org/10.1101/gr.234443.118)
+
+[10x Genomics License](https://github.com/10XGenomics/longranger/blob/master/LICENSE)
 :::
 
 Currently supported Longranger pipelines:

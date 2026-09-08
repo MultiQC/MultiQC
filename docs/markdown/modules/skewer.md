@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/skewer/skewer.py
 Adapter trimming tool for NGS paired-end sequences.
 
 [https://github.com/relipmoc/skewer](https://github.com/relipmoc/skewer)
+
+DOI: [10.1186/1471-2105-15-182](https://doi.org/10.1186/1471-2105-15-182)
+
+[MIT License](https://github.com/relipmoc/skewer/blob/master/LICENSE)
 :::
 
 ### File search patterns

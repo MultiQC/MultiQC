@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/motus/motus.py
 Microbial profiling through marker gene (MG)-based operational taxonomic units (mOTUs).
 
 [https://motu-tool.org/](https://motu-tool.org/)
+
+DOI: [10.1038/s41467-019-08844-4](https://doi.org/10.1038/s41467-019-08844-4)
+
+[GNU General Public License v3.0](https://github.com/motu-tool/mOTUs/blob/master/LICENSE)
 :::
 
 The module takes as input in the stdout of `mOTUs profile`, and provides summary statistics on various steps of the pipeline.

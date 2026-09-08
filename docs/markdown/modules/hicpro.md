@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/hicpro/hicpro.py
 Pipeline for Hi-C data processing.
 
 [https://github.com/nservant/HiC-Pro](https://github.com/nservant/HiC-Pro)
+
+DOI: [10.1186/s13059-015-0831-x](https://doi.org/10.1186/s13059-015-0831-x)
+
+[BSD 3-Clause License](https://github.com/nservant/HiC-Pro/blob/master/LICENSE)
 :::
 
 **Note** - because this module shares sample identifiers across multiple files,

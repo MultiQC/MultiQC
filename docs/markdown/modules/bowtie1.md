@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/bowtie1/bowtie1.py
 Ultrafast, memory-efficient short read aligner.
 
 [http://bowtie-bio.sourceforge.net/](http://bowtie-bio.sourceforge.net/)
+
+DOI: [10.1186/gb-2009-10-3-r25](https://doi.org/10.1186/gb-2009-10-3-r25)
+
+[Artistic License 2.0](https://github.com/BenLangmead/bowtie/blob/master/LICENSE)
 :::
 
 ### File search patterns

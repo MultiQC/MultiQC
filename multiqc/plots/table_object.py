@@ -1192,7 +1192,9 @@ def render_html(
 
     # Build the header row
     col1_header = dt.pconfig.col1_header
-    html += f'<thead><tr><th class="rowheader">{col1_header}</th>{"".join(col_to_th.values())}</tr></thead>'
+    # sorter-text: sample names are never numbers, but tablesorter picks a parser from the
+    # first row alone, so a numeric-looking sample name would sort the whole column by charcode sum
+    html += f'<thead><tr><th class="rowheader sorter-text">{col1_header}</th>{"".join(col_to_th.values())}</tr></thead>'
 
     # Build the table body
     html += "<tbody>"

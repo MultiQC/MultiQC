@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/riker/riker.py
 Fast Rust toolkit that ports key sequencing QC tools from Picard.
 
 [https://github.com/fulcrumgenomics/riker](https://github.com/fulcrumgenomics/riker)
+
+[MIT License](https://github.com/fulcrumgenomics/riker/blob/main/LICENSE)
 :::
 
 [Riker](https://github.com/fulcrumgenomics/riker) is a fast Rust toolkit for

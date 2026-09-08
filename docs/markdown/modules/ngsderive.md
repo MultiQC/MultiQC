@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/ngsderive/ngsderive.py
 Forensic tool for by backwards computing library information in sequencing data.
 
 [https://github.com/stjudecloud/ngsderive](https://github.com/stjudecloud/ngsderive)
+
+[MIT License](https://github.com/stjudecloud/ngsderive/blob/master/LICENSE.md)
 :::
 
 Results are provided as a 'best guess' — the tool does not claim 100% accuracy and results

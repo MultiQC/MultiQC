@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/checkatlas/checkatlas.
 A one-liner tool for quality control of your single-cell atlases.
 
 [https://github.com/becavin-lab/checkatlas](https://github.com/becavin-lab/checkatlas)
+
+[BSD 3-Clause License](https://github.com/becavin-lab/checkatlas/blob/main/LICENSE)
 :::
 
 CheckAtlas is a one-liner tool to check the quality of your single-cell atlases. For every atlas, it produces

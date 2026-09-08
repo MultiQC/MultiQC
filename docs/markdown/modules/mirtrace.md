@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/mirtrace/mirtrace.py
 Quality control for small RNA sequencing data.
 
 [https://github.com/friedlanderlab/mirtrace](https://github.com/friedlanderlab/mirtrace)
+
+DOI: [10.1186/s13059-018-1588-9](https://doi.org/10.1186/s13059-018-1588-9)
+
+[GNU General Public License v3.0](https://github.com/friedlanderlab/mirtrace/blob/master/release-bundle-includes/LICENCE)
 :::
 
 miRTrace performs adapter trimming and discards the reads that fail to pass

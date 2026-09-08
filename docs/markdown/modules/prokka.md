@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/prokka/prokka.py
 Rapid annotation of prokaryotic genomes.
 
 [http://www.vicbioinformatics.com/software.prokka.shtml](http://www.vicbioinformatics.com/software.prokka.shtml)
+
+DOI: [10.1093/bioinformatics/btu153](https://doi.org/10.1093/bioinformatics/btu153)
+
+[GNU General Public License v3.0](https://github.com/tseemann/prokka/blob/master/LICENSE)
 :::
 
 The Prokka module accepts two configuration options:

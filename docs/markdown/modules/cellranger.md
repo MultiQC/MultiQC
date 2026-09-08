@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/cellranger/cellranger.
 Analyzes single cell expression or VDJ data produced by 10X Genomics.
 
 [https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger](https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger)
+
+DOI: [10.1038/ncomms14049](https://doi.org/10.1038/ncomms14049)
+
+[10x Genomics License](https://github.com/10XGenomics/cellranger/blob/main/LICENSE)
 :::
 
 The module summarizes the main information useful for QC, including:
