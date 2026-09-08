@@ -33,4 +33,3 @@ telseq:
   contents: "ReadGroup\tLibrary\tSample\tTotal\tMapped\tDuplicates\tLENGTH_ESTIMATE"
   num_lines: 3
 ```
-    

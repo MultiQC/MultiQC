@@ -33,4 +33,3 @@ mapdamage:
 - fn: 5p*_freq.txt
 - fn: lgdistribution.txt
 ```
-    

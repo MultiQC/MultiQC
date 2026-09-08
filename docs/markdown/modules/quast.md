@@ -74,4 +74,3 @@ quast:
   fn: report.tsv
   num_lines: 2
 ```
-    

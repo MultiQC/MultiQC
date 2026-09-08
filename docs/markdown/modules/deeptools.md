@@ -81,4 +81,3 @@ deeptools/plotProfile:
   contents: bin labels
   num_lines: 1
 ```
-    

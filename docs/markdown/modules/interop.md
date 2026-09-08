@@ -42,4 +42,3 @@ interop/index-summary:
 interop/summary:
   contents: Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30
 ```
-    

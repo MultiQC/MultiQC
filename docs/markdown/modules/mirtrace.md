@@ -46,4 +46,3 @@ mirtrace/mirnacomplexity:
 mirtrace/summary:
   fn: mirtrace-results.json
 ```
-    

@@ -68,4 +68,3 @@ supernova/summary:
   fn: summary.json
   num_lines: 120
 ```
-    

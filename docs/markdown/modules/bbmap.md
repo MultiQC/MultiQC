@@ -154,4 +154,3 @@ bbmap/statsfile_machine:
   contents: Reads Used=
   num_lines: 10
 ```
-    

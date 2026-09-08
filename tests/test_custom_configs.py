@@ -117,9 +117,9 @@ custom_logo_url: "https://customlogo.com"
         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
         title=""
         class="custom_logo custom_logo_light"
-        
+
       />
-      
+
       </a>"""
 
         assert expected_logo_html in report_html
@@ -149,9 +149,9 @@ custom_logo_url: "https://customlogo.com"
         src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAxMDAgMzAiPgogIDxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMzAiIGZpbGw9IiMyMTk2RjMiLz4KICA8dGV4dCB4PSI1MCIgeT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXNpemU9IjEyIj5Mb2dvPC90ZXh0Pgo8L3N2Zz4K"
         title=""
         class="custom_logo custom_logo_light"
-        
+
       />
-      
+
       </a>"""
 
         assert expected_logo_html in report_html

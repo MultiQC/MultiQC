@@ -53,4 +53,3 @@ nonpareil:
   max_filesize: 1048576
   num_lines: 50
 ```
-    

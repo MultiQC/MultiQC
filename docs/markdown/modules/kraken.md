@@ -55,4 +55,3 @@ kraken:
   contents_re: ^\s{0,2}(\d{1,3}\.\d{1,2})\t(\d+)\t(\d+)\t((\d+)\t(\d+)\t)?([URDKPCOFGS-]\d{0,2})\t(\d+)(\s+)[root|unclassified]
   num_lines: 2
 ```
-    

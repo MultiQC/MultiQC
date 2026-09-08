@@ -34,4 +34,3 @@ Also note that if there are more than 5 tumour subclones, their percentages are 
 theta2:
   fn: '*.BEST.results'
 ```
-    

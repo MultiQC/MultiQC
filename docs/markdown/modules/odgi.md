@@ -94,4 +94,3 @@ odgi:
 - fn: '*.odgi.stats.yaml'
 - fn: '*.odgi.stats.yml'
 ```
-    

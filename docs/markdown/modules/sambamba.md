@@ -68,4 +68,3 @@ sambamba/markdup:
   contents: finding positions of the duplicate reads in the file
   num_lines: 50
 ```
-    

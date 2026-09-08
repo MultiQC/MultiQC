@@ -34,4 +34,3 @@ bamtools/stats:
   contents: 'Stats for BAM file(s):'
   num_lines: 10
 ```
-    

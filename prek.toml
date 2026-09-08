@@ -17,19 +17,39 @@ hooks = [
 ]
 
 [[repos]]
-repo = "https://github.com/pre-commit/pre-commit-hooks"
-rev = "3e8a8703264a2f4a69428a0aa4dcb512790b2c8c"  # frozen: v6.0.0
+repo = "builtin"
 hooks = [
   { id = "check-added-large-files" },
   { id = "check-merge-conflict" },
-  { id = "debug-statements" }
+  # Replaces Lucas-C/pre-commit-hooks remove-crlf
+  { id = "mixed-line-ending", args = ["--fix=lf"] },
+  {
+    id = "trailing-whitespace",
+    # Keep markdown hard line breaks, which are two trailing spaces
+    args = ["--markdown-linebreak-ext=md"],
+    exclude = '''(?x)^(
+        multiqc/utils/material_icons/.*
+      | multiqc/templates/[^/]+/assets/(js/packages|fonts)/.*
+      | multiqc/templates/[^/]+/compiled/.*
+      | docs/images/.*\.svg
+      | .*\.min\.(js|css)
+    )$'''
+  },
+  { id = "end-of-file-fixer", exclude = '''(?x)^(
+        multiqc/utils/material_icons/.*
+      | multiqc/templates/[^/]+/assets/(js/packages|fonts)/.*
+      | multiqc/templates/[^/]+/compiled/.*
+      | docs/images/.*\.svg
+      | .*\.min\.(js|css)
+    )$''' }
 ]
 
 [[repos]]
-repo = "https://github.com/Lucas-C/pre-commit-hooks"
-rev = "ad1b27d73581aa16cca06fc4a0761fc563ffe8e8"  # frozen: v1.5.6
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "3e8a8703264a2f4a69428a0aa4dcb512790b2c8c"  # frozen: v6.0.0
+# Only hook here without a prek built-in equivalent
 hooks = [
-  { id = "remove-crlf" }
+  { id = "debug-statements" }
 ]
 
 [[repos]]
@@ -87,5 +107,17 @@ hooks = [
     language = "script",
     entry = "scripts/build-assets.sh",
     files = '^multiqc/templates/(default|disco)/src/.*\.(scss|js)$'
+  },
+  {
+    id = "code-checks",
+    name = "Module code style checks",
+    # The same checks the code_checks.py CI job used to run on its own. It scans
+    # the whole package rather than the files it is handed, so filenames are not
+    # passed; the file filter only decides whether it needs to run at all.
+    language = "python",
+    entry = "python .github/workflows/code_checks.py",
+    additional_dependencies = ["rich"],
+    files = '^multiqc/.*\.py$',
+    pass_filenames = false
   }
 ]

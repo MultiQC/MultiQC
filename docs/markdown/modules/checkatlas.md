@@ -62,4 +62,3 @@ checkatlas/summary:
   fn: '*.tsv'
   num_lines: 1
 ```
-    

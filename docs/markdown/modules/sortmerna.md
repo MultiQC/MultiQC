@@ -40,4 +40,3 @@ sortmerna:
 sortmerna:
   contents: Minimal SW score based on E-value
 ```
-    

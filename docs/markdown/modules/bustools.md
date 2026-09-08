@@ -35,4 +35,3 @@ way as all other MultiQC modules.
 bustools:
   fn: '*inspect.json'
 ```
-    

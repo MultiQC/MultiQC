@@ -29,4 +29,3 @@ DOI: [10.1093/bioinformatics/btu314](https://doi.org/10.1093/bioinformatics/btu3
 samblaster:
   contents: 'samblaster: Version'
 ```
-    

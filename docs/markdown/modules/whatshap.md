@@ -32,4 +32,3 @@ whatshap/stats:
   contents: "#sample\tchromosome\tfile_name\tvariants\tphased\tunphased\tsingletons"
   num_lines: 1
 ```
-    

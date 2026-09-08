@@ -22,9 +22,9 @@ class MultiqcModule(BaseMultiqcModule):
             extra="""
             VarScan is a platform-independent mutation caller for targeted, exome, and whole-genome
             resequencing data generated on Illumina, SOLiD, Life/PGM, Roche/454, and similar instruments.
-        
+
             VarScan can be used to detect different types of variation:
-        
+
             - Germline variants (SNPs an dindels) in individual samples or pools of samples.
             - Multi-sample variants (shared or private) in multi-sample datasets (with mpileup).
             - Somatic mutations, LOH events, and germline variants in tumor-normal pairs.

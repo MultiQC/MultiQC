@@ -37,4 +37,3 @@ gtdbtk:
     closest_genome_taxonomy\tclosest_genome_ani"
   num_lines: 10
 ```
-    
