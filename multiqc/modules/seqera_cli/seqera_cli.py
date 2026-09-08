@@ -181,12 +181,13 @@ class MultiqcModule(BaseMultiqcModule):
         repo = repo.replace("https://", "").replace("http://", "").replace("github.com/", "")
         d["id_repository"] = f"{repo}_{d['id']}"
 
-        # "start" and "complete" are time stamps like time stamps like 2023-10-22T14:39:01Z
-        # parse them with a library, take the difference "complete" - "start" to get the
-        # wall time, and convert the wall time it to a human-readable format.
+        # "start" and "complete" are UTC time stamps like 2023-10-22T14:39:01Z. Parse
+        # them with %z so the trailing Z is read as UTC rather than matched as a literal:
+        # a naive value here would be treated as local time by .timestamp() below, putting
+        # every reported start and complete time out by the reader's UTC offset.
         if "start" in d and "complete" in d and d["complete"] is not None:
-            start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%SZ")
-            complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%SZ")
+            start = dt.datetime.strptime(d["start"], "%Y-%m-%dT%H:%M:%S%z")
+            complete = dt.datetime.strptime(d["complete"], "%Y-%m-%dT%H:%M:%S%z")
             wall_time = complete - start
             d["wallTime"] = wall_time.total_seconds()
             d["start"] = start.timestamp()
@@ -258,13 +259,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "Start",
                 "description": "Start time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x, tz=dt.timezone.utc)),
             },
             "complete": {
                 "title": "Complete",
                 "description": "End time of the workflow",
                 "hidden": True,
-                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x)),
+                "format": lambda x: humanize.naturaltime(dt.datetime.fromtimestamp(x, tz=dt.timezone.utc)),
             },
             "wallTime": {
                 "title": "Wall time",

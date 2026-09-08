@@ -257,11 +257,12 @@ class MultiqcModule(BaseMultiqcModule):
         dt = None
         if "pipeline_id" in data:
             s = data["pipeline_id"].split("_")
-            dt = datetime.datetime.fromtimestamp(int(s[-1]))
+
+            dt = datetime.datetime.fromtimestamp(int(s[-1]))  # noqa: DTZ006
         elif "pipeline_start" in data:
             dt_r = re.match(r"(\d{2}):(\d{2}), (\d{2})-(\d{2})-(\d{4})", data["pipeline_start"])
             if dt_r:
-                dt = datetime.datetime(
+                dt = datetime.datetime(  # noqa: DTZ001
                     int(dt_r.group(5)),  # year
                     int(dt_r.group(4)),  # month
                     int(dt_r.group(3)),  # day

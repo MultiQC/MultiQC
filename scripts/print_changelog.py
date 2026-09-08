@@ -135,7 +135,8 @@ def main():
         sections_to_prs[section_name].append(pr)
 
     print()
-    print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")
+    today = datetime.date.today()  # noqa: DTZ011 - local date is fine for a changelog heading
+    print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {today.isoformat()}")
     print()
 
     for section, prs in sections_to_prs.items():
