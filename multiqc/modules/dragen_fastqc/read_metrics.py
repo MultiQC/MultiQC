@@ -43,9 +43,9 @@ class DragenReadMetrics(BaseMultiqcModule):
                         max_non_zero = max(qv, max_non_zero)
                     data[r_name][qv] = count
 
-        for r_name in data:
+        for r_name, read_data in data.items():
             for qv in range(max_non_zero + 2, MAX_QV):
-                del data[r_name][qv]
+                del read_data[qv]
 
         if len(data) == 0:
             log.debug("per_seq_quality not found in DRAGEN FastQC reports")

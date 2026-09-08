@@ -52,9 +52,9 @@ def plot_qahist(data_by_sample: dict[str, dict[str, dict]], file_type, **plot_ar
     }
 
     plot_data = []
-    for column_type in columns_to_plot:
+    for columns in columns_to_plot.values():
         y_by_x_by_sample = {}
-        for column in columns_to_plot[column_type]:
+        for column in columns:
             for sample, sample_data in data_by_sample.items():
                 y_by_x = {}
                 for x in all_x:

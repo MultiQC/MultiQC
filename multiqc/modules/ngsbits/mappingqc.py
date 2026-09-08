@@ -181,8 +181,8 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     for x in table_covs:
         gen_stats_headers[f"target region {x:d}x %"] = copy(headers[f"target region {x:d}x %"])
 
-    for k in gen_stats_headers:
-        gen_stats_headers[k]["hidden"] = True
+    for header in gen_stats_headers.values():
+        header["hidden"] = True
     gen_stats_headers["bases usable"]["hidden"] = False
     gen_stats_headers["target region 30x %"]["hidden"] = False
 

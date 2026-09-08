@@ -81,9 +81,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         num_roc_samples = 0
-        for chrom in roc_plot_data:
-            roc_plot_data[chrom] = self.ignore_samples(roc_plot_data[chrom])
-            num_roc_samples = max(len(roc_plot_data[chrom]), num_roc_samples)
+        for chrom, roc in roc_plot_data.items():
+            kept = self.ignore_samples(roc)
+            roc_plot_data[chrom] = kept
+            num_roc_samples = max(len(kept), num_roc_samples)
 
         # Write data to file
         self.write_data_file(roc_plot_data, "goleft_roc")

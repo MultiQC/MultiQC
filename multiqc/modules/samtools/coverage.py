@@ -187,8 +187,8 @@ def lineplot_per_region(module, data_by_sample: dict):
 
     excluded_contigs = set()
     included_contigs = set()
-    for sample in data_by_sample:
-        for contig in data_by_sample[sample]:
+    for data_by_contig in data_by_sample.values():
+        for contig in data_by_contig:
             if contig in excluded_contigs:
                 continue
             if contig not in included_contigs:

@@ -191,40 +191,40 @@ class MultiqcModule(BaseMultiqcModule):
 
         divisor = {}
 
-        for fromBase in baseDict:
-            for toBase in baseDict[fromBase]:
+        for fromBase, to_bases in baseDict.items():
+            for toBase in to_bases:
                 if toBase.islower():
                     if fromBase.lower() not in divisor:
                         divisor[fromBase.lower()] = 0
-                    divisor[fromBase.lower()] += baseDict[fromBase][toBase]
+                    divisor[fromBase.lower()] += to_bases[toBase]
                 else:
                     if fromBase not in divisor:
                         divisor[fromBase] = 0
-                    divisor[fromBase] += baseDict[fromBase][toBase]
+                    divisor[fromBase] += to_bases[toBase]
 
-        for fromBase in baseDict:
-            for toBase in baseDict[fromBase]:
+        for fromBase, to_bases in baseDict.items():
+            for toBase in to_bases:
                 if toBase.islower():
                     if divisor[fromBase.lower()] > 0:
-                        baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase.lower()]) * 100
+                        to_bases[toBase] = to_bases[toBase] / float(divisor[fromBase.lower()]) * 100
                     else:
-                        baseDict[fromBase][toBase] = 0.0
+                        to_bases[toBase] = 0.0
                 else:
                     if divisor[fromBase] > 0:
-                        baseDict[fromBase][toBase] = baseDict[fromBase][toBase] / float(divisor[fromBase]) * 100
+                        to_bases[toBase] = to_bases[toBase] / float(divisor[fromBase]) * 100
                     else:
-                        baseDict[fromBase][toBase] = 0.0
+                        to_bases[toBase] = 0.0
 
         self.rates_data_plus[sample] = {}
         self.rates_data_minus[sample] = {}
 
-        for fromBase in baseDict:
-            for toBase in baseDict[fromBase]:
+        for fromBase, to_bases in baseDict.items():
+            for toBase in to_bases:
                 if fromBase != "N" and toBase.upper() != "N" and fromBase != toBase.upper():
                     if toBase.islower():
-                        self.rates_data_minus[sample][fromBase + ">" + toBase.upper()] = baseDict[fromBase][toBase]
+                        self.rates_data_minus[sample][fromBase + ">" + toBase.upper()] = to_bases[toBase]
                     else:
-                        self.rates_data_plus[sample][fromBase + ">" + toBase] = baseDict[fromBase][toBase]
+                        self.rates_data_plus[sample][fromBase + ">" + toBase] = to_bases[toBase]
 
     def parseSlamdunkTCPerReadpos(self, f):
         sample = f["s_name"]

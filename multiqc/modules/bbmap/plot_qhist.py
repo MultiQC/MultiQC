@@ -31,7 +31,7 @@ def plot_qhist(samples: dict[str, Any], file_type: str, **plot_args: Any):
     }
 
     plot_data: list[dict[str, Any]] = []
-    for column_type in columns_to_plot:
+    for columns in columns_to_plot.values():
         plot_data.append(
             {
                 sample + "." + column_name: {
@@ -40,7 +40,7 @@ def plot_qhist(samples: dict[str, Any], file_type: str, **plot_args: Any):
                     if len(samples[sample]["data"]) > x and len(samples[sample]["data"][x]) > column
                 }
                 for sample in samples
-                for column, column_name in columns_to_plot[column_type].items()
+                for column, column_name in columns.items()
             }
         )
 

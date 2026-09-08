@@ -127,8 +127,8 @@ class MultiqcModule(BaseMultiqcModule):
             results_by_s_name[s_name] = results
 
         # loop through all samples found and add them to rhdata
-        for s_name in results_by_s_name:
-            self.add_results_to_rhdata(f, s_name, results_by_s_name[s_name])
+        for s_name, results in results_by_s_name.items():
+            self.add_results_to_rhdata(f, s_name, results)
 
     def rockhopper_general_stats_table(self):
         """Take the parsed stats from the Rockhopper summary and add it to the

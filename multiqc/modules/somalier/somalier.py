@@ -215,17 +215,17 @@ class MultiqcModule(BaseMultiqcModule):
                 # cycle over keys, i.e. sample names
                 # safely add new data to object data
                 # warn when overwriting
-                for s_name_raw in parsed_data:
+                for s_name_raw, sample_data in parsed_data.items():
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
                     if s_name in self.somalier_data:
-                        intersect_keys = parsed_data[s_name_raw].keys() & self.somalier_data.keys()
+                        intersect_keys = sample_data.keys() & self.somalier_data.keys()
                         if len(intersect_keys) > 0:
                             log.debug(f"Duplicate sample name found! Overwriting: {s_name} : {intersect_keys}")
                     self.add_data_source(f, s_name)
                     try:
-                        self.somalier_data[s_name].update(parsed_data[s_name_raw])
+                        self.somalier_data[s_name].update(sample_data)
                     except KeyError:
-                        self.somalier_data[s_name] = parsed_data[s_name_raw]
+                        self.somalier_data[s_name] = sample_data
         else:
             log.warning(f"Detected empty file: {f['fn']}")
 

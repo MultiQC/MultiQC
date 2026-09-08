@@ -166,9 +166,9 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Add row ID to avoid duplicates
-        for k in headers:
-            h_id = re.sub("[^0-9a-zA-Z]+", "_", headers[k]["title"])
-            headers[k]["rid"] = f"rid_{h_id}"
+        for header in headers.values():
+            h_id = re.sub("[^0-9a-zA-Z]+", "_", header["title"])
+            header["rid"] = f"rid_{h_id}"
 
         return headers
 

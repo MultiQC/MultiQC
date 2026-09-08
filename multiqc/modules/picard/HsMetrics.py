@@ -124,25 +124,28 @@ def parse_reports(module: BaseMultiqcModule) -> set[str]:
             s_bait_name = f"{s_name}: {bait}"
             module.add_data_source(f, s_bait_name, section="HsMetrics")
 
-    # Remove empty dictionaries
-    for s_name in data_by_bait_by_sample:
-        for bait in data_by_bait_by_sample[s_name]:
-            if len(data_by_bait_by_sample[s_name][bait]) == 0:
-                data_by_bait_by_sample[s_name].pop(bait, None)
-        if len(data_by_bait_by_sample[s_name]) == 0:
+    # Remove empty dictionaries. Both loops iterate over a snapshot of the keys:
+    # popping from a dict while iterating it raises "dictionary changed size during
+    # iteration", so this crashed as soon as any sample or bait had no metrics.
+    for s_name in list(data_by_bait_by_sample):
+        data_by_bait = data_by_bait_by_sample[s_name]
+        for bait in list(data_by_bait):
+            if len(data_by_bait[bait]) == 0:
+                data_by_bait.pop(bait, None)
+        if len(data_by_bait) == 0:
             data_by_bait_by_sample.pop(s_name, None)
 
     data_by_sample: dict[str, dict[str, Any]] = {}
     # Manipulate sample names if multiple baits found
-    for s_name in data_by_bait_by_sample:
-        for bait in data_by_bait_by_sample[s_name]:
+    for s_name, data_by_bait in data_by_bait_by_sample.items():
+        for bait in data_by_bait:
             s_bait_name = s_name
             # If there are multiple baits, append the bait name to the sample name
-            if len(data_by_bait_by_sample[s_name]) > 1:
+            if len(data_by_bait) > 1:
                 s_bait_name = f"{s_name}: {bait}"
             if s_bait_name in data_by_sample:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_bait_name}")
-            data_by_sample[s_bait_name] = data_by_bait_by_sample[s_name][bait]
+            data_by_sample[s_bait_name] = data_by_bait[bait]
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -384,11 +387,11 @@ def _generate_table_header_config(table_cols: list[str], hidden_table_cols: list
 def _add_target_bases(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]) -> dict[str, Any]:
     data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     max_non_zero_cov = 0
-    for s in data:
-        for h in data[s]:
+    for s, s_data in data.items():
+        for h in s_data:
             if h.startswith("PCT_TARGET"):
                 cov = int(h.replace("PCT_TARGET_BASES_", "")[:-1])
-                bases_pct = data[s][h]
+                bases_pct = s_data[h]
                 data_clean[s][cov] = bases_pct * 100.0
                 if bases_pct > 0 and cov > max_non_zero_cov:
                     max_non_zero_cov = cov
@@ -415,11 +418,11 @@ def _add_target_bases(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]
 def hs_penalty_plot(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]):
     data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     any_non_zero = False
-    for s in data:
-        for h in data[s]:
+    for s, s_data in data.items():
+        for h in s_data:
             if h.startswith("HS_PENALTY"):
-                data_clean[s][int(h.removeprefix("HS_PENALTY_").removesuffix("X"))] = data[s][h]
-                if data[s][h] > 0:
+                data_clean[s][int(h.removeprefix("HS_PENALTY_").removesuffix("X"))] = s_data[h]
+                if s_data[h] > 0:
                     any_non_zero = True
 
     pconfig = {

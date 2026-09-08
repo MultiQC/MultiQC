@@ -195,17 +195,17 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
             if len(warnings) > 0:
                 warnings_by_sample[s_name] = warnings
             plots_params_by_id = plots
-            for k in plots_data:
+            for k, sample_data in plots_data.items():
                 if k not in plots_data_by_sample_by_id:
                     plots_data_by_sample_by_id[k] = {}
-                plots_data_by_sample_by_id[k].update(plots_data[k])
+                plots_data_by_sample_by_id[k].update(sample_data)
 
     mapping_by_sample = module.ignore_samples(mapping_by_sample)
     annotations_by_sample = module.ignore_samples(annotations_by_sample)
     general_data_by_sample = module.ignore_samples(general_data_by_sample)
     warnings_by_sample = module.ignore_samples(warnings_by_sample)
-    for k in plots_data_by_sample_by_id:
-        plots_data_by_sample_by_id[k] = module.ignore_samples(plots_data_by_sample_by_id[k])
+    for k, sample_data in plots_data_by_sample_by_id.items():
+        plots_data_by_sample_by_id[k] = module.ignore_samples(sample_data)
 
     general_data_headers["reads"] = {
         "title": f"{config.read_count_prefix} Reads",

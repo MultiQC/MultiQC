@@ -534,8 +534,8 @@ class MultiqcModule(BaseMultiqcModule):
             for key, value in plot_data.items():
                 join_plot[key] = join_plot.get(key, 0) + value
         max_i = 0
-        for key in join_plot:
-            max_i += join_plot[key]
+        for key, contig_len in join_plot.items():
+            max_i += contig_len
             cuml_plot[key] = max_i
         max_x = [i for i, j in cuml_plot.items() if j <= max_i * pct][-1]
         # xlim = {, 50} at minimum

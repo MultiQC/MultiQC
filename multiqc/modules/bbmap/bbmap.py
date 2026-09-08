@@ -339,10 +339,10 @@ class MultiqcModule(BaseMultiqcModule):
             table_headers[column_header].update(header_options)
 
         tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools", "title": "BBTools " + file_type}
-        for sample in table_data:
-            for key, value in table_data[sample].items():
+        for sample_data in table_data.values():
+            for key, value in sample_data.items():
                 try:
-                    table_data[sample][key] = float(value)
+                    sample_data[key] = float(value)
                 except ValueError:
                     pass
         return table.plot(table_data, table_headers, tconfig)

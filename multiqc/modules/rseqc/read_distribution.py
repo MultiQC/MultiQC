@@ -52,11 +52,11 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         if "total_tags" in d:
             t = float(d["total_tags"])
             pcts = {}
-            for k in d:
+            for k, v in d.items():
                 if k.endswith("_tag_count"):
                     pk = f"{k[:-10]}_tag_pct"
                     try:
-                        pcts[pk] = (float(d[k]) / t) * 100.0
+                        pcts[pk] = (float(v) / t) * 100.0
                     except ZeroDivisionError:
                         pcts[pk] = 0
             d.update(pcts)

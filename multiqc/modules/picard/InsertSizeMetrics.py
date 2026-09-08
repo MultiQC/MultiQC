@@ -106,9 +106,9 @@ def parse_reports(module):
             samplestats_by_sample[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
-    for s_name in histogram_by_sample:
+    for s_name, histogram in histogram_by_sample.items():
         j = 0
-        for idx, c in histogram_by_sample[s_name].items():
+        for idx, c in histogram.items():
             j += c
             if j > (samplestats_by_sample[s_name]["total_count"] / 2):
                 samplestats_by_sample[s_name]["summed_median"] = idx

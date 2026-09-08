@@ -259,8 +259,8 @@ class MultiqcModule(BaseMultiqcModule):
 
             if rank_code != "U":
                 # Add unclassified count to each rank-level dataset
-                for s_name in cnt_by_top_taxon_by_rank_by_sample:
-                    cnt = cnt_by_top_taxon_by_rank_by_sample[s_name].get("U", {}).get("unclassified", 0)
+                for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+                    cnt = cnt_by_top_taxon_by_rank.get("U", {}).get("unclassified", 0)
                     rank_cnt_data_by_taxon_by_sample[s_name]["unclassified"] = cnt
                     rank_counts_shown[s_name] += cnt
 

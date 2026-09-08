@@ -193,10 +193,10 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 txt_data[title][key] = value
 
-        for title in txt_data:
+        for title, values in txt_data.items():
             if title not in self.vep_data[f["s_name"]]:
                 self.vep_data[f["s_name"]][title] = {}
-            self.vep_data[f["s_name"]][title] = txt_data[title]
+            self.vep_data[f["s_name"]][title] = values
 
     def add_stats_table(self):
         """Add a section with VEP General Statistics"""

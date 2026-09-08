@@ -305,8 +305,7 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
             log.debug(f"No samples found: custom content ({config_custom_data_id})")
 
     # Filter to strip out ignored sample names
-    for config_custom_data_id in ccdict_by_id:
-        ccdict = ccdict_by_id[config_custom_data_id]
+    for config_custom_data_id, ccdict in ccdict_by_id.items():
         if isinstance(ccdict.data, dict):
             ccdict.data = bm.ignore_samples(ccdict.data)
 
