@@ -42,4 +42,4 @@ repos:
         name: Build assets with Vite
         language: script
         entry: scripts/build-assets.sh
-        files: ^multiqc/templates/default/src/.*\.(scss|js)$
+        files: ^multiqc/templates/(default|disco)/src/.*\.(scss|js)$

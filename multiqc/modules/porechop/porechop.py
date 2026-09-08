@@ -1,5 +1,6 @@
 import logging
 import re
+from html import escape
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -279,7 +280,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description="The following samples did not have any adapters found - output reads were unchanged from input reads:",
                 content=f"""
                     <ul>
-                        <li><code>{"</code></li><li><code>".join(no_adapters)}</code></li>
+                        {"".join(f"<li><code>{escape(s)}</code></li>" for s in no_adapters)}
                     </ul>
                 """,
             )

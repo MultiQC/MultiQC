@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import date, datetime
+from html import escape
 
 import yaml
 
@@ -160,7 +161,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "SNP annotation",
                 "description": "Annotation file used for differentiating genomes",
                 "scale": False,
-                "modify": lambda x: f"<code>{x}</code>",
+                # Annotation filename is parsed from the report, so escape it
+                "format": lambda x: f"<code>{escape(str(x))}</code>",
                 "hidden": True,
             },
             "tagging_percent_N_was_known_SNP": {
