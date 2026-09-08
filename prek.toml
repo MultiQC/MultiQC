@@ -1,0 +1,65 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+minimum_pre_commit_version = "2.9.2"
+
+[[repos]]
+repo = "meta"
+hooks = [
+  { id = "check-hooks-apply" }
+]
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+  { id = "check-added-large-files" },
+  { id = "check-merge-conflict" },
+  { id = "debug-statements" }
+]
+
+[[repos]]
+repo = "https://github.com/Lucas-C/pre-commit-hooks"
+rev = "v1.5.6"
+hooks = [
+  { id = "remove-crlf" }
+]
+
+[[repos]]
+repo = "https://github.com/rbubley/mirrors-prettier"
+rev = "v3.9.6"
+hooks = [
+  {
+    id = "prettier",
+    additional_dependencies = [
+      "prettier@3.9.6",
+      "prettier-plugin-jinja-template@2.2.0"
+    ]
+  }
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+# Pinned: ruff 0.15+ broadened its default rule set, which flags thousands of new
+# findings in this repo. Bump deliberately alongside a `lint.select` in pyproject.toml.
+rev = "v0.14.11"
+hooks = [
+  {
+    id = "ruff-check",
+    args = ["--fix"]
+  },
+  { id = "ruff-format" }
+]
+
+[[repos]]
+repo = "local"
+hooks = [
+  {
+    id = "build-assets",
+    name = "Build assets with Vite",
+    language = "script",
+    entry = "scripts/build-assets.sh",
+    files = '^multiqc/templates/(default|disco)/src/.*\.(scss|js)$'
+  }
+]
