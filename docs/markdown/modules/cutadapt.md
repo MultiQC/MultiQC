@@ -51,4 +51,3 @@ cutadapt:
 - contents: Cutadapt report
   fn: '*.json'
 ```
-    

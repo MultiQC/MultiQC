@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+from html import escape
 
 import numpy
 
@@ -60,9 +61,9 @@ class CompareMixin:
             # that contains a comparison matrix across multiple samples.
             id = name.lower().strip().replace(" ", "-").replace(".labels.txt", "")
             self.add_section(
-                name=f"Sample similarity (<code>{name}</code>)",
+                name=f"Sample similarity (<code>{escape(name)}</code>)",
                 anchor=f"sourmash-compare-{id}",
-                description=f"Heatmap of similarity values from the output of `sourmash compare` run on <code>{name}</code>",
+                description=f"Heatmap of similarity values from the output of `sourmash compare` run on <code>{escape(name)}</code>",
                 helptext=helptext,
                 plot=heatmap.plot(
                     data,

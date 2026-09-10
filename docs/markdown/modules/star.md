@@ -39,4 +39,3 @@ star:
 star/genecounts:
   fn: '*ReadsPerGene.out.tab'
 ```
-    

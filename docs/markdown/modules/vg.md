@@ -73,4 +73,3 @@ vg/stats:
   - 'Speed:'
   num_lines: 30
 ```
-    

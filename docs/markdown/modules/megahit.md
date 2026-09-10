@@ -33,4 +33,3 @@ megahit:
   contents: ' - MEGAHIT v'
   num_lines: 5
 ```
-    

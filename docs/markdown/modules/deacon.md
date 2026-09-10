@@ -61,4 +61,3 @@ deacon:
   fn: '*.json'
   num_lines: 30
 ```
-    

@@ -39,4 +39,3 @@ busco:
   fn: short_summary*
   num_lines: 1
 ```
-    

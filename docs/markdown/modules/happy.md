@@ -30,4 +30,3 @@ happy:
   contents: Type,Filter,TRUTH
   fn: '*.summary.csv'
 ```
-    

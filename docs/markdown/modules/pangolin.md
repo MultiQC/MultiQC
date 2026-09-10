@@ -34,4 +34,3 @@ pangolin:
   contents: pangolin_version
   num_lines: 1
 ```
-    

@@ -47,4 +47,3 @@ bbduk:
   contents: Executing jgi.BBDuk
   num_lines: 2
 ```
-    

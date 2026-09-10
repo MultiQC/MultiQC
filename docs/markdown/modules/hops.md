@@ -33,4 +33,3 @@ categories (small edit distance, damage, both edit distance and aDNA damage) tha
 hops:
   fn: heatmap_overview_Wevid.json
 ```
-    

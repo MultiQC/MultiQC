@@ -56,4 +56,3 @@ flash/hist:
 flash/log:
   contents: '[FLASH]'
 ```
-    

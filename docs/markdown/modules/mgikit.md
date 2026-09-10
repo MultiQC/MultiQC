@@ -59,4 +59,3 @@ mgikit/mgi_sample_stats:
 mgikit/mgi_undetermined_barcode:
   fn: '*.mgikit.undetermined_barcode'
 ```
-    

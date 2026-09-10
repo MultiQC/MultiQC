@@ -47,4 +47,3 @@ gffcompare:
   fn: '*.stats'
   num_lines: 2
 ```
-    

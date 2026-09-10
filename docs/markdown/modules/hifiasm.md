@@ -30,4 +30,3 @@ hifiasm:
   contents: '[M::ha_analyze_count]'
   num_lines: 1
 ```
-    

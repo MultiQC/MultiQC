@@ -59,4 +59,3 @@ ribowaltz/psite_region:
   fn: '*ribowaltz*psite_region.tsv'
   num_lines: 1
 ```
-    

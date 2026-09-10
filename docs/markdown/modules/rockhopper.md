@@ -31,4 +31,3 @@ rockhopper:
   fn: summary.txt
   max_filesize: 500000
 ```
-    

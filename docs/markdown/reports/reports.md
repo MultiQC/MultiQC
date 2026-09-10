@@ -167,7 +167,7 @@ delimiters are not needed (use `pattern`, not `/pattern/`).
 
 Here, we highlight any sample names that end in `_1`:
 
-![highligh regex](../../../docs/images/toolbox_highlight_regex.png)
+![highlight regex](../../../docs/images/toolbox_highlight_regex.png)
 
 Note that a new button appears above the General Statistics table when samples
 are highlighted, allowing you to sort the table according to highlights.

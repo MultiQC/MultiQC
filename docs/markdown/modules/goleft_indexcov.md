@@ -55,4 +55,3 @@ goleft_indexcov/ped:
 goleft_indexcov/roc:
   fn: '*-indexcov.roc'
 ```
-    

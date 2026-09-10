@@ -30,4 +30,3 @@ anglerfish:
   contents: anglerfish_version
   fn: '*.json'
 ```
-    

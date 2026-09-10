@@ -43,4 +43,3 @@ stacks/sumstats:
   fn: '*.sumstats_summary.tsv'
   max_filesize: 1000000
 ```
-    

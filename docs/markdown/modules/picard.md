@@ -314,4 +314,3 @@ picard/wgs_metrics:
 - contents_re: '## METRICS CLASS.*WgsMetrics'
   shared: true
 ```
-    

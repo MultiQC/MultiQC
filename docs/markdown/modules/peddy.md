@@ -40,4 +40,3 @@ peddy/sex_check:
 peddy/summary_table:
   fn: '*.peddy.ped'
 ```
-    

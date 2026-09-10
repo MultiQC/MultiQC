@@ -44,4 +44,3 @@ somalier/samples:
 somalier/somalier-ancestry:
   fn: '*.somalier-ancestry.tsv'
 ```
-    

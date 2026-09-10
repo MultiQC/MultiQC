@@ -47,4 +47,3 @@ percolator:
 percolator:
   fn: '*percolator_feature_weights.tsv'
 ```
-    

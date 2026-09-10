@@ -50,4 +50,3 @@ longranger/summary:
   fn: '*summary.csv'
   num_lines: 2
 ```
-    

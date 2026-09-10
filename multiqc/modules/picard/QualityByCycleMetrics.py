@@ -141,9 +141,9 @@ def parse_reports(self):
 
         description = "Plot shows the mean base quality by cycle, comparing recalibrated quality scores with original quality scores."
         helptext_addition = """
-        
-        When Base Quality Score Recalibration (BQSR) has been applied, this plot shows both the 
-        recalibrated quality scores (Mean Quality) and the original quality scores (Mean Original Quality). 
+
+        When Base Quality Score Recalibration (BQSR) has been applied, this plot shows both the
+        recalibrated quality scores (Mean Quality) and the original quality scores (Mean Original Quality).
         This comparison helps assess the effectiveness of BQSR or other quality adjustments.
         """
     else:

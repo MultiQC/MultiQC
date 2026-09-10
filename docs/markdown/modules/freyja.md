@@ -35,4 +35,3 @@ freyja:
   fn: '*.tsv'
   num_lines: 6
 ```
-    

@@ -33,4 +33,3 @@ Kallisto stdout to a file when running to use the MultiQC module.
 kallisto:
   contents: '[quant] finding pseudoalignments for the reads'
 ```
-    

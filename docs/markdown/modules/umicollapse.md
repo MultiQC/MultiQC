@@ -43,4 +43,3 @@ umicollapse:
   contents: 'UMI collapsing finished in '
   num_lines: 100
 ```
-    

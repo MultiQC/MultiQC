@@ -62,4 +62,3 @@ already-paired sample.
 trim_galore:
   fn: '*_trimming_report.json'
 ```
-    

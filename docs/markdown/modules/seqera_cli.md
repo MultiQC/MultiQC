@@ -49,4 +49,3 @@ seqera_cli/json:
 seqera_cli/run_dump:
   fn: runs_*.tar.gz
 ```
-    

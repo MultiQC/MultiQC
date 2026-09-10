@@ -49,4 +49,3 @@ prokka:
   contents: 'contigs:'
   num_lines: 2
 ```
-    

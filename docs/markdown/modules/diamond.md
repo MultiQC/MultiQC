@@ -38,4 +38,3 @@ the number of sequences aligned and displays them in the General Stats table.
 diamond:
   fn: diamond.log
 ```
-    

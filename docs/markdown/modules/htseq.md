@@ -39,4 +39,3 @@ htseq:
   num_lines: 1
   shared: true
 ```
-    

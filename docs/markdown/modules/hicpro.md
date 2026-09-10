@@ -49,4 +49,3 @@ hicpro/mpairstat:
   fn: '*pairstat'
   num_lines: 10
 ```
-    

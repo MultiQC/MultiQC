@@ -34,4 +34,3 @@ The module parses the `*SummaryStatistics.tsv` files that results from a SeqyCle
 seqyclean:
   fn: '*_SummaryStatistics.tsv'
 ```
-    

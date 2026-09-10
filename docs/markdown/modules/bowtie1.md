@@ -39,4 +39,3 @@ bowtie1:
   - bowtie.right_kept_reads.m2g_um_seg2.log
   shared: true
 ```
-    
