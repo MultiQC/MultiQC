@@ -483,6 +483,7 @@ module_order:
   - phantompeakqualtools
   - qualimap
   - bamdst
+  - covsnap
   - preseq
   - hifiasm
   - quast
