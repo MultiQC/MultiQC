@@ -234,6 +234,7 @@ use_filename_as_sample_name: false
 # Used for cleaning sample names. Should be strings.
 # NB: These are removed in order!
 fn_clean_exts:
+  - "_nexons_stats.txt"
   - ".gz"
   - ".fastq"
   - ".fq"
