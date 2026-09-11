@@ -12,6 +12,15 @@ log = logging.getLogger(__name__)
 
 class DragenCoverageHist(BaseMultiqcModule):
     def add_coverage_hist(self):
+        # RNA-seq runs produce these files rarely and the WGS-oriented coverage
+        # distribution plots are not informative for this workflow.
+        has_rna_outputs = any(self.find_log_files("dragen/rna_quant_metrics", filecontents=False)) or any(
+            self.find_log_files("dragen/rna_transcript_cov", filecontents=False)
+        )
+        if has_rna_outputs:
+            log.debug("Skipping DRAGEN coverage distribution plots for RNA-seq data")
+            return set()
+
         data_by_phenotype_by_sample = defaultdict(dict)
         for f in self.find_log_files("dragen/wgs_fine_hist"):
             data_by_phenotype = parse_wgs_fine_hist(f)

@@ -370,6 +370,8 @@ dragen/wgs_fine_hist:
   fn_re: '.*\.wgs_fine_hist_?(tumor|normal)?\.csv'
 dragen/fragment_length_hist:
   fn: "*.fragment_length_hist.csv"
+dragen/rna_transcript_fragment_lengths:
+  fn: "*.quant.transcript_fragment_lengths.txt"
 dragen/mapping_metrics:
   fn: "*.mapping_metrics.csv"
   contents: "Number of unique reads (excl. duplicate marked reads)"
@@ -876,6 +878,58 @@ qorts/log:
   fn: "QC.*.log"
   contents: "Starting QoRTs"
   num_lines: 2
+qorts/quals_r1:
+  fn: "QC.quals.r1.txt*"
+qorts/quals_r2:
+  fn: "QC.quals.r2.txt*"
+qorts/gc_by_read:
+  fn: "QC.gc.byRead.txt*"
+qorts/insert_size:
+  fn: "QC.insert.size.txt*"
+qorts/nvc_raw_r1:
+  fn: "QC.NVC.raw.R1.txt*"
+qorts/nvc_raw_r2:
+  fn: "QC.NVC.raw.R2.txt*"
+qorts/nvc_lead_clip_r1:
+  fn: "QC.NVC.lead.clip.R1.txt*"
+qorts/nvc_lead_clip_r2:
+  fn: "QC.NVC.lead.clip.R2.txt*"
+qorts/nvc_tail_clip_r1:
+  fn: "QC.NVC.tail.clip.R1.txt*"
+qorts/nvc_tail_clip_r2:
+  fn: "QC.NVC.tail.clip.R2.txt*"
+qorts/nvc_minus_clipping_r1:
+  fn: "QC.NVC.minus.clipping.R1.txt*"
+qorts/nvc_minus_clipping_r2:
+  fn: "QC.NVC.minus.clipping.R2.txt*"
+qorts/read_len_dist:
+  fn: "QC.readLenDist.txt*"
+qorts/gene_body_coverage:
+  fn: "QC.geneBodyCoverage.by.expression.level.txt*"
+qorts/biotype_counts:
+  fn: "QC.biotypeCounts.txt*"
+qorts/chrom_counts:
+  fn: "QC.chromCount.txt*"
+qorts/cigar_op_lengths_r1:
+  fn: "QC.cigarOpLengths.byOp.R1.txt*"
+qorts/cigar_op_lengths_r2:
+  fn: "QC.cigarOpLengths.byOp.R2.txt*"
+qorts/cigar_op_cycle_r1:
+  fn: "QC.cigarOpDistribution.byReadCycle.R1.txt*"
+qorts/cigar_op_cycle_r2:
+  fn: "QC.cigarOpDistribution.byReadCycle.R2.txt*"
+qorts/gene_counts:
+  fn: "QC.geneCounts.txt*"
+qorts/on_target:
+  fn: "QC.onTarget.txt*"
+qorts/overlap_coverage:
+  fn: "QC.overlapCoverage.txt*"
+qorts/overlap_mismatch_by_read:
+  fn: "QC.overlapMismatch.byRead.txt*"
+qorts/reference_mismatch_counts:
+  fn: "QC.referenceMismatchCounts.txt*"
+qorts/reference_mismatch_by_score:
+  fn: "QC.referenceMismatch.byScore.txt*"
 qualimap/bamqc/genome_results:
   fn: "genome_results.txt"
 qualimap/bamqc/coverage:
