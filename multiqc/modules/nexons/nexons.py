@@ -82,10 +82,10 @@ class MultiqcModule(BaseMultiqcModule):
                 {"id": "nexons_summary_table", "title": "Nexons: Summary"},
             ),
         )
-        self.add_outcome_plot("read_fate", "Read Fate", ["No_Alignment", "Primary_Alignment", "Secondary_Alignment"])
+        self.add_outcome_plot("read_fate", "Read Fate", ["No_Alignment", "Primary_Alignment", "Secondary_Alignment"], "Breakdown of types of alignment seen in the input BAM file")
         for key in ("Gene", "Partial", "Unique", "Multi_Gene", "No_Gene"):
-            self.add_outcome_plot(key.lower(), OUTCOMES[key], [key])
-        self.add_outcome_plot("directionality", "Alignment Directionality", ["Same_Strand_Hit", "Opposing_Strand_Hit"])
+            self.add_outcome_plot(key.lower(), OUTCOMES[key], [key], "Reads assigned to features with different degrees of specificity. Individual reads can be in multiple classes, so all transcipt matching reads will also be gene matching.")
+        self.add_outcome_plot("directionality", "Alignment Directionality", ["Same_Strand_Hit", "Opposing_Strand_Hit"],"Direction of matches relative to annotated features")
         self.add_distributions()
         self.write_data_file(self.outcomes, "multiqc_nexons")
         self.write_data_file(self.nexons_data, "multiqc_nexons_distributions", data_format="json")
@@ -146,12 +146,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(data, headers)
 
-    def add_outcome_plot(self, anchor: str, title: str, keys: list):
+    def add_outcome_plot(self, anchor: str, title: str, keys: list, description: str):
         # Explicit datasets avoid MultiQC normalising overlapping counts to their sum.
         self.add_section(
             name=title,
             anchor=f"nexons_{anchor}",
-            description="Percentages are relative to all reads. Gene and transcript match counts overlap.",
+            description=description,
             plot=bargraph.plot(
                 [
                     {s: {k: d[k] for k in keys} for s, d in dataset.items()}
@@ -172,11 +172,11 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_distributions(self):
-        for key, title, xlab, ylab in (
-            ("read_lengths", "Read Lengths", "Read length (bp, reported bins)", "Read count"),
-            ("coverage", "Transcript Coverage", "Percentile through transcript (5′ to 3′)", "Read count"),
-            ("inner_flex", "Inner Exon Flex", "Distance from annotated junction (bp)", "Junction count"),
-            ("end_flex", "Transcript End Flex", "Distance from annotated junction (bp)", "Junction count"),
+        for key, title, xlab, ylab, description in (
+            ("read_lengths", "Read Lengths", "Read length (bp, reported bins)", "Read count","Lengths of all reads processed (200bp bin size)"),
+            ("coverage", "Transcript Coverage", "Average percentile coverage over transcripts (5′ to 3′)", "Read count","Average relative coverage of transcript area from 5' to 3' - useful for detecting coverage bias in your libraries."),
+            ("inner_flex", "Inner Exon Flex", "Observed distances from annotated exon junctions (bp)", "Junction count","Distribution of distances of observed exon ends compared to the annotation in the GTF file. Limited to whatever value was set for 'flex' in the original analysis."),
+            ("end_flex", "Transcript End Flex", "Observed distances from annotated transcript ends (bp)", "Junction count","Distribution of distances of observed transcript ends compared to the annotation in the GTF file.  Limited to whatever values was set for 'endflex' in the original analysis"),
         ):
             data = {}
             for sample, stats in self.nexons_data.items():
@@ -193,7 +193,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_section(
                 name=title,
                 anchor=f"nexons_{key}",
-                description="Reported counts and bins are preserved without smoothing or normalisation.",
+                description=description,
                 alerts=[SectionAlert(level="info", message="No observations reported.", affected_samples=empty_samples)]
                 if empty_samples
                 else [],
