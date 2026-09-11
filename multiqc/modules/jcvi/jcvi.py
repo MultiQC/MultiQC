@@ -52,7 +52,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.jcvi = dict()
+        self.jcvi = {}
         for f in self.find_log_files("jcvi", filehandles=True):
             self.parse_jcvi(f)
 
@@ -162,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         if s_name in self.jcvi:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.jcvi[s_name] = dict()
+        self.jcvi[s_name] = {}
 
         # Define parsing regexes
         regexes = {

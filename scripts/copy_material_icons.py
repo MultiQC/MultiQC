@@ -6,10 +6,11 @@ This script fetches required SVG files from the Iconify API using the mdi (Mater
 icon set and saves them to the MultiQC source directory so they are bundled with the PyPI installation.
 """
 
-import requests
-from pathlib import Path
 import logging
-from typing import List
+import sys
+from pathlib import Path
+
+import requests
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -25,7 +26,7 @@ ICONS_DIR = UTILS_DIR / "material_icons"
 ICONIFY_API_BASE = "https://api.iconify.design"
 
 # List of icons that MultiQC uses in mdi:iconname format
-REQUIRED_ICONS: List[str] = [
+REQUIRED_ICONS: list[str] = [
     # Core functionality
     "mdi:information",
     "mdi:alert",
@@ -184,5 +185,5 @@ Downloaded via Iconify API: https://api.iconify.design/
 if __name__ == "__main__":
     success = fetch_icons()
     if not success:
-        exit(1)
+        sys.exit(1)
     logger.info("Material Design Icons download completed successfully!")

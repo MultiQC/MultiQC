@@ -314,16 +314,17 @@ you access to a number of functions on the `self` namespace. For example:
 ```python
 from multiqc.base_module import BaseMultiqcModule
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super().__init__(
-          name="My Module",
-          anchor="mymodule",
-          href="https://www.awesome_bioinfo.com/mymodule",
-          info="Example analysis module used for writing documentation.",
-          doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
-          license="MIT License",
-          license_url="https://opensource.org/license/mit",
+            name="My Module",
+            anchor="mymodule",
+            href="https://www.awesome_bioinfo.com/mymodule",
+            info="Example analysis module used for writing documentation.",
+            doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 ```
 
@@ -449,6 +450,7 @@ Instead, use the `logger` module as follows:
 
 ```python
 import logging
+
 log = logging.getLogger(__name__)
 
 log.info("Hello World!")
@@ -647,6 +649,7 @@ for a basic example, based loosely on the preseq module:
 ```python
 from multiqc.base_module import BaseMultiqcModule
 from typing import Dict, Union
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -966,6 +969,7 @@ data scales and colour schemes, you can supply an extra dict:
 
 ```python
 from multiqc.plots.table_object import ColumnMeta
+
 headers = {
     "first_col": ColumnMeta(
         title="First",
@@ -979,7 +983,7 @@ headers = {
         min=0,
         scale="Blues",
         suffix="%",
-    )
+    ),
 }
 self.general_stats_addcols(data_by_sample, headers)
 ```
@@ -988,18 +992,18 @@ Here are all options for headers, with defaults:
 
 ```python
 headers["name"] = TableColumn(
-    namespace="",                # Module name. Auto-generated for core modules in General Statistics.
-    title="[ dict key ]",        # Short title, table column title
+    namespace="",  # Module name. Auto-generated for core modules in General Statistics.
+    title="[ dict key ]",  # Short title, table column title
     description="[ dict key ]",  # Longer description, goes in mouse hover text
-    max=None,                    # Minimum value in range, for bar / colour coding
-    min=None,                    # Maximum value in range, for bar / colour coding
-    scale="GnBu",                # Colour scale for colour coding. Set to False to disable.
-    suffix=None,                 # Suffix for value (eg. '%')
-    format="{:,.1f}",            # Output format() string. Can also be a lambda function.
-    shared_key=None,             # See below for description
-    modify=None,                 # Lambda function to modify values
-    hidden=False,                # Set to True to hide the column on page load
-    placement=1000.0,            # Alter the default ordering of columns in the table
+    max=None,  # Minimum value in range, for bar / colour coding
+    min=None,  # Maximum value in range, for bar / colour coding
+    scale="GnBu",  # Colour scale for colour coding. Set to False to disable.
+    suffix=None,  # Suffix for value (eg. '%')
+    format="{:,.1f}",  # Output format() string. Can also be a lambda function.
+    shared_key=None,  # See below for description
+    modify=None,  # Lambda function to modify values
+    hidden=False,  # Set to True to hide the column on page load
+    placement=1000.0,  # Alter the default ordering of columns in the table
 )
 ```
 
@@ -1104,7 +1108,7 @@ self.general_stats_addcols(
             (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
         ],
         extra_functions=[_summarize_statues],
-    )
+    ),
 )
 ```
 
@@ -1121,9 +1125,7 @@ In this configuration, you can specify how to merge data for each column:
 The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, FastQC uses it to recalculate the `percent_fails` value:
 
 ```python
-def _summarize_statues(
-    merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]
-):
+def _summarize_statues(merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]):
     # Add count of fail statuses
     _num_statuses = 0
     _num_fails = 0
@@ -1144,18 +1146,16 @@ Use this when the tool output already tells you which samples are related. For e
 # Build the groups from tool metadata during parse.
 explicit_groups: Dict[str, List[str]] = {}
 for s_name, data in data_by_sample.items():
-    group_id = data["sample_id"] # This will depend on your data structure
+    group_id = data["sample_id"]  # This will depend on your data structure
     explicit_groups.setdefault(group_id, []).append(s_name)
 
 self.general_stats_addcols(
     data_by_sample,
     headers,
-    group_samples_config = SampleGroupingConfig(
-        explicit_groups = explicit_groups,
-        cols_to_sum = [ColumnKey("some_count_column")],
-        cols_to_weighted_average = [
-            (ColumnKey("some_percent"), ColumnKey("some_count_column"))
-        ],
+    group_samples_config=SampleGroupingConfig(
+        explicit_groups=explicit_groups,
+        cols_to_sum=[ColumnKey("some_count_column")],
+        cols_to_weighted_average=[(ColumnKey("some_percent"), ColumnKey("some_count_column"))],
     ),
 )
 ```
@@ -1236,11 +1236,7 @@ For example:
 
 ```python
 # Collect sample names by status for this section
-status_data = {
-    "pass": ["sample1", "sample2", "sample3"],
-    "warn": ["sample4"],
-    "fail": ["sample5"]
-}
+status_data = {"pass": ["sample1", "sample2", "sample3"], "warn": ["sample4"], "fail": ["sample5"]}
 
 # Add section with status bar
 self.add_section(
@@ -1248,7 +1244,7 @@ self.add_section(
     anchor="quality_check",
     description="Results from quality control analysis",
     plot=my_plot,
-    statuses=status_data
+    statuses=status_data,
 )
 ```
 
@@ -1313,10 +1309,9 @@ from multiqc.plots.bargraph import BarPlotConfig
 self.add_section(
     name="Second Module Section",
     anchor="mymodule-second",
-    plot=linegraph.plot(data_by_sample2, pconfig=LinePlotConfig(
-        id="mymodule-second",
-        title="My Module: Duplication Rate"
-    )),
+    plot=linegraph.plot(
+        data_by_sample2, pconfig=LinePlotConfig(id="mymodule-second", title="My Module: Duplication Rate")
+    ),
 )
 self.add_section(
     name="First Module Section",
@@ -1332,14 +1327,9 @@ self.add_section(
         * Are
         * `Great`
     """,
-    plot = bargraph.plot(data_by_sample, pconfig=BarPlotConfig(
-        id="mymodule-first",
-        title="My Module: Read Counts"
-    ))
+    plot=bargraph.plot(data_by_sample, pconfig=BarPlotConfig(id="mymodule-first", title="My Module: Read Counts")),
 )
-self.add_section(
-    content="<p>Some custom HTML.</p>"
-)
+self.add_section(content="<p>Some custom HTML.</p>")
 ```
 
 If a module has more than one section, these will automatically be labelled and linked
@@ -1367,8 +1357,8 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, 'mymod', {})
-my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
+mymod_config = getattr(config, "mymod", {})
+my_custom_config_var = mymod_config.get("my_custom_config_var", 5)
 ```
 
 You now have a variable `my_custom_config_var` with a default value of 5, but that
@@ -1438,12 +1428,11 @@ the path to the desired file. For example, see how it's done in the FastQC modul
 
 ```python
 import os
+
 self.css = {
     "assets/css/multiqc_fastqc.css": os.path.join(os.path.dirname(__file__), "assets", "css", "multiqc_fastqc.css")
 }
-self.js = {
-    "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
-}
+self.js = {"assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")}
 ```
 
 ## Addendum - example module
@@ -1533,7 +1522,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("qualalyser/quality", filehandles=True):
             sample_data = parse_qualalyser_log(f)
             if sample_data:
-                s_name = f['s_name']
+                s_name = f["s_name"]
                 if s_name in data_by_sample:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 data_by_sample[s_name] = sample_data

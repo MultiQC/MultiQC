@@ -34,7 +34,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/FelixKrueger/SNPsplit/blob/master/LICENSE",
         )
 
-        self.snpsplit_data = dict()
+        self.snpsplit_data = {}
 
         # Parse log files generated with newer versions of SNPsplit (YAML)
         for f in self.find_log_files("snpsplit/new", filehandles=True):
@@ -89,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_old_snpsplit_log(self, f):
         input_fn = None
-        d = dict()
+        d = {}
 
         for line in f["f"].splitlines():
             # Parse the sample name

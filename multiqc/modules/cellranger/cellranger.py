@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Set up class objects to hold parsed data
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["count"] = parse_count_html(self)

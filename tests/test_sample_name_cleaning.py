@@ -1,6 +1,7 @@
 """Test that the sample cleaning logic works as expected."""
 
 import pytest
+
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 

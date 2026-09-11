@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class PlotEnrichmentMixin:
     def parse_plot_enrichment(self):
         """Find plotEnrichment output."""
-        self.deeptools_plotEnrichment = dict()
+        self.deeptools_plotEnrichment = {}
         for f in self.find_log_files("deeptools/plotEnrichment"):
             parsed_data = self.parsePlotEnrichment(f)
             for k, v in parsed_data.items():
@@ -34,11 +34,11 @@ class PlotEnrichmentMixin:
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        dCounts = dict()
-        dPercents = dict()
+        dCounts = {}
+        dPercents = {}
         for sample, v in self.deeptools_plotEnrichment.items():
-            dCounts[sample] = dict()
-            dPercents[sample] = dict()
+            dCounts[sample] = {}
+            dPercents[sample] = {}
             for category, v2 in v.items():
                 dCounts[sample][category] = v2["count"]
                 dPercents[sample][category] = v2["percent"]
@@ -77,15 +77,15 @@ class PlotEnrichmentMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name not in d:
-                d[s_name] = dict()
+                d[s_name] = {}
             cols[1] = str(cols[1])
             if cols[1] in d[s_name]:
                 log.warning(f"Replacing duplicate sample:featureType {s_name}:{cols[1]}.")
-            d[s_name][cols[1]] = dict()
+            d[s_name][cols[1]] = {}
 
             try:
                 d[s_name][cols[1]]["percent"] = float(cols[2])
@@ -96,5 +96,5 @@ class PlotEnrichmentMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
         return d

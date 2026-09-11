@@ -2,11 +2,9 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, List
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
-from multiqc.plots.bargraph import CatDataDict
 
 # Initialise the logger
 log = logging.getLogger(__name__)
@@ -15,7 +13,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard ExtractIlluminaBarcodes reports and parse their data"""
 
-    data_by_lane: Dict[str, Dict] = defaultdict(dict)
+    data_by_lane: dict[str, dict] = defaultdict(dict)
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/extractilluminabarcodes", filehandles=True):
@@ -80,7 +78,7 @@ def parse_reports(module):
         ],
     }
 
-    plot_cats: List = [dict(), dict(), dict()]
+    plot_cats: list = [{}, {}, {}]
     plot_cats[0]["READS"] = {"name": "Reads"}
     plot_cats[1]["PERFECT_MATCHES"] = {"name": "Perfect Matching Reads"}
     plot_cats[1]["ONE_MISMATCH_MATCHES"] = {"name": "One Mismatch Reads"}
@@ -123,7 +121,7 @@ def reads_per_barcode(data):
     Return reads/barcode for entire run
     """
     reads_per_barcode = {}
-    for lane, barcodes in data.items():
+    for barcodes in data.values():
         for barcode, barcode_data in barcodes.items():
             if barcode not in reads_per_barcode:
                 reads_per_barcode[barcode] = {
@@ -157,7 +155,7 @@ def reads_per_lane(data):
             "PF_PERFECT_MATCHES": 0,
             "PF_ONE_MISMATCH_MATCHES": 0,
         }
-        for barcode, barcode_data in barcodes.items():
+        for barcode_data in barcodes.values():
             reads_per_lane[lane]["READS"] += int(barcode_data["READS"])
             reads_per_lane[lane]["PERFECT_MATCHES"] += int(barcode_data["PERFECT_MATCHES"])
             reads_per_lane[lane]["ONE_MISMATCH_MATCHES"] += int(barcode_data["ONE_MISMATCH_MATCHES"])

@@ -2,7 +2,6 @@ import logging
 import os
 import re
 from copy import deepcopy
-from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -33,7 +32,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any STAR reports
-        data_by_sample: Dict[str, Dict[str, float]] = dict()
+        data_by_sample: dict[str, dict[str, float]] = {}
         for f in self.find_log_files("star"):
             parsed_data = parse_star_report(f["f"])
             if parsed_data is not None:
@@ -46,9 +45,9 @@ class MultiqcModule(BaseMultiqcModule):
                 data_by_sample[s_name] = parsed_data
 
         # Find and load any STAR gene count tables
-        genecounts_unstranded: Dict[str, Dict[str, int]] = dict()
-        genecounts_first_strand: Dict[str, Dict[str, int]] = dict()
-        genecounts_second_strand: Dict[str, Dict[str, int]] = dict()
+        genecounts_unstranded: dict[str, dict[str, int]] = {}
+        genecounts_first_strand: dict[str, dict[str, int]] = {}
+        genecounts_second_strand: dict[str, dict[str, int]] = {}
         for f in self.find_log_files("star/genecounts", filehandles=True):
             gc_parsed_data = parse_star_genecounts_report(f)
             if gc_parsed_data is not None:
@@ -76,9 +75,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(data_by_sample) > 0:
             if len(genecounts_unstranded) > 0:
-                log.info(
-                    "Found {} reports and {} gene count files".format(len(data_by_sample), len(genecounts_unstranded))
-                )
+                log.info(f"Found {len(data_by_sample)} reports and {len(genecounts_unstranded)} gene count files")
             else:
                 log.info(f"Found {len(data_by_sample)} reports")
         else:
@@ -110,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the parsed stats from the STAR report and add them to the
         basic stats table at the top of the report"""
 
-        headers: Dict[str, Dict] = {
+        headers: dict[str, dict] = {
             "total_reads": {
                 "title": "Total reads",
                 "description": "Number of input reads",
@@ -154,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(data_by_sample, headers)
 
-        all_headers: Dict[str, Dict] = deepcopy(headers)
+        all_headers: dict[str, dict] = deepcopy(headers)
         all_headers["total_reads"]["hidden"] = False
 
         all_headers.update(
@@ -258,13 +255,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def parse_star_genecounts_report(f) -> Optional[Dict[str, Dict[str, int]]]:
+def parse_star_genecounts_report(f) -> dict[str, dict[str, int]] | None:
     """Parse a STAR gene counts output file"""
     # Three numeric columns: unstranded, stranded/first-strand, stranded/second-strand
     keys = ["N_unmapped", "N_multimapping", "N_noFeature", "N_ambiguous"]
-    unstranded: Dict[str, int] = {"N_genes": 0}
-    first_strand: Dict[str, int] = {"N_genes": 0}
-    second_strand: Dict[str, int] = {"N_genes": 0}
+    unstranded: dict[str, int] = {"N_genes": 0}
+    first_strand: dict[str, int] = {"N_genes": 0}
+    second_strand: dict[str, int] = {"N_genes": 0}
     num_errors = 0
     num_genes = 0
     for line in f["f"]:
@@ -345,7 +342,7 @@ def star_alignment_chart(data_by_sample):
     return bargraph.plot(data_by_sample, keys, pconfig)
 
 
-def parse_star_report(contents: str) -> Optional[Dict[str, float]]:
+def parse_star_report(contents: str) -> dict[str, float] | None:
     """Parse the final STAR log file."""
 
     regexes = {
@@ -373,7 +370,7 @@ def parse_star_report(contents: str) -> Optional[Dict[str, float]]:
         "unmapped_tooshort_percent": r"% of reads unmapped: too short \|\s+([\d\.]+)",
         "unmapped_other_percent": r"% of reads unmapped: other \|\s+([\d\.]+)",
     }
-    parsed_data: Dict[str, float] = dict()
+    parsed_data: dict[str, float] = {}
     for k, r in regexes.items():
         r_search = re.search(r, contents, re.MULTILINE)
         if r_search:

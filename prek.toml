@@ -67,9 +67,7 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/astral-sh/ruff-pre-commit"
-# Pinned: ruff 0.15+ broadened its default rule set, which flags thousands of new
-# findings in this repo. Bump deliberately alongside a `lint.select` in pyproject.toml.
-rev = "6ce4b4fc349b8881cbce40207dac3bf78824a88e"  # frozen: v0.14.11
+rev = "321478e58f4938179c6b86e4ddfa923d1547a49b"  # frozen: v0.16.6
 hooks = [
   {
     id = "ruff-check",

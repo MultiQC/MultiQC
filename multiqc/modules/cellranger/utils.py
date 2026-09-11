@@ -1,6 +1,3 @@
-from typing import Dict, Union, List
-
-
 def clean_title_case(col_id):
     title = col_id.title() if col_id[0:1].islower() else col_id
     for str in ["Bc", "bc", "Umi", "Igk", "Igh", "Igl", "Vj", "q30"]:
@@ -21,7 +18,7 @@ def update_dict(table, headers, rows_list, col_map, colours, namespace):
             try:
                 col_data = float(col_data)
             except ValueError:
-                col_data = col_data
+                pass  # leave col_data as the original string
 
             col_id = col_map[col_name]
             table[col_id] = col_data
@@ -64,27 +61,27 @@ def set_hidden_cols(headers, col_names):
     return headers
 
 
-def parse_bcknee_data(data, s_name, max_idx=1000) -> Dict[str, Dict[str, Union[int, str, float]]]:
+def parse_bcknee_data(data, s_name, max_idx=1000) -> dict[str, dict[str, int | str | float]]:
     """parse data for bc knee plot from dict"""
 
-    value_dict: Dict[str, Dict[str, Union[int, str, float]]] = dict()
+    value_dict: dict[str, dict[str, int | str | float]] = {}
     for idx, data_series in enumerate(data):
         if idx > max_idx:
             break
         if len(data_series["x"]) == 0:
             continue
         id = f"{s_name}_{data_series['name']}"
-        if id not in value_dict.keys():
-            value_dict[id] = dict()
+        if id not in value_dict:
+            value_dict[id] = {}
         value_dict[id].update(transform_data(data_series))
 
     return value_dict
 
 
-def transform_data(data: Dict[str, List]) -> Dict[str, Union[int, str, float]]:
+def transform_data(data: dict[str, list]) -> dict[str, int | str | float]:
     """Transform x:list,y:list data to a dict of x_val:y_val"""
 
-    value_dict = dict()
+    value_dict = {}
     for idx, row in enumerate(data["x"]):
         if row > 0 and data["y"][idx] > 0:
             value_dict[row] = data["y"][idx]

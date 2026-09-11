@@ -14,7 +14,7 @@ NAMESPACE = "Variant calling"
 
 class DragenVCMetrics(BaseMultiqcModule):
     def add_vc_metrics(self):
-        vc_data_by_sample = dict()
+        vc_data_by_sample = {}
         for f in self.find_log_files("dragen/vc_metrics"):
             data = parse_vc_metrics_file(f)
             s_name = f["s_name"]
@@ -23,7 +23,7 @@ class DragenVCMetrics(BaseMultiqcModule):
             self.add_data_source(f, s_name=s_name, section="vc_metrics")
             vc_data_by_sample[s_name] = data
 
-        gvcf_data_by_sample = dict()
+        gvcf_data_by_sample = {}
         for f in self.find_log_files("dragen/gvcf_metrics"):
             data = parse_vc_metrics_file(f)
             s_name = f["s_name"]
@@ -48,8 +48,8 @@ class DragenVCMetrics(BaseMultiqcModule):
         self.add_software_version(None)
 
         all_metric_names = set()
-        for sn, sdata in vc_data_by_sample.items():
-            for m in sdata.keys():
+        for sdata in vc_data_by_sample.values():
+            for m in sdata:
                 all_metric_names.add(m)
 
         gen_stats_headers, table_headers = make_headers(all_metric_names, VC_METRICS)
@@ -372,9 +372,9 @@ def parse_vc_metrics_file(f):
     VARIANT CALLER POSTFILTER,T_SRR7890936_50pc,Percent Autosome Callability,NA
     """
 
-    summary_data = dict()
-    prefilter_data = dict()
-    postfilter_data = dict()
+    summary_data = {}
+    prefilter_data = {}
+    postfilter_data = {}
 
     for line in f["f"].splitlines():
         fields = line.split(",")
@@ -440,9 +440,8 @@ def parse_vc_metrics_file(f):
         if prefilter_data["Total"] > 0:
             data["Filtered vars"] = prefilter_data["Total"] - data["Total"]
 
-    if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs"):
-        if prefilter_data["SNPs"] > 0:
-            data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
+    if exist_and_number(data, "SNPs") and exist_and_number(prefilter_data, "SNPs") and prefilter_data["SNPs"] > 0:
+        data["Filtered SNPs"] = prefilter_data["SNPs"] - data["SNPs"]
 
     if exist_and_number(data, "Indels") and exist_and_number(prefilter_data, "Indels"):
         if prefilter_data["Indels"] > 0:

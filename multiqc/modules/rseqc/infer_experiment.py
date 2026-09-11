@@ -3,7 +3,6 @@ http://rseqc.sourceforge.net/#infer-experiment-py"""
 
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -14,7 +13,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC infer_experiment reports and parse their data"""
 
-    infer_exp: Dict = dict()
+    infer_exp: dict = {}
     regexes = {
         "pe_sense": r"\"1\+\+,1--,2\+-,2-\+\": (\d\.\d+)",
         "pe_antisense": r"\"1\+-,1-\+,2\+\+,2--\": (\d\.\d+)",
@@ -25,7 +24,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Go through files and parse data using regexes
     for f in module.find_log_files("rseqc/infer_experiment"):
-        d = dict()
+        d = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -51,9 +50,9 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     module.write_data_file(infer_exp, "multiqc_rseqc_infer_experiment")
 
     # Merge PE and SE for plot
-    pdata = dict()
+    pdata = {}
     for s_name, vals in infer_exp.items():
-        pdata[s_name] = dict()
+        pdata[s_name] = {}
         for k, v in vals.items():
             v *= 100.0  # Multiply to get percentage
             if k[:2] == "pe" or k[:2] == "se":

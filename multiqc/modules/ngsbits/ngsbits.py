@@ -29,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Call submodule functions
-        n = dict()
+        n = {}
         n["mappingqc"] = mappingqc_parse_reports(self)
         if n["mappingqc"] > 0:
             log.info(f"Found {n['mappingqc']} MappingQC reports")

@@ -1,7 +1,6 @@
 """Parse riker `hybcap` outputs (hybcap-metrics.txt)."""
 
 import logging
-from typing import Dict, List, Optional
 
 from multiqc import config
 from multiqc.plots import linegraph, table
@@ -16,8 +15,8 @@ TARGET_COVERAGE_LEVELS = [1, 10, 20, 30, 50, 100, 250, 500, 1000]
 
 
 def parse_reports(module):
-    data_by_sample: Dict[str, Dict[str, Optional[float]]] = {}
-    panel_by_sample: Dict[str, str] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
+    panel_by_sample: dict[str, str] = {}
 
     for f in module.find_log_files("riker/hybcap_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -44,7 +43,7 @@ def parse_reports(module):
     riker_config = getattr(config, "riker_config", {})
     user_covs = riker_config.get("general_stats_target_coverage", [])
     if isinstance(user_covs, list) and user_covs:
-        gs_covs: List[int] = [int(c) for c in user_covs if int(c) in TARGET_COVERAGE_LEVELS]
+        gs_covs: list[int] = [int(c) for c in user_covs if int(c) in TARGET_COVERAGE_LEVELS]
         skipped = [c for c in user_covs if int(c) not in TARGET_COVERAGE_LEVELS]
         if skipped:
             log.warning(
@@ -66,7 +65,7 @@ def parse_reports(module):
     #     practice for deeper-coverage thresholds, so don't saturate too early.
     #   - at_dropout / gc_dropout: capped at 10 (Picard convention treats <2 as
     #     excellent, 5+ as concerning; 10 saturates anything truly bad).
-    headers: Dict[str, dict] = {
+    headers: dict[str, dict] = {
         "mean_target_coverage": {
             "title": "Mean target cov.",
             "description": "Mean coverage depth across target bases (HQ non-dup)",
@@ -138,7 +137,7 @@ def parse_reports(module):
     module.general_stats_addcols(data_by_sample, headers, namespace="hybcap")
 
     # Full metrics table; most columns hidden by default and the user can toggle them.
-    table_data: Dict[str, Dict[str, object]] = {}
+    table_data: dict[str, dict[str, object]] = {}
     for s_name, row in data_by_sample.items():
         merged = dict(row)
         merged["panel_name"] = panel_by_sample.get(s_name, "")
@@ -187,7 +186,7 @@ def parse_reports(module):
             "hidden": hidden,
         }
 
-    table_headers: Dict[str, dict] = {
+    table_headers: dict[str, dict] = {
         "panel_name": {"title": "Panel", "description": "Bait/target panel name", "hidden": True},
         "total_reads": {
             "title": f"{config.read_count_prefix} Total reads",
@@ -347,7 +346,7 @@ def parse_reports(module):
     )
 
     # Target coverage curve: % of target bases at >=Nx for the standard riker thresholds.
-    curve_data: Dict[str, Dict[int, float]] = {}
+    curve_data: dict[str, dict[int, float]] = {}
     for s_name, row in data_by_sample.items():
         curve_data[s_name] = {}
         for cov in TARGET_COVERAGE_LEVELS:

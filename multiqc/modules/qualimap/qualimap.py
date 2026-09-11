@@ -62,7 +62,7 @@ class MultiqcModule(BaseMultiqcModule):
         from . import QM_BamQC, QM_RNASeq
 
         # Set up class objects to hold parsed data()
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["BamQC"] = QM_BamQC.parse_reports(self)

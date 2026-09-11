@@ -31,7 +31,7 @@ class MultiqcModule(BaseMultiqcModule):
         # data vars ---------------------------------------------------------------------
 
         # Find and load any gopeaks reports
-        self.gopeaks_data = dict()
+        self.gopeaks_data = {}
         for f in self.find_log_files("gopeaks", filehandles=True):
             parsed = self.parse_gopeaks_log(f)
 
@@ -69,8 +69,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Read gopeaks json log file and extract number of peaks.
         """
-        with open(Path(f["root"]) / Path(f["fn"])) as f:
-            sample_log = json.load(f)
+        with open(Path(f["root"]) / Path(f["fn"])) as fh:
+            sample_log = json.load(fh)
 
         return sample_log
 

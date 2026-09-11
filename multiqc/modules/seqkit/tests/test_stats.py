@@ -1,9 +1,6 @@
 """Tests for the seqkit stats module"""
 
-import pytest
-
 from multiqc.modules.seqkit.stats import parse_stats_report
-
 
 # Sample seqkit stats output with all columns (--all --tabular)
 SAMPLE_STATS_ALL = """file	format	type	num_seqs	sum_len	min_len	avg_len	max_len	Q1	Q2	Q3	sum_gap	N50	N50_num	Q20(%)	Q30(%)	AvgQual	GC(%)	sum_n

@@ -20,9 +20,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Sargasso reports
-        self.sargasso_data = dict()
-        self.sargasso_files = list()
-        self.sargasso_keys = list()  # header keys
+        self.sargasso_data = {}
+        self.sargasso_files = []
+        self.sargasso_keys = []  # header keys
 
         for f in self.find_log_files("sargasso"):
             self.parse_sargasso_logs(f)
@@ -52,14 +52,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_sargasso_logs(self, f):
         """Parse the sargasso log file."""
-        species_name = list()
-        items = list()
+        species_name = []
+        items = []
         is_first_line = True
         for line in f["f"].splitlines():
             s = line.split(",")
             # Check that this actually is a Sargasso file
             if is_first_line and s[0] != "Sample":
-                return None
+                return
 
             if len(s) < 7:
                 continue
@@ -88,7 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
                     # Clean up sample name
                     new_sample_name = self.clean_s_name(new_sample_name, f)
 
-                    if new_sample_name in self.sargasso_data.keys():
+                    if new_sample_name in self.sargasso_data:
                         log.debug(f"Duplicate sample name found! Overwriting: {new_sample_name}")
 
                     try:

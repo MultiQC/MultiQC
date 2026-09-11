@@ -2,8 +2,6 @@ import json
 import logging
 import re
 
-from typing import Dict
-
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -55,7 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/bede/deacon/blob/main/LICENSE",
         )
 
-        self.deacon_data: Dict[str, Dict] = {}
+        self.deacon_data: dict[str, dict] = {}
 
         for f in self.find_log_files("deacon", filehandles=True):
             try:
@@ -263,7 +261,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Bar plot: removed vs kept sequences
-        plot_data: Dict[str, Dict[str, float]] = {}
+        plot_data: dict[str, dict[str, float]] = {}
         for sample, stats in self.deacon_data.items():
             removed = stats.get("seqs_removed")
             seqs_out = stats.get("seqs_out")

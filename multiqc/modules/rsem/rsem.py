@@ -30,8 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/deweylab/RSEM/blob/master/COPYING",
         )
 
-        self.rsem_mapped_data = dict()
-        self.rsem_multimapping_data = dict()
+        self.rsem_mapped_data = {}
+        self.rsem_multimapping_data = {}
 
         # Find and load any count file
         for f in self.find_log_files("rsem"):
@@ -65,8 +65,8 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse the rsem cnt stat file.
         Description of cnt file found : https://github.com/deweylab/RSEM/blob/master/cnt_file_description.txt
         """
-        data = dict()
-        multimapping_hist = dict()
+        data = {}
+        multimapping_hist = {}
         in_hist = False
         for line in f["f"].splitlines():
             s = line.split()
@@ -106,10 +106,10 @@ class MultiqcModule(BaseMultiqcModule):
             assert data["Unique"] + data["Multi"] == data["Alignable"]
         except AssertionError:
             log.warning(f"Unique + Multimapping read counts != alignable reads! '{f['fn']}'")
-            return None
+            return
         except KeyError:
             log.warning(f"Error parsing RSEM counts file '{f['fn']}'")
-            return None
+            return
 
         # Save parsed data
         if len(data) > 0:

@@ -1,5 +1,5 @@
-import logging
 import csv
+import logging
 
 from multiqc.plots import table
 
@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class scCountQCMixin:
     def parse_scCountQC(self):
         """Find scCountQC output."""
-        self.sincei_scCountQC = dict()
+        self.sincei_scCountQC = {}
         for f in self.find_log_files("sincei/scCountQC", filehandles=True):
             parsed_data = self.parsescCountQCFile(f)
             for k, v in parsed_data.items():
@@ -31,7 +31,7 @@ class scCountQCMixin:
             # Write data to file
             self.write_data_file(self.sincei_scCountQC, "sincei_count_qc")
 
-            header = dict()
+            header = {}
             header["n_genes"] = {
                 "title": "# Features",
                 "description": "No. of detected features (bins or genes) with non-zero counts (Median of cells)",
@@ -91,13 +91,13 @@ class scCountQCMixin:
 
             test_dict = group_median_by_cell_prefix(self.sincei_scCountQC, kys[0])
             out = {}
-            for k in test_dict.keys():
+            for k in test_dict:
                 out[k] = dict.fromkeys(kys)
                 for p in kys:
                     dv = group_median_by_cell_prefix(self.sincei_scCountQC, p)
                     out[k].update(dv[k])
 
-            tdata = dict()
+            tdata = {}
             for k, v in out.items():
                 tdata[k] = {
                     "SampleName": k,
@@ -169,7 +169,7 @@ class scCountQCMixin:
             log.warning(
                 f"{f['fn']} was initially flagged as the tabular output from scCountQC, but that seems to not be the case. Skipping..."
             )
-            return dict()
+            return {}
 
         d = {}
         for row in reader:

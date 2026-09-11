@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_samtools_rmdup(module: BaseMultiqcModule):
     """Find Samtools rmdup logs and parse their data"""
 
-    samtools_rmdup: Dict = dict()
+    samtools_rmdup: dict = {}
     for f in module.find_log_files("samtools/rmdup", filehandles=True):
         # Example below:
         # [bam_rmdupse_core] 26602816 / 103563641 = 0.2569 in library '   '
@@ -63,7 +62,7 @@ def parse_samtools_rmdup(module: BaseMultiqcModule):
 
     # Add a column to the General Stats table
     # General Stats Table
-    stats_headers: Dict[str, ColumnDict] = {
+    stats_headers: dict[str, ColumnDict] = {
         "pct_dups": {
             "title": "Duplicates",
             "description": "Percent of duplicate alignments",

@@ -56,8 +56,8 @@ def run_group_reads_by_umi(module: BaseMultiqcModule) -> int:
 
 
 def parse_groupreadsbyumi_log(module: BaseMultiqcModule):
-    umi_data = dict()
-    umi_data_normed = dict()
+    umi_data = {}
+    umi_data_normed = {}
 
     for f in module.find_log_files("fgbio/groupreadsbyumi"):
         # add file to data sources

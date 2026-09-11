@@ -16,18 +16,18 @@ OLDEST_SUPPORTED_PYTHON_VERSION = "3.9"
 
 if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))):
     raise RuntimeError(
-        "You are running MultiQC with Python {}. "
-        "Please upgrade Python! MultiQC does not support Python < {}, "
-        "things will break.".format(sys.version_info, OLDEST_SUPPORTED_PYTHON_VERSION)
+        f"You are running MultiQC with Python {sys.version_info}. "
+        f"Please upgrade Python! MultiQC does not support Python < {OLDEST_SUPPORTED_PYTHON_VERSION}, "
+        "things will break."
     )
 
 # Load config and report before anything else:
-from multiqc import (  # noqa: E402
+from multiqc import (
     config,
     report,
 )
-from multiqc.base_module import BaseMultiqcModule  # noqa: E402
-from multiqc.interactive import (  # noqa: E402
+from multiqc.base_module import BaseMultiqcModule
+from multiqc.interactive import (
     ClConfig,
     add_custom_content_section,
     get_general_stats_data,
@@ -42,31 +42,31 @@ from multiqc.interactive import (  # noqa: E402
     reset,
     write_report,
 )
-from multiqc.multiqc import run  # noqa: E402
-from multiqc.plots.plot import PConfig, Plot  # noqa: E402
+from multiqc.multiqc import run
+from multiqc.plots.plot import PConfig, Plot
 
 __version__ = config.version
 
 __all__ = [
-    "run",
-    "config",
-    "report",
+    "BaseMultiqcModule",
+    "ClConfig",
+    "PConfig",
+    "Plot",
     "__version__",
-    # The rest of the functions define the interactive use API:
-    "parse_logs",
+    "add_custom_content_section",
+    "config",
+    "get_general_stats_data",
+    "get_module_data",
+    "get_plot",
     "list_data_sources",
     "list_modules",
-    "list_samples",
     "list_plots",
-    "get_plot",
-    "Plot",
-    "PConfig",
-    "get_module_data",
-    "get_general_stats_data",
-    "reset",
-    "write_report",
-    "add_custom_content_section",
-    "BaseMultiqcModule",
+    "list_samples",
     "load_config",
-    "ClConfig",
+    # The rest of the functions define the interactive use API:
+    "parse_logs",
+    "report",
+    "reset",
+    "run",
+    "write_report",
 ]

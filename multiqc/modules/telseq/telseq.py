@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any telseq reports
-        self.telseq_data = dict()
+        self.telseq_data = {}
 
         # Parse the output files
         self.parse_telseq_data()

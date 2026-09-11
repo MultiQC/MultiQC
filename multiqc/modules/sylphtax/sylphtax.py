@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
         self,
         name="Sylph-tax",
         anchor="sylphtax",
-        href=["https://sylph-docs.github.io/", "https://sylph-docs.github.io/sylph-tax/"],
+        href=["https://sylph-docs.github.io/", "https://sylph-docs.github.io/sylph-tax/"],  # noqa: B006 - passed to super() unchanged
         info="Taxonomic profiling of metagenomic reads.",
         doi="10.1038/s41587-024-02412-y",
     ):
@@ -65,7 +65,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.top_n = getattr(config, "sylphtax", {}).get("top_n", 10)
 
-        self.sylph_raw_data = dict()
+        self.sylph_raw_data = {}
         for f in self.find_log_files("sylphtax", filehandles=True):
             self.parse_logs(f)
             self.add_data_source(f)
@@ -80,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         # Sum percentages across all samples, so that we can pick top species
-        self.sylph_total_pct = dict()
+        self.sylph_total_pct = {}
         self.sum_sample_abundances()
         self.general_stats_cols()
         self.top_taxa_barplot()
@@ -163,13 +163,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Sum the percentages for each taxa across all samples
         # Allows us to pick the top taxa for each rank
-        for s_name, data in self.sylph_raw_data.items():
+        for data in self.sylph_raw_data.values():
             for row in data:
                 tax_rank = row["tax_rank"]
                 taxonomy = row["taxonomy"]
 
                 if tax_rank not in self.sylph_total_pct:
-                    self.sylph_total_pct[tax_rank] = dict()
+                    self.sylph_total_pct[tax_rank] = {}
 
                 if taxonomy not in self.sylph_total_pct[tax_rank]:
                     self.sylph_total_pct[tax_rank][taxonomy] = 0
@@ -228,13 +228,11 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Column headers
-        headers = dict()
+        headers = {}
         top_one_hkey = f"% {top_taxa[0]}"
         headers[top_one_hkey] = {
             "title": top_one_hkey,
-            "description": "Percentage of reads that were the top {} over all samples - {}".format(
-                top_rank_name, top_taxa[0]
-            ),
+            "description": f"Percentage of reads that were the top {top_rank_name} over all samples - {top_taxa[0]}",
             "suffix": "%",
             "max": 100,
             "scale": "PuBuGn",
@@ -268,13 +266,13 @@ class MultiqcModule(BaseMultiqcModule):
         """Add a bar plot showing the top-N from each taxa rank"""
 
         pd = []
-        cats = list()
+        cats = []
         # Keeping track of encountered codes to display only tabs with available data
         found_rank_codes = set()
 
         for rank_code in self.t_ranks:
-            rank_cats = dict()
-            rank_data = dict()
+            rank_cats = {}
+            rank_data = {}
 
             # Loop through the summed tax percentages to get the top-N across all samples
             try:
@@ -298,7 +296,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Pull out abundances for this rank + classif from each sample
                 for s_name, d in self.sylph_raw_data.items():
                     if s_name not in rank_data:
-                        rank_data[s_name] = dict()
+                        rank_data[s_name] = {}
                     if s_name not in abundances_shown:
                         abundances_shown[s_name] = 0
 
@@ -315,7 +313,7 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, d in self.sylph_raw_data.items():
                 # In case none of the top_n were in some sample:
                 if s_name not in rank_data:
-                    rank_data[s_name] = dict()
+                    rank_data[s_name] = {}
                 if s_name not in abundances_shown:
                     abundances_shown[s_name] = 0
                 rank_data[s_name]["other"] = 100 - abundances_shown[s_name]

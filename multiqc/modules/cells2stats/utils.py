@@ -32,7 +32,7 @@ def is_nan(value):
     """
     Check if a value is NaN
     """
-    return value != value
+    return value != value  # noqa: PLR0124 - NaN is the only value that is not equal to itself
 
 
 def summarize_batch_names(c2s_run_data):

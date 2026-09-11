@@ -4,12 +4,10 @@ import json
 import logging
 import os
 from collections import defaultdict
-from typing import Dict, Union
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule
+from multiqc.modules.spaceranger.utils import populate_data_and_headers, set_hidden_cols, transform_data
 from multiqc.plots import linegraph, table
-
-from multiqc.modules.spaceranger.utils import set_hidden_cols, transform_data, populate_data_and_headers
 
 log = logging.getLogger(__name__)
 
@@ -19,15 +17,15 @@ def parse_count_html(module: BaseMultiqcModule):
     Space Ranger count report parser
     """
 
-    general_stats_data: Dict[str, Dict[str, Union[str, float, int, None]]] = defaultdict()
-    summary_data_by_sample: Dict[str, Dict[str, Union[str, float, int, None]]] = defaultdict()
-    warnings_data_by_sample: Dict[str, Dict[str, Union[str, float, int, None]]] = defaultdict(lambda: defaultdict())
+    general_stats_data: dict[str, dict[str, str | float | int | None]] = defaultdict()
+    summary_data_by_sample: dict[str, dict[str, str | float | int | None]] = defaultdict()
+    warnings_data_by_sample: dict[str, dict[str, str | float | int | None]] = defaultdict(lambda: defaultdict())
 
-    plots_data: Dict[str, Dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
-    plots_conf: Dict[str, Dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
+    plots_data: dict[str, dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
+    plots_conf: dict[str, dict] = {"saturation": defaultdict(), "genes": defaultdict(), "genomic_dna": defaultdict()}
 
-    warnings_headers: Dict = dict()
-    summary_headers: Dict[str, Dict[str, Union[str, float, int, None]]] = {
+    warnings_headers: dict = {}
+    summary_headers: dict[str, dict[str, str | float | int | None]] = {
         "reads": {
             "rid": "count_data_reads",
             "title": "Reads",
@@ -35,7 +33,7 @@ def parse_count_html(module: BaseMultiqcModule):
             "shared_key": "read_count",
         }
     }
-    general_stats_headers: Dict[str, Dict[str, Union[str, float, int, None]]] = {
+    general_stats_headers: dict[str, dict[str, str | float | int | None]] = {
         "reads": {
             "rid": "count_genstats_reads",
             "title": "Reads",
@@ -57,7 +55,7 @@ def parse_count_html(module: BaseMultiqcModule):
                 break
 
         if summary is None:
-            logging.error(f"Couldn't find JSON summary data in HTML report, skipping: {f['fn']}")
+            log.error(f"Couldn't find JSON summary data in HTML report, skipping: {f['fn']}")
             continue
 
         sample_name = module.clean_s_name(summary["sample"]["id"], f)
@@ -199,7 +197,7 @@ def parse_count_html(module: BaseMultiqcModule):
                 summary["analysis_tab"]["seq_saturation_plot"]["plot"]["data"][0]
             )
         except KeyError as e:
-            log.debug("No saturation plot found in the spaceranger report:", e)
+            log.debug(f"No saturation plot found in the spaceranger report: {e}")
 
         # `analysis_tab` may not be present in the report if there are few reads
         try:
@@ -247,8 +245,8 @@ def parse_count_html(module: BaseMultiqcModule):
     summary_data_by_sample = module.ignore_samples(summary_data_by_sample)
     warnings_data_by_sample = module.ignore_samples(warnings_data_by_sample)
     general_stats_data = module.ignore_samples(general_stats_data)
-    for k in plots_data.keys():
-        plots_data[k] = module.ignore_samples(plots_data[k])
+    for k, sample_data in plots_data.items():
+        plots_data[k] = module.ignore_samples(sample_data)
 
     summary_headers = set_hidden_cols(
         summary_headers,

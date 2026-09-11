@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, violin
@@ -61,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse vg stats data
-        data_by_sample: Dict = dict()
+        data_by_sample: dict = {}
         for f in self.find_log_files("vg/stats", filehandles=True):
             data = self.parse_vg_stats_file(f)
             if f["s_name"] in data_by_sample:
@@ -154,8 +153,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Load the file
         data = {}
         for line in f["f"]:
-            var = list()
-            val = list()
+            var = []
+            val = []
             s = line.strip().split(": ")
             if s[1].isnumeric():
                 var.append(s[0])
@@ -179,14 +178,14 @@ class MultiqcModule(BaseMultiqcModule):
                 data[k] = float(v)
         return data
 
-    def make_barplot(self, data_by_sample: Dict):
+    def make_barplot(self, data_by_sample: dict):
         cats = {
             "Perfect": {"color": "#437bb1", "name": "Perfect"},
             "Imperfect": {"color": "#FF9933", "name": "Imperfect"},
             "Unaligned": {"color": "#b1084c", "name": "Unaligned"},
         }
 
-        bar_data_by_sample: Dict = {
+        bar_data_by_sample: dict = {
             s: {
                 "Perfect": d["Total perfect"],
                 "Imperfect": d["Total aligned"] - d["Total perfect"],
@@ -212,7 +211,7 @@ and "Unaligned" is calculated as the difference between "Total alignments" and "
             ),
         )
 
-    def make_violin_plot(self, data_by_sample: Dict):
+    def make_violin_plot(self, data_by_sample: dict):
         # Make dot plot of counts
         headers = {
             "Total alignments": {

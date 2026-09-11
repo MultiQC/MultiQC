@@ -45,7 +45,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/shenwei356/seqkit/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["stats"] = parse_seqkit_stats(self)

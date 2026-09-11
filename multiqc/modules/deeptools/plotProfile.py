@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class plotProfileMixin:
     def parse_plotProfile(self):
         """Find plotProfile output"""
-        self.deeptools_plotProfile = dict()
+        self.deeptools_plotProfile = {}
         for f in self.find_log_files("deeptools/plotProfile", filehandles=False):
             parsed_data, bin_labels, converted_bin_labels = self.parsePlotProfileData(f)
             for k, v in parsed_data.items():
@@ -73,18 +73,11 @@ class plotProfileMixin:
                         "color": "#000000",
                     }
                 )
-                plotBandHelp = """
-                    * Green: {} upstream of gene to {}
-                    * Yellow: {} to {}
-                    * Pink: {} to {} downstream of gene
-                    """.format(
-                    list(filter(None, bin_labels))[0],
-                    list(filter(None, bin_labels))[1],
-                    list(filter(None, bin_labels))[1],
-                    list(filter(None, bin_labels))[2],
-                    list(filter(None, bin_labels))[2],
-                    list(filter(None, bin_labels))[3],
-                )
+                plotBandHelp = f"""
+                    * Green: {next(filter(None, bin_labels))} upstream of gene to {list(filter(None, bin_labels))[1]}
+                    * Yellow: {list(filter(None, bin_labels))[1]} to {list(filter(None, bin_labels))[2]}
+                    * Pink: {list(filter(None, bin_labels))[2]} to {list(filter(None, bin_labels))[3]} downstream of gene
+                    """
             except (ValueError, IndexError):
                 pass
 
@@ -101,18 +94,18 @@ class plotProfileMixin:
             self.add_section(
                 name="Read Distribution Profile after Annotation",
                 anchor="read_distribution_profile_plot",
-                description="""
+                description=f"""
                     Accumulated view of the distribution of sequence reads related to the closest annotated gene.
                     All annotated genes have been normalized to the same size.
 
-                    {}""".format(plotBandHelp),
+                    {plotBandHelp}""",
                 plot=linegraph.plot(self.deeptools_plotProfile, config),
             )
 
         return len(self.deeptools_plotProfile)
 
     def parsePlotProfileData(self, f):
-        d = dict()
+        d = {}
         bin_labels = []
         bins = []
         converted_bin_labels = []
@@ -132,7 +125,7 @@ class plotProfileMixin:
                         break
             else:
                 s_name = self.clean_s_name(cols[0], f)
-                d[s_name] = dict()
+                d[s_name] = {}
 
                 # Convert the bins into genomic coordinates if we can
                 try:

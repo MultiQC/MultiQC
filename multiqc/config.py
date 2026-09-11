@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Literal
 
 import importlib_metadata
 import yaml
@@ -58,14 +58,14 @@ try:
 except:  # noqa: E722
     pass
 
-CleanPatternT = Union[str, Dict[str, Union[str, List[str]]]]
+CleanPatternT = str | dict[str, str | list[str]]
 
 
 title: str
 subtitle: str
 intro_text: str
 report_comment: str
-report_header_info: List[Dict[str, str]]
+report_header_info: list[dict[str, str]]
 show_analysis_paths: bool
 show_analysis_time: bool
 custom_logo: str
@@ -73,12 +73,12 @@ custom_logo_dark: str
 custom_logo_url: str
 custom_logo_title: str
 custom_logo_width: int
-custom_favicon: Optional[str]
-custom_css_files: List[str]
+custom_favicon: str | None
+custom_css_files: list[str]
 simple_output: bool
 template: str
 template_dark_mode: bool
-plot_font_family: Optional[str]
+plot_font_family: str | None
 profile_runtime: bool
 profile_memory: bool
 pandoc_template: str
@@ -109,9 +109,9 @@ version_check_url: str
 make_data_dir: bool
 zip_data_dir: bool
 data_dump_file: bool
-data_dump_file_write_raw: Optional[bool]
+data_dump_file_write_raw: bool | None
 megaqc_url: str
-megaqc_access_token: Optional[str]
+megaqc_access_token: str | None
 megaqc_timeout: int
 export_plots: bool
 make_report: bool
@@ -121,19 +121,19 @@ ai_summary: bool
 ai_summary_full: bool
 ai_provider: AiProviderLiteral
 ai_model: str
-ai_custom_endpoint: Optional[str]
-ai_auth_type: Optional[Literal["bearer", "api-key"]]
+ai_custom_endpoint: str | None
+ai_auth_type: Literal["bearer", "api-key"] | None
 ai_retries: int
-ai_extra_query_options: Optional[Dict[str, Any]]
-ai_custom_context_window: Optional[int]
-ai_prompt_short: Optional[str]
-ai_prompt_full: Optional[str]
+ai_extra_query_options: dict[str, Any] | None
+ai_custom_context_window: int | None
+ai_prompt_short: str | None
+ai_prompt_full: str | None
 no_ai: bool
 ai_anonymize_samples: bool
-ai_reasoning_effort: Optional[Literal["low", "medium", "high"]]
-ai_max_completion_tokens: Optional[int]
+ai_reasoning_effort: Literal["low", "medium", "high"] | None
+ai_max_completion_tokens: int | None
 ai_extended_thinking: bool
-ai_thinking_budget_tokens: Optional[int]
+ai_thinking_budget_tokens: int | None
 
 seqera_api_url: str
 seqera_website: str
@@ -146,54 +146,54 @@ plots_defer_loading_numseries: int
 num_datasets_plot_limit: int  # DEPRECATED in favour of plots_number_of_series_to_defer_loading
 lineplot_number_of_points_to_hide_markers: int
 barplot_legend_on_bottom: bool
-boxplot_boxpoints: Union[str, bool, None]
+boxplot_boxpoints: str | bool | None
 box_min_threshold_outliers: int
 box_min_threshold_no_points: int
-violin_downsample_after: Optional[int]
+violin_downsample_after: int | None
 violin_min_threshold_outliers: int
 violin_min_threshold_no_points: int
 
 collapse_tables: bool
 max_table_rows: int
 max_configurable_table_columns: int
-general_stats_columns: Dict[str, Dict]
+general_stats_columns: dict[str, dict]
 general_stats_helptext: str
-table_columns_visible: Dict[str, Union[bool, Dict[str, bool]]]
-table_columns_placement: Dict[str, Dict[str, float]]
-table_columns_name: Dict[str, Union[str, Dict[str, str]]]
-table_cond_formatting_colours: List[Dict[str, str]]
-table_cond_formatting_rules: Dict[str, Dict[str, List[Dict[str, Union[str, int, float]]]]]
+table_columns_visible: dict[str, bool | dict[str, bool]]
+table_columns_placement: dict[str, dict[str, float]]
+table_columns_name: dict[str, str | dict[str, str]]
+table_cond_formatting_colours: list[dict[str, str]]
+table_cond_formatting_rules: dict[str, dict[str, list[dict[str, str | int | float]]]]
 decimalPoint_format: str
 thousandsSep_format: str
-remove_sections: List[str]
-section_comments: Dict[str, str]
-section_status_checks: Dict[str, Union[bool, Dict[str, bool]]]
+remove_sections: list[str]
+section_comments: dict[str, str]
+section_status_checks: dict[str, bool | dict[str, bool]]
 lint: bool  # Deprecated since v1.17
 strict: bool
 development: bool
-custom_plot_config: Dict
-custom_table_header_config: Dict
-software_versions: Dict[str, Dict[str, List[str]]]
+custom_plot_config: dict
+custom_table_header_config: dict
+software_versions: dict[str, dict[str, list[str]]]
 ignore_symlinks: bool
 ignore_images: bool
-fn_ignore_dirs: List[str]
-fn_ignore_paths: List[str]
-sample_names_ignore: List[str]
-sample_names_ignore_re: List[str]
-sample_names_only_include: List[str]
-sample_names_only_include_re: List[str]
-sample_names_rename_buttons: List[str]
-sample_names_replace: Dict[str, str]
+fn_ignore_dirs: list[str]
+fn_ignore_paths: list[str]
+sample_names_ignore: list[str]
+sample_names_ignore_re: list[str]
+sample_names_only_include: list[str]
+sample_names_only_include_re: list[str]
+sample_names_rename_buttons: list[str]
+sample_names_replace: dict[str, str]
 sample_names_replace_regex: bool
 sample_names_replace_exact: bool
 sample_names_replace_complete: bool
-sample_names_rename: List[List[str]]
-show_hide_buttons: List[str]
-show_hide_patterns: List[Union[str, List[str]]]
-show_hide_regex: List[Union[str, bool]]
-show_hide_mode: List[str]
-highlight_patterns: List[str]
-highlight_colors: List[str]
+sample_names_rename: list[list[str]]
+show_hide_buttons: list[str]
+show_hide_patterns: list[str | list[str]]
+show_hide_regex: list[str | bool]
+show_hide_mode: list[str]
+highlight_patterns: list[str]
+highlight_colors: list[str]
 highlight_regex: bool
 no_version_check: bool
 log_filesize_limit: int
@@ -203,46 +203,46 @@ skip_generalstats: bool
 skip_versions_section: bool
 disable_version_detection: bool
 versions_table_group_header: str
-data_format_extensions: Dict[str, str]
-export_plot_formats: List[str]
-filesearch_file_shared: List[str]
-custom_content: Dict
+data_format_extensions: dict[str, str]
+export_plot_formats: list[str]
+filesearch_file_shared: list[str]
+custom_content: dict
 fn_clean_sample_names: bool
-use_filename_as_sample_name: Union[bool, List[str]]
-fn_clean_exts: List[CleanPatternT]
-fn_clean_trim: List[str]
-fn_ignore_files: List[str]
-top_modules: List[Union[str, Dict[str, Dict[str, str]]]]
-module_order: List[Union[str, Dict[str, Dict[str, Union[str, List[str]]]]]]
-preserve_module_raw_data: Optional[bool]
-table_sample_merge: Dict[str, List[CleanPatternT]]
+use_filename_as_sample_name: bool | list[str]
+fn_clean_exts: list[CleanPatternT]
+fn_clean_trim: list[str]
+fn_ignore_files: list[str]
+top_modules: list[str | dict[str, dict[str, str]]]
+module_order: list[str | dict[str, dict[str, str | list[str]]]]
+preserve_module_raw_data: bool | None
+table_sample_merge: dict[str, list[CleanPatternT]]
 
 # Module filename search patterns
-sp: Dict = {}
+sp: dict = {}
 
 # Other defaults that can't be set in YAML
 modules_dir: str
 working_dir: str
-analysis_dir: List[str]
+analysis_dir: list[str]
 output_dir: str
-kwargs: Dict = {}
+kwargs: dict = {}
 
 # Other variables that set only through the CLI
-run_modules: List[str]
-custom_content_modules: List[str]
-exclude_modules: List[str]
-data_dir: Optional[str]
-plots_dir: Optional[str]
-custom_data: Dict
-report_section_order: Dict[
-    Union[SectionId, ModuleId, Anchor], Union[str, Dict[str, int], Dict[str, Union[SectionId, ModuleId, Anchor]]]
+run_modules: list[str]
+custom_content_modules: list[str]
+exclude_modules: list[str]
+data_dir: str | None
+plots_dir: str | None
+custom_data: dict
+report_section_order: dict[
+    SectionId | ModuleId | Anchor, str | dict[str, int] | dict[str, SectionId | ModuleId | Anchor]
 ]
-output_fn: Optional[str]
-filename: Optional[str]
+output_fn: str | None
+filename: str | None
 megaqc_upload: bool
 
-avail_modules: Dict[str, EntryPoint]
-avail_templates: Dict[str, EntryPoint]
+avail_modules: dict[str, EntryPoint]
+avail_templates: dict[str, EntryPoint]
 
 export_plots_timeout: int
 
@@ -300,7 +300,7 @@ def load_defaults():
     global avail_modules
     # Modules must be listed in pyproject.toml under entry_points['multiqc.modules.v1']
     # Get all modules, including those from other extension packages
-    avail_modules = dict()
+    avail_modules = {}
     for entry_point in importlib_metadata.entry_points(group="multiqc.modules.v1"):
         nice_name = entry_point.name
         avail_modules[nice_name] = entry_point
@@ -336,10 +336,10 @@ def load_defaults():
 load_defaults()
 
 # To restore after load_defaults()
-explicit_user_config_files: Set[Path] = set()
+explicit_user_config_files: set[Path] = set()
 
 # To avoid finding same file many times
-loaded_user_files: Set[Path] = set()
+loaded_user_files: set[Path] = set()
 
 
 def reset():
@@ -360,7 +360,7 @@ def find_user_files():
     Note that config files are loaded in a specific order and values can overwrite each other.
     """
 
-    def _load_found_file(path: Union[Path, str, None]):
+    def _load_found_file(path: Path | str | None):
         load_config_file(path, is_explicit_config=False)
 
     # Load and parse installation config file if we find it
@@ -386,9 +386,7 @@ def find_user_files():
     _load_found_file("multiqc_config.yaml")
 
 
-def load_config_file(
-    yaml_config_path: Union[str, Path, None], is_explicit_config=True, validate_schema=True
-) -> Optional[Path]:
+def load_config_file(yaml_config_path: str | Path | None, is_explicit_config=True, validate_schema=True) -> Path | None:
     """
     Load and parse a config file if we find it.
 
@@ -417,7 +415,7 @@ def load_config_file(
     try:
         # pyaml_env allows referencing environment variables in YAML for default values
         # new_config can be None if the file is empty
-        new_config: Optional[Dict] = pyaml_env.parse_config(str(path))
+        new_config: dict | None = pyaml_env.parse_config(str(path))
         if new_config:
             if validate_schema:
                 try:
@@ -425,11 +423,11 @@ def load_config_file(
                     schema = config_to_schema()
                     validate_json_schema(instance=new_config, schema=schema)
                 except Exception as e:
-                    logger.warning(f"Config validation warning for {path}: {str(e)}")
+                    logger.warning(f"Config validation warning for {path}: {e!s}")
 
             logger.info(f"Loading config settings from: {path}")
             _add_config(new_config, str(path))
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.warning(f"Error loading config {path}: {e}")
         return None
     except yaml.YAMLError as e:
@@ -440,7 +438,7 @@ def load_config_file(
     return path
 
 
-def load_cl_config(cl_config: List[str]):
+def load_cl_config(cl_config: list[str]):
     for clc_str in cl_config:
         try:
             parsed_clc = yaml.safe_load(clc_str)
@@ -458,13 +456,13 @@ def load_cl_config(cl_config: List[str]):
             _add_config(parsed_clc)
 
 
-def _env_vars_config() -> Dict:
+def _env_vars_config() -> dict:
     """
     Check MULTIQC_* environment variables and set to corresponding config values if they are of scalar types.
     """
     RESERVED_NAMES = {"MULTIQC_CONFIG_PATH"}
     PREFIX = "MULTIQC_"  # Prefix for environment variables
-    env_config: Dict[str, Union[str, int, float, bool]] = {}
+    env_config: dict[str, str | int | float | bool] = {}
     for k, v in os.environ.items():
         if v.strip() == "":
             continue
@@ -502,11 +500,14 @@ def _env_vars_config() -> Dict:
     return env_config
 
 
-def _add_config(conf: Dict, conf_path=None):
+def _add_config(conf: dict, conf_path=None):
     """
     Add to the global config with given MultiQC config dict
     """
-    global custom_css_files, fn_clean_exts, fn_clean_trim
+    # These config values are injected at runtime from config_defaults.yaml rather
+    # than declared at module level, so the `global` line is what tells readers and
+    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    global custom_css_files, fn_clean_exts, fn_clean_trim  # noqa: PLW0602
     log_new_config = {}
     log_filename_patterns = []
     log_filename_clean_extensions = []
@@ -577,7 +578,10 @@ def load_sample_names(sample_names_file: Path):
     As such, can also be done directly using a config file.
     """
 
-    global sample_names_rename_buttons, sample_names_rename
+    # These config values are injected at runtime from config_defaults.yaml rather
+    # than declared at module level, so the `global` line is what tells readers and
+    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    global sample_names_rename_buttons, sample_names_rename  # noqa: PLW0602
     num_cols = None
     try:
         with open(sample_names_file) as f:
@@ -590,9 +594,7 @@ def load_sample_names(sample_names_file: Path):
                         num_cols = len(s)
                     elif num_cols != len(s):
                         logger.warning(
-                            "Inconsistent number of columns found in sample names file (skipping line): '{}'".format(
-                                line.strip()
-                            )
+                            f"Inconsistent number of columns found in sample names file (skipping line): '{line.strip()}'"
                         )
                     # Parse the line
                     if len(sample_names_rename_buttons) == 0:
@@ -601,13 +603,16 @@ def load_sample_names(sample_names_file: Path):
                         sample_names_rename.append(s)
                 elif len(line.strip()) > 0:
                     logger.warning(f"Sample names file line did not have columns (must use tabs): {line.strip()}")
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.error(f"Error loading sample names file: {e}")
     logger.debug(f"Found {len(sample_names_rename_buttons)} sample renaming patterns")
 
 
 def load_replace_names(replace_names_file: Path):
-    global sample_names_replace
+    # These config values are injected at runtime from config_defaults.yaml rather
+    # than declared at module level, so the `global` line is what tells readers and
+    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    global sample_names_replace  # noqa: PLW0602
     try:
         with open(replace_names_file) as f:
             logger.debug(f"Loading sample replace config settings from: {replace_names_file}")
@@ -615,13 +620,16 @@ def load_replace_names(replace_names_file: Path):
                 s = line.strip().split("\t")
                 if len(s) == 2:
                     sample_names_replace[s[0]] = s[1]
-    except (IOError, AttributeError) as e:
+    except (OSError, AttributeError) as e:
         logger.error(f"Error loading sample names replacement file: {e}")
     logger.debug(f"Found {len(sample_names_replace)} sample replacing patterns")
 
 
-def load_show_hide(show_hide_file: Optional[Path] = None):
-    global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex
+def load_show_hide(show_hide_file: Path | None = None):
+    # These config values are injected at runtime from config_defaults.yaml rather
+    # than declared at module level, so the `global` line is what tells readers and
+    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex  # noqa: PLW0602
     if show_hide_file:
         try:
             with open(show_hide_file, "r") as f:
@@ -671,15 +679,15 @@ def load_show_hide(show_hide_file: Optional[Path] = None):
 
 
 # Keep track of all changes to the config
-nondefault_config: Dict = {}
+nondefault_config: dict = {}
 
 
-def update(u: Dict[str, Any]):
+def update(u: dict[str, Any]):
     update_dict(nondefault_config, u)
     return update_dict(globals(), u)
 
 
-def get_cov_thresholds(config_key: str) -> Tuple[List[int], List[int]]:
+def get_cov_thresholds(config_key: str) -> tuple[list[int], list[int]]:
     """
     Reads coverage thresholds from the config, otherwise sets sensible defaults. Useful for modules like mosdepth, qualimap (BamQC), ngsbits
     """

@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any KAT dist analysis reports
-        self.kat_data = dict()
+        self.kat_data = {}
         for f in self.find_log_files("kat"):
             s_name = self.clean_s_name(f["s_name"].replace(".dist_analysis", ""), f)
             content = json.loads(f["f"])

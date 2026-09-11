@@ -5,8 +5,10 @@ Better validation of configs. Build on top of Pydantic, but prints more helpful 
 import inspect
 import logging
 import re
+import types
+import typing
 from collections import defaultdict
-from typing import Any, Dict, Set, Tuple
+from typing import Any
 
 from PIL import ImageColor
 from pydantic import BaseModel
@@ -27,8 +29,8 @@ class ModuleConfigValidationError(Exception):
         super().__init__()
 
 
-_errors_by_cfg_path: Dict[Tuple[str, ...], Set[str]] = defaultdict(set)
-_warnings_by_cfg_path: Dict[Tuple[str, ...], Set[str]] = defaultdict(set)
+_errors_by_cfg_path: dict[tuple[str, ...], set[str]] = defaultdict(set)
+_warnings_by_cfg_path: dict[tuple[str, ...], set[str]] = defaultdict(set)
 
 
 def get_current_module_name() -> str:
@@ -40,18 +42,18 @@ def get_current_module_name() -> str:
     return ""
 
 
-def add_validation_error(path_in_cfg: Tuple[str, ...], error: str):
+def add_validation_error(path_in_cfg: tuple[str, ...], error: str):
     _errors_by_cfg_path[path_in_cfg].add(error)
 
 
-def add_validation_warning(path_in_cfg: Tuple[str, ...], warning: str):
+def add_validation_warning(path_in_cfg: tuple[str, ...], warning: str):
     _warnings_by_cfg_path[path_in_cfg].add(warning)
 
 
 # To avoid cluttering stdout with duplicated messages
 collapse_repeated_messages = False
-_printed_errors: Set[str] = set()
-_printed_warnings: Set[str] = set()
+_printed_errors: set[str] = set()
+_printed_warnings: set[str] = set()
 
 
 def reset():
@@ -81,7 +83,7 @@ def _print_error(msg: str):
     logger.error(msg)
 
 
-def _print_large_dict(data: Dict[str, Any]) -> str:
+def _print_large_dict(data: dict[str, Any]) -> str:
     """
     Print a large dict - recursively find all large sub-dicts and sub-lists and print only first 10 items of each
     """
@@ -111,7 +113,7 @@ class ValidatedConfig(BaseModel):
     reference where exactly the error happened in error messages in nested configs
     """
 
-    def __init__(self, path_in_cfg: Tuple[str, ...], **data: Any):
+    def __init__(self, path_in_cfg: tuple[str, ...], **data: Any):
         # Format original data for concise error messages
         formatted_data = _print_large_dict(data)
 
@@ -159,9 +161,9 @@ class ValidatedConfig(BaseModel):
         super().__init__(**data)
 
     @classmethod
-    def validate_fields(cls, path_in_cfg: Tuple[str, ...], values: Dict[str, Any]) -> Dict[str, Any]:
+    def validate_fields(cls, path_in_cfg: tuple[str, ...], values: dict[str, Any]) -> dict[str, Any]:
         # Remove underscores from field names (used for names matching reserved keywords, e.g. from_)
-        for k in cls.model_fields.keys():
+        for k in cls.model_fields:
             if k.endswith("_") and k[:-1] in values:
                 values[k] = values.pop(k[:-1])
 
@@ -182,7 +184,7 @@ class ValidatedConfig(BaseModel):
         values = filtered_values
 
         # Convert deprecated fields
-        values_without_deprecateds: Dict[str, Any] = {}
+        values_without_deprecateds: dict[str, Any] = {}
         for name, val in values.items():
             new_name = cls.model_fields[name].deprecated
             if isinstance(new_name, str) and new_name not in values:
@@ -194,13 +196,12 @@ class ValidatedConfig(BaseModel):
 
         # Check missing fields
         for name, field in cls.model_fields.items():
-            if field.is_required():
-                if name not in values:
-                    add_validation_error(path_in_cfg + (name,), "missing required field")
-                    try:
-                        values[name] = field.annotation() if field.annotation else None
-                    except TypeError:
-                        values[name] = None
+            if field.is_required() and name not in values:
+                add_validation_error(path_in_cfg + (name,), "missing required field")
+                try:
+                    values[name] = field.annotation() if field.annotation else None
+                except TypeError:
+                    values[name] = None
 
         # Check types and validate specific fields
         corrected_values = {}
@@ -228,11 +229,20 @@ class ValidatedConfig(BaseModel):
                 try:
                     check_type(val, expected_type)
                 except TypeCheckError as e:
+                    annotation = expected_type
                     try:  # try casting to expected type?
-                        if expected_type is not None:
-                            if expected_type.__name__ in ["Optional", "Union"]:
-                                expected_type = expected_type.__args__[0]
+                        # Unwrap Optional/Union to its first member before casting.
+                        # Checked with get_origin() rather than __name__: a PEP 604
+                        # union (`str | None`) is a types.UnionType on Python 3.10 to
+                        # 3.13 and has no __name__ at all, so name sniffing would raise
+                        # AttributeError here and silently skip the cast.
+                        if typing.get_origin(expected_type) in (typing.Union, types.UnionType):
+                            expected_type = typing.get_args(expected_type)[0]
                         val = expected_type(val)  # type: ignore
+                        # A parameterised generic such as list[Literal["xaxis"]] is
+                        # callable and builds a list of invalid members without
+                        # complaining, so check the cast value really does fit
+                        check_type(val, annotation)
                     except Exception:
                         v_str = repr(val)
                         if len(v_str) > 20:
@@ -253,7 +263,7 @@ class ValidatedConfig(BaseModel):
     def parse_color(
         cls,
         val,
-        path_in_cfg: Tuple[str, ...],
+        path_in_cfg: tuple[str, ...],
     ):
         if val is None:
             return None

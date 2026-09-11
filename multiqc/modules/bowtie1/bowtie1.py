@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Bowtie reports
-        self.bowtie_data = dict()
+        self.bowtie_data = {}
         for f in self.find_log_files("bowtie1"):
             self.parse_bowtie_logs(f)
 

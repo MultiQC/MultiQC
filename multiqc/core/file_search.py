@@ -2,10 +2,9 @@ import glob
 import logging
 import os.path
 from pathlib import Path
-from typing import Dict, List, Tuple
 
-from multiqc.core.exceptions import RunError, NoAnalysisFound
 from multiqc import config, report
+from multiqc.core.exceptions import NoAnalysisFound, RunError
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +55,7 @@ def _make_analysis_file_list():
         logger.info(f"Search path: {os.path.abspath(p)}")
 
 
-def include_or_exclude_modules(module_names: List[str]) -> List[str]:
+def include_or_exclude_modules(module_names: list[str]) -> list[str]:
     """
     Apply config.run_modules and config.exclude_modules filters
     """
@@ -84,7 +83,7 @@ def include_or_exclude_modules(module_names: List[str]) -> List[str]:
     return module_names
 
 
-def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
+def _module_list_to_search() -> tuple[list[dict[str, dict]], list[str]]:
     """
     Get the list of modules we want to run, in the order that we want them.
 
@@ -92,20 +91,20 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     """
 
     # Build initial list from report.module_order and config.top_modules
-    mod_dicts_in_order: List[Dict[str, Dict]] = [
-        m for m in report.top_modules if list(m.keys())[0] in config.avail_modules.keys()
+    mod_dicts_in_order: list[dict[str, dict]] = [
+        m for m in report.top_modules if next(iter(m.keys())) in config.avail_modules
     ]
 
-    mod_order_keys = set(list(m.keys())[0] for m in report.module_order)
+    mod_order_keys = {next(iter(m.keys())) for m in report.module_order}
     mod_dicts_in_order.extend(
-        [{m: {}} for m in config.avail_modules.keys() if m not in mod_order_keys and m not in mod_dicts_in_order]
+        [{m: {}} for m in config.avail_modules if m not in mod_order_keys and m not in mod_dicts_in_order]
     )
     mod_dicts_in_order.extend(
         [
             m
             for m in report.module_order
-            if list(m.keys())[0] in config.avail_modules.keys()
-            and list(m.keys())[0] not in [list(rm.keys())[0] for rm in mod_dicts_in_order]
+            if next(iter(m.keys())) in config.avail_modules
+            and next(iter(m.keys())) not in [next(iter(rm.keys())) for rm in mod_dicts_in_order]
         ]
     )
 
@@ -114,8 +113,8 @@ def _module_list_to_search() -> Tuple[List[Dict[str, Dict]], List[str]]:
     if "software_versions" not in mod_order_keys:
         mod_dicts_in_order.append({"software_versions": {}})
 
-    mod_ids = include_or_exclude_modules([list(m.keys())[0] for m in mod_dicts_in_order])
-    mod_dicts_in_order = [m for m in mod_dicts_in_order if list(m.keys())[0] in mod_ids]
+    mod_ids = include_or_exclude_modules([next(iter(m.keys())) for m in mod_dicts_in_order])
+    mod_dicts_in_order = [m for m in mod_dicts_in_order if next(iter(m.keys())) in mod_ids]
     if len(mod_dicts_in_order) == 0:
         raise RunError("No analysis modules specified!")
     assert len(mod_dicts_in_order) == len(mod_ids)

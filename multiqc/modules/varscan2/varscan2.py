@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load VarScan2 reports - there are 3 different ones, but all with identical content (differentiated by header)
-        self.varscan2_data = dict()
+        self.varscan2_data = {}
         for f in self.find_log_files("varscan2/mpileup2snp", filehandles=True):
             parsed_data = self.parse_varscan(f)
             s_name = self.clean_s_name(parsed_data["sample_name"], f)
@@ -92,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
     # Total variants = SNPs + Indels
     def parse_varscan(self, f):
         """Parse a VarScan2 report"""
-        parsed = dict()
+        parsed = {}
         regexes = {
             "sample_name": r"(?:Reading input from )(\w+.+)",
             "min_coverage": r"(?:Min coverage:)\s(\d+)",

@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # dictionary to hold all data for each sample
-        self.verifybamid_data = dict()
+        self.verifybamid_data = {}
 
         # for each file ending in self.SM
         for f in self.find_log_files("verifybamid/selfsm"):
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_selfsm(self, f):
         """Go through selfSM file and create a dictionary with the sample name as a key,"""
         # create a dictionary to populate from this sample's file
-        parsed_data = dict()
+        parsed_data = {}
         # set a empty variable which denotes if the headers have been read
         headers = None
         # for each line in the file
@@ -172,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Take the percentage of contamination from all the parsed *.SELFSM files and add it to the basic stats table at the top of the report"""
 
         # create a dictionary to hold the columns to add to the general stats table
-        headers = dict()
+        headers = {}
         # available columns are:
         # SEQ_ID RG  CHIP_ID #SNPS   #READS  AVG_DP  FREEMIX FREELK1 FREELK0 FREE_RH FREE_RA CHIPMIX CHIPLK1 CHIPLK0 CHIP_RH CHIP_RA DPREF   RDPHET  RDPALT
         # see https://genome.sph.umich.edu/wiki/VerifyBamID#Interpreting_output_files
@@ -181,19 +181,15 @@ class MultiqcModule(BaseMultiqcModule):
         if not self.hide_chip_columns:
             headers["CHIPMIX"] = dict(
                 self.col_config_defaults,
-                **{
-                    "title": "Contamination (S+A)",
-                    "description": "VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)",
-                },
+                title="Contamination (S+A)",
+                description="VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)",
             )
 
         # add the FREEMIX column. set the title and description
         headers["FREEMIX"] = dict(
             self.col_config_defaults,
-            **{
-                "title": "Contamination (S)",
-                "description": "VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.",
-            },
+            title="Contamination (S)",
+            description="VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.",
         )
 
         # pass the data dictionary and header dictionary to function to add to table.
@@ -205,12 +201,12 @@ class MultiqcModule(BaseMultiqcModule):
         """
 
         # create an ordered dictionary to preserve the order of columns
-        headers = dict()
+        headers = {}
         # add each column and the title and description (taken from verifyBAMID website)
         headers["RG"] = {
             "title": "Read Group",
             "description": "ReadGroup ID of sequenced lane.",
-            "hidden": all([s["RG"] == "ALL" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["RG"] == "ALL" for s in self.verifybamid_data.values()),
         }
         if not self.hide_chip_columns:
             headers["CHIP_ID"] = {"title": "Chip ID", "description": "ReadGroup ID of sequenced lane."}
@@ -240,10 +236,8 @@ class MultiqcModule(BaseMultiqcModule):
         # use default columns
         headers["FREEMIX"] = dict(
             self.col_config_defaults,
-            **{
-                "title": "Contamination (Seq)",
-                "description": "VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.",
-            },
+            title="Contamination (Seq)",
+            description="VerifyBamID: FREEMIX -   Sequence-only estimate of contamination.",
         )
         headers["FREELK1"] = {
             "title": "FREEELK1",
@@ -262,22 +256,20 @@ class MultiqcModule(BaseMultiqcModule):
         headers["FREE_RH"] = {
             "title": "FREE_RH",
             "description": "Estimated reference bias parameter Pr(refBase|HET) (when --free-refBias or --free-full is used)",
-            "hidden": all([s["FREE_RH"] == "NA" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["FREE_RH"] == "NA" for s in self.verifybamid_data.values()),
         }
         headers["FREE_RA"] = {
             "title": "FREE_RA",
             "description": "Estimated reference bias parameter Pr(refBase|HOMALT) (when --free-refBias or --free-full is used)",
-            "hidden": all([s["FREE_RA"] == "NA" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["FREE_RA"] == "NA" for s in self.verifybamid_data.values()),
         }
 
         # Only print Chip columns to the report if we have data
         if not self.hide_chip_columns:
             headers["CHIPMIX"] = dict(
                 self.col_config_defaults,
-                **{
-                    "title": "Contamination S+A",
-                    "description": "VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)",
-                },
+                title="Contamination S+A",
+                description="VerifyBamID: CHIPMIX -   Sequence+array estimate of contamination (NA if the external genotype is unavailable)",
             )
             headers["CHIPLK1"] = {
                 "title": "CHIPLK1",
@@ -299,17 +291,17 @@ class MultiqcModule(BaseMultiqcModule):
         headers["DPREF"] = {
             "title": "DPREF",
             "description": "Depth (Coverage) of HomRef site (based on the genotypes of (SELF_SM/BEST_SM), passing mapQ, baseQual, maxDepth thresholds.",
-            "hidden": all([s["DPREF"] == "NA" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["DPREF"] == "NA" for s in self.verifybamid_data.values()),
         }
         headers["RDPHET"] = {
             "title": "RDPHET",
             "description": "DPHET/DPREF, Relative depth to HomRef site at Heterozygous site.",
-            "hidden": all([s["RDPHET"] == "NA" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["RDPHET"] == "NA" for s in self.verifybamid_data.values()),
         }
         headers["RDPALT"] = {
             "title": "RDPALT",
             "description": "DPHET/DPREF, Relative depth to HomRef site at HomAlt site.",
-            "hidden": all([s["RDPALT"] == "NA" for s in self.verifybamid_data.values()]),
+            "hidden": all(s["RDPALT"] == "NA" for s in self.verifybamid_data.values()),
         }
 
         tconfig = {

@@ -3,10 +3,8 @@
 import logging
 from html import escape
 from textwrap import dedent
-from typing import Dict, List, Optional
 
-from multiqc import config
-from multiqc import report
+from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.types import Anchor, SoftwareVersionMetadata
 from multiqc.utils.material_icons import get_material_icon
@@ -15,7 +13,7 @@ from multiqc.utils.material_icons import get_material_icon
 log = logging.getLogger(__name__)
 
 
-def _license_html(meta: Optional[SoftwareVersionMetadata]) -> str:
+def _license_html(meta: SoftwareVersionMetadata | None) -> str:
     """Render the License table cell, linking the license name to its URL if available."""
     if meta is None or (not meta.license and not meta.license_url):
         return ""
@@ -25,7 +23,7 @@ def _license_html(meta: Optional[SoftwareVersionMetadata]) -> str:
     return str(label)
 
 
-def _doi_html(meta: Optional[SoftwareVersionMetadata]) -> str:
+def _doi_html(meta: SoftwareVersionMetadata | None) -> str:
     """Render the DOI table cell as one or more links to doi.org."""
     if meta is None or not meta.doi:
         return ""
@@ -51,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(name=None, content=content)
 
     @staticmethod
-    def _make_versions_html(versions: Dict[str, Dict[str, List[str]]]) -> str:
+    def _make_versions_html(versions: dict[str, dict[str, list[str]]]) -> str:
         """Generate a tabular HTML output of all versions."""
         table_id = report.save_htmlid("mqc_versions_table")
         metadata = report.software_versions_metadata
@@ -59,7 +57,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Check if the Group column is identical to Software column
         groups_rows = []
         software_rows = []
-        group_versions: Dict[str, List[str]]
+        group_versions: dict[str, list[str]]
         for group, group_versions in sorted(versions.items()):
             for tool, _ in sorted(group_versions.items()):
                 groups_rows.append(group)
@@ -103,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
         ]
         for group, group_versions in sorted(versions.items()):
             html.append("<tbody>")
-            tool_versions: List[str]
+            tool_versions: list[str]
             for i, (tool, tool_versions) in enumerate(sorted(group_versions.items())):
                 meta = metadata.get(group, {}).get(tool)
                 # Tool names and versions are parsed from tool output, so escape them
@@ -128,14 +126,14 @@ class MultiqcModule(BaseMultiqcModule):
         Write software versions to a file for downstream use
         """
         # Get rid of the default dicts and Version objects
-        clean_software_versions: Dict[str, Dict[str, List[str]]] = {
+        clean_software_versions: dict[str, dict[str, list[str]]] = {
             group: {software: list(map(str, svs)) for software, svs in versions.items()}
             for group, versions in report.software_versions.items()
         }
 
         # TSV only allows 2 levels of nesting.
         if config.data_format == "tsv":
-            flat_software_versions: Dict[str, Dict[str, str]] = {
+            flat_software_versions: dict[str, dict[str, str]] = {
                 group: {software: ", ".join(svs) for software, svs in versions.items()}
                 for group, versions in clean_software_versions.items()
             }

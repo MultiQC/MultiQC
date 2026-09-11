@@ -7,14 +7,14 @@ Usage:
 """
 
 import json
-from typing import Dict
-import yaml
-from markdownify import markdownify
+import subprocess
 from pathlib import Path
 from textwrap import dedent
-import subprocess
 
-from multiqc import config, report, BaseMultiqcModule
+import yaml
+from markdownify import markdownify
+
+from multiqc import BaseMultiqcModule, config, report
 
 
 def main():
@@ -26,7 +26,7 @@ def main():
     OUTPUT_PATH = Path("docs")
 
     # Load search patterns
-    sp_by_mod: Dict[str, Dict] = dict()
+    sp_by_mod: dict[str, dict] = {}
     with (Path(config.MODULE_DIR) / "search_patterns.yaml").open() as f:
         for k, v in yaml.safe_load(f).items():
             mod_id = k.split("/")[0]
@@ -152,7 +152,7 @@ If you would like another tool to to be supported, please [open an issue](https:
 import MultiqcModules from "@site/src/components/MultiqcModules";
 
 <MultiqcModules
-modules={{{str(json.dumps(modules_data))}}}
+modules={{{json.dumps(modules_data)!s}}}
 />
 """
         )

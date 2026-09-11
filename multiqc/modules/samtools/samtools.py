@@ -134,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/samtools/samtools/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
 
         # Call submodule functions
         n["ampliconclip"] = parse_samtools_ampliconclip(self)

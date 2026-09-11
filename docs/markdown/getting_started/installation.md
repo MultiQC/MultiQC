@@ -77,7 +77,7 @@ docker run -t -v `pwd`:`pwd` -w `pwd` multiqc/multiqc multiqc .
 MultiQC is written in Python and needs a Python installation to run.
 
 To run MultiQC manually install, you'll typically install it into a local Python environment.
-MultiQC requires Python version 3.9 or above.
+MultiQC requires Python version 3.10 or above.
 
 :::tip
 If you use [uv](#uv) to install MultiQC, you don't need to install Python separately — uv automatically downloads and manages Python for you.
@@ -116,7 +116,7 @@ uv python install 3.13
 ### Python with Conda
 
 To see if you have python installed, run `python --version` on the command line.
-MultiQC needs Python version 3.9+.
+MultiQC needs Python version 3.10+.
 
 We recommend using virtual environments to manage your Python installation.
 Our favourite is _conda_, a cross-platform tool to manage Python environments.
@@ -463,6 +463,7 @@ the `multiqc.run()` function as follows:
 
 ```python
 import multiqc
+
 multiqc.run("/path/to/dir")
 ```
 

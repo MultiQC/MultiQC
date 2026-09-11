@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs (txt files)
-        self.bakta = dict()
+        self.bakta = {}
         for f in self.find_log_files("bakta"):
             self.bakta[f["s_name"]] = self.parse_bakta(f)
             self.add_data_source(f)

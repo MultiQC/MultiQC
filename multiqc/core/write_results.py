@@ -1,7 +1,6 @@
 import base64
 import dataclasses
 import errno
-import io
 import logging
 import os
 import re
@@ -12,7 +11,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import cast
 
 import jinja2
 
@@ -26,8 +25,8 @@ from multiqc.plots.plot import Plot, process_batch_exports
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor
 from multiqc.utils import util_functions
-from multiqc.utils.util_functions import rmtree_with_retries
 from multiqc.utils.material_icons import get_material_icon
+from multiqc.utils.util_functions import rmtree_with_retries
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +50,9 @@ class OutputPaths:
 
     to_stdout: bool = False
 
-    report_path: Optional[Path] = None
-    data_dir: Optional[Path] = None
-    plots_dir: Optional[Path] = None
+    report_path: Path | None = None
+    data_dir: Path | None = None
+    plots_dir: Path | None = None
 
     data_dir_overwritten: bool = False
     plots_dir_overwritten: bool = False
@@ -81,7 +80,7 @@ def get_image_mime_type(path: str) -> str:
     return mime_types[ext]
 
 
-def write_results(return_html: bool = False) -> Optional[str]:
+def write_results(return_html: bool = False) -> str | None:
     plugin_hooks.mqc_trigger("before_report_generation")
 
     # Did we find anything?
@@ -362,7 +361,7 @@ def render_and_export_plots(plots_dir_name: str):
     )
 
 
-def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
+def _render_general_stats_table(plots_dir_name: str) -> Plot | None:
     """
     Construct HTML for the general stats table.
     """
@@ -491,7 +490,7 @@ def _move_exported_plots(plots_dir: Path):
         logger.warning(f"Couldn't remove plots tmp dir: {e}")
 
 
-def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html: bool = False) -> Optional[str]:
+def _write_html_report(to_stdout: bool, report_path: Path | None, return_html: bool = False) -> str | None:
     """
     Render and write report HTML to disk
     """
@@ -550,18 +549,18 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     )
 
     # Function to include file contents in Jinja template
-    def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):
+    def include_file(name, fdir=tmp_dir.get_tmp_dir(), b64=False):  # noqa: B008 - tmp dir is fixed for the run
         try:
             if fdir is None:
                 fdir = ""
             _path: str = os.path.join(fdir, name)
 
             if config.development:
-                if os.path.exists(dev_path := os.path.join(template_mod.template_dir, name)):
-                    fdir = template_mod.template_dir
-                    name = dev_path
-                    _path = dev_path
-                elif parent_template and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name)):
+                if (
+                    os.path.exists(dev_path := os.path.join(template_mod.template_dir, name))
+                    or parent_template
+                    and os.path.exists(dev_path := os.path.join(parent_template.template_dir, name))
+                ):
                     fdir = template_mod.template_dir
                     name = dev_path
                     _path = dev_path
@@ -582,7 +581,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
             else:
                 with open(_path, "r", encoding="utf-8") as f:
                     return f.read()
-        except (OSError, IOError) as e:
+        except OSError as e:
             logger.error(f"Could not include file '{name}': {e}")
 
     # Load the report template
@@ -601,7 +600,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
 
         j_template = env.get_template(template_mod.base_fn, globals={"development": config.development})
     except:  # noqa: E722
-        raise IOError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
+        raise OSError(f"Could not load {config.template} template file '{template_mod.base_fn}'")
 
     # Compress the report plot JSON data
     runtime_compression_start = time.time()
@@ -627,8 +626,8 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
         try:
             with open(report_path, "w", encoding="utf-8") as f:
                 print(report_output, file=f)
-        except IOError as e:
-            raise IOError(f"Could not print report to '{config.output_fn}' - {IOError(e)}")
+        except OSError as e:
+            raise OSError(f"Could not print report to '{config.output_fn}' - {OSError(e)}")
 
         # Copy over files if requested by the theme
         try:
@@ -643,7 +642,7 @@ def _write_html_report(to_stdout: bool, report_path: Optional[Path], return_html
     return report_output if return_html else None
 
 
-def _write_pdf(report_path: Path) -> Optional[Path]:
+def _write_pdf(report_path: Path) -> Path | None:
     pdf_path = report_path.with_suffix(".pdf")
     pandoc_call = [
         "pandoc",

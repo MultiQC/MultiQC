@@ -3,7 +3,6 @@ Tests for discovering and excluding files
 """
 
 from pathlib import Path
-from typing import Dict, Set, Union
 
 import pytest
 import yaml
@@ -32,10 +31,10 @@ def reset_config():
 
 
 def _test_search_files(
-    search_patterns: Dict,
+    search_patterns: dict,
     analysis_dir: Path,
-    extra_config: Dict,
-    expected_paths_by_module: Dict[str, Set[Union[Path, str]]],
+    extra_config: dict,
+    expected_paths_by_module: dict[str, set[Path | str]],
 ):
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())
@@ -47,8 +46,8 @@ def _test_search_files(
 
     file_search()
 
-    expected = {m: set(str(p) for p in paths) for m, paths in expected_paths_by_module.items()}
-    found = {m: set(f["fn"] for f in files) for m, files in report.files.items()}
+    expected = {m: {str(p) for p in paths} for m, paths in expected_paths_by_module.items()}
+    found = {m: {f["fn"] for f in files} for m, files in report.files.items()}
     assert found == expected
 
 
@@ -215,7 +214,7 @@ metric3: 321
 """
     )
 
-    sp_patterns: Dict = yaml.safe_load(
+    sp_patterns: dict = yaml.safe_load(
         """
 tool1:
   - contents:

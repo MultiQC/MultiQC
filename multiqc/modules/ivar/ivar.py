@@ -26,8 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load iVar trim results
-        self.ivar_data = dict()
-        self.ivar_primers = dict()
+        self.ivar_data = {}
+        self.ivar_primers = {}
         for f in self.find_log_files("ivar/trim", filehandles=True):
             self.parse_ivar(f)
 
@@ -71,8 +71,8 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         }
         primer_regex = re.compile(r"^(.*)(?:\t+)(\d+$)")
-        parsed_data = dict()
-        primers = dict()
+        parsed_data = {}
+        primers = {}
         for line in f["f"]:
             # Search count regexes for stats
             for k, count_regex in count_regexes.items():
@@ -103,9 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "reads_too_short_after_trimming": {
                 "title": f"{config.read_count_prefix} Too short",
-                "description": "Number of reads too short (<30bp) after primer trimming ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Number of reads too short (<30bp) after primer trimming ({config.read_count_desc})",
                 "scale": "OrRd",
                 "shared_key": "read_counts",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -119,9 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "trimmed_reads": {
                 "title": f"{config.read_count_prefix} Primer trimmed",
-                "description": "Total number of reads where primer trimming was performed. ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Total number of reads where primer trimming was performed. ({config.read_count_desc})",
                 "scale": "Purples",
                 "shared_key": "read_counts",
                 "modify": lambda x: x * config.read_count_multiplier,

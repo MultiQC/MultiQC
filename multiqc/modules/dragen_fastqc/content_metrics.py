@@ -4,9 +4,9 @@ import json
 import logging
 from collections import defaultdict
 
+from multiqc import report
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
-from multiqc import report
 from multiqc.utils.material_icons import get_material_icon
 
 from .util import average_from_range, average_pos_from_metric
@@ -32,7 +32,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
     def n_content_plot(self):
         """Create the HTML for the per base N content plot"""
-        data = dict()
+        data = {}
         GROUP = "POSITIONAL BASE CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
@@ -50,7 +50,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
                 # Convert Total and Non-N counts into N%
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
                 for pos, count in totals.items():
                     if count == 0:
                         continue
@@ -61,7 +61,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("per_base_n_content not found in DRAGEN FastQC reports")
-            return None
+            return
 
         pconfig = {
             "id": "dragenqc_per_base_n_content_plot",
@@ -101,12 +101,12 @@ class DragenContentMetrics(BaseMultiqcModule):
         """Create the epic HTML for the FastQC sequence content heatmap"""
 
         # Prep the data
-        data = dict()
+        data = {}
         GROUP = "POSITIONAL BASE CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
                 group_data = self.dragen_fastqc_data[s_name][mate][GROUP]
 
                 totals = defaultdict(int)
@@ -117,7 +117,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     base = parts[-2].lower()
 
                     if avg_pos not in data[r_name]:
-                        data[r_name][avg_pos] = dict()
+                        data[r_name][avg_pos] = {}
 
                     # Store the current count and add it to the total
                     data[r_name][avg_pos][base] = value
@@ -137,7 +137,7 @@ class DragenContentMetrics(BaseMultiqcModule):
 
         if len(data) == 0:
             log.debug("sequence_content not found in FastQC reports")
-            return None
+            return
 
         html = """<div id="dragen_fastqc_per_base_sequence_content_plot_div">
             <div class="alert alert-info">
@@ -201,7 +201,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         """Create the epic HTML for the FastQC adapter content plot"""
 
         # Prep the data
-        data = dict()
+        data = {}
         COUNT_GROUP = "POSITIONAL BASE CONTENT"
         ADP_GROUP = "SEQUENCE POSITIONS"
         for s_name in sorted(self.dragen_fastqc_data):
@@ -226,7 +226,7 @@ class DragenContentMetrics(BaseMultiqcModule):
                     adps[pos] += int(value)
 
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
                 cumsum = 0
                 for pos, adp_count in sorted(adps.items()):
                     total = totals[pos]

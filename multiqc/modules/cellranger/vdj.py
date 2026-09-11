@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.cellranger.utils import clean_title_case, parse_bcknee_data, set_hidden_cols, update_dict
@@ -16,16 +15,16 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
     """
     Cell Ranger count report parser
     """
-    mapping_by_sample: Dict[str, Dict] = dict()
-    annotations_by_sample: Dict[str, Dict] = dict()
-    general_data_by_sample: Dict[str, Dict] = dict()
-    warnings_by_sample: Dict[str, Dict] = dict()
-    plots_params_by_id: Dict[str, Dict] = {"bc": dict(), "genes": dict()}
-    plots_data_by_sample_by_id: Dict[str, Dict] = {"bc": dict(), "genes": dict()}
-    general_data_headers: Dict[str, Dict] = dict()
-    mapping_headers: Dict[str, Dict] = dict()
-    annotations_headers: Dict[str, Dict] = dict()
-    vdj_warnings_headers: Dict[str, Dict] = dict()
+    mapping_by_sample: dict[str, dict] = {}
+    annotations_by_sample: dict[str, dict] = {}
+    general_data_by_sample: dict[str, dict] = {}
+    warnings_by_sample: dict[str, dict] = {}
+    plots_params_by_id: dict[str, dict] = {"bc": {}, "genes": {}}
+    plots_data_by_sample_by_id: dict[str, dict] = {"bc": {}, "genes": {}}
+    general_data_headers: dict[str, dict] = {}
+    mapping_headers: dict[str, dict] = {}
+    annotations_headers: dict[str, dict] = {}
+    vdj_warnings_headers: dict[str, dict] = {}
 
     for f in module.find_log_files("cellranger/vdj_html", filehandles=True):
         mydict = None
@@ -55,7 +54,7 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
         except (KeyError, AssertionError):
             log.debug(f"Unable to parse version for sample {s_name}")
 
-        data_general_stats: Dict[str, Dict] = dict()
+        data_general_stats: dict[str, dict] = {}
 
         # Store general stats from cells and sequencing tables
         col_dict = {
@@ -157,7 +156,7 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
             data_annotations = None
 
         # Extract warnings if any
-        warnings = dict()
+        warnings = {}
         alarms_list = mydict["alarms"].get("alarms", [])
         for alarm in alarms_list:
             warnings[alarm["id"]] = "FAIL"
@@ -196,17 +195,17 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
             if len(warnings) > 0:
                 warnings_by_sample[s_name] = warnings
             plots_params_by_id = plots
-            for k in plots_data.keys():
-                if k not in plots_data_by_sample_by_id.keys():
-                    plots_data_by_sample_by_id[k] = dict()
-                plots_data_by_sample_by_id[k].update(plots_data[k])
+            for k, sample_data in plots_data.items():
+                if k not in plots_data_by_sample_by_id:
+                    plots_data_by_sample_by_id[k] = {}
+                plots_data_by_sample_by_id[k].update(sample_data)
 
     mapping_by_sample = module.ignore_samples(mapping_by_sample)
     annotations_by_sample = module.ignore_samples(annotations_by_sample)
     general_data_by_sample = module.ignore_samples(general_data_by_sample)
     warnings_by_sample = module.ignore_samples(warnings_by_sample)
-    for k in plots_data_by_sample_by_id.keys():
-        plots_data_by_sample_by_id[k] = module.ignore_samples(plots_data_by_sample_by_id[k])
+    for k, sample_data in plots_data_by_sample_by_id.items():
+        plots_data_by_sample_by_id[k] = module.ignore_samples(sample_data)
 
     general_data_headers["reads"] = {
         "title": f"{config.read_count_prefix} Reads",
@@ -262,7 +261,7 @@ def parse_vdj_html(module: BaseMultiqcModule) -> int:
     if len(general_data_by_sample) == 0:
         return 0
 
-    for k in general_data_headers.keys():
+    for k in general_data_headers:
         general_data_headers[k]["title"] = f"{general_data_headers[k]['title']} (VDJ)"
         general_data_headers[k]["description"] = f"{general_data_headers[k]['description']} (VDJ)"
 

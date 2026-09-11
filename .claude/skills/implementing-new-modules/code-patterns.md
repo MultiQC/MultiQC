@@ -39,6 +39,7 @@ def parse_key_value_report(file_content: str) -> Dict:
 ```python
 import json
 
+
 def parse_json_report(file_content: str) -> Dict:
     """Parse JSON format output."""
     try:
@@ -103,7 +104,7 @@ table_headers = {
     "column1": {
         "title": "Column 1",
         "description": "Description",
-        "format": "{:,.0f}", # Only needed for integers
+        "format": "{:,.0f}",  # Only needed for integers
         "scale": "Blues",
     },
     # ... more columns
@@ -162,10 +163,7 @@ module.add_section(
 from multiqc.plots import linegraph
 
 # Data format: {sample: {x1: y1, x2: y2, ...}}
-line_data = {
-    s_name: {pos: val for pos, val in enumerate(d.get("values", []))}
-    for s_name, d in data.items()
-}
+line_data = {s_name: {pos: val for pos, val in enumerate(d.get("values", []))} for s_name, d in data.items()}
 
 module.add_section(
     name="Distribution",
@@ -202,10 +200,10 @@ title case with spaces:
 
 ```python
 # Bad: dict key passed straight through
-pconfig={"title": "total_counts", "ylab": "pct_dup"}
+pconfig = {"title": "total_counts", "ylab": "pct_dup"}
 
 # Good: rendered for humans
-pconfig={"title": "Total Counts", "ylab": "% Duplicates"}
+pconfig = {"title": "Total Counts", "ylab": "% Duplicates"}
 ```
 
 The same applies to `add_section(name=...)` — `"Adapter Trimming"`, not

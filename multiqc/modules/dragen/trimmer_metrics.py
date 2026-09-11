@@ -1,5 +1,3 @@
-from typing import Dict
-
 import logging
 from collections import defaultdict
 
@@ -11,7 +9,7 @@ log = logging.getLogger(__name__)
 
 class DragenTrimmerMetrics(BaseMultiqcModule):
     def add_trimmer_metrics(self):
-        data_by_sample = dict()
+        data_by_sample = {}
 
         for f in self.find_log_files("dragen/trimmer_metrics"):
             data = parse_trimmer_metrics_file(f)
@@ -53,11 +51,11 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
         return data_by_sample.keys()
 
     @staticmethod
-    def __get_table_data(data_by_sample: Dict) -> Dict:
+    def __get_table_data(data_by_sample: dict) -> dict:
         ANALYSIS = "TRIMMER STATISTICS"
         trimmer_data = {}
         for sample, data in data_by_sample.items():
-            trimmer_data[sample] = {metric: stat for metric, stat in data[ANALYSIS].items()}
+            trimmer_data[sample] = dict(data[ANALYSIS].items())
         return trimmer_data
 
 

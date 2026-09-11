@@ -24,10 +24,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Init empty dictionaries
-        self.threepGtoAfreq_data = dict()
-        self.fivepCtoTfreq_data = dict()
-        self.lgdist_fw_data = dict()
-        self.lgdist_rv_data = dict()
+        self.threepGtoAfreq_data = {}
+        self.fivepCtoTfreq_data = {}
+        self.lgdist_fw_data = {}
+        self.lgdist_rv_data = {}
 
         # Find and load log files
         for f in self.find_log_files("mapdamage", filehandles=True):
@@ -123,7 +123,7 @@ class MultiqcModule(BaseMultiqcModule):
         try:
             for line in f["f"]:
                 ## Skip commented lines and header
-                if line.startswith("#") or line.startswith("Std"):
+                if line.startswith(("#", "Std")):
                     continue
                 else:
                     ## Lines are tab-separated, first column is strand, second column is read length, third column is count
@@ -145,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Get sample name from result directory name
         ## Remove the *results_ prefix from the sample name if it is there.
-        s_name = self.clean_s_name(f["root"], f, root=os.path.dirname(f["root"])).lstrip("*results_")
+        s_name = self.clean_s_name(f["root"], f, root=os.path.dirname(f["root"])).removeprefix("*results_")
         self.add_data_source(f, s_name)
 
         if f["fn"].endswith("_freq.txt") and f["fn"].startswith("3p"):
@@ -194,14 +194,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Create new small subset dictionary for entries (we need just the first two data (k,v) pairs from each report)
         # Only the first two parts are informative from both 3' and 5' ends of reads (1st, 2nd base damage pattern)
-        dict_to_add = dict()
+        dict_to_add = {}
 
-        for key in dict_to_plot.keys():
+        for key in dict_to_plot:
             tmp = dict_to_plot[key]
             pos = ["mapdamage-" + readend + "1", "mapdamage-" + readend + "2"]
             strlist = tmp[:2]
             tuples = list(zip(pos, strlist))
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             # Extract first two elements from list
             dict_to_add[key] = data
 
@@ -213,7 +213,7 @@ class MultiqcModule(BaseMultiqcModule):
     def lgdistplot(self, dict_to_use, orientation):
         """Generate a read length distribution plot"""
 
-        data = dict()
+        data = {}
         for s_name in dict_to_use:
             try:
                 data[s_name] = {int(d): int(dict_to_use[s_name][d]) for d in dict_to_use[s_name]}
@@ -239,8 +239,8 @@ class MultiqcModule(BaseMultiqcModule):
     def threeprime_plot(self):
         """Generate a 3' G>A linegraph plot"""
 
-        data = dict()
-        dict_to_add = dict()
+        data = {}
+        dict_to_add = {}
         # Create tuples out of entries
         for key in self.threepGtoAfreq_data:
             pos = list(range(1, len(self.threepGtoAfreq_data.get(key))))
@@ -248,7 +248,7 @@ class MultiqcModule(BaseMultiqcModule):
             tmp = [i * 100.0 for i in self.threepGtoAfreq_data.get(key)]
             tuples = list(zip(pos, tmp))
             # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             dict_to_add[key] = data
 
         config = {
@@ -267,15 +267,15 @@ class MultiqcModule(BaseMultiqcModule):
     def fiveprime_plot(self):
         """Generate a 5' C>T linegraph plot"""
 
-        data = dict()
-        dict_to_add = dict()
+        data = {}
+        dict_to_add = {}
         # Create tuples out of entries
         for key in self.fivepCtoTfreq_data:
             pos = list(range(1, len(self.fivepCtoTfreq_data.get(key))))
             tmp = [i * 100.0 for i in self.fivepCtoTfreq_data.get(key)]
             tuples = list(zip(pos, tmp))
             # Get a dictionary out of it
-            data = dict((x, y) for x, y in tuples)
+            data = dict(tuples)
             dict_to_add[key] = data
 
         config = {

@@ -1,6 +1,5 @@
 import csv
 import logging
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -27,8 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and parse the sample files
-        self.pangolin_data = dict()
-        self.lineage_colours = dict()
+        self.pangolin_data = {}
+        self.lineage_colours = {}
         for f in self.find_log_files("pangolin", filehandles=True):
             self.parse_pangolin_log(f)
             for s_name in self.pangolin_data:
@@ -239,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
         return table.plot(self.pangolin_data, headers, table_config)
 
 
-def _format_qc_notes(raw: str) -> Optional[str]:
+def _format_qc_notes(raw: str) -> str | None:
     """
     Parses QC notes, they appear to come from:
     https://github.com/cov-lineages/pangolin/blob/361f49cbffbf26eb28bed2f4a4c0e7f3d5a054cc/pangolin/utils/preprocessing.py#L91-L97
@@ -249,7 +248,7 @@ def _format_qc_notes(raw: str) -> Optional[str]:
         # e.g. Ambiguous_content:0.03
         split = raw.split(":")
         if len(split) != 2:
-            logging.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
+            log.warning(f"Expected label of format 'Ambiguous_content:0.01', found: '{raw}'")
             return None
         proportion_n = float(split[1])
         percent_n = int(proportion_n * 100)

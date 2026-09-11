@@ -38,7 +38,7 @@ dependencies = [
     "pyarrow",            # for parquet support
 ]
 # Avoid cPython bug in 3.14.1 - https://github.com/python/cpython/issues/142214
-requires-python = ">=3.9, !=3.14.1"
+requires-python = ">=3.10, !=3.14.1"
 authors = [
     { name = "Phil Ewels", email = "phil.ewels@seqera.io" },
     { name = "Vlad Savelyev", email = "vladislav.sav@gmail.com" },
@@ -317,8 +317,37 @@ package-data = { multiqc = ["py.typed"] }
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
-lint.ignore = ["F401"]   # unused-import
+# Past release notes are a historical record, so ruff should not reformat the
+# Python snippets in them
+extend-exclude = ["CHANGELOG.md"]
+
+[tool.ruff.lint]
+# Ruff picks its own default rule set, and it grew a great deal in 0.15. Rules
+# turned off below are ones that conflict with a project convention or would be a
+# behaviour change rather than a cleanup. Each is worth revisiting on its own.
+ignore = [
+  "F401",    # unused-import: modules re-export names for the public API
+  "N999",    # module and file names deliberately match the tool or subcommand they
+             # support, so that Picard's MarkDuplicates output leads to
+             # picard/MarkDuplicates.py. Renaming would also break entry points,
+             # search_patterns.yaml keys and the module IDs users pass to --module
+  "BLE001",  # 85 broad `except Exception` handlers. Narrowing them is a behaviour
+             # change per call site, so it gets its own PR
+  "S110",    # try/except/pass. Often legitimate: absent data in a tool's output is
+  "S112",    # expected, not the unexpected-data case the crash-loudly rule is about
+  "SIM102",  # collapsible nested ifs. The remaining sites put a comment on the inner
+             # condition, which a merged `and` chain would strand or lose; ruff declines
+             # to fix them for the same reason
+  "PYI019",  # its fix imports typing_extensions, which is not a dependency. Resolves
+             # itself at 3.11, when `typing.Self` becomes available
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Mutable defaults on pydantic model fields are correct: pydantic copies them per
+# instance. Ruff cannot see the BaseModel inheritance through ValidatedConfig.
+"multiqc/plots/*.py" = ["RUF012"]
+# Naive `datetime.now()` in test fixtures is not worth a timezone
+"tests/*.py" = ["DTZ005"]
 
 [tool.mypy]
 check_untyped_defs = true

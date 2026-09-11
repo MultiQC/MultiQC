@@ -1,10 +1,9 @@
 """MultiQC submodule to parse output from Picard HsMetrics"""
 
 import logging
-from collections import defaultdict
-
 import re
-from typing import Any, Dict, List, Optional, Set, cast
+from collections import defaultdict
+from typing import Any, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
@@ -64,20 +63,20 @@ FIELD_DESCRIPTIONS = {
 }
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     """Find Picard HsMetrics reports and parse their data"""
 
-    data_by_bait_by_sample: Dict[str, Dict[str, Dict[str, Any]]] = dict()
+    data_by_bait_by_sample: dict[str, dict[str, dict[str, Any]]] = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/hsmetrics", filehandles=True):
-        s_name: Optional[str] = f["s_name"]
-        keys: Optional[List[str]] = None
-        commadecimal: Optional[bool] = None
-        baits: Set[str] = set()
+        s_name: str | None = f["s_name"]
+        keys: list[str] | None = None
+        commadecimal: bool | None = None
+        baits: set[str] = set()
 
         for line in f["f"]:
-            maybe_s_name: Optional[str] = util.extract_sample_name(
+            maybe_s_name: str | None = util.extract_sample_name(
                 module,
                 line,
                 f,
@@ -89,10 +88,10 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 keys = None
 
             if util.is_line_right_before_table(line, picard_class="HsMetrics", sentieon_algo="HsMetricAlgo"):
-                keys = cast(List[str], f["f"].readline().strip("\n").split("\t"))
+                keys = cast(list[str], f["f"].readline().strip("\n").split("\t"))
                 if s_name in data_by_bait_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-                data_by_bait_by_sample[s_name] = dict()
+                data_by_bait_by_sample[s_name] = {}
 
             elif keys:
                 vals = line.strip("\n").split("\t")
@@ -103,16 +102,15 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 bait = "NA"
                 if keys[0] == "BAIT_SET":
                     bait = vals[0]
-                data_by_bait_by_sample[s_name][bait] = dict()
+                data_by_bait_by_sample[s_name][bait] = {}
                 baits.add(bait)
                 # Check that we're not using commas for decimal places
                 if commadecimal is None:
                     commadecimal = False
                     for i, k in enumerate(keys):
-                        if "PCT" in k or "BAIT" in k or "MEAN" in k:
-                            if "," in vals[i]:
-                                commadecimal = True
-                                break
+                        if ("PCT" in k or "BAIT" in k or "MEAN" in k) and "," in vals[i]:
+                            commadecimal = True
+                            break
                 for i, k in enumerate(keys):
                     try:
                         if commadecimal:
@@ -126,25 +124,28 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             s_bait_name = f"{s_name}: {bait}"
             module.add_data_source(f, s_bait_name, section="HsMetrics")
 
-    # Remove empty dictionaries
-    for s_name in data_by_bait_by_sample:
-        for bait in data_by_bait_by_sample[s_name]:
-            if len(data_by_bait_by_sample[s_name][bait]) == 0:
-                data_by_bait_by_sample[s_name].pop(bait, None)
-        if len(data_by_bait_by_sample[s_name]) == 0:
+    # Remove empty dictionaries. Both loops iterate over a snapshot of the keys:
+    # popping from a dict while iterating it raises "dictionary changed size during
+    # iteration", so this crashed as soon as any sample or bait had no metrics.
+    for s_name in list(data_by_bait_by_sample):
+        data_by_bait = data_by_bait_by_sample[s_name]
+        for bait in list(data_by_bait):
+            if len(data_by_bait[bait]) == 0:
+                data_by_bait.pop(bait, None)
+        if len(data_by_bait) == 0:
             data_by_bait_by_sample.pop(s_name, None)
 
-    data_by_sample: Dict[str, Dict[str, Any]] = dict()
+    data_by_sample: dict[str, dict[str, Any]] = {}
     # Manipulate sample names if multiple baits found
-    for s_name in data_by_bait_by_sample:
-        for bait in data_by_bait_by_sample[s_name]:
+    for s_name, data_by_bait in data_by_bait_by_sample.items():
+        for bait in data_by_bait:
             s_bait_name = s_name
             # If there are multiple baits, append the bait name to the sample name
-            if len(data_by_bait_by_sample[s_name]) > 1:
+            if len(data_by_bait) > 1:
                 s_bait_name = f"{s_name}: {bait}"
             if s_bait_name in data_by_sample:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_bait_name}")
-            data_by_sample[s_bait_name] = data_by_bait_by_sample[s_name][bait]
+            data_by_sample[s_bait_name] = data_by_bait[bait]
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -210,7 +211,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     return set(data_by_sample.keys())
 
 
-def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
+def _general_stats_table(module: BaseMultiqcModule, data: dict[str, Any]):
     """
     Generate table header configs for the General Stats table,
     add config and data to the base module.
@@ -220,7 +221,7 @@ def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
     genstats_table_cols = picard_config.get("HsMetrics_genstats_table_cols", [])
     genstats_table_cols_hidden = picard_config.get("HsMetrics_genstats_table_cols_hidden", [])
 
-    headers: Dict[str, ColumnDict] = {}
+    headers: dict[str, ColumnDict] = {}
     # Custom general stats columns
     if len(genstats_table_cols) or len(genstats_table_cols_hidden):
         for k, v in _generate_table_header_config(genstats_table_cols, genstats_table_cols_hidden).items():
@@ -247,7 +248,7 @@ def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
             assert isinstance(covs, list)
             assert len(covs) > 0
             covs = [str(i) for i in covs]
-            log.debug(f"Custom picad coverage thresholds: {', '.join([i for i in covs])}")
+            log.debug(f"Custom picad coverage thresholds: {', '.join(list(covs))}")
         except (KeyError, AttributeError, TypeError, AssertionError):
             covs = ["30"]
         for c in covs:
@@ -265,7 +266,7 @@ def _general_stats_table(module: BaseMultiqcModule, data: Dict[str, Any]):
     module.general_stats_addcols(data, headers, namespace="HsMetrics")
 
 
-def _get_table_headers() -> Dict[ColumnKey, ColumnDict]:
+def _get_table_headers() -> dict[ColumnKey, ColumnDict]:
     # Look for a user config of which table columns we should use
     picard_config = getattr(config, "picard_config", {})
     HsMetrics_table_cols = picard_config.get("HsMetrics_table_cols")
@@ -316,7 +317,7 @@ def _get_table_headers() -> Dict[ColumnKey, ColumnDict]:
     return _generate_table_header_config(HsMetrics_table_cols, HsMetrics_table_cols_hidden)
 
 
-def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List[str]) -> Dict[ColumnKey, ColumnDict]:
+def _generate_table_header_config(table_cols: list[str], hidden_table_cols: list[str]) -> dict[ColumnKey, ColumnDict]:
     """
     Automatically generate some nice table header configs based on what we know about
     the different types of Picard data fields.
@@ -336,7 +337,7 @@ def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List
         if c not in FIELD_DESCRIPTIONS and c[:17] != "PCT_TARGET_BASES_":
             log.error(f"Field '{c}' not found in expected Picard fields. Please check your config.")
 
-    headers: Dict[ColumnKey, ColumnDict] = dict()
+    headers: dict[ColumnKey, ColumnDict] = {}
     for h in table_cols + hidden_table_cols:
         # Set up the configuration for each column
         if h not in headers:
@@ -383,14 +384,14 @@ def _generate_table_header_config(table_cols: List[str], hidden_table_cols: List
     return headers
 
 
-def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
-    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
+def _add_target_bases(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     max_non_zero_cov = 0
-    for s in data:
-        for h in data[s]:
+    for s, s_data in data.items():
+        for h in s_data:
             if h.startswith("PCT_TARGET"):
                 cov = int(h.replace("PCT_TARGET_BASES_", "")[:-1])
-                bases_pct = data[s][h]
+                bases_pct = s_data[h]
                 data_clean[s][cov] = bases_pct * 100.0
                 if bases_pct > 0 and cov > max_non_zero_cov:
                     max_non_zero_cov = cov
@@ -414,14 +415,14 @@ def _add_target_bases(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]
     }
 
 
-def hs_penalty_plot(module: BaseMultiqcModule, data: Dict[str, Dict[str, Any]]):
-    data_clean: Dict[str, Dict[int, float]] = defaultdict(dict)
+def hs_penalty_plot(module: BaseMultiqcModule, data: dict[str, dict[str, Any]]):
+    data_clean: dict[str, dict[int, float]] = defaultdict(dict)
     any_non_zero = False
-    for s in data:
-        for h in data[s]:
+    for s, s_data in data.items():
+        for h in s_data:
             if h.startswith("HS_PENALTY"):
-                data_clean[s][int(h.lstrip("HS_PENALTY_").rstrip("X"))] = data[s][h]
-                if data[s][h] > 0:
+                data_clean[s][int(h.removeprefix("HS_PENALTY_").removesuffix("X"))] = s_data[h]
+                if s_data[h] > 0:
                     any_non_zero = True
 
     pconfig = {

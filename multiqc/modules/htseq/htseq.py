@@ -28,8 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HTSeq Count reports
-        self.htseq_data = dict()
-        self.htseq_keys = list()
+        self.htseq_data = {}
+        self.htseq_keys = []
         for f in self.find_log_files("htseq", filehandles=True):
             parsed_data = self.parse_htseq_report(f)
             if parsed_data is not None:
@@ -61,7 +61,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_htseq_report(f):
         """Parse the HTSeq Count log file."""
         keys = ["__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique"]
-        parsed_data = dict()
+        parsed_data = {}
         assigned_counts = 0
 
         # HtSeq search pattern is just two tab-separated columns, which is not very specific.
@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(parsed_data) > 0:
             parsed_data["assigned"] = assigned_counts
-            parsed_data["total_count"] = sum([v for v in parsed_data.values()])
+            parsed_data["total_count"] = sum(list(parsed_data.values()))
             try:
                 parsed_data["percent_assigned"] = (
                     float(parsed_data["assigned"]) / float(parsed_data["total_count"])

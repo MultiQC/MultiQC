@@ -2,7 +2,6 @@
 
 import logging
 from html import escape
-from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph, linegraph
@@ -15,8 +14,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard RnaSeqMetrics reports and parse their data"""
 
-    data_by_sample: Dict = dict()
-    histogram_by_sample: Dict = dict()
+    data_by_sample: dict = {}
+    histogram_by_sample: dict = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/rnaseqmetrics", filehandles=True):
@@ -59,8 +58,8 @@ def parse_reports(module):
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
                 module.add_data_source(f, s_name, section="RnaSeqMetrics")
-                data_by_sample[s_name] = dict()
-                histogram_by_sample[s_name] = dict()
+                data_by_sample[s_name] = {}
+                histogram_by_sample[s_name] = {}
 
                 for k, v in zip(keys, vals):
                     if not v:
@@ -85,7 +84,7 @@ def parse_reports(module):
                 keys = f["f"].readline().strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
-                histogram_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = {}
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -162,11 +161,11 @@ def parse_reports(module):
     )
 
     # Bar plot of strand mapping
-    bg_cats = dict()
+    bg_cats = {}
     bg_cats["CORRECT_STRAND_READS"] = {"name": "Correct"}
     bg_cats["INCORRECT_STRAND_READS"] = {"name": "Incorrect", "color": "#8e123c"}
 
-    pdata = dict()
+    pdata = {}
     for s_name, d in data_by_sample.items():
         if d["CORRECT_STRAND_READS"] > 0 and d["INCORRECT_STRAND_READS"] > 0:
             pdata[s_name] = d

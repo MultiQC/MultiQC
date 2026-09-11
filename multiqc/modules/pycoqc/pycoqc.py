@@ -127,9 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
                 qual_plot_pass[sample] = dict(zip(qual_x_vals_pass, qual_y_vals_pass))
             except KeyError:
                 log.debug(
-                    "'{}': Could not find plot data. Please make sure you are using pycoQC v2.5.0.20 or newer.".format(
-                        sample
-                    )
+                    f"'{sample}': Could not find plot data. Please make sure you are using pycoQC v2.5.0.20 or newer."
                 )
 
         self.read_length_plot_data = [length_plot_pass, length_plot_all]

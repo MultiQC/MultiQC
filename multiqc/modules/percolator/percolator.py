@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.data_by_sample = dict()
+        self.data_by_sample = {}
         for f in self.find_log_files("percolator", filehandles=True):
             self.parse_percolator(f)
 
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             for feature, value in sample_dict.items():
                 values_by_feature[feature].extend(value)
         # Since our bars are features and not samples, computing the median of each feature across samples
-        median_weights_by_feature = dict()
+        median_weights_by_feature = {}
         for feature, values in values_by_feature.items():
             median_value = median(values)
             median_weights_by_feature[feature] = median_value
@@ -105,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
         header = lines[0].strip().split("\t")
         if s_name in self.data_by_sample:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.data_by_sample[s_name] = {feature: list() for feature in header}
+        self.data_by_sample[s_name] = {feature: [] for feature in header}
         # Select every third line starting from the first data line after the header (normalized values)
         for i in range(1, len(lines), 3):
             line = lines[i].strip().split("\t")
