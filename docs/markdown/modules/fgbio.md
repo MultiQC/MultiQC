@@ -25,10 +25,19 @@ The module currently supports tool the following outputs:
 
 - [GroupReadsByUmi](http://fulcrumgenomics.github.io/fgbio/tools/latest/GroupReadsByUmi.html)
 - [ErrorRateByReadPosition](http://fulcrumgenomics.github.io/fgbio/tools/latest/ErrorRateByReadPosition.html)
+- [ClipBam](http://fulcrumgenomics.github.io/fgbio/tools/latest/ClipBam.html)
+
+For `ClipBam`, the module reads the metrics file written with `--metrics` and reports, per
+read type, how many reads and bases were clipped and for which reason. Note that `bases` in
+that file counts the aligned bases left after clipping, so the percentages of bases clipped
+are computed against `bases + bases_clipped_post`, the bases present before ClipBam ran.
 
 ### File search patterns
 
 ```yaml
+fgbio/clipbam:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post"
+  num_lines: 3
 fgbio/errorratebyreadposition:
   contents: "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\t\
     a_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate"
