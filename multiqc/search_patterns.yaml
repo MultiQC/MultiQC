@@ -677,6 +677,8 @@ nanostat/legacy:
 nanoq:
   contents: "Nanoq Read Summary"
   num_lines: 3
+nexons:
+  fn: "*nexons_stats.txt"
 nextclade:
   contents: "seqName;clade;"
   num_lines: 1
