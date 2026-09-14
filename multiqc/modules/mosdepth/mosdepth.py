@@ -348,7 +348,7 @@ class MultiqcModule(BaseMultiqcModule):
             if xy_cov_by_sample:
                 xy_keys = {
                     "x": {"name": self.cfg.get("xchr") or "Chromosome X"},
-                    "y": {"name": self.cfg.get("xchr") or "Chromosome Y"},
+                    "y": {"name": self.cfg.get("ychr") or "Chromosome Y"},
                 }
                 pconfig = {
                     "id": "mosdepth-xy-coverage-plot",
