@@ -14,7 +14,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     The sample name is parsed from the cleaned file name.
 
-    The software version information for AMRFinder can be added to the MultiQC report using MultiQC configuration, or by creating a stand-alone YAML file (https://docs.seqera.io/multiqc/reports/customisation#listing-software-versions).
+    The software version information for AMRFinder can be added to the MultiQC report using MultiQC configuration, or by creating a stand-alone YAML file. See more [here](https://docs.seqera.io/multiqc/reports/customisation#listing-software-versions).
     """
 
     def __init__(self):
@@ -52,6 +52,10 @@ class MultiqcModule(BaseMultiqcModule):
                 level="warning",
                 affected_samples=self.samples_w_no_elements,
             ),
+            helptext="""
+                This plot shows the counts of each functional category of element (AMR, STRESS, and VIRULENCE) found by AMRFinder for each sample. 
+                If AMRFinder was not run with the '--plus' option, then there will typically only be AMR elements. 
+                The user can switch to show element subtypes as well, which breaks down the functional category further if a more specific category is available. """,
         )
 
         # Adding section for heatmap
@@ -65,6 +69,12 @@ class MultiqcModule(BaseMultiqcModule):
                 level="warning",
                 affected_samples=self.samples_w_no_elements,
             ),
+            helptext="""
+                This plot shows the percentage of the reference covered by a blast hit for each element found by AMRFinder across each sample. 
+                Samples where there was no blast alignment detected for the element will have NA in the sorted plot or 0% coverage when the plot is switched to clustered. 
+                The highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a run with combined protein and nucleotide data. 
+                "Users of AMRFinderPlus or its supporting data files are cautioned that presence of a gene encoding an antimicrobial resistance (AMR) protein or resistance causing mutation does not necessarily indicate that the isolate carrying the gene is resistant to the corresponding antibiotic. 
+                AMRFinderPlus does not predict phenotypic resistance." Additional information from NCBI on interpreting results can be found [here](https://github.com/ncbi/amr/wiki/Interpreting-results).""",
         )
 
     def parse_amrfinder_log(self, f):
@@ -89,8 +99,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.plot_data.append(row)
                 row_count += 1
-                coverage_sum += float(row["% Coverage of reference"])
-                identity_sum += float(row["% Identity to reference"])
+                coverage_sum += float(row["% Coverage of reference"]) if row["% Coverage of reference"] != "NA" else 0.0
+                identity_sum += float(row["% Identity to reference"]) if row["% Identity to reference"] != "NA" else 0.0
             # adding a row to general stats data for this sample that has the count of elements, average coverage, and average identity
             self.general_stats_data[sample_name] = {
                 "elements": row_count,
@@ -124,7 +134,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "AMRFinder Elements Avg Identity",
                 "description": "Mean identity across elements found in each sample",
                 "format": "{:.2f}%",
-                "scale": "Greens",
+                "scale": "Purples",
                 "hidden": True,
             },
         }
@@ -168,15 +178,19 @@ class MultiqcModule(BaseMultiqcModule):
         return bargraph.plot([element_type_counts, element_subtype_counts], pconfig=pconfig)
 
     def amrfinder_heatmap(self):
+        # Sort plot data by % coverage for each row. This should mean that the highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a combined protein and nucleotide run.
+        sorted(self.plot_data, key=lambda x: x["% Coverage of reference"])
+
         # Pivot plot_data to: {element: {sample: coverage}}
         heatmap_data = {}
         for row in self.plot_data:
-            element = row["Element symbol"]
-            sample = row["Sample"]
-            value = float(row["% Coverage of reference"])
-            if element not in heatmap_data:
-                heatmap_data[element] = {}
-            heatmap_data[element][sample] = value
+            if row["% Coverage of reference"] != "NA":
+                element = row["Element symbol"]
+                sample = row["Sample"]
+                value = float(row["% Coverage of reference"])
+                if element not in heatmap_data:
+                    heatmap_data[element] = {}
+                heatmap_data[element][sample] = value
 
         # sorting heatmap data so that the elements are in alphabetical order
         heatmap_data = dict(sorted(heatmap_data.items()))
@@ -188,6 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
             "xlab": "Sample",
             "ylab": "Element",
             "zlab": "% Coverage",
+            "reverse_colors": True,
         }
 
         return heatmap.plot(data=heatmap_data, pconfig=pconfig)
