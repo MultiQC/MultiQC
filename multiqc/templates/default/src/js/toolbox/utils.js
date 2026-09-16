@@ -2,6 +2,16 @@
 // MultiQC Report Toolbox Utility Functions
 ////////////////////////////////////////////////
 
+// Escape HTML meta-characters before interpolating text into markup
+window.escapeHtml = function (str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
+
 // Make functions available globally
 window.hashCode = function (str) {
   var hash = 0;

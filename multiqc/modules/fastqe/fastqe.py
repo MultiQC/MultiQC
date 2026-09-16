@@ -1,6 +1,7 @@
 # https://github.com/fastqe/fastqe
 # https://github.com/fastqe/fastqe/issues/11
 import logging
+from html import escape
 from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -35,6 +36,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/fastqe/fastqe",
             info="Uses emoji to represent FASTQ sequence quality scores.",
             # doi="",  # No DOI
+            license="BSD 3-Clause License",
+            license_url="https://github.com/fastqe/fastqe/blob/master/LICENSE.txt",
         )
 
         fastqe_data: Dict[str, Dict[str, str]] = {}
@@ -66,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": stat.capitalize(),
                 "description": f"Per-base {stat} quality scores as emoji",
                 "scale": False,
-                "format": lambda x: f'<span style="font-size: 1.5em; letter-spacing: 2px;">{x}</span>',
+                "format": lambda x: f'<span style="font-size: 1.5em; letter-spacing: 2px;">{escape(str(x))}</span>',
             }
 
         self.add_section(

@@ -37,13 +37,16 @@ jobs:
           ls -la
           PR_NUMBER=$(cat pr-number.txt)
           HEAD_SHA=$(cat head-sha.txt)
-          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
+          # Artifact from the unprivileged workflow: treat as untrusted input
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "Invalid PR number: $PR_NUMBER"; exit 1; }
+          [[ "$HEAD_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "Invalid head SHA: $HEAD_SHA"; exit 1; }
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
           echo "PR Number: $PR_NUMBER"
           echo "Head SHA: $HEAD_SHA"
 
       - name: Checkout PR
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ steps.pr-info.outputs.head_sha }}
           fetch-depth: 0
@@ -52,7 +55,7 @@ jobs:
       - name: Run Claude Code Review
         id: claude-review
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@f4fb5c6cdccc1ee7af63692f5d08d56efaa64cc8 # v1.0.121
+        uses: anthropics/claude-code-action@9c5ddab2e6d17b83ea679153b31f1d5f023cf636 # v1.0.217
         env:
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         with:

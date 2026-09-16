@@ -33,6 +33,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/huishenlab/biscuit",
             info="Maps bisulfite converted DNA sequence reads and determines cytosine methylation states.",
             doi="10.1093/nar/gkae097",
+            license="MIT License",
+            license_url="https://github.com/huishenlab/biscuit/blob/master/LICENSE",
         )
 
         # Set up data structures for collected data

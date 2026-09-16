@@ -43,6 +43,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.10xgenomics.com/",
             info="De novo genome assembler of 10X Genomics linked-reads.",
             doi="10.1101/gr.214874.116",
+            license="10x Genomics License",
+            license_url="https://github.com/10XGenomics/supernova/blob/master/LICENSE",
         )
 
         # Headers for the supernova Table

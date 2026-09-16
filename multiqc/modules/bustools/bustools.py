@@ -26,6 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Tools for BUS files - a file format for single-cell RNA-seq data designed to facilitate "
             "the development of modular workflows for data processing.",
             doi="10.1093/bioinformatics/btz279",
+            license="BSD 2-Clause License",
+            license_url="https://github.com/BUStools/bustools/blob/master/LICENSE",
         )
 
         self.prepare_data()

@@ -17,6 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://bowtie-bio.sourceforge.net/",
             info="Ultrafast, memory-efficient short read aligner.",
             doi="10.1186/gb-2009-10-3-r25",
+            license="Artistic License 2.0",
+            license_url="https://github.com/BenLangmead/bowtie/blob/master/LICENSE",
         )
 
         # Find and load any Bowtie reports

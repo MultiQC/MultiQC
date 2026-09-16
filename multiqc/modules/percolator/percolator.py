@@ -37,6 +37,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/percolator/percolator",
             info="Semi-supervised learning for peptide identification from shotgun proteomics datasets.",
             doi="10.1007/s13361-016-1460-7",
+            license="Apache License 2.0",
+            license_url="https://github.com/percolator/percolator/blob/master/license.txt",
         )
 
         # Parse logs
@@ -80,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Plot the bar plot of the median weight for each feature
         self.add_section(
             anchor="percolator_median_feature_weights",
-            helptext="""The bar plot illustrates the median weights for each feature, 
+            helptext="""The bar plot illustrates the median weights for each feature,
         which have been assigned to one of three categories: psm_file_combined, ms2pip and deeplc.""",
             description="""For each feature, the associated weight is the median value calculated over all input samples.""",
             plot=bargraph.plot(

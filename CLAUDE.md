@@ -50,6 +50,11 @@ When writing modules, the following are mandatory:
   `UserWarning`**.
 - Call `self.add_software_version()` even if version is unknown — it's
   required by linting.
+- Pass `license` and `license_url` to `super().__init__()` — like `doi`
+  they are optional arguments, but CI linting checks that both are
+  present. Use the tool's software license (e.g. `license="MIT License"`),
+  or `None` with a code comment if the license is unknown or the tool is
+  proprietary.
 - Call `self.write_data_file()` at the **very end** of the module, after
   all sections are added.
 - Register the module via the entry point in `pyproject.toml` (ignore
@@ -57,6 +62,12 @@ When writing modules, the following are mandatory:
 - Put module documentation in the module class docstring; do not add
   separate markdown files or module-level docstrings.
 - The module's `info` field must start with a capital letter.
+- Escape anything parsed from tool output before putting it in HTML:
+  sample names, filenames, versions and parsed values all end up in a
+  shared report, so `from html import escape` around every interpolation
+  into section `content`, `description` or a `format` callable. Table cell
+  values and sample names are escaped centrally, but a callable `format`
+  may return HTML and so owns its own escaping.
 
 For full module guidance, see the `implementing-new-modules` skill in
 `.claude/skills/`.
@@ -103,6 +114,14 @@ sample name anonymisation.
   Driven into `docs/markdown/config_schema.md`,
   `multiqc/utils/config_schema.json`, and the wizard HTML by scripts in
   `scripts/`. `tests/test_config_wizard.py` catches drift.
+- `scripts/wizard_template.html` — config wizard source. Loads
+  js-yaml, highlight.js, ajv, and monaco-editor from cdnjs with SRI
+  `integrity` hashes. When updating these, bump the version in both the
+  `src`/`paths` URLs and the matching `integrity` hash (get the hash from
+  `https://api.cdnjs.com/libraries/<lib>/<ver>?fields=sri` and verify it
+  against the served file), then regenerate with
+  `python scripts/generate_config_wizard.py`. See
+  `scripts/CONFIG_WIZARD_README.md`.
 - `multiqc/search_patterns.yaml` — file-pattern matching for every module
 - `multiqc/base_module.py` — `BaseMultiqcModule` parent class
 - `pyproject.toml` — package config and module entry points

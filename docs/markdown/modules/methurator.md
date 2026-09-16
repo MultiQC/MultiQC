@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/methurator/methurator.
 Estimates sequencing saturation for reduced-representation bisulfite sequencing (RRBS) data.
 
 [https://github.com/VIBTOBIlab/methurator](https://github.com/VIBTOBIlab/methurator)
+
+[MIT License](https://github.com/VIBTOBIlab/methurator/blob/main/LICENSE)
 :::
 
 Methurator is a Python package designed to estimate sequencing saturation for
@@ -38,4 +40,3 @@ curve plots showing how CpG detection changes with sequencing depth.
 methurator:
   fn: '*methurator_summary.yml'
 ```
-    

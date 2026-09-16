@@ -29,6 +29,9 @@ ALIGNMENT_TSV = (
     "\t0.02466\t0\t0.49993\t0.01793\t0.01464\t0.00000\t21.69\n"
 )
 
+# Single-end riker output: the header plus only the `read1` row (no `read2`, no `pair`).
+ALIGNMENT_SE_TSV = "\n".join(ALIGNMENT_TSV.split("\n")[:2]) + "\n"
+
 BASE_DIST_TSV = (
     "sample\tread_end\tcycle\tfrac_a\tfrac_c\tfrac_g\tfrac_t\tfrac_n\n"
     "HG00240\t1\t1\t0.28942\t0.20943\t0.20676\t0.29184\t0.00255\n"
@@ -149,6 +152,48 @@ def test_alignment_metrics(run_riker_module):
     _assert_one_sample_for_tool(module, "alignment", "HG00240")
 
 
+def _alignment_group_rows(sample):
+    """Return the grouped table rows for a sample from the alignment metrics table."""
+    from multiqc.types import SampleGroup
+
+    for plot in report.plot_by_id.values():
+        for dataset in getattr(plot, "datasets", []):
+            dt = getattr(dataset, "dt", None)
+            if dt is None:
+                continue
+            for section in dt.section_by_id.values():
+                if SampleGroup(sample) in section.rows_by_sgroup:
+                    return section.rows_by_sgroup[SampleGroup(sample)]
+    return None
+
+
+def test_alignment_table_groups_pair_as_primary(run_riker_module):
+    """The alignment metrics table groups each sample so the `pair` row is the primary
+    (headline) row and `read1` / `read2` nest under it as expandable children."""
+    from multiqc.types import ColumnKey
+
+    run_riker_module("HG00240.alignment-metrics.txt", ALIGNMENT_TSV)
+
+    rows = _alignment_group_rows("HG00240")
+    assert rows is not None, "alignment table did not produce a HG00240 sample group"
+    assert [str(r.sample) for r in rows] == ["HG00240", "HG00240 (read1)", "HG00240 (read2)"]
+
+    # The primary row carries the `pair` metrics (total_reads is the sum of both reads).
+    assert rows[0].data[ColumnKey("total_reads")].raw == 98580386
+    assert rows[1].data[ColumnKey("total_reads")].raw == 49290193
+    assert rows[2].data[ColumnKey("total_reads")].raw == 49290193
+
+
+def test_alignment_table_single_end_has_no_expandable_group(run_riker_module):
+    """Single-end riker emits only a `read1` row. It is shown as a bare primary row
+    (no `(read1)` suffix and nothing to expand), so the group degrades to one row."""
+    run_riker_module("HG00240.alignment-metrics.txt", ALIGNMENT_SE_TSV)
+
+    rows = _alignment_group_rows("HG00240")
+    assert rows is not None, "alignment table did not produce a HG00240 sample group"
+    assert [str(r.sample) for r in rows] == ["HG00240"]
+
+
 def test_basic_base_distribution(run_riker_module):
     module = run_riker_module("HG00240.base-distribution-by-cycle.txt", BASE_DIST_TSV)
     # When read_end=2 is present we split into _R1 / _R2; the per-tool sample set
@@ -179,6 +224,34 @@ def test_gcbias_summary(run_riker_module):
 def test_hybcap_metrics(run_riker_module):
     module = run_riker_module("HG00240.hybcap-metrics.txt", HYBCAP_METRICS_TSV)
     _assert_one_sample_for_tool(module, "hybcap", "HG00240")
+
+
+def test_hybcap_metrics_tolerates_empty_field(run_riker_module):
+    """An undefined metric (e.g. hs_library_size) is left blank by riker; the row
+    must be retained with that field missing, not dropped wholesale."""
+    from multiqc import config
+
+    # Blank out the hs_library_size cell, as riker does when the estimate is undefined.
+    assert "\t246041533\t" in HYBCAP_METRICS_TSV
+    content = HYBCAP_METRICS_TSV.replace("\t246041533\t", "\t\t")
+
+    original = config.preserve_module_raw_data
+    config.preserve_module_raw_data = True
+    try:
+        module = run_riker_module("HG00240.hybcap-metrics.txt", content)
+    finally:
+        config.preserve_module_raw_data = original
+
+    _assert_one_sample_for_tool(module, "hybcap", "HG00240")
+
+    saved = module.saved_raw_data
+    assert saved is not None
+    data = saved.get("multiqc_riker_hybcap")
+    assert data and "HG00240" in data, "hybcap row was dropped for the empty cell"
+    row = data["HG00240"]
+    # The empty cell becomes missing; every other numeric field is untouched.
+    assert row["hs_library_size"] is None
+    assert row["mean_target_coverage"] == 83.13
 
 
 def test_isize_metrics(run_riker_module):

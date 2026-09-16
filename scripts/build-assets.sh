@@ -9,14 +9,32 @@ if [ $# -gt 0 ]; then
     # Change to the default template directory
     cd multiqc/templates/default
 
-    # Check if node_modules exists
+    # Install from the lockfile if needed. Use `npm ci`, not `npm install`:
+    # `npm install` rewrites package-lock.json (differently per platform / npm
+    # version), which dirties the tree and fails the hook in CI. `npm ci`
+    # installs exactly what the lockfile pins and never modifies it.
     if [ ! -d "node_modules" ]; then
         echo "Installing npm dependencies..."
-        npm install
+        npm ci
     fi
 
     # Build with Vite
     npm run build
+
+    # The 'disco' template re-exports the default template's JS, so its own bundle
+    # goes stale whenever the default sources change.
+    if [ -d "../disco" ]; then
+        cd ../disco
+        if [ ! -d "node_modules" ]; then
+            npm ci
+        fi
+        npm run build
+        cd ../default
+    fi
+
+    # 'original' loads plain script tags rather than a bundle, so it needs its own copy
+    # of DOMPurify. Copy it from node_modules so package.json stays the only version pin.
+    cp node_modules/dompurify/dist/purify.min.js ../original/assets/js/packages/dompurify.min.js
 
     echo "Build complete."
 else

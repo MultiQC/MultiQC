@@ -14,10 +14,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/FRED-2/OptiType",
             info="Precision HLA typing from next-generation sequencing data.",
             extra="""
-            Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit 
+            Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit
             HLA genotyping predictions from NGS data by simultaneously selecting all major and minor HLA Class I alleles.
             """,
             doi="10.1093/bioinformatics/btu548",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/FRED-2/OptiType/blob/master/LICENSE",
         )
 
         # Find and load any optitype reports

@@ -534,25 +534,37 @@ function markdownToHtml(text) {
 
   text = deanonymizeSampleNames(text);
 
-  // Convert directives :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
-  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<span class="text-${p2}">${p1}</span>`;
-  });
-
-  // Convert directives :sample[text]{.text-color} -> <sample... (preserving underscores)
-  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
-  });
-
-  // Convert markdown to html
+  // Markdown first, so that code spans escape their own angle brackets and "`x < 5`"
+  // does not come out double-escaped.
   try {
     let converter = new showdown.Converter({
       literalMidWordUnderscores: true, // Prevents interpretation of underscores within words
     });
-    return converter.makeHtml(text);
+    text = converter.makeHtml(text);
   } catch (e) {
-    return text;
+    // Fall through and sanitise the unconverted text
   }
+
+  // The text can carry sample names straight from the analysed files, so a crafted name
+  // could otherwise inject markup into the report. Default profile: ordinary formatting
+  // and links survive, scripts, event handlers and javascript: URLs do not.
+  // The markdown -> sanitise -> directives order matters, and this function is forked
+  // into multiqc/templates/default/src/js/ai-helpers.js - keep the two in step.
+  text = DOMPurify.sanitize(text);
+
+  // Directives last: this is our own markup, and the captured text is already
+  // sanitised, so re-inserting it here is safe. Do not move this above the sanitise.
+  // :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
+  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<span class="text-${p2}">${p1}</span>`;
+  });
+
+  // :sample[text]{.text-color} -> <sample... (preserving underscores)
+  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<sample data-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
+  });
+
+  return text;
 }
 
 let multiqcDescription = `\

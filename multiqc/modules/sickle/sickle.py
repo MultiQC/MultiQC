@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/najoshi/sickle",
             info="A windowed adaptive trimming tool for FASTQ files using quality.",
             # No DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/najoshi/sickle/blob/master/LICENSE",
         )
 
         # parse list of log files

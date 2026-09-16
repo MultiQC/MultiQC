@@ -32,4 +32,3 @@ bcl2fastq:
   fn: Stats.json
   num_lines: 300
 ```
-    

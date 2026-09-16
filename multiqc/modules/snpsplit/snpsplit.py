@@ -1,6 +1,7 @@
 import logging
 import re
 from datetime import date, datetime
+from html import escape
 
 import yaml
 
@@ -29,6 +30,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/",
             info="Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions",
             doi="10.12688/f1000research.9037.2",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/FelixKrueger/SNPsplit/blob/master/LICENSE",
         )
 
         self.snpsplit_data = dict()
@@ -158,7 +161,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "title": "SNP annotation",
                 "description": "Annotation file used for differentiating genomes",
                 "scale": False,
-                "modify": lambda x: f"<code>{x}</code>",
+                # Annotation filename is parsed from the report, so escape it
+                "format": lambda x: f"<code>{escape(str(x))}</code>",
                 "hidden": True,
             },
             "tagging_percent_N_was_known_SNP": {

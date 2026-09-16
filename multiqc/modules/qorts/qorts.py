@@ -22,6 +22,8 @@ class MultiqcModule(BaseMultiqcModule):
             "exon usage tools, as well as individual-sample and/or group-summary genome "
             "track files suitable for use with the UCSC genome browser.",
             doi="10.1186/s12859-015-0670-5",
+            license="Public Domain",
+            license_url="https://github.com/hartleys/QoRTs/blob/master/src/QoRTs/LICENSE",
         )
 
         # Parse logs

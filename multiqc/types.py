@@ -17,6 +17,19 @@ SampleName = NewType("SampleName", str)
 SampleGroup = NewType("SampleGroup", str)
 
 
+@dataclasses.dataclass
+class SoftwareVersionMetadata:
+    """
+    FAIR metadata about a software tool, shown alongside its version(s) in the
+    Software Versions section of the report: the software license and its
+    citation DOI(s).
+    """
+
+    license: Optional[str] = None
+    license_url: Optional[str] = None
+    doi: List[str] = dataclasses.field(default_factory=list)
+
+
 class FileDict(TypedDict):
     fn: str
     root: str

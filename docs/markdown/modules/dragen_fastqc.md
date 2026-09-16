@@ -61,4 +61,3 @@ dragen_fastqc:
 dragen_fastqc:
   fn: '*.fastqc_metrics.csv'
 ```
-    

@@ -1,7 +1,7 @@
 """Shared helpers for the riker submodules."""
 
 import logging
-from typing import Dict, Iterator, List, TextIO
+from typing import Dict, Iterator, List, Optional, TextIO
 
 log = logging.getLogger(__name__)
 
@@ -42,3 +42,18 @@ def to_int(value: str) -> int:
         return int(value)
     except (TypeError, ValueError):
         return int(float(value))
+
+
+def to_float(value: str) -> Optional[float]:
+    """
+    Parse a float metric column, treating an empty or blank cell as missing.
+
+    Riker leaves an undefined metric (for example Picard's estimated library
+    size when it cannot be computed) as an empty string. Returning ``None`` for
+    such a cell lets the rest of the row survive; MultiQC renders a missing cell
+    as blank. A non-empty, non-numeric value is a genuine parse error and still
+    raises ``ValueError``.
+    """
+    if value is None or value.strip() == "":
+        return None
+    return float(value)

@@ -210,16 +210,16 @@ def parse_reports(
         The table in the Picard metrics file contains some columns referring
         read pairs and some referring to single reads.
 
-        To make the numbers in this plot sum correctly, values referring to pairs are 
+        To make the numbers in this plot sum correctly, values referring to pairs are
         doubled
         according to the scheme below:
 
         * `READS_IN_DUPLICATE_PAIRS = 2 * READ_PAIR_DUPLICATES`
         * `READS_IN_UNIQUE_PAIRS = 2 * (READ_PAIRS_EXAMINED - READ_PAIR_DUPLICATES)`
-        * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED - 
+        * `READS_IN_UNIQUE_UNPAIRED = UNPAIRED_READS_EXAMINED -
         UNPAIRED_READ_DUPLICATES`
         * `READS_IN_DUPLICATE_PAIRS_OPTICAL = 2 * READ_PAIR_OPTICAL_DUPLICATES`
-        * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS - 
+        * `READS_IN_DUPLICATE_PAIRS_NONOPTICAL = READS_IN_DUPLICATE_PAIRS -
         READS_IN_DUPLICATE_PAIRS_OPTICAL`
         * `READS_IN_DUPLICATE_UNPAIRED = UNPAIRED_READ_DUPLICATES`
         * `READS_UNMAPPED = UNMAPPED_READS`
