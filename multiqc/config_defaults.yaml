@@ -506,6 +506,7 @@ module_order:
   - mirtop
   - glimpse
   # Post-alignment processing
+  - amrfinder
   - gopeaks
   - homer
   - hops
