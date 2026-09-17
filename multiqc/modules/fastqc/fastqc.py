@@ -693,10 +693,12 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the HTML for the per sequence quality score plot"""
 
         data_by_sample: Dict[str, Dict[int, float]] = dict()
+        data_norm_by_sample: Dict[str, Dict[int, float]] = dict()
         for s_name, sd in self.fastqc_data.items():
             if sd.get("per_sequence_quality_scores") is None:
                 continue
             data_by_sample[s_name] = {d["quality"]: d["count"] for d in sd["per_sequence_quality_scores"]}
+            data_norm_by_sample[s_name] = _normalize_to_percent(data_by_sample[s_name])
         if len(data_by_sample) == 0:
             log.debug("per_seq_quality not found in FastQC reports")
             return None
@@ -716,6 +718,10 @@ class MultiqcModule(BaseMultiqcModule):
             "xmin": 0,
             "x_decimals": False,
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
+            "data_labels": [
+                {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
+                {"name": "Counts", "ylab": "Count", "tt_suffix": ""},
+            ],
             "showlegend": False,
             "colors": self.get_status_cols("per_sequence_quality_scores"),
             "x_bands": [
@@ -736,7 +742,7 @@ class MultiqcModule(BaseMultiqcModule):
             subset of sequences will have universally poor quality, however these should
             represent only a small percentage of the total sequences._
             """,
-            plot=linegraph.plot(data_by_sample, pconfig),
+            plot=linegraph.plot([data_norm_by_sample, data_by_sample], pconfig),
             statuses=status_dict if section_statuses else None,
         )
 
@@ -837,13 +843,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             data_by_sample[s_name] = {d["gc_content"]: d["count"] for d in sd["per_sequence_gc_content"]}
-            data_norm_by_sample[s_name] = dict()
-            total = sum([c for c in data_by_sample[s_name].values()])
-            for gc, count in data_by_sample[s_name].items():
-                if total == 0:
-                    data_norm_by_sample[s_name][gc] = 0
-                else:
-                    data_norm_by_sample[s_name][gc] = (count / total) * 100
+            data_norm_by_sample[s_name] = _normalize_to_percent(data_by_sample[s_name])
         if len(data_by_sample) == 0:
             log.debug("per_sequence_gc_content not found in FastQC reports")
             return None
@@ -1021,6 +1021,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Create the HTML for the Sequence Length Distribution plot"""
 
         cnt_by_range_by_sample: Dict[str, Dict[int, int]] = dict()
+        cnt_norm_by_range_by_sample: Dict[str, Dict[int, float]] = dict()
         all_ranges_across_samples: Set[int] = set()
         only_single_length: bool = True
         for s_name, sd in self.fastqc_data.items():
@@ -1030,6 +1031,7 @@ class MultiqcModule(BaseMultiqcModule):
                 int(_range_bp_to_num(d["length"], method="start")): d["count"]
                 for d in sd["sequence_length_distribution"]
             }
+            cnt_norm_by_range_by_sample[s_name] = _normalize_to_percent(cnt_by_range_by_sample[s_name])
             sample_ranges_set = set(cnt_by_range_by_sample[s_name].keys())
             if len(sample_ranges_set) > 1:
                 only_single_length = False
@@ -1063,6 +1065,10 @@ class MultiqcModule(BaseMultiqcModule):
                 xlab="Sequence Length (bp)",
                 ymin=0,
                 tt_label="<b>{point.x} bp</b>: {point.y}",
+                data_labels=[
+                    {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
+                    {"name": "Counts", "ylab": "Read Count", "tt_suffix": ""},
+                ],
                 showlegend=False,
                 colors=self.get_status_cols("sequence_length_distribution"),
             )
@@ -1070,7 +1076,7 @@ class MultiqcModule(BaseMultiqcModule):
                 name="Sequence Length Distribution",
                 anchor="fastqc_sequence_length_distribution",
                 description="The distribution of fragment sizes (read lengths) found. See the [FastQC help](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/Help/3%20Analysis%20Modules/7%20Sequence%20Length%20Distribution.html)",
-                plot=linegraph.plot(cnt_by_range_by_sample, pconfig),
+                plot=linegraph.plot([cnt_norm_by_range_by_sample, cnt_by_range_by_sample], pconfig),
                 statuses=status_dict if section_statuses else None,
             )
 
@@ -1529,3 +1535,11 @@ def _range_bp_to_num(bp: Union[str, int], method: Literal["start", "median", "me
         except TypeError:
             pass
     return int(bp)
+
+
+def _normalize_to_percent(data: Dict[Any, float]) -> Dict[Any, float]:
+    """Helper function - converts a {x: count} histogram into {x: percent-of-total}."""
+    total = sum(data.values())
+    if total == 0:
+        return {key: 0 for key in data}
+    return {key: (value / total) * 100 for key, value in data.items()}
