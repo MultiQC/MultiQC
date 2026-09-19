@@ -1156,6 +1156,15 @@ supernova/kmers:
   contents: '"description": "kmer_count",'
 sylphtax:
   fn: "*.sylphmpa"
+tasmanian/mismatch:
+  num_lines: 1
+  contents_re: '^base_change\tread_num\treference_order\tfragment_position\tcount\s*$'
+tasmanian/variants:
+  num_lines: 1
+  contents_re: '^chromosome\tposition\treference_base\tmismatch_base\tcount\tdepth\s*$'
+tasmanian/inconsistencies:
+  num_lines: 1
+  contents_re: '^read1_position\tread2_position\tdiscordance_type\tcount\s*$'
 telseq:
   num_lines: 3
   contents: "ReadGroup	Library	Sample	Total	Mapped	Duplicates	LENGTH_ESTIMATE"
