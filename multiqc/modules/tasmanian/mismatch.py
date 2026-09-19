@@ -17,11 +17,10 @@ ALL_MISMATCHES = "All Mismatches"
 
 # Pooled classes: the rate is the summed count of the member substitutions over all bases with
 # one of the member reference bases, so a group is not an average of its members' rates
-GROUPS: Dict[str, List[str]] = {
-    "Deamination (C>T + G>A)": ["C>T", "G>A"],
-    "Oxidation (G>T + C>A)": ["G>T", "C>A"],
-}
-# Class name -> the substitutions it counts, for the profile plot, heatmaps and summary table
+DEAMINATION = "Deamination (C>T + G>A)"
+OXIDATION = "Oxidation (G>T + C>A)"
+GROUPS: Dict[str, List[str]] = {DEAMINATION: ["C>T", "G>A"], OXIDATION: ["G>T", "C>A"]}
+# Class name -> the substitutions it counts, for the profile plot, heatmaps and general stats
 CLASSES: Dict[str, List[str]] = {ALL_MISMATCHES: MISMATCHES, **GROUPS, **{m: [m] for m in MISMATCHES}}
 HEATMAP_CLASSES = [ALL_MISMATCHES, *GROUPS]
 HEATMAP_UNITS = "Mismatches (%)"
@@ -130,7 +129,12 @@ def _add_general_stats(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
     for s_name, data in mismatch_data.items():
         rates = overall_rates(data)
         if rates is not None:
-            stats[s_name] = {"mismatch_rate": rates[ALL_MISMATCHES], "total_bases": rates["total_bases"]}
+            stats[s_name] = {
+                "mismatch_rate": rates[ALL_MISMATCHES],
+                "deamination_rate": rates[DEAMINATION],
+                "oxidation_rate": rates[OXIDATION],
+                "total_bases": rates["total_bases"],
+            }
     headers: Dict = {
         "mismatch_rate": {
             "title": "Mismatch Rate",
@@ -138,6 +142,24 @@ def _add_general_stats(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
             "min": 0,
             "suffix": "%",
             "scale": "OrRd",
+            "format": "{:,.3f}",
+        },
+        "deamination_rate": {
+            "title": "Deamination Rate",
+            "description": (
+                "Percentage of C and G bases read as T or A respectively, C>T and G>A (tasmanian-mismatch)"
+            ),
+            "min": 0,
+            "suffix": "%",
+            "scale": "PuRd",
+            "format": "{:,.3f}",
+        },
+        "oxidation_rate": {
+            "title": "Oxidation Rate",
+            "description": "Percentage of G and C bases read as T or A respectively, G>T and C>A (tasmanian-mismatch)",
+            "min": 0,
+            "suffix": "%",
+            "scale": "YlOrBr",
             "format": "{:,.3f}",
         },
         "total_bases": {
@@ -178,11 +200,15 @@ def _add_summary_table(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
         name="Mismatch Rates",
         anchor="tasmanian-mismatch-rates",
         description=(
-            "Overall mismatch rates from <code>tasmanian-mismatch</code>, over all positions. "
+            "Mismatch rates from <code>tasmanian-mismatch</code>, over all fragment positions. "
             "Each substitution class is the percentage of bases with that reference base "
             "that were sequenced as the alternative base. Deamination and oxidation pool their two "
-            "substitutions over all bases with either reference base. Individual substitutions are "
-            "hidden by default; show them with the columns button."
+            "substitutions over all bases with either reference base."
+        ),
+        helptext=(
+            "The individual substitutions are hidden by default; show them with the columns button to compare "
+            "every class between libraries. All columns are the same kind of value, a percentage where higher "
+            "means more mismatches, so they share one color scale."
         ),
         plot=table.plot(
             rates,
