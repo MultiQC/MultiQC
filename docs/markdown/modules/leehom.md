@@ -35,4 +35,3 @@ leehom:
   contents: Adapter dimers/chimeras
   num_lines: 100
 ```
-    

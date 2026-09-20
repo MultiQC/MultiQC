@@ -101,4 +101,3 @@ dragen/wgs_contig_mean_cov:
 dragen/wgs_fine_hist:
   fn_re: .*\.wgs_fine_hist_?(tumor|normal)?\.csv
 ```
-    

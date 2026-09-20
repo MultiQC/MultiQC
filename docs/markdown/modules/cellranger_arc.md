@@ -49,4 +49,3 @@ cellranger_arc:
   fn: '*.html'
   num_lines: 250
 ```
-    

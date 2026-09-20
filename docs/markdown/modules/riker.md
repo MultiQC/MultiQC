@@ -101,4 +101,3 @@ riker/wgs_metrics:
   fn: '*.wgs-metrics.txt'
   num_lines: 1
 ```
-    

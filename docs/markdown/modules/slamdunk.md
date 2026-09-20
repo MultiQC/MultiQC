@@ -47,4 +47,3 @@ slamdunk/utrrates:
   contents: '# slamdunk utrrates'
   num_lines: 1
 ```
-    

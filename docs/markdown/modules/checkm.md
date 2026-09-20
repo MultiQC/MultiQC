@@ -38,4 +38,3 @@ checkm:
     \ markers(?:\t| {3,})# marker sets.*"
   num_lines: 10
 ```
-    

@@ -35,4 +35,3 @@ the number of peaks called per sample via the general table and the bar plot.
 gopeaks:
   fn: '*_gopeaks.json'
 ```
-    

@@ -31,4 +31,3 @@ haplocheck:
     \t\"Sample Coverage\""
   num_lines: 10
 ```
-    

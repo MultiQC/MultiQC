@@ -44,4 +44,3 @@ ngsderive/strandedness:
   contents: "File\tTotalReads\tForwardPct\tReversePct\tPredicted"
   num_lines: 1
 ```
-    

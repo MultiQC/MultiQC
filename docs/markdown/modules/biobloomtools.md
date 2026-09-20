@@ -35,4 +35,3 @@ biobloomtools:
   contents: "filter_id\thits\tmisses\tshared\trate_hit\trate_miss\trate_shared"
   num_lines: 2
 ```
-    

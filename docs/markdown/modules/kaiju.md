@@ -38,4 +38,3 @@ kaiju:
   contents_re: file\tpercent\treads\ttaxon_id\ttaxon_name
   num_lines: 1
 ```
-    

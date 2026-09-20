@@ -36,4 +36,3 @@ pycoqc:
   contents: '"pycoqc":'
   num_lines: 2
 ```
-    

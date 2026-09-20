@@ -38,4 +38,3 @@ biobambam2/bamsormadup:
   contents: '# bamsormadup'
   num_lines: 2
 ```
-    

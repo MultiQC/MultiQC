@@ -34,4 +34,3 @@ prinseqplusplus:
 - contents: reads removed by -
   num_lines: 2
 ```
-    

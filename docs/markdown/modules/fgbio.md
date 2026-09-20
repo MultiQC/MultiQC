@@ -37,4 +37,3 @@ fgbio/groupreadsbyumi:
   contents: fraction_gt_or_eq_family_size
   num_lines: 3
 ```
-    

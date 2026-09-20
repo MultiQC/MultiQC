@@ -44,4 +44,3 @@ fastqe:
   fn: '*fastqe*'
   num_lines: 1
 ```
-    

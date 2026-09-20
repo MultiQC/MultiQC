@@ -92,4 +92,3 @@ rseqc/tin:
   fn: '*.summary.txt'
   num_lines: 1
 ```
-    

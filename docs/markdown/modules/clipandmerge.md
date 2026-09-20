@@ -33,4 +33,3 @@ clipandmerge:
   contents: ClipAndMerge (
   num_lines: 5
 ```
-    

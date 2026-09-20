@@ -40,4 +40,3 @@ ribodetector:
   contents: Writing output non-rRNA sequences into file
   num_lines: 20
 ```
-    

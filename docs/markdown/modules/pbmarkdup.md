@@ -31,4 +31,3 @@ pbmarkdup:
   contents_re: LIBRARY +READS +UNIQUE MOLECULES +DUPLICATE READS
   num_lines: 5
 ```
-    

@@ -32,4 +32,3 @@ motus:
   contents: Reads are aligned (by BWA) to marker gene sequences in the reference database
   num_lines: 2
 ```
-    

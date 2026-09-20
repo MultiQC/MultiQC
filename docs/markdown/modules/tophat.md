@@ -30,4 +30,3 @@ tophat:
   fn: '*align_summary.txt'
   shared: true
 ```
-    

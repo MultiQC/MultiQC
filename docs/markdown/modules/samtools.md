@@ -158,4 +158,3 @@ samtools/rmdup:
 samtools/stats:
   contents: This file was produced by samtools stats
 ```
-    

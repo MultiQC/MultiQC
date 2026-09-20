@@ -46,4 +46,3 @@ multiqc . --cl-config "sp: { jellyfish: { fn: '*.hist' } }"
 jellyfish:
   fn: '*_jf.hist'
 ```
-    

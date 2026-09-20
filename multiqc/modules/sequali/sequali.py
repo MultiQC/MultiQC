@@ -13,27 +13,27 @@ log = logging.getLogger(__name__)
 
 PHRED_SCORE_EXPLANATION = textwrap.dedent(
     """
-    As Phred scores are logarithmic, the means are calculated by 
-    calculating the probability for each base and then averaging that 
+    As Phred scores are logarithmic, the means are calculated by
+    calculating the probability for each base and then averaging that
     over the total number of bases. The probability is then converted
     back into a Phred score. Tools that average Phred scores naively
-    are prone to overestimate the average quality by orders of 
-    magnitude. As such Sequali might give a different plot here than 
+    are prone to overestimate the average quality by orders of
+    magnitude. As such Sequali might give a different plot here than
     other QC tools.
 """
 )
 
 DUPLICATION_EXPLANATION = textwrap.dedent(
     """
-    [The methodology to estimate duplication uses fingerprinting 
+    [The methodology to estimate duplication uses fingerprinting
     with subsampling based on the fingerprints themselves](
-    https://www.usenix.org/system/files/conference/atc13/atc13-xie.pdf). 
-    This mitigates biases that might occur in estimates that only 
+    https://www.usenix.org/system/files/conference/atc13/atc13-xie.pdf).
+    This mitigates biases that might occur in estimates that only
     look at the first reads.
-    
-    Sequali fingerprints by combining an 8 bp fragment at an offset 
+
+    Sequali fingerprints by combining an 8 bp fragment at an offset
     of 64 bp from the beginning with an 8 bp fragment offset at 64
-    bp from the end. The offsets were chosen to limit the chance 
+    bp from the end. The offsets were chosen to limit the chance
     of adapter sequences contaminating the fingerprint.
     """
 )
@@ -345,8 +345,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="Sequence counts for each sample.  Duplicate read counts are an estimate.",
             helptext=textwrap.dedent(
                 """
-                This plots shows the total number of reads broken down into 
-                unique and duplicate reads. 
+                This plots shows the total number of reads broken down into
+                unique and duplicate reads.
                 """
                 + DUPLICATION_EXPLANATION
             ),
@@ -396,9 +396,9 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=textwrap.dedent(
                     """
                 Only mean scores are plotted. The means are approximated as Sequali
-                stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and 
-                higher. It does not store all 94 discrete phred score counts for 
-                each position. For context, Illumina FASTQ files only 
+                stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and
+                higher. It does not store all 94 discrete phred score counts for
+                each position. For context, Illumina FASTQ files only
                 utilize four different phred scores.
                 """
                 )
@@ -701,8 +701,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali_insert_size_distribution",
             description="Distribution of insert sizes for paired-end reads.",
             helptext="""
-            Insert size is calculated as the distance between the start of read 1 and 
-            the end of read 2 in properly paired reads. The median insert size is 
+            Insert size is calculated as the distance between the start of read 1 and
+            the end of read 2 in properly paired reads. The median insert size is
             included in the general statistics table.
             """,
             plot=linegraph.plot(plot_data, plot_config),
@@ -812,7 +812,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali_adapter_content",
             description="The cumulative percentage count of the found adapter sequences",
             helptext="""
-            Note that only samples with >= 0.1% adapter contamination are shown. 
+            Note that only samples with >= 0.1% adapter contamination are shown.
             There may be several adapters detected per sample. For long read data there
             maybe more adapters per sample, this is a result of the false positive detection
             rate increasing with longer read length.

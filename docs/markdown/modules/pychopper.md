@@ -36,4 +36,3 @@ pychopper:
   contents: "Classification\tRescue"
   num_lines: 6
 ```
-    

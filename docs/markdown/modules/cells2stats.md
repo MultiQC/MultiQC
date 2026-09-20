@@ -27,4 +27,3 @@ cells2stats/run:
   fn: RunStats.json
   num_lines: 100
 ```
-    

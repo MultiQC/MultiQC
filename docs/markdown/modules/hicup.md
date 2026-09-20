@@ -31,4 +31,3 @@ hicup:
 hicup/html:
   fn: '*HiCUP_summary_report*.html'
 ```
-    

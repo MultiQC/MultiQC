@@ -279,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="ataqv-peak-percentiles",
                 description="Cumulative distribution of reads in peaks and of genomic territory.",
                 helptext="""
-                This plot shows the cumulative fraction of high-quality autosomal alignments, 
+                This plot shows the cumulative fraction of high-quality autosomal alignments,
                 and the cumulative fraction of the genome territory covered by those peaks.
 
                 * A steeper curve indicates better enrichment

@@ -40,4 +40,3 @@ curve plots showing how CpG detection changes with sequencing depth.
 methurator:
   fn: '*methurator_summary.yml'
 ```
-    

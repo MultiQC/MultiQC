@@ -48,4 +48,3 @@ spaceranger/count_html:
   fn: '*.html'
   num_lines: 20
 ```
-    

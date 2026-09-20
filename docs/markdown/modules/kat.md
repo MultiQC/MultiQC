@@ -32,4 +32,3 @@ contain information such as estimated genome size and heterozygosity rates from 
 kat:
   fn: '*.dist_analysis.json'
 ```
-    

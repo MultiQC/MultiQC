@@ -34,4 +34,3 @@ measure of library complexity. PBC is the ratio of (non-redundant, uniquely mapp
 phantompeakqualtools/out:
   fn: '*.spp.out'
 ```
-    

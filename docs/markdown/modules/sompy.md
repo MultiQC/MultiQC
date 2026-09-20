@@ -29,4 +29,3 @@ sompy:
   fn: '*.stats.csv'
   num_lines: 2
 ```
-    

@@ -31,4 +31,3 @@ ataqv:
   fn: '*.json'
   num_lines: 10
 ```
-    

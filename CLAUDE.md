@@ -62,6 +62,12 @@ When writing modules, the following are mandatory:
 - Put module documentation in the module class docstring; do not add
   separate markdown files or module-level docstrings.
 - The module's `info` field must start with a capital letter.
+- Escape anything parsed from tool output before putting it in HTML:
+  sample names, filenames, versions and parsed values all end up in a
+  shared report, so `from html import escape` around every interpolation
+  into section `content`, `description` or a `format` callable. Table cell
+  values and sample names are escaped centrally, but a callable `format`
+  may return HTML and so owns its own escaping.
 
 For full module guidance, see the `implementing-new-modules` skill in
 `.claude/skills/`.

@@ -46,4 +46,3 @@ MultiQC report.
 hisat2:
   contents: 'HISAT2 summary stats:'
 ```
-    

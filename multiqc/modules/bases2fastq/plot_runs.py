@@ -1,10 +1,20 @@
 import math
+from html import escape
 from typing import Any, Dict, List, cast
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict, SectionT
 from multiqc.utils import mqc_colour
 from natsort import natsorted
+
+
+def _format_indexing(value: str) -> str:
+    """Render "10 + 10 (I1 + I2)" with the index names muted. Escape first: the names
+    come from the run manifest."""
+    cycles, bracket, names = escape(str(value)).partition(" (")
+    if not bracket:
+        return cycles
+    return f"{cycles} &nbsp; <span class='text-muted'>({names}</span>"
 
 
 def plot_run_stats(run_data, color_dict):
@@ -386,6 +396,7 @@ def tabulate_manifest_stats(run_data, color_dict):
         "title": "Indexing",
         "description": "Indexing scheme.",
         "bgcols": indexing_bgcols,
+        "format": _format_indexing,
     }
     headers["adapter_trim_type"] = {
         "title": "Adapter Trim Type",
@@ -648,7 +659,7 @@ def plot_base_quality_hist(run_data, color_dict):
     anchor = "bq_hist"
     description = "Histogram of run base qualities"
     helptext = """
-    Run base qualities histogram, summarised by bases and reads. 
+    Run base qualities histogram, summarised by bases and reads.
     Use tabs to switch between the views:\n
         - Quality Per Base: distribution of base qualities.\n
         - Quality Per Read: distribution of read qualities.\n

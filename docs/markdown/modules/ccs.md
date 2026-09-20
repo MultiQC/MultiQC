@@ -37,4 +37,3 @@ ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: '*.json'
 ```
-    

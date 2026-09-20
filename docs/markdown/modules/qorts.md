@@ -36,4 +36,3 @@ qorts/log:
   fn: QC.*.log
   num_lines: 2
 ```
-    

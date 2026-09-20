@@ -36,4 +36,3 @@ pairtools:
   - pair_types/
   num_lines: 20
 ```
-    

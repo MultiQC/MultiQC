@@ -27,4 +27,3 @@ Tools to compare and manipulate the contents of EingenStrat databases, and to ca
 eigenstratdatabasetools:
   fn: '*_eigenstrat_coverage.json'
 ```
-    

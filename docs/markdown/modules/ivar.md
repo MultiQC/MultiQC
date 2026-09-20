@@ -33,4 +33,3 @@ ivar/trim:
   contents: Number of references
   num_lines: 8
 ```
-    

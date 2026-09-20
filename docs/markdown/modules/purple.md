@@ -36,4 +36,3 @@ purple/purity:
 purple/qc:
   fn: '*.purple.qc'
 ```
-    

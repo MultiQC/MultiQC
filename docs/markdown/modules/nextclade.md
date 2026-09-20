@@ -34,4 +34,3 @@ nextclade:
   contents: seqName;clade;
   num_lines: 1
 ```
-    

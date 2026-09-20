@@ -181,4 +181,3 @@ fastqc/theoretical_gc:
 fastqc/zip:
   fn: '*_fastqc.zip'
 ```
-    

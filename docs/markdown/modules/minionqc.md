@@ -36,4 +36,3 @@ minionqc:
   contents: total.gigabases
   fn: summary.yaml
 ```
-    

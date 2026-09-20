@@ -35,4 +35,3 @@ checkm2:
   contents: "Name\tCompleteness\tContamination\tCompleteness_Model_Used\tTranslation_Table_Used"
   num_lines: 10
 ```
-    

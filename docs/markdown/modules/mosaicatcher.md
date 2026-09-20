@@ -29,4 +29,3 @@ DOI: [10.1038/s41587-019-0366-x](https://doi.org/10.1038/s41587-019-0366-x)
 mosaicatcher:
   fn: '*.mosaicatcher_info_raw.txt'
 ```
-    

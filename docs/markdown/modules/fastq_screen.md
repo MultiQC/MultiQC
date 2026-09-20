@@ -37,4 +37,3 @@ the reads down by methylation status.
 fastq_screen:
   fn: '*_screen.txt'
 ```
-    

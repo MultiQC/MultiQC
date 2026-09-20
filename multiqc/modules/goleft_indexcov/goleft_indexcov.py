@@ -1,5 +1,6 @@
 from collections import defaultdict
 import logging
+from html import escape
 from typing import Optional, Dict
 
 from multiqc import config
@@ -215,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {len(bin_plot_data_empty_samples)} sample{"s" if len(bin_plot_data_empty_samples) > 1 else ""} had zero bins and could not be plotted.
                 <a href="#goleft_empty_samples" onclick="$('#goleft_empty_samples').slideToggle();">Click to show missing sample names.</a>
                 <div id="goleft_empty_samples" style="display:none;">
-                    <ul><li><code>{"</code></li>, <li><code>".join(bin_plot_data_empty_samples)}</code></li></ul>
+                    <ul>{"".join(f"<li><code>{escape(s)}</code></li>" for s in bin_plot_data_empty_samples)}</ul>
                 </div>
             </div>"""
         self.add_section(

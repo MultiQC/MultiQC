@@ -580,7 +580,7 @@ These overwrite the defaults that are hardcoded in the module code. `path_filter
 | [seq]   | matches any character in seq     |
 | [!seq]  | matches any character not in seq |
 
-Note that exclusion superseeds inclusion for the path filters.
+Note that exclusion supersedes inclusion for the path filters.
 
 The other available configuration options are:
 

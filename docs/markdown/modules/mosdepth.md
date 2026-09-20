@@ -128,4 +128,3 @@ mosdepth/region_dist:
 mosdepth/summary:
   fn: '*.mosdepth.summary.txt'
 ```
-    

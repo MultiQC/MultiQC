@@ -88,4 +88,3 @@ bamdst/coverage:
   contents: '## The file was created by bamdst'
   num_lines: 5
 ```
-    

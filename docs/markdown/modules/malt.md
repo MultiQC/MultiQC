@@ -36,4 +36,3 @@ malt:
   contents: MaltRun - Aligns sequences using MALT (MEGAN alignment tool)
   num_lines: 2
 ```
-    

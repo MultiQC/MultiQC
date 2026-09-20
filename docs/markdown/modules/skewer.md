@@ -29,4 +29,3 @@ DOI: [10.1186/1471-2105-15-182](https://doi.org/10.1186/1471-2105-15-182)
 skewer:
   contents: 'maximum error ratio allowed (-r):'
 ```
-    

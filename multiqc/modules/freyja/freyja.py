@@ -17,8 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/andersen-lab/Freyja",
             info="Recovers relative lineage abundances from mixed SARS-CoV-2 samples.",
             extra="""
-            Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a 
-            sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global 
+            Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a
+            sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global
             phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing problem.
             """,
             doi="10.1038/s41586-022-05049-6",
@@ -127,14 +127,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Freyja Summary",
             anchor="freyja-summary",
             description="""
-                Relative lineage abundances from mixed SARS-CoV-2 samples. Hover over the column headers for descriptions and click _Help_ for more in-depth documentation. 
+                Relative lineage abundances from mixed SARS-CoV-2 samples. Hover over the column headers for descriptions and click _Help_ for more in-depth documentation.
                 """,
             helptext="""
                 The graph denotes a sum of all lineage abundances in a particular WHO designation , otherwise they are grouped into "Other".
-                Lineages abundances are calculated as the number of reads that are assigned to a particular lineage. 
-                Lineages and their corresponding abundances are summarized by constellation. 
+                Lineages abundances are calculated as the number of reads that are assigned to a particular lineage.
+                Lineages and their corresponding abundances are summarized by constellation.
 
-                > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time. 
+                > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time.
                 """,
             plot=bargraph.plot(data_by_sample, cats, pconfig),
         )

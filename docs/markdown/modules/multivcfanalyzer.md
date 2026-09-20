@@ -31,4 +31,3 @@ The downstream formats are useful for follow-up analyses such as phylogeny recon
 multivcfanalyzer:
   fn: MultiVCFAnalyzer.json
 ```
-    

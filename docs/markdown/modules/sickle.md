@@ -32,4 +32,3 @@ sickle:
   contents_re: 'FastQ \w*\s?records kept: .*'
   num_lines: 2
 ```
-    

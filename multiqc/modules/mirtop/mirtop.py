@@ -18,11 +18,11 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/miRTop/mirtop/",
             info="Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.",
             extra="""
-            This tool is dedicated to the creation and management of miRNA alignment output using the standardized 
+            This tool is dedicated to the creation and management of miRNA alignment output using the standardized
             GFF3 format (see [miRTop/mirGFF3](https://github.com/miRTop/mirGFF3)).
             A unified miRNA alignment format allows to easily compare the output of different alignment tools.
-        
-            Currently, mirtop can convert into mirGFF3 the outputs of commonly used pipelines, such as seqbuster, 
+
+            Currently, mirtop can convert into mirGFF3 the outputs of commonly used pipelines, such as seqbuster,
             isomiR-SEA, sRNAbench, Prost! as well as BAM files.
             """,
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.

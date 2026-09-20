@@ -53,4 +53,3 @@ rna_seqc/metrics_v2:
   contents: High Quality Ambiguous Alignment Rate
   fn: '*metrics.tsv'
 ```
-    

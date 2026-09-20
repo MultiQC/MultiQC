@@ -65,4 +65,3 @@ gatk/base_recalibrator:
 gatk/varianteval:
   contents: '#:GATKTable:TiTvVariantEvaluator'
 ```
-    

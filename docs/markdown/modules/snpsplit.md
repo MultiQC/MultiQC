@@ -40,4 +40,3 @@ snpsplit/old:
   contents: 'Writing allele-flagged output file to:'
   num_lines: 2
 ```
-    

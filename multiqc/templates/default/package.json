@@ -12,6 +12,7 @@
   "devDependencies": {
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
+    "dompurify": "^3.4.15",
     "sass": "^1.103.1",
     "terser": "^5.51.2",
     "vite": "^8.2.2"

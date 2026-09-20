@@ -39,4 +39,3 @@ ribotish/qual:
   fn: '*_qual.txt'
   num_lines: 10
 ```
-    

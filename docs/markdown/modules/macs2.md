@@ -37,4 +37,3 @@ found in the General Statistics table. Numerous additional values are parsed and
 macs2:
   fn: '*_peaks.xls'
 ```
-    

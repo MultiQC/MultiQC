@@ -35,4 +35,3 @@ conpair/contamination:
   contents: 'Tumor sample contamination level: '
   num_lines: 3
 ```
-    

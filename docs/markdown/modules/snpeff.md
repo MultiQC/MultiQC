@@ -34,4 +34,3 @@ snpeff:
   contents: SnpEff_version
   max_filesize: 5000000
 ```
-    

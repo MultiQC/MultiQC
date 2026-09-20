@@ -66,4 +66,3 @@ hicstuff/pipeline_stats:
   fn: '*.log'
   num_lines: 10
 ```
-    

@@ -28,4 +28,3 @@ seqwho:
   contents: '  "Per Base Seq": ['
   num_lines: 10
 ```
-    

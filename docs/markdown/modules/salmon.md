@@ -43,4 +43,3 @@ salmon/meta:
   max_filesize: 50000
   num_lines: 10
 ```
-    

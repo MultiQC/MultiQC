@@ -30,4 +30,3 @@ nanoq:
   contents: Nanoq Read Summary
   num_lines: 3
 ```
-    

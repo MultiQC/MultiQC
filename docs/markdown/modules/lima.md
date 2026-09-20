@@ -48,4 +48,3 @@ lima/summary:
   max_filesize: 1024
   num_lines: 2
 ```
-    

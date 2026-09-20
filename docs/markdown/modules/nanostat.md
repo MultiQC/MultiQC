@@ -90,4 +90,3 @@ nanostat/legacy:
   max_filesize: 4096
   num_lines: 1
 ```
-    
