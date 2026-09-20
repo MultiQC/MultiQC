@@ -75,7 +75,7 @@ def parse_count_html(module: BaseMultiqcModule):
         else:
             software_name = "spaceranger"
             software_version = software.rsplit(maxsplit=1)[-1].removeprefix("v")
-        
+
         module.add_software_version(version=software_version, sample=sample_name, software_name=software_name)
 
         # List of data collated from different tables in cellranger reports.
