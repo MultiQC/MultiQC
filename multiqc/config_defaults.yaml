@@ -638,6 +638,7 @@ module_order:
   - telseq
   - ataqv
   - mgikit
+  - mgnifam
   - mosaicatcher
 
 # Preserves `saved_raw_data` section in modules - default for interactive runs
