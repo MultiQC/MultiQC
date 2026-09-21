@@ -78,18 +78,38 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._add_general_stats()
         self._add_outcomes_section()
-        self._add_histogram_section("full_msa_size", "Full MSA size", "Sequences in the full alignment")
-        self._add_histogram_section("model_length", "Model length", "Match states in the family model")
+        self._add_histogram_section(
+            "full_msa_size",
+            "Full MSA size",
+            "Sequences in the full alignment",
+            "Each successful family's full alignment holds every sequence its final model recruited. "
+            "Small alignments mark narrow families; very large ones can mark a family that absorbed "
+            "unrelated sequences.",
+        )
+        self._add_histogram_section(
+            "model_length",
+            "Model length",
+            "Match states in the family model",
+            "The length of each successful family's final HMM, in match states.",
+        )
         self._add_histogram_section(
             "model_length_change",
             "Model length change",
             "Match states gained or lost by the update",
+            "Final model length minus the input model length, for every family that reached a final "
+            "model. With "
+            "`--skip_refine` models are not rebuilt, so every family sits at 0. In refine mode a model "
+            "can shrink as columns are trimmed, or grow when new recruits support extra columns.",
             update_only=True,
         )
         self._add_histogram_section(
             "retention",
             "Retention",
             "Fraction of round 1 recruits still present at the end",
+            "The share of the sequences recruited in the first search round that are still members "
+            "when the family finishes. Under `--skip_refine` it is 1.0 by construction. In refine mode, "
+            "values near 1 mean the family stayed stable. Values "
+            "are grouped into bins 0.05 wide for display; the data file keeps them exact.",
             update_only=True,
         )
 
@@ -152,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Mean fraction of round 1 recruits still present at the end of an update",
                 "min": 0,
                 "max": 1,
-                "scale": "RdYlGn",
+                "scale": "YlGnBu",
                 "format": "{:,.2f}",
             },
         }
@@ -173,6 +193,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Family outcomes",
             anchor="mgnifam-outcomes",
             description="Families that were generated or updated successfully, and the reasons the rest were discarded.",
+            helptext="""
+Each input cluster (for `generate_families`) or model (for `update_families`) ends in exactly
+one outcome: it becomes a successful family, or it is discarded with the reason shown here.
+
+A family that failed on an internal error is contained and recorded as a discard, so the chunk
+still completes, but mgnifam then exits with status 3. Chunks where that happened are listed
+in the warning above the plot.
+""",
             plot=bargraph.plot(
                 data,
                 {category: {"name": category.capitalize()} for category in categories},
@@ -194,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
             else None,
         )
 
-    def _add_histogram_section(self, key: str, name: str, xlab: str, update_only: bool = False):
+    def _add_histogram_section(self, key: str, name: str, xlab: str, helptext: str, update_only: bool = False):
         samples = {
             s_name: stats
             for s_name, stats in self.mgnifam_data.items()
@@ -218,6 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
             name=name,
             anchor=anchor,
             description=f"Number of families per value of: {xlab.lower()}.",
+            helptext=helptext,
             plot=linegraph.plot(
                 data,
                 pconfig={
