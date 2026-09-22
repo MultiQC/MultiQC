@@ -178,7 +178,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         general_stats_headers = self.get_general_stats_headers(all_headers=headers)
         if general_stats_headers:
-            self.general_stats_addcols(data, general_stats_headers, namespace="mgnifam")
+            self.general_stats_addcols(data, general_stats_headers)
 
     def _add_outcomes_section(self):
         data = {
