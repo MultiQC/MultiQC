@@ -67,7 +67,7 @@ def parse_count_html(module: BaseMultiqcModule):
         software = next(
             iter(x[1] for x in summary["summary_tab"]["pipeline_info_table"]["rows"] if x[0] == "Pipeline Version")
         )
-        
+
         software = str(software).strip()
 
         if "-" in software:
