@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 SCHEMA_VERSION = 1
 COMMANDS = ("generate_families", "update_families")
 STATS_SUFFIX = "_stats.json"
-# Retention is stored exactly; for display it is binned into twentieths (0.05 wide).
-RETENTION_BINS = 20
+# Retention is stored exactly; for display it is binned 0.05 wide.
+RETENTION_BIN_WIDTH = 0.05
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -111,6 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
             "values near 1 mean the family stayed stable. Values "
             "are grouped into bins 0.05 wide for display; `multiqc_mgnifam_histograms.json` keeps them exact.",
             update_only=True,
+            bin_width=RETENTION_BIN_WIDTH,
         )
 
         self.write_data_file(
@@ -233,7 +234,15 @@ in the warning above the plot.
             else None,
         )
 
-    def _add_histogram_section(self, key: str, name: str, xlab: str, helptext: str, update_only: bool = False):
+    def _add_histogram_section(
+        self,
+        key: str,
+        name: str,
+        xlab: str,
+        helptext: str,
+        update_only: bool = False,
+        bin_width: float | None = None,
+    ):
         samples = {
             s_name: stats
             for s_name, stats in self.mgnifam_data.items()
@@ -246,8 +255,9 @@ in the warning above the plot.
             counts: Counter[float] = Counter()
             for value, count in stats["histograms"][key].items():
                 x = float(value)
-                if key == "retention":
-                    x = math.floor(x * RETENTION_BINS) / RETENTION_BINS
+                if bin_width:
+                    # Rounding first keeps a value on a bin edge (0.35 / 0.05 = 6.999...) in its own bin.
+                    x = round(math.floor(round(x / bin_width, 6)) * bin_width, 6)
                 counts[x] += count
             if counts:
                 data[s_name] = dict(sorted(counts.items()))

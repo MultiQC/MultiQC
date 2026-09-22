@@ -121,12 +121,13 @@ def test_invalid_and_schemaless_files_are_skipped(run_module, tmp_path):
 
 def test_retention_is_binned_for_display(run_module):
     stats = _stats("update_families")
-    stats["histograms"]["retention"] = {"0.91": 1, "0.93": 2, "1.0": 3}
+    # 0.35 sits on a bin edge that floating-point division puts just below.
+    stats["histograms"]["retention"] = {"0.35": 1, "0.91": 1, "0.93": 2, "1.0": 3}
     run_module({"1_updated_stats.json": stats})
 
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-retention-plot")
     points = dict(plot.datasets[0].lines[0].pairs)
-    assert points == {0.9: 3, 1.0: 3}
+    assert points == {0.35: 1, 0.9: 3, 1.0: 3}
 
 
 def test_histograms_are_exported_exactly(run_module):
