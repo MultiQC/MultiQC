@@ -35,11 +35,13 @@ def _stats(command="generate_families", **changes):
 
 @pytest.fixture
 def run_module(tmp_path):
-    def _run(files):
+    def _run(files, **config_changes):
         for name, stats in files.items():
             (tmp_path / name).write_text(json.dumps(stats, indent=2) + "\n")
         report.reset()
         config.reset()
+        for key, value in config_changes.items():
+            setattr(config, key, value)
         report.analysis_files = [tmp_path]
         report.search_files(["mgnifam"])
         return MultiqcModule()
@@ -125,3 +127,11 @@ def test_retention_is_binned_for_display(run_module):
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-retention-plot")
     points = dict(plot.datasets[0].lines[0].pairs)
     assert points == {0.9: 3, 1.0: 3}
+
+
+def test_histograms_are_exported_exactly(run_module):
+    stats = _stats("update_families")
+    stats["histograms"]["retention"] = {"0.91": 1, "1.0": 3}
+    run_module({"1_updated_stats.json": stats}, preserve_module_raw_data=True)
+
+    assert report.saved_raw_data["multiqc_mgnifam_histograms"]["1_updated"] == stats["histograms"]

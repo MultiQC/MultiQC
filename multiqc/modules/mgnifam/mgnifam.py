@@ -109,7 +109,7 @@ class MultiqcModule(BaseMultiqcModule):
             "The share of the sequences recruited in the first search round that are still members "
             "when the family finishes. Under `--skip_refine` it is 1.0 by construction. In refine mode, "
             "values near 1 mean the family stayed stable. Values "
-            "are grouped into bins 0.05 wide for display; the data file keeps them exact.",
+            "are grouped into bins 0.05 wide for display; `multiqc_mgnifam_histograms.json` keeps them exact.",
             update_only=True,
         )
 
@@ -125,6 +125,12 @@ class MultiqcModule(BaseMultiqcModule):
                 for s_name, stats in self.mgnifam_data.items()
             },
             "multiqc_mgnifam",
+        )
+        # Exact values, including the histograms the report does not plot.
+        self.write_data_file(
+            {s_name: stats["histograms"] for s_name, stats in self.mgnifam_data.items()},
+            "multiqc_mgnifam_histograms",
+            data_format="json",
         )
 
     def _add_general_stats(self):
