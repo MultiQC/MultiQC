@@ -52,7 +52,7 @@ def _general_stats(sample):
 
 
 def test_both_commands_parse_as_separate_samples(run_module):
-    module = run_module({"1_stats.json": _stats(), "1_updated_stats.json": _stats("update_families", exit_status=3)})
+    module = run_module({"1_stats.json": _stats(), "1_updated_stats.json": _stats("update_families")})
 
     assert set(module.mgnifam_data) == {"1", "1_updated"}
     generated = _general_stats("1")
@@ -68,6 +68,16 @@ def test_both_commands_parse_as_separate_samples(run_module):
         "mgnifam-model-length-change",
         "mgnifam-retention",
     ]
+
+
+def test_crashed_chunks_are_flagged(run_module):
+    crashed = _stats(
+        exit_status=3, families={"input": 4, "successful": 3, "discarded": 1, "converged": 2, "crashed": 1}
+    )
+    module = run_module({"1_stats.json": crashed, "2_stats.json": _stats()})
+
+    section = next(s for s in module.sections if s.anchor == "mgnifam-outcomes")
+    assert section.alerts and section.alerts[0].affected_samples == ["1"]
 
 
 def test_update_sections_are_skipped_without_update_samples(run_module):
