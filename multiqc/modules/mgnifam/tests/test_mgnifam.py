@@ -142,3 +142,12 @@ def test_update_without_retention_is_a_format_break(run_module):
     del stats["histograms"]["retention"]
     with pytest.raises(KeyError):
         run_module({"1_updated_stats.json": stats})
+
+
+def test_families_without_a_discard_reason_are_shown_as_unaccounted(run_module):
+    run_module({"1_stats.json": _stats(discard_reasons={}), "2_stats.json": _stats()})
+
+    plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-outcomes-plot")
+    dataset = plot.datasets[0]
+    unaccounted = next(cat.data for cat in dataset.cats if cat.name == "Unaccounted")
+    assert dict(zip(dataset.samples, unaccounted))["1"] == 1

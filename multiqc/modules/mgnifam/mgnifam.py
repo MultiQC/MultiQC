@@ -187,13 +187,18 @@ class MultiqcModule(BaseMultiqcModule):
             self.general_stats_addcols(data, general_stats_headers)
 
     def _add_outcomes_section(self):
-        data = {
-            s_name: {"Successful": stats["families"]["successful"], **stats["discard_reasons"]}
-            for s_name, stats in self.mgnifam_data.items()
-        }
-        categories = ["Successful"] + sorted(
-            {reason for stats in self.mgnifam_data.values() for reason in stats["discard_reasons"]}
-        )
+        data: dict[str, dict[str, int]] = {}
+        for s_name, stats in self.mgnifam_data.items():
+            families = stats["families"]
+            row = {"Successful": families["successful"], **stats["discard_reasons"]}
+            # Keep each bar summing to the input count, so a discard without a reason stays visible.
+            if remainder := families["input"] - sum(row.values()):
+                row["Unaccounted"] = remainder
+            data[s_name] = row
+        reasons = {reason for stats in self.mgnifam_data.values() for reason in stats["discard_reasons"]}
+        categories = ["Successful"] + sorted(reasons)
+        if any("Unaccounted" in row for row in data.values()):
+            categories.append("Unaccounted")
         crashed = sorted(s_name for s_name, stats in self.mgnifam_data.items() if stats["families"]["crashed"])
         self.add_section(
             name="Family outcomes",
