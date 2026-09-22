@@ -2,7 +2,7 @@ import json
 import logging
 import math
 from collections import Counter
-from typing import Any
+from typing import Any, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -245,7 +245,7 @@ in the warning above the plot.
         xlab: str,
         helptext: str,
         update_only: bool = False,
-        bin_width: float | None = None,
+        bin_width: Optional[float] = None,
     ):
         samples = {
             s_name: stats
