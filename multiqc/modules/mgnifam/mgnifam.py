@@ -144,8 +144,8 @@ class MultiqcModule(BaseMultiqcModule):
             # An empty chunk is valid output: leave the percentage out rather than divide by zero.
             if families["input"]:
                 row["successful_pct"] = 100 * families["successful"] / families["input"]
-            retention = stats["histograms"].get("retention", {})
-            if retention:
+            # Only update_families records retention; index it so a missing key surfaces as a format break.
+            if stats["command"] == "update_families" and (retention := stats["histograms"]["retention"]):
                 row["mean_retention"] = sum(float(value) * count for value, count in retention.items()) / sum(
                     retention.values()
                 )

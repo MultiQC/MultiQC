@@ -135,3 +135,10 @@ def test_histograms_are_exported_exactly(run_module):
     run_module({"1_updated_stats.json": stats}, preserve_module_raw_data=True)
 
     assert report.saved_raw_data["multiqc_mgnifam_histograms"]["1_updated"] == stats["histograms"]
+
+
+def test_update_without_retention_is_a_format_break(run_module):
+    stats = _stats("update_families")
+    del stats["histograms"]["retention"]
+    with pytest.raises(KeyError):
+        run_module({"1_updated_stats.json": stats})
