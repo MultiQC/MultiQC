@@ -64,6 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
             if stats["command"] not in COMMANDS:
                 log.warning(f"Skipping {f['fn']}: unknown mgnifam command {stats['command']}")
                 continue
+            # Manually remove '_stats' suffix: too generic to have as part of clean_s_name()
             s_name = self.clean_s_name(f["fn"].removesuffix(STATS_SUFFIX), f)
             if s_name in self.mgnifam_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
