@@ -324,6 +324,6 @@ in the warning above the plot.
                 f"**{len(empty)} chunk{'s' if len(empty) != 1 else ''}** "
                 f"{'have' if len(empty) != 1 else 'has'} no families to plot."
             ),
-            level="info",
+            level="warning",
             affected_samples=empty,
         )
