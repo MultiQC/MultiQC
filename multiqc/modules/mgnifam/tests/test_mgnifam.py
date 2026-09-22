@@ -76,10 +76,12 @@ def test_crashed_chunks_are_flagged(run_module):
     crashed = _stats(
         exit_status=3, families={"input": 4, "successful": 3, "discarded": 1, "converged": 2, "crashed": 1}
     )
-    module = run_module({"1_stats.json": crashed, "2_stats.json": _stats()})
+    # A non-zero exit status is flagged even when no family is counted as crashed.
+    failed = _stats(exit_status=3)
+    module = run_module({"1_stats.json": crashed, "2_stats.json": _stats(), "3_stats.json": failed})
 
     section = next(s for s in module.sections if s.anchor == "mgnifam-outcomes")
-    assert section.alerts and section.alerts[0].affected_samples == ["1"]
+    assert section.alerts and section.alerts[0].affected_samples == ["1", "3"]
 
 
 def test_update_sections_are_skipped_without_update_samples(run_module):

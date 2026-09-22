@@ -200,7 +200,11 @@ class MultiqcModule(BaseMultiqcModule):
         categories = ["Successful"] + sorted(reasons)
         if any("Unaccounted" in row for row in data.values()):
             categories.append("Unaccounted")
-        crashed = sorted(s_name for s_name, stats in self.mgnifam_data.items() if stats["families"]["crashed"])
+        crashed = sorted(
+            s_name
+            for s_name, stats in self.mgnifam_data.items()
+            if stats["families"]["crashed"] or stats["exit_status"] != 0
+        )
         self.add_section(
             name="Family outcomes",
             anchor="mgnifam-outcomes",
@@ -224,8 +228,8 @@ in the warning above the plot.
             ),
             alerts=SectionAlert(
                 message=(
-                    f"**{len(crashed)} chunk{'s' if len(crashed) != 1 else ''}** completed with "
-                    "families that failed on an internal error and were recorded as discards."
+                    f"**{len(crashed)} chunk{'s' if len(crashed) != 1 else ''}** completed with a non-zero "
+                    "exit status: families failed on an internal error and were recorded as discards."
                 ),
                 level="warning",
                 affected_samples=crashed,
