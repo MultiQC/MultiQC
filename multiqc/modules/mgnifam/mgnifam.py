@@ -77,41 +77,101 @@ class MultiqcModule(BaseMultiqcModule):
 
         self._add_general_stats()
         self._add_outcomes_section()
-        self._add_histogram_section(
-            "full_msa_size",
-            "Full MSA size",
-            "Sequences in the full alignment",
-            "Each successful family's full alignment holds every sequence its final model recruited. "
+        all_samples = list(self.mgnifam_data)
+        update_samples = [s for s, stats in self.mgnifam_data.items() if stats["command"] == "update_families"]
+
+        data, empty = self._histogram_data("full_msa_size", all_samples)
+        self.add_section(
+            name="Full MSA size",
+            anchor="mgnifam-full-msa-size",
+            description="Number of families per full alignment size.",
+            helptext="Each successful family's full alignment holds every sequence its final model recruited. "
             "Small alignments mark narrow families; very large ones can mark a family that absorbed "
             "unrelated sequences.",
+            plot=linegraph.plot(
+                data,
+                pconfig={
+                    "id": "mgnifam-full-msa-size-plot",
+                    "title": "mgnifam: Full MSA size",
+                    "xlab": "Sequences in the full alignment",
+                    "ylab": "Families",
+                    "y_decimals": False,
+                },
+            )
+            if data
+            else None,
+            alerts=self._empty_chunks_alert(empty),
         )
-        self._add_histogram_section(
-            "model_length",
-            "Model length",
-            "Match states in the family model",
-            "The length of each successful family's final HMM, in match states.",
+
+        data, empty = self._histogram_data("model_length", all_samples)
+        self.add_section(
+            name="Model length",
+            anchor="mgnifam-model-length",
+            description="Number of families per model length.",
+            helptext="The length of each successful family's final HMM, in match states.",
+            plot=linegraph.plot(
+                data,
+                pconfig={
+                    "id": "mgnifam-model-length-plot",
+                    "title": "mgnifam: Model length",
+                    "xlab": "Match states in the family model",
+                    "ylab": "Families",
+                    "y_decimals": False,
+                },
+            )
+            if data
+            else None,
+            alerts=self._empty_chunks_alert(empty),
         )
-        self._add_histogram_section(
-            "model_length_change",
-            "Model length change",
-            "Match states gained or lost by the update",
-            "Final model length minus the input model length, for every family that reached a final "
-            "model. With "
-            "`--skip_refine` models are not rebuilt, so every family sits at 0. In refine mode a model "
-            "can shrink as columns are trimmed, or grow when new recruits support extra columns.",
-            update_only=True,
-        )
-        self._add_histogram_section(
-            "retention",
-            "Retention",
-            "Fraction of round 1 recruits still present at the end",
-            "The share of the sequences recruited in the first search round that are still members "
-            "when the family finishes. Under `--skip_refine` it is 1.0 by construction. In refine mode, "
-            "values near 1 mean the family stayed stable. Values "
-            "are grouped into bins 0.05 wide for display; `multiqc_mgnifam_histograms.json` keeps them exact.",
-            update_only=True,
-            bin_width=RETENTION_BIN_WIDTH,
-        )
+
+        if update_samples:
+            data, empty = self._histogram_data("model_length_change", update_samples)
+            self.add_section(
+                name="Model length change",
+                anchor="mgnifam-model-length-change",
+                description="Number of families per change in model length during the update.",
+                helptext="Final model length minus the input model length, for every family that reached a "
+                "final model. With `--skip_refine` models are not rebuilt, so every family sits at 0. In "
+                "refine mode a model can shrink as columns are trimmed, or grow when new recruits support "
+                "extra columns.",
+                plot=linegraph.plot(
+                    data,
+                    pconfig={
+                        "id": "mgnifam-model-length-change-plot",
+                        "title": "mgnifam: Model length change",
+                        "xlab": "Match states gained or lost by the update",
+                        "ylab": "Families",
+                        "y_decimals": False,
+                    },
+                )
+                if data
+                else None,
+                alerts=self._empty_chunks_alert(empty),
+            )
+
+            data, empty = self._histogram_data("retention", update_samples, bin_width=RETENTION_BIN_WIDTH)
+            self.add_section(
+                name="Retention",
+                anchor="mgnifam-retention",
+                description="Number of families per fraction of round 1 recruits kept by the update.",
+                helptext="The share of the sequences recruited in the first search round that are still "
+                "members when the family finishes. Under `--skip_refine` it is 1.0 by construction. In "
+                "refine mode, values near 1 mean the family stayed stable. Values are grouped into bins "
+                "0.05 wide for display; `multiqc_mgnifam_histograms.json` keeps them exact.",
+                plot=linegraph.plot(
+                    data,
+                    pconfig={
+                        "id": "mgnifam-retention-plot",
+                        "title": "mgnifam: Retention",
+                        "xlab": "Fraction of round 1 recruits still present at the end",
+                        "ylab": "Families",
+                        "y_decimals": False,
+                    },
+                )
+                if data
+                else None,
+                alerts=self._empty_chunks_alert(empty),
+            )
 
         self.write_data_file(
             {
@@ -237,26 +297,14 @@ in the warning above the plot.
             else None,
         )
 
-    def _add_histogram_section(
-        self,
-        key: str,
-        name: str,
-        xlab: str,
-        helptext: str,
-        update_only: bool = False,
-        bin_width: Optional[float] = None,
-    ):
-        samples = {
-            s_name: stats
-            for s_name, stats in self.mgnifam_data.items()
-            if not update_only or stats["command"] == "update_families"
-        }
-        if not samples:
-            return
+    def _histogram_data(
+        self, key: str, s_names: list[str], bin_width: Optional[float] = None
+    ) -> tuple[dict[str, dict[float, int]], list[str]]:
+        """Per-sample {value: family count} for one histogram, and the samples with nothing to plot."""
         data: dict[str, dict[float, int]] = {}
-        for s_name, stats in samples.items():
+        for s_name in s_names:
             counts: Counter[float] = Counter()
-            for value, count in stats["histograms"][key].items():
+            for value, count in self.mgnifam_data[s_name]["histograms"][key].items():
                 x = float(value)
                 if bin_width:
                     # Rounding first keeps a value on a bin edge (0.35 / 0.05 = 6.999...) in its own bin.
@@ -264,33 +312,17 @@ in the warning above the plot.
                 counts[x] += count
             if counts:
                 data[s_name] = dict(sorted(counts.items()))
-        empty = sorted(set(samples) - set(data))
-        anchor = f"mgnifam-{key.replace('_', '-')}"
-        self.add_section(
-            name=name,
-            anchor=anchor,
-            description=f"Number of families per value of: {xlab.lower()}.",
-            helptext=helptext,
-            plot=linegraph.plot(
-                data,
-                pconfig={
-                    "id": f"{anchor}-plot",
-                    "title": f"mgnifam: {name}",
-                    "xlab": xlab,
-                    "ylab": "Families",
-                    "y_decimals": False,
-                },
-            )
-            if data
-            else None,
-            alerts=SectionAlert(
-                message=(
-                    f"**{len(empty)} chunk{'s' if len(empty) != 1 else ''}** "
-                    f"{'have' if len(empty) != 1 else 'has'} no families to plot."
-                ),
-                level="info",
-                affected_samples=empty,
-            )
-            if empty
-            else None,
+        return data, sorted(set(s_names) - set(data))
+
+    @staticmethod
+    def _empty_chunks_alert(empty: list[str]) -> Optional[SectionAlert]:
+        if not empty:
+            return None
+        return SectionAlert(
+            message=(
+                f"**{len(empty)} chunk{'s' if len(empty) != 1 else ''}** "
+                f"{'have' if len(empty) != 1 else 'has'} no families to plot."
+            ),
+            level="info",
+            affected_samples=empty,
         )
