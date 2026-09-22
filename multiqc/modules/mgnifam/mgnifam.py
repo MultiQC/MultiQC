@@ -283,7 +283,7 @@ in the warning above the plot.
             alerts=SectionAlert(
                 message=(
                     f"**{len(empty)} chunk{'s' if len(empty) != 1 else ''}** "
-                    "with no families to plot hidden from this plot."
+                    f"{'have' if len(empty) != 1 else 'has'} no families to plot."
                 ),
                 level="info",
                 affected_samples=empty,
