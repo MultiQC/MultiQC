@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 COMMANDS = ("generate_families", "update_families")
-STATS_SUFFIX = "_stats.json"
 # Retention is stored exactly; for display it is binned 0.05 wide.
 RETENTION_BIN_WIDTH = 0.05
 
@@ -27,8 +26,8 @@ class MultiqcModule(BaseMultiqcModule):
     The module parses the run summary each command writes after a completed run:
     `<chunk>_stats.json` for `generate_families` and `<chunk>_updated_stats.json` for
     `update_families`. One file describes one chunk, and each chunk is one sample. The
-    sample name is the file name without the `_stats.json` suffix, so a chunk `1` reports
-    as `1` for generation and `1_updated` for an update. Files with a `schema_version`
+    sample name is the cleaned file name, so a chunk `1` reports as `1_stats` for generation
+    and `1_updated_stats` for an update. Files with a `schema_version`
     other than 1 are skipped with a warning.
 
     A summary is only written when a run completes, so every sample in the report comes
@@ -64,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             if stats["command"] not in COMMANDS:
                 log.warning(f"Skipping {f['fn']}: unknown mgnifam command {stats['command']}")
                 continue
-            s_name = self.clean_s_name(f["fn"].removesuffix(STATS_SUFFIX), f)
+            s_name = self.clean_s_name(f["fn"], f)
             if s_name in self.mgnifam_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name=s_name)

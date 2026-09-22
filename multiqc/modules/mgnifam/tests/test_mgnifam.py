@@ -56,11 +56,11 @@ def _general_stats(sample):
 def test_both_commands_parse_as_separate_samples(run_module):
     module = run_module({"1_stats.json": _stats(), "1_updated_stats.json": _stats("update_families")})
 
-    assert set(module.mgnifam_data) == {"1", "1_updated"}
-    generated = _general_stats("1")
+    assert set(module.mgnifam_data) == {"1_stats", "1_updated_stats"}
+    generated = _general_stats("1_stats")
     assert generated[ColumnKey("successful_pct")] == pytest.approx(75)
     assert ColumnKey("mean_retention") not in generated
-    assert _general_stats("1_updated")[ColumnKey("mean_retention")] == pytest.approx(2.5 / 3)
+    assert _general_stats("1_updated_stats")[ColumnKey("mean_retention")] == pytest.approx(2.5 / 3)
     # Update-only sections are added once, alongside the shared ones.
     anchors = [section.anchor for section in module.sections]
     assert anchors == [
@@ -81,7 +81,7 @@ def test_crashed_chunks_are_flagged(run_module):
     module = run_module({"1_stats.json": crashed, "2_stats.json": _stats(), "3_stats.json": failed})
 
     section = next(s for s in module.sections if s.anchor == "mgnifam-outcomes")
-    assert section.alerts and section.alerts[0].affected_samples == ["1", "3"]
+    assert section.alerts and section.alerts[0].affected_samples == ["1_stats", "3_stats"]
 
 
 def test_update_sections_are_skipped_without_update_samples(run_module):
@@ -98,7 +98,7 @@ def test_empty_chunk_renders_without_a_percentage(run_module):
     )
     module = run_module({"1_stats.json": empty})
 
-    assert ColumnKey("successful_pct") not in _general_stats("1")
+    assert ColumnKey("successful_pct") not in _general_stats("1_stats")
     # The section stays, with the chunk listed as having nothing to plot.
     section = next(s for s in module.sections if s.anchor == "mgnifam-full-msa-size")
     assert section.plot_anchor is None
@@ -118,7 +118,7 @@ def test_invalid_and_schemaless_files_are_skipped(run_module, tmp_path):
     (tmp_path / "broken_stats.json").write_text('{\n  "tool": "mgnifam",\n  "schema_')
     (tmp_path / "old_stats.json").write_text('{\n  "tool": "mgnifam"\n}\n')
     module = run_module({"1_stats.json": _stats()})
-    assert set(module.mgnifam_data) == {"1"}
+    assert set(module.mgnifam_data) == {"1_stats"}
 
 
 def test_retention_is_binned_for_display(run_module):
@@ -137,7 +137,7 @@ def test_histograms_are_exported_exactly(run_module):
     stats["histograms"]["retention"] = {"0.91": 1, "1.0": 3}
     run_module({"1_updated_stats.json": stats}, preserve_module_raw_data=True)
 
-    assert report.saved_raw_data["multiqc_mgnifam_histograms"]["1_updated"] == stats["histograms"]
+    assert report.saved_raw_data["multiqc_mgnifam_histograms"]["1_updated_stats"] == stats["histograms"]
 
 
 def test_update_without_retention_is_a_format_break(run_module):
@@ -153,7 +153,7 @@ def test_families_without_a_discard_reason_are_shown_as_unaccounted(run_module):
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-outcomes-plot")
     dataset = plot.datasets[0]
     unaccounted = next(cat.data for cat in dataset.cats if cat.name == "Unaccounted")
-    assert dict(zip(dataset.samples, unaccounted))["1"] == 1
+    assert dict(zip(dataset.samples, unaccounted))["1_stats"] == 1
 
 
 def test_discard_reason_acronyms_keep_their_case(run_module):
