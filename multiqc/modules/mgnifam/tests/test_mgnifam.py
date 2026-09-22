@@ -151,3 +151,10 @@ def test_families_without_a_discard_reason_are_shown_as_unaccounted(run_module):
     dataset = plot.datasets[0]
     unaccounted = next(cat.data for cat in dataset.cats if cat.name == "Unaccounted")
     assert dict(zip(dataset.samples, unaccounted))["1"] == 1
+
+
+def test_discard_reason_acronyms_keep_their_case(run_module):
+    run_module({"1_stats.json": _stats(discard_reasons={"HMM build failed": 1})})
+
+    plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-outcomes-plot")
+    assert [cat.name for cat in plot.datasets[0].cats] == ["Successful", "HMM build failed"]

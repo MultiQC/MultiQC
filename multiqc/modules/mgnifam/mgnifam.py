@@ -214,7 +214,7 @@ in the warning above the plot.
 """,
             plot=bargraph.plot(
                 data,
-                {category: {"name": category.capitalize()} for category in categories},
+                {category: {"name": category[:1].upper() + category[1:]} for category in categories},
                 pconfig={
                     "id": "mgnifam-outcomes-plot",
                     "title": "mgnifam: Family outcomes",
