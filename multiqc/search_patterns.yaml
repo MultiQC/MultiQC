@@ -456,6 +456,9 @@ fgumi/position_group_sizes:
 fgumi/retag:
   contents: "operation\tkind\trecords_applied"
   num_lines: 1
+fgumi/review:
+  contents: "chrom\tpos\tref\tgenotype\tfilters"
+  num_lines: 1
 fgumi/strand_family_sizes:
   contents: "family_size\tcs_count\tcs_fraction"
   num_lines: 1
