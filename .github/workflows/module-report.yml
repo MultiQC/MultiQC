@@ -9,12 +9,13 @@ permissions:
 
 jobs:
   build:
-    # PR code runs here, so this job gets a read-only token and no secrets.
-    # The /review trigger phrase is kept in sync with claude-code-review-trigger.yml
+    # Runs PR code: never give this job write scopes or secrets.
+    # Keep the /review match in sync with claude-code-review-trigger.yml.
+    # Commands only count at line start; fromJSON is the only way to write a newline in an expression.
     if: |
       github.event.issue.pull_request &&
-      (startsWith(github.event.comment.body, '/report') ||
-       contains(github.event.comment.body, '/review'))
+      (contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/report', fromJSON('"\n"'))) ||
+       contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"'))))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -26,8 +27,7 @@ jobs:
       report_url: ${{ steps.upload-report.outputs.artifact-url }}
       screenshot: ${{ steps.upload-screenshot.outputs.artifact-id != '' }}
     steps:
-      # Pin the head commit here: resolving it at checkout would let a push
-      # land after the maintainer commented but before the PR code runs.
+      # Pin the head SHA now, so a push after the maintainer's comment can't change what runs.
       - name: Require maintainer access and pin the PR head
         id: pr
         env:
@@ -127,7 +127,7 @@ jobs:
     if: |
       always() && needs.build.outputs.pr != '' &&
       (needs.build.outputs.modules != '' || needs.build.result != 'success' ||
-       startsWith(github.event.comment.body, '/report'))
+       contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/report', fromJSON('"\n"'))))
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
