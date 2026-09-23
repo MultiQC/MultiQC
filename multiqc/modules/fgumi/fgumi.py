@@ -3,7 +3,7 @@ from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import family_sizes, grouping, consensus_families, yields, umis, consensus_stats
+from . import family_sizes, grouping, consensus_families, yields, umis, consensus_stats, dedup
 
 _TOOL_MODULES = (
     family_sizes,
@@ -12,6 +12,7 @@ _TOOL_MODULES = (
     yields,
     umis,
     consensus_stats,
+    dedup,
 )
 
 log = logging.getLogger(__name__)

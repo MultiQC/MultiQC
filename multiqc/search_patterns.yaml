@@ -423,6 +423,12 @@ fgumi/consensus_stats:
 fgumi/correct:
   contents: "umi\ttotal_matches\tperfect_matches"
   num_lines: 1
+fgumi/dedup:
+  contents: "sample\tlibrary\tfiltered_templates"
+  num_lines: 1
+fgumi/dedup_ladder:
+  contents: "library\ttemplates_seen\tduplicate_fraction"
+  num_lines: 1
 fgumi/duplex_family_sizes:
   contents: "ab_size\tba_size\tcount\tfraction"
   num_lines: 1
