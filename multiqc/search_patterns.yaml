@@ -417,6 +417,9 @@ fgbio/groupreadsbyumi:
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+fgumi/correct:
+  contents: "umi\ttotal_matches\tperfect_matches"
+  num_lines: 1
 fgumi/duplex_family_sizes:
   contents: "ab_size\tba_size\tcount\tfraction"
   num_lines: 1
@@ -431,6 +434,9 @@ fgumi/position_group_sizes:
   num_lines: 1
 fgumi/strand_family_sizes:
   contents: "family_size\tcs_count\tcs_fraction"
+  num_lines: 1
+fgumi/umi_counts:
+  contents: "umi\traw_observations\traw_observations_with_errors"
   num_lines: 1
 fgumi/yield:
   contents: "fraction\tread_pairs\tcs_families\tss_families"

@@ -3,13 +3,14 @@ from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import family_sizes, grouping, consensus_families, yields
+from . import family_sizes, grouping, consensus_families, yields, umis
 
 _TOOL_MODULES = (
     family_sizes,
     grouping,
     consensus_families,
     yields,
+    umis,
 )
 
 log = logging.getLogger(__name__)
