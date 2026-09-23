@@ -11,7 +11,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph, table
 
 from .schemas import ClippingMetric, CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
-from .util import drop_none, flatten, load_rows, pct, register, sample_name
+from .util import drop_none, flatten, iter_samples, load_rows, pct, register
 
 log = logging.getLogger(__name__)
 
@@ -74,10 +74,15 @@ def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:
     if f["f"].split("\n", 1)[0].startswith("total_reads\tpassed_reads"):
         rows = load_rows(f, FilterStatsMetric)
         return rows[0] if rows else None
+    pairs = [line.rstrip("\r").split("\t") for line in f["f"].splitlines() if line.strip()]
+    fields = {pair[0]: pair[1] for pair in pairs if len(pair) == 2}
+    # Another tool's key/value file can start with "total_reads"; only fgumi's exact key set is ours.
+    if len(fields) != len(pairs) or set(fields) != set(FilterStatsMetric.columns()):
+        log.debug(f"{f['fn']}: key/value file is not an fgumi filter --stats file, skipping")
+        return None
     try:
-        fields = dict(line.rstrip("\r").split("\t", 1) for line in f["f"].splitlines() if line.strip())
         return FilterStatsMetric.model_validate(fields)
-    except (ValueError, ValidationError) as error:
+    except ValidationError as error:
         log.warning(f"Skipping {f['fn']}: not a valid fgumi filter --stats file: {error}")
         return None
 
@@ -113,6 +118,7 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
         {
             "pass_rate": {
                 "title": "% pass filter",
+                "scale": "RdYlGn",
                 "description": "Consensus reads passing fgumi filter",
                 "suffix": "%",
                 "max": 100,
@@ -126,18 +132,11 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, int]] = {}
-    for f in module.find_log_files("fgumi/copy_umi"):
-        rows = load_rows(f, CopyUmiMetric)
-        if not rows:
-            continue
-        row = rows[0]
-        data[register(module, f)] = {
-            "rx_written": row.rx_written,
-            "rx_overwritten": row.rx_overwritten,
-            "names_trimmed": row.names_trimmed,
-        }
-    data = module.ignore_samples(data)
+    data: Dict[str, Dict[str, int]] = {
+        s_name: rows[0].model_dump(include={"rx_written", "rx_overwritten", "names_trimmed"})
+        for s_name, rows in iter_samples(module, "fgumi/copy_umi", CopyUmiMetric)
+        if rows
+    }
     if not data:
         return set()
     module.add_section(
@@ -163,15 +162,9 @@ def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
 def _retag(module: BaseMultiqcModule) -> Set[str]:
     data: Dict[str, Dict[str, Union[int, str]]] = {}
     samples: Set[str] = set()
-    for f in module.find_log_files("fgumi/retag"):
-        rows = load_rows(f, RetagMetric)
-        if not rows:
-            continue
-        # Rows are keyed "<sample> (<operation>)", so sample filters are applied to the bare sample name here.
-        s_name = sample_name(module, f)
-        if module.is_ignore_sample(s_name):
-            continue
-        samples.add(register(module, f, s_name))
+    # Rows are keyed "<sample> (<operation>)"; iter_samples applies sample filters to the bare sample name.
+    for s_name, rows in iter_samples(module, "fgumi/retag", RetagMetric):
+        samples.add(s_name)
         for row in rows:
             key = f"{s_name} ({row.operation})"
             if key in data:
@@ -207,13 +200,10 @@ def _retag(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _downsample(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[int, int]] = {}
-    for f in module.find_log_files("fgumi/downsample_histogram"):
-        rows = load_rows(f, DownsampleHistogramMetric)
-        if rows is None:
-            continue
-        data[register(module, f)] = {r.family_size: r.count for r in rows}
-    data = module.ignore_samples(data)
+    data: Dict[str, Dict[int, int]] = {
+        s_name: {r.family_size: r.count for r in rows}
+        for s_name, rows in iter_samples(module, "fgumi/downsample_histogram", DownsampleHistogramMetric)
+    }
     if not data:
         return set()
     module.add_section(

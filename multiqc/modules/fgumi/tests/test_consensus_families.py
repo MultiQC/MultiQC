@@ -28,13 +28,9 @@ def test_simplex_and_duplex_strand_family_sizes(run_fgumi):
     assert module.samples_parsed_by_tool["consensus_families"] == {"A", "B"}
     raw = module.saved_raw_data
     assert raw["multiqc_fgumi_simplex_family_sizes"]["A"] == {"cs_1": 50, "cs_3": 50, "ss_1": 40, "ss_3": 60}
-    assert (
-        raw["multiqc_fgumi_duplex_family_sizes"]["B"]["ds_1"],
-        raw["multiqc_fgumi_duplex_family_sizes"]["B"]["ds_2"],
-    ) == (
-        30,
-        70,
-    )
+    duplex = raw["multiqc_fgumi_duplex_family_sizes"]["B"]
+    assert duplex["ds_1"] == 30
+    assert duplex["ds_2"] == 70
     assert {"fgumi_simplex_family_sizes", "fgumi_duplex_family_sizes"} <= set(report.plot_by_id)
 
 
@@ -50,8 +46,8 @@ def test_duplex_ab_ba_heatmaps_and_min_strand_line(run_fgumi):
 @pytest.mark.parametrize(
     "n_samples, cap, expect_heatmaps",
     [
-        pytest.param(11, None, False, id="above-default-cap"),
-        pytest.param(10, None, True, id="at-default-cap"),
+        pytest.param(6, None, False, id="above-default-cap"),
+        pytest.param(5, None, True, id="at-default-cap"),
         pytest.param(2, 1, False, id="configured-cap"),
     ],
 )
@@ -108,3 +104,18 @@ def test_header_only_duplex_family_sizes_gets_one_section(run_fgumi):
     per_sample = [s for s in module.sections if s.anchor.startswith("fgumi-duplex-ab-ba")]
     assert [s.anchor for s in per_sample] == ["fgumi-duplex-ab-ba-B"]
     assert "No duplex families were recorded" in per_sample[0].alerts[0].message
+
+
+def test_both_strands_heatmap_is_skipped_when_identical(run_fgumi):
+    # Every family has BA reads, so the both-strands heatmap would repeat the all-families one.
+    all_have_ba = "ab_size\tba_size\tcount\tfraction\tfraction_gt_or_eq_size\n2\t1\t30\t0.5\t1\n3\t2\t30\t0.5\t0.5\n"
+    run_fgumi({"B.duplex_family_sizes.txt": all_have_ba})
+    assert "fgumi_duplex_ab_ba_B" in report.plot_by_id
+    assert "fgumi_duplex_ab_ba_both_B" not in report.plot_by_id
+
+
+def test_duplex_metrics_files_are_all_listed_as_sources(run_fgumi):
+    # duplex-metrics writes both <prefix>.family_sizes.txt and <prefix>.duplex_family_sizes.txt for one sample.
+    run_fgumi({"B.family_sizes.txt": DUPLEX_FS, "B.duplex_family_sizes.txt": DUPLEX_AB_BA})
+    sections = [section for section, by_sample in report.data_sources["fgumi"].items() if "B" in by_sample]
+    assert len(sections) == 2

@@ -10,18 +10,19 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.report import clean_htmlid
 from multiqc.plots import heatmap, linegraph
 from multiqc.types import SectionAlert
 
 from .schemas import DuplexFamilySizeMetric, DuplexStrandFamilySizeMetric, SimplexFamilySizeMetric
-from .util import drop_none, flatten, load_rows, pct, register, safe_id
+from .util import drop_none, flatten, header_columns, iter_samples, load_rows, pct, register
 
 log = logging.getLogger(__name__)
 
 HEATMAP_CAP = 20  # sizes at or above this fold into one "20+" row/column
-# Above this many samples the two per-sample heatmaps are skipped (they would swamp the report) and only the
+# Above this many samples the per-sample heatmaps are skipped (they would swamp the report) and only the
 # cross-sample min(AB, BA) line is drawn. Override with `fgumi_config: {max_duplex_heatmap_samples: N}`.
-MAX_HEATMAP_SAMPLES = 10
+MAX_HEATMAP_SAMPLES = 5
 
 _HEATMAP_HELP = (
     "Each cell counts duplex families by the number of reads from the AB and BA strands, as in fgbio "
@@ -39,11 +40,12 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
     for f in module.find_log_files("fgumi/strand_family_sizes"):
         if f["f"] is None:
             continue
-        is_duplex = "ds_count" in f["f"].split("\n", 1)[0].split("\t")
+        is_duplex = DuplexStrandFamilySizeMetric.matches(header_columns(f))
         rows = load_rows(f, DuplexStrandFamilySizeMetric if is_duplex else SimplexFamilySizeMetric)
         if rows is None:
             continue
-        s_name = register(module, f, section=f"{'duplex' if is_duplex else 'simplex'}_family_sizes")
+        # Not "<kind>_family_sizes": "duplex_family_sizes" is already the section of the AB x BA files.
+        s_name = register(module, f, section=f"strand_family_sizes_{'duplex' if is_duplex else 'simplex'}")
         strands = ["cs", "ss", "ds"] if is_duplex else ["cs", "ss"]
         entry: Dict[str, Dict[int, Optional[float]]] = {}
         for strand in strands:
@@ -120,13 +122,7 @@ def _heatmap_matrix(
 
 
 def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
-    rows_by_sample: Dict[str, List[DuplexFamilySizeMetric]] = {}
-    for f in module.find_log_files("fgumi/duplex_family_sizes"):
-        rows = load_rows(f, DuplexFamilySizeMetric)
-        if rows is None:
-            continue
-        rows_by_sample[register(module, f)] = rows
-    rows_by_sample = module.ignore_samples(rows_by_sample)
+    rows_by_sample = dict(iter_samples(module, "fgumi/duplex_family_sizes", DuplexFamilySizeMetric))
     if not rows_by_sample:
         return set()
 
@@ -154,23 +150,30 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
     max_samples = (getattr(config, "fgumi_config", None) or {}).get("max_duplex_heatmap_samples", MAX_HEATMAP_SAMPLES)
     if len(rows_by_sample) > max_samples:
         log.info(f"Skipping per-sample duplex heatmaps for {len(rows_by_sample)} samples (limit {max_samples})")
-        rows_by_sample_for_heatmaps: Dict[str, List[DuplexFamilySizeMetric]] = {}
     else:
-        rows_by_sample_for_heatmaps = rows_by_sample
-    for s_name, rows in rows_by_sample_for_heatmaps.items():
+        _per_sample_heatmaps(module, rows_by_sample)
+    module.write_data_file(min_strand, "multiqc_fgumi_duplex_min_strand")
+    return set(rows_by_sample)
+
+
+def _per_sample_heatmaps(module: BaseMultiqcModule, rows_by_sample: Dict[str, List[DuplexFamilySizeMetric]]) -> None:
+    for s_name, rows in rows_by_sample.items():
         if not rows:
             module.add_section(
                 name=f"Duplex family sizes: {html.escape(s_name)}",
-                anchor=f"fgumi_duplex_ab_ba_{safe_id(s_name)}".replace("_", "-"),
+                anchor=clean_htmlid(f"fgumi_duplex_ab_ba_{s_name}").replace("_", "-"),
                 description="No duplex families were recorded.",
                 helptext=_HEATMAP_HELP,
                 plot=None,
                 alerts=[SectionAlert(message="No duplex families were recorded", affected_samples=[s_name])],
             )
             continue
-        for suffix, min_ba, title in [("", 0, "all families"), ("_both", 1, "families with AB > 0 and BA > 0")]:
+        variants = [("", 0, "all families"), ("_both", 1, "families with AB > 0 and BA > 0")]
+        if all(r.ba_size > 0 for r in rows):
+            variants = variants[:1]  # every family has BA reads, so the both-strands heatmap would be identical
+        for suffix, min_ba, title in variants:
             built = _heatmap_matrix(rows, min_ba)
-            plot_id = f"fgumi_duplex_ab_ba{suffix}_{safe_id(s_name)}"
+            plot_id = clean_htmlid(f"fgumi_duplex_ab_ba{suffix}_{s_name}")
             if built is None:
                 # "No families with reads on both strands" is exactly what this plot exists to show.
                 module.add_section(
@@ -206,5 +209,3 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
                     },
                 ),
             )
-    module.write_data_file(min_strand, "multiqc_fgumi_duplex_min_strand")
-    return set(rows_by_sample)

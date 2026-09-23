@@ -3,9 +3,8 @@
 one pydantic object per UMI."""
 
 import itertools
-import statistics
 from collections import Counter
-from typing import Any, Dict, Iterable, List, Set
+from typing import Any, Dict, Iterable, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
@@ -15,16 +14,38 @@ from .util import drop_none, register, skip_unreadable, stream_dicts
 
 
 def summarize_observations(counts: Iterable[int]) -> Dict[str, Any]:
-    """Number of UMIs, median raw observations, % seen once, and UMIs per log2 bin of raw observations."""
-    values: List[int] = list(counts)
-    bins: Counter = Counter(1 << (value - 1).bit_length() if value > 1 else 1 for value in values)
+    """Number of UMIs, median raw observations, % seen once, and UMIs per log2 bin of raw observations.
+
+    Tallies the distinct observation counts rather than keeping one value per UMI, so memory stays small for a
+    file with millions of UMIs.
+    """
+    tally: Counter = Counter(counts)
+    n = sum(tally.values())
+    bins: Counter = Counter()
+    for value, umis in tally.items():
+        bins[1 << (value - 1).bit_length() if value > 1 else 1] += umis
     # With no UMIs the median and singleton share are undefined, not zero.
     return {
-        "n": len(values),
-        "median": float(statistics.median(values)) if values else None,
-        "singleton_pct": 100.0 * sum(1 for v in values if v == 1) / len(values) if values else None,
+        "n": n,
+        "median": _median(tally, n) if n else None,
+        "singleton_pct": 100.0 * tally[1] / n if n else None,
         "bins": dict(sorted(bins.items())),
     }
+
+
+def _median(tally: Counter, n: int) -> float:
+    """The median of ``n`` values given as ``{value: occurrences}``."""
+    ordered = sorted(tally.items())
+
+    def nth(index: int) -> int:
+        seen = 0
+        for value, occurrences in ordered:
+            seen += occurrences
+            if index < seen:
+                return value
+        raise IndexError(index)
+
+    return float(nth(n // 2)) if n % 2 else (nth(n // 2 - 1) + nth(n // 2)) / 2.0
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -39,8 +60,8 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             continue
         try:
             header_line = handle.readline()
-            kind = "duplex_umi_counts" if "fraction_unique_observations_expected" in header_line else "umi_counts"
-            schema = DuplexUmiMetric if kind == "duplex_umi_counts" else UmiMetric
+            schema = DuplexUmiMetric if DuplexUmiMetric.matches(header_line.rstrip("\r\n").split("\t")) else UmiMetric
+            kind = "duplex_umi_counts" if schema is DuplexUmiMetric else "umi_counts"
             rows = stream_dicts(itertools.chain([header_line], handle), f["fn"], schema)
             summary = summarize_observations(int(row["raw_observations"]) for row in rows)
         except (MetricFormatError, ValueError) as error:  # UnicodeDecodeError is a ValueError
@@ -61,7 +82,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             "(or fgbio CollectDuplexSeqMetrics); "
             "individual UMIs are not listed.",
             plot=linegraph.plot(
-                {s: dict(data[s]["bins"]) for s in data},
+                {s: data[s]["bins"] for s in data},
                 {
                     "id": f"fgumi_{kind}",
                     "title": f"fgumi: {title}",
@@ -75,13 +96,20 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
         headers: Dict[str, Dict[str, Any]] = {
             "n": {
                 "title": "UMIs" if kind == "umi_counts" else "Duplex UMIs",
+                "scale": "Purples",
                 "hidden": True,
                 "description": f"Distinct UMIs ({title.lower()})",
                 "format": "{:,.0f}",
             },
-            "median": {"title": "Median obs", "hidden": True, "description": "Median raw observations per UMI"},
+            "median": {
+                "title": "Median obs",
+                "scale": "Blues",
+                "hidden": True,
+                "description": "Median raw observations per UMI",
+            },
             "singleton_pct": {
                 "title": "% singleton",
+                "scale": "YlOrRd",
                 "hidden": True,
                 "suffix": "%",
                 "max": 100,

@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import DuplexYieldMetric, SimplexYieldMetric
-from .util import drop_none, finite, flatten, load_rows, pct, register
+from .util import drop_none, finite, flatten, header_columns, load_rows, pct, register
 
 _DUPLEX_TABS = [
     ("duplexes", "Duplexes (actual)", "Duplexes"),
@@ -34,7 +34,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     for f in module.find_log_files("fgumi/yield"):
         if f["f"] is None:
             continue
-        if "ds_families" in f["f"].split("\n", 1)[0].split("\t"):
+        if DuplexYieldMetric.matches(header_columns(f)):
             rows = load_rows(f, DuplexYieldMetric)
             if not rows:
                 continue
@@ -95,12 +95,14 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             {
                 "ds_duplexes": {
                     "title": "Duplexes",
+                    "scale": "YlGn",
                     "description": "Duplex consensus molecules",
                     "hidden": True,
                     "format": "{:,.0f}",
                 },
                 "ds_fraction_duplexes": {
                     "title": "% duplexes",
+                    "scale": "RdYlGn",
                     "description": "Double-strand families that are duplexes",
                     "hidden": True,
                     "max": 100,
@@ -109,6 +111,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 },
                 "ss_consensus_families": {
                     "title": "SS families",
+                    "scale": "BuGn",
                     "description": "Single-strand consensus families",
                     "hidden": True,
                     "format": "{:,.0f}",

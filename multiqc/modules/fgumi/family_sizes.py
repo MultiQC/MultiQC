@@ -1,36 +1,32 @@
 """Family size histograms: `group --family-size-histogram`, `group --metrics` (`<prefix>.family_sizes.txt`)
-and `dedup --family-size-histogram`. The columns are identical to fgbio GroupReadsByUmi's histogram, so the
-fgumi module claims these files instead of the fgbio module: MultiQC tries search patterns with a smaller
-`num_lines` first, and a file claimed by a non-shared pattern is not offered to later ones, so `fgumi/family_sizes`
-(`num_lines: 2`) wins over `fgbio/groupreadsbyumi` (`num_lines: 3`)."""
+and `dedup --family-size-histogram`. The columns are identical to fgbio GroupReadsByUmi's histogram, so both
+modules find these files; `util.family_sizes_module` decides which one reports them."""
 
-from typing import Dict, Optional, Set
+from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import FamilySizeMetric
-from .util import drop_none, load_rows, pct, register
+from .util import drop_none, family_sizes_evidence, family_sizes_module, found_by, iter_samples, pct
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     counts: Dict[str, Dict[int, float]] = {}
-    percent: Dict[str, Dict[int, Optional[float]]] = {}
-    cumulative: Dict[str, Dict[int, Optional[float]]] = {}
-    for f in module.find_log_files("fgumi/family_sizes"):
-        rows = load_rows(f, FamilySizeMetric)
-        if rows is None:
-            continue
-        s_name = register(module, f)
+    percent: Dict[str, Dict[int, float]] = {}
+    cumulative: Dict[str, Dict[int, float]] = {}
+    evidence = family_sizes_evidence()
+    for s_name, rows in iter_samples(
+        module,
+        "fgumi/family_sizes",
+        FamilySizeMetric,
+        skip=lambda f: found_by(f, "fgbio/groupreadsbyumi") and family_sizes_module(f, evidence) == "fgbio",
+    ):
         counts[s_name] = {r.family_size: r.count for r in rows}
-        percent[s_name] = {r.family_size: pct(r.fraction) for r in rows}
-        cumulative[s_name] = {r.family_size: pct(r.fraction_gt_or_eq_family_size) for r in rows}
-
-    counts = module.ignore_samples(counts)
+        percent[s_name] = drop_none({r.family_size: pct(r.fraction) for r in rows})
+        cumulative[s_name] = drop_none({r.family_size: pct(r.fraction_gt_or_eq_family_size) for r in rows})
     if not counts:
         return set()
-    percent = {s: percent[s] for s in counts}
-    cumulative = {s: cumulative[s] for s in counts}
 
     module.add_section(
         name="Family sizes",
@@ -40,11 +36,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         "`fgumi dedup --family-size-histogram`. The cumulative tab shows the percentage of families of at least "
         "each size.",
         plot=linegraph.plot(
-            [
-                counts,
-                {s: drop_none(v) for s, v in percent.items()},
-                {s: drop_none(v) for s, v in cumulative.items()},
-            ],
+            [counts, percent, cumulative],
             {
                 "id": "fgumi_family_sizes",
                 "title": "fgumi: Family sizes",

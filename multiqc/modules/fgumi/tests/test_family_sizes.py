@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from multiqc import report
@@ -71,17 +73,121 @@ def test_runall_outputs_share_one_sample(run_fgumi):
     assert {"family_sizes", "grouping_metrics"} <= sources
 
 
-def test_family_sizes_claimed_by_fgumi_not_fgbio(tmp_path):
+FGBIO_ERROR_RATE = (
+    "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\ta_to_g_error_rate"
+    "\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate\n"
+    "1\t1\t1000\t0\t0.0\t0.001\t0.002\t0.003\t0.004\t0.005\t0.006\n"
+)
+POSITION_GROUP_SIZES = "position_group_size\tcount\tfraction\tfraction_gt_or_eq_position_group_size\n1\t10\t1\t1\n"
+
+
+HIST = FAMILY_SIZES_TSV
+FGUMI_ONLY = POSITION_GROUP_SIZES  # a file only fgumi writes
+FGBIO_ONLY = FGBIO_ERROR_RATE  # a file only fgbio writes
+
+
+@pytest.mark.parametrize(
+    "layout, family_sizes_module, modules, expected",
+    [
+        pytest.param({"A.family_sizes.txt": HIST}, None, ["fgbio", "fgumi"], {"A": "fgbio"}, id="no-evidence-fgbio"),
+        pytest.param(
+            {"A.family_sizes.txt": HIST, "A.position_group_sizes.txt": FGUMI_ONLY},
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgumi"},
+            id="same-dir-fgumi-evidence",
+        ),
+        pytest.param(
+            {"A.family_sizes.txt": HIST, "A.error_rate.txt": FGBIO_ONLY},
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgbio"},
+            id="same-dir-fgbio-evidence",
+        ),
+        pytest.param(
+            {"A.family_sizes.txt": HIST, "A.position_group_sizes.txt": FGUMI_ONLY, "A.error_rate.txt": FGBIO_ONLY},
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgbio"},
+            id="mixed-dir-fgbio",
+        ),
+        pytest.param(
+            {"S1/group/A.family_sizes.txt": HIST, "S1/dedup/A.position_group_sizes.txt": FGUMI_ONLY},
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgumi"},
+            id="evidence-in-parent-dir",
+        ),
+        pytest.param(
+            {
+                "fgbio/B.family_sizes.txt": HIST,
+                "fgbio/B.error_rate.txt": FGBIO_ONLY,
+                "fgumi/A.family_sizes.txt": HIST,
+                "fgumi/A.position_group_sizes.txt": FGUMI_ONLY,
+            },
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgumi", "B": "fgbio"},
+            id="sibling-dirs-each-keep-their-own",
+        ),
+        pytest.param(
+            {
+                "A.error_rate.txt": FGBIO_ONLY,
+                "fgumi/A.family_sizes.txt": HIST,
+                "fgumi/A.position_group_sizes.txt": FGUMI_ONLY,
+            },
+            None,
+            ["fgbio", "fgumi"],
+            {"A": "fgumi"},
+            id="nearest-dir-wins-over-mixed-parent",
+        ),
+        pytest.param({"A.family_sizes.txt": HIST}, "fgumi", ["fgbio", "fgumi"], {"A": "fgumi"}, id="config-fgumi"),
+        pytest.param(
+            {"A.family_sizes.txt": HIST, "A.position_group_sizes.txt": FGUMI_ONLY},
+            "fgbio",
+            ["fgbio", "fgumi"],
+            {"A": "fgbio"},
+            id="config-fgbio",
+        ),
+        pytest.param({"A.family_sizes.txt": HIST}, None, ["fgumi"], {"A": "fgumi"}, id="only-fgumi-running"),
+        pytest.param({"A.family_sizes.txt": HIST}, "fgumi", ["fgbio"], {"A": "fgbio"}, id="only-fgbio-running"),
+    ],
+)
+def test_one_module_reports_each_family_size_histogram(tmp_path, layout, family_sizes_module, modules, expected):
+    # fgumi and fgbio GroupReadsByUmi histograms are identical; exactly one module may report each file.
+    from multiqc import config
     from multiqc.modules.fgbio import MultiqcModule as FgbioModule
 
-    path = tmp_path / "S1.family_sizes.txt"
-    path.write_text(FAMILY_SIZES_TSV)
+    config.reset()
+    if family_sizes_module is not None:
+        config.fgumi_config = {"family_sizes_module": family_sizes_module}
+    paths = []
+    for name, content in layout.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        paths.append(path)
     report.reset()
-    report.analysis_files = [path]
-    report.search_files(["fgbio", "fgumi"])
-    with pytest.raises(ModuleNoSamplesFound):
-        FgbioModule()
-    assert MultiqcModule().samples_parsed_by_tool["family_sizes"] == {"S1"}
+    report.analysis_files = paths
+    report.search_files(modules)
+    try:
+        for module_class in [FgbioModule, MultiqcModule]:
+            if module_class.__module__.split(".")[2] in modules:
+                try:
+                    module_class()
+                except ModuleNoSamplesFound:
+                    pass
+        # The module that recorded each histogram as a data source is the one that reported it.
+        owners = {
+            Path(path).name.split(".")[0]: module_name
+            for module_name, sections in report.data_sources.items()
+            for by_sample in sections.values()
+            for path in by_sample.values()
+            if str(path).endswith(".family_sizes.txt")
+        }
+        assert owners == expected
+    finally:
+        config.reset()
 
 
 def test_malformed_file_is_skipped(run_fgumi, caplog):

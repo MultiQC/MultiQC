@@ -9,9 +9,7 @@ Column names and order follow fgumi's published contract, ``crates/fgumi-metrics
 """
 
 from typing import (
-    ClassVar,
     Dict,
-    FrozenSet,
     Iterable,
     Iterator,
     List,
@@ -44,7 +42,6 @@ class FgumiMetric(BaseModel):
     """
 
     model_config = ConfigDict(extra="ignore")
-    null_sentinels: ClassVar[FrozenSet[str]] = frozenset({""})
 
     @model_validator(mode="before")
     @classmethod
@@ -57,7 +54,7 @@ class FgumiMetric(BaseModel):
             value = data.get(key)
             if not isinstance(value, str):
                 continue
-            if value in cls.null_sentinels and _allows_none(field.annotation):
+            if value == "" and _allows_none(field.annotation):
                 data[key] = None
         # pydantic itself parses fgbio's "NaN" / "Infinity" / "-Infinity" cells into float fields.
         return data
@@ -66,6 +63,19 @@ class FgumiMetric(BaseModel):
     def columns(cls) -> List[str]:
         """The column names this schema reads, in declaration order."""
         return [field.alias or name for name, field in cls.model_fields.items()]
+
+    @classmethod
+    def matches(cls, header: Iterable[str]) -> bool:
+        """Whether a file with column names ``header`` has every column this schema reads."""
+        return set(cls.columns()) <= set(header)
+
+    @classmethod
+    def validate_row(cls: Type[M], row: Dict[str, str], source: str, number: int) -> M:
+        """Data row ``number`` of ``source`` validated as this schema; ``MetricFormatError`` if it does not fit."""
+        try:
+            return cls.model_validate(row)
+        except ValidationError as error:
+            raise MetricFormatError(f"{source}: data row {number}: {error}") from error
 
     @classmethod
     def iter_dicts(cls, lines: Iterable[str], source: str) -> Iterator[Dict[str, str]]:
@@ -96,10 +106,7 @@ class FgumiMetric(BaseModel):
     def iter_rows(cls: Type[M], lines: Iterable[str], source: str) -> Iterator[M]:
         """Yields each data row validated as this schema."""
         for number, row in enumerate(cls.iter_dicts(lines, source), start=1):
-            try:
-                yield cls.model_validate(row)
-            except ValidationError as error:
-                raise MetricFormatError(f"{source}: data row {number}: {error}") from error
+            yield cls.validate_row(row, source, number)
 
     @classmethod
     def read(cls: Type[M], text: str, source: str) -> List[M]:

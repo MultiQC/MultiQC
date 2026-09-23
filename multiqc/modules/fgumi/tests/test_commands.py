@@ -91,3 +91,13 @@ def test_anchored_patterns_match_either_line_ending(run_fgumi, newline):
         {"Down1.txt": DOWNSAMPLE.replace("\n", newline), "Filt1.txt": LEGACY_FILTER.replace("\n", newline)}
     )
     assert module.samples_parsed_by_tool["commands"] == {"Down1", "Filt1"}
+
+
+def test_other_tools_total_reads_key_value_file_is_ignored_quietly(run_fgumi, caplog):
+    # Only the first line is matched by the search pattern, so another tool's key/value file can match it.
+    from multiqc.base_module import ModuleNoSamplesFound
+
+    other_tool = "total_reads\t1000\nmapped_reads\t900\n"
+    with pytest.raises(ModuleNoSamplesFound):
+        run_fgumi({"other.txt": other_tool})
+    assert not [r for r in caplog.records if r.levelname == "WARNING" and "other.txt" in r.message]

@@ -1,12 +1,12 @@
 """`group --grouping-metrics` / `<prefix>.grouping_metrics.txt` and `<prefix>.position_group_sizes.txt`."""
 
-from typing import Dict, Optional, Set
+from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import PositionGroupSizeMetric, UmiGroupingMetric
-from .util import drop_none, load_rows, pct, register
+from .util import drop_none, iter_samples, pct
 
 _CATEGORIES = {
     "accepted_sam_records": {"name": "Accepted"},
@@ -18,28 +18,19 @@ _CATEGORIES = {
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    grouping: Dict[str, Dict[str, int]] = {}
-    for f in module.find_log_files("fgumi/grouping_metrics"):
-        rows = load_rows(f, UmiGroupingMetric)
-        if not rows:
-            continue
-        grouping[register(module, f)] = rows[0].model_dump()
+    grouping: Dict[str, Dict[str, int]] = {
+        s_name: rows[0].model_dump()
+        for s_name, rows in iter_samples(module, "fgumi/grouping_metrics", UmiGroupingMetric)
+        if rows
+    }
 
     positions: Dict[str, Dict[int, float]] = {}
-    positions_cumulative: Dict[str, Dict[int, Optional[float]]] = {}
-    for f in module.find_log_files("fgumi/position_group_sizes"):
-        position_rows = load_rows(f, PositionGroupSizeMetric)
-        if position_rows is None:
-            continue
-        s_name = register(module, f)
+    positions_cumulative: Dict[str, Dict[int, float]] = {}
+    for s_name, position_rows in iter_samples(module, "fgumi/position_group_sizes", PositionGroupSizeMetric):
         positions[s_name] = {r.position_group_size: r.count for r in position_rows}
-        positions_cumulative[s_name] = {
-            r.position_group_size: pct(r.fraction_gt_or_eq_position_group_size) for r in position_rows
-        }
-
-    grouping = module.ignore_samples(grouping)
-    positions = module.ignore_samples(positions)
-    positions_cumulative = {s: positions_cumulative[s] for s in positions}
+        positions_cumulative[s_name] = drop_none(
+            {r.position_group_size: pct(r.fraction_gt_or_eq_position_group_size) for r in position_rows}
+        )
 
     if grouping:
         module.add_section(
@@ -63,7 +54,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             description="How many UMI families were found at each genomic position.",
             helptext="Written by `fgumi group --metrics` as `<prefix>.position_group_sizes.txt`.",
             plot=linegraph.plot(
-                [positions, {s: drop_none(v) for s, v in positions_cumulative.items()}],
+                [positions, positions_cumulative],
                 {
                     "id": "fgumi_position_group_sizes",
                     "title": "fgumi: Position group sizes",

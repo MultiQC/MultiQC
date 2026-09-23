@@ -7,7 +7,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import DeduplicationMetric, DuplicationLadderMetric
-from .util import drop_none, flatten, load_rows, pct, register, sample_name
+from .util import drop_none, flatten, iter_samples, load_rows, pct, register
 
 ALL_READS = "All Reads"
 
@@ -87,15 +87,9 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
 def _ladder(module: BaseMultiqcModule) -> Set[str]:
     data: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
     samples: Set[str] = set()
-    for f in module.find_log_files("fgumi/dedup_ladder"):
-        rows = load_rows(f, DuplicationLadderMetric)
-        if rows is None:
-            continue
-        s_name = sample_name(module, f)
-        # Multi-library rows are keyed "<sample> (<library>)", so sample filters apply to the bare name here.
-        if module.is_ignore_sample(s_name):
-            continue
-        samples.add(register(module, f, s_name))
+    # Multi-library rows are keyed "<sample> (<library>)"; iter_samples applies sample filters to the bare name.
+    for s_name, rows in iter_samples(module, "fgumi/dedup_ladder", DuplicationLadderMetric):
+        samples.add(s_name)
         libraries = sorted({r.library for r in rows})
         for library in libraries:
             key = s_name if len(libraries) == 1 else f"{s_name} ({library})"

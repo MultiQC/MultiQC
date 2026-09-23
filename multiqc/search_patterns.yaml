@@ -411,7 +411,7 @@ fastqc/theoretical_gc:
 featurecounts:
   fn: "*.summary"
   shared: true
-# fgumi/family_sizes (num_lines: 2) is tried first and claims these files; see the fgumi module docs.
+# fgumi/family_sizes also finds these files; fgumi.util.family_sizes_module picks which module reports them.
 fgbio/groupreadsbyumi:
   contents: "fraction_gt_or_eq_family_size"
   num_lines: 3
@@ -444,17 +444,19 @@ fgumi/downsample_histogram:
 fgumi/duplex_family_sizes:
   contents: "ab_size\tba_size\tcount\tfraction"
   num_lines: 2
-# Claims fgbio GroupReadsByUmi histograms too: patterns with a smaller num_lines are tried first, and this one is
-# not shared, so it wins over fgbio/groupreadsbyumi (num_lines: 3). Keep num_lines below fgbio's.
+# Identical to fgbio GroupReadsByUmi histograms, so shared with fgbio/groupreadsbyumi.
 fgumi/family_sizes:
   contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
   num_lines: 2
+  shared: true
 fgumi/filter_stats:
   - contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
     num_lines: 2
-  # fgumi 0.7.0 and earlier write filter --stats as headerless key/value rows
+  # fgumi 0.7.0 and earlier write filter --stats as headerless key/value rows. Shared because the first line alone
+  # is generic; the parser only accepts files whose keys are exactly fgumi's.
   - contents_re: "^total_reads\t\\d+$"
     num_lines: 2
+    shared: true
 fgumi/grouping_metrics:
   contents: "accepted_sam_records\tdiscarded_non_pf"
   num_lines: 2
