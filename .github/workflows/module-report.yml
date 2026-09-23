@@ -91,7 +91,7 @@ jobs:
         run: |
           ARGS=()
           for m in $MODULES; do ARGS+=(-m "$m"); done
-          multiqc "${ARGS[@]}" test-data -n "multiqc_report_pr${PR}.html" -o report
+          multiqc "${ARGS[@]}" test-data/data/modules -n "multiqc_report_pr${PR}.html" -o report
 
       - name: Take screenshot
         id: screenshot
