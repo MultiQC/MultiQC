@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import DuplexYieldMetric, SimplexYieldMetric
-from .util import drop_none, finite, load_rows, sample_name
+from .util import drop_none, finite, load_rows, pct, sample_name
 
 _DUPLEX_TABS = [
     ("duplexes", "Duplexes (actual)", "Duplexes"),
@@ -47,7 +47,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             }
             full = max(rows, key=lambda r: r.fraction)
             general.setdefault(s_name, {}).update(
-                {"ds_duplexes": full.ds_duplexes, "ds_fraction_duplexes": finite(full.ds_fraction_duplexes)}
+                {"ds_duplexes": full.ds_duplexes, "ds_fraction_duplexes": pct(full.ds_fraction_duplexes)}
             )
         else:
             simplex_rows = load_rows(f, SimplexYieldMetric)
@@ -73,6 +73,8 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             anchor=f"fgumi-{kind}-yield",
             description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics` "
             "(or fgbio CollectDuplexSeqMetrics) downsampling.",
+            helptext="The input reads are downsampled to several fractions and the metrics recomputed at each, so the curves "
+            "show how yield would grow with more sequencing. A curve that flattens means the library is saturating.",
             plot=linegraph.plot(
                 [{s: drop_none(data[s][key]) for s in data} for key, _, _ in tabs],
                 {
@@ -98,10 +100,11 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                     "format": "{:,.0f}",
                 },
                 "ds_fraction_duplexes": {
-                    "title": "Duplex frac",
-                    "description": "Fraction of double-strand families that are duplexes",
+                    "title": "% duplexes",
+                    "description": "Double-strand families that are duplexes",
                     "hidden": True,
-                    "max": 1,
+                    "max": 100,
+                    "suffix": "%",
                     "min": 0,
                 },
                 "ss_consensus_families": {

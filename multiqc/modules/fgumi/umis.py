@@ -44,7 +44,8 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             rows = stream_dicts({"f": itertools.chain(["\t".join(header)], f["f"]), "fn": f["fn"]}, schema)
             summary = summarize_observations(int(row["raw_observations"]) for row in rows)
         except (MetricFormatError, ValueError) as error:
-            log.warning(f"Skipping {f['fn']}: {error}")
+            # MetricFormatError messages already start with the file name.
+            log.warning(f"Skipping {error}" if isinstance(error, MetricFormatError) else f"Skipping {f['fn']}: {error}")
             continue
         s_name = sample_name(module, f)
         module.add_data_source(f, s_name)
@@ -79,7 +80,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             "n": {
                 "title": "UMIs" if kind == "umi_counts" else "Duplex UMIs",
                 "hidden": True,
-                "description": f"Distinct UMIs in {kind}",
+                "description": f"Distinct UMIs ({title.lower()})",
                 "format": "{:,.0f}",
             },
             "median": {"title": "Median obs", "hidden": True, "description": "Median raw observations per UMI"},
@@ -92,7 +93,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
                 "description": "UMIs seen in exactly one raw read",
             },
         }
-        module.general_stats_addcols(table, headers, namespace=kind)
+        module.general_stats_addcols(table, headers, namespace=f"fgumi {title}")
         module.write_data_file(table, f"multiqc_fgumi_{kind}")
         parsed |= set(data)
     return parsed
@@ -112,7 +113,8 @@ def _correct(module: BaseMultiqcModule) -> Set[str]:
                 totals["two_mismatch"] += int(row["two_mismatch_matches"])
                 totals["other"] += int(row["other_matches"])
         except (MetricFormatError, ValueError) as error:
-            log.warning(f"Skipping {f['fn']}: {error}")
+            # MetricFormatError messages already start with the file name.
+            log.warning(f"Skipping {error}" if isinstance(error, MetricFormatError) else f"Skipping {f['fn']}: {error}")
             continue
         s_name = sample_name(module, f)
         module.add_data_source(f, s_name)
@@ -136,7 +138,7 @@ def _correct(module: BaseMultiqcModule) -> Set[str]:
                 "other": {"name": "3+ mismatches"},
                 "unmatched": {"name": "Unmatched"},
             },
-            {"id": "fgumi_correct", "title": "fgumi: UMI correction", "ylab": "Reads"},
+            {"id": "fgumi_correct", "title": "fgumi: UMI correction", "ylab": "UMI observations"},
         ),
     )
     module.write_data_file(data, "multiqc_fgumi_correct")

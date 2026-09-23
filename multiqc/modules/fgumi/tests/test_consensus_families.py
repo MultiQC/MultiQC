@@ -51,3 +51,23 @@ def test_sample_names_are_html_escaped_in_section_titles(run_fgumi):
     names = [section.name for section in module.sections]
     assert any("&lt;i&gt;x" in name for name in names), names
     assert not any("<i>" in name for name in names), names
+
+
+def test_heatmap_axes_are_contiguous_and_capped(run_fgumi):
+    import math
+
+    import pytest
+
+    run_fgumi({"B.duplex_family_sizes.txt": DUPLEX_AB_BA})
+    dataset = report.plot_by_id["fgumi_duplex_ab_ba_B"].datasets[0]
+    assert dataset.ycats == [str(i) for i in range(1, 20)] + ["20+"]
+    assert dataset.xcats == [str(i) for i in range(0, 20)] + ["20+"]
+    assert dataset.rows[-1][-1] == pytest.approx(math.log10(30))
+
+
+def test_both_strands_heatmap_section_kept_with_alert_when_empty(run_fgumi):
+    only_ab = "ab_size\tba_size\tcount\tfraction\tfraction_gt_or_eq_size\n1\t0\t40\t0.4\t1\n2\t0\t60\t0.6\t0.6\n"
+    module = run_fgumi({"B.duplex_family_sizes.txt": only_ab})
+    both = [s for s in module.sections if s.anchor == "fgumi-duplex-ab-ba-both-B"]
+    assert len(both) == 1 and both[0].plot_anchor is None
+    assert both[0].alerts

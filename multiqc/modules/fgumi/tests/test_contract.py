@@ -1,4 +1,5 @@
-"""Pins every fgumi schema to fgumi's published column contract (``crates/fgumi-metrics/metric_columns.json``).
+"""Pins every fgumi schema to fgumi's column contract (``crates/fgumi-metrics/metric_columns.json``, vendored from
+fulcrumgenomics/fgumi#979).
 
 Update ``metric_columns.json`` here whenever fgumi's contract changes; a schema column that fgumi no longer
 emits (or emits in a different order) then fails this test instead of silently parsing nothing.
@@ -100,3 +101,13 @@ def test_docstring_names_the_fgbio_outputs_the_module_also_reads():
 
     for tool in ("GroupReadsByUmi", "CollectDuplexSeqMetrics", "CorrectUmis", "ClipBam"):
         assert tool in MultiqcModule.__doc__, tool
+
+
+def test_every_section_has_a_description_and_help_text(run_fgumi):
+    # MultiQC's new-module checklist asks for both on every section.
+    data_dir = Path(__file__).parents[5] / "MultiQC-test-data" / "data" / "modules" / "fgumi"
+    if not data_dir.is_dir():
+        pytest.skip("MultiQC test-data checkout not found next to the MultiQC repo")
+    module = run_fgumi({p.name: p.read_text() for p in data_dir.iterdir() if p.suffix == ".txt"})
+    missing = [s.name for s in module.sections if not s.description or not s.helptext]
+    assert not missing, missing

@@ -35,12 +35,14 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         name="Consensus variant review",
         anchor="fgumi-review",
         description="Variant sites reviewed by `fgumi review`, and the consensus reads observed at them.",
+        helptext="Summarized from the `<output>.txt` detail file of `fgumi review`, which has one row per variant site and "
+        "consensus read.",
         plot=table.plot(
             data,
             {
-                "sites": {"title": "Variant sites", "format": "{:,.0f}"},
-                "consensus_reads": {"title": "Consensus reads", "format": "{:,.0f}"},
-                "observations": {"title": "Observations", "format": "{:,.0f}"},
+                "sites": {"title": "Variant sites", "format": "{:,.0f}", "scale": "Blues"},
+                "consensus_reads": {"title": "Consensus reads", "format": "{:,.0f}", "scale": "Greens"},
+                "observations": {"title": "Observations", "format": "{:,.0f}", "scale": "Purples"},
             },
             {"id": "fgumi_review", "title": "fgumi: Consensus variant review", "namespace": "fgumi review"},
         ),

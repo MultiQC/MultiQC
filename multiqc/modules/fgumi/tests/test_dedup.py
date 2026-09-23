@@ -40,3 +40,24 @@ def test_duplication_ladder(run_fgumi):
     ladder = module.saved_raw_data["multiqc_fgumi_dedup_ladder"]["S1"]
     assert ladder["cumulative"] == pytest.approx({50: 10.0, 100: 20.0})
     assert ladder["window"] == pytest.approx({50: 10.0, 100: 30.0})
+
+
+TWO_LIBRARY_LADDER = LADDER + "libB\t50\t0.2\t50\t0.2\n"
+
+
+def test_ladder_honours_sample_filters_on_the_sample_name(run_fgumi):
+    from multiqc import config
+
+    original = config.sample_names_ignore
+    config.sample_names_ignore = ["S1"]
+    try:
+        module = run_fgumi({"S1.txt": TWO_LIBRARY_LADDER, "S2.txt": LADDER})
+    finally:
+        config.sample_names_ignore = original
+    assert set(module.saved_raw_data["multiqc_fgumi_dedup_ladder"]) == {"S2"}
+
+
+def test_dedup_without_all_reads_row_warns(run_fgumi, caplog):
+    only_library = "".join(line + "\n" for line in DEDUP.splitlines() if "All Reads" not in line)
+    run_fgumi({"S1.txt": only_library, "S2.txt": LADDER})
+    assert any("S1.txt" in r.message and "All Reads" in r.message for r in caplog.records)

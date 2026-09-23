@@ -1,5 +1,6 @@
 """`dedup --metrics` (one row per library plus `All Reads`) and `dedup --duplication-ladder`."""
 
+import logging
 from typing import Dict, Optional, Set
 
 from multiqc.base_module import BaseMultiqcModule
@@ -9,6 +10,8 @@ from .schemas import DeduplicationMetric, DuplicationLadderMetric
 from .util import drop_none, load_rows, pct, sample_name
 
 ALL_READS = "All Reads"
+
+log = logging.getLogger(__name__)
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -21,7 +24,10 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, DeduplicationMetric)
         if not rows:
             continue
-        total = next((r for r in rows if r.library == ALL_READS), rows[-1])
+        total = next((r for r in rows if r.library == ALL_READS), None)
+        if total is None:
+            log.warning(f"Skipping {f['fn']}: fgumi dedup metrics have no '{ALL_READS}' row")
+            continue
         s_name = sample_name(module, f)
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
@@ -38,6 +44,8 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
         name="Deduplication",
         anchor="fgumi-dedup",
         description="Unique and duplicate templates found by `fgumi dedup` (all libraries combined).",
+        helptext="Written by `fgumi dedup --metrics`, using the `All Reads` row. % Dup in General Statistics is Picard's "
+        "PERCENT_DUPLICATION.",
         plot=bargraph.plot(
             data,
             {"unique_templates": {"name": "Unique"}, "duplicate_templates": {"name": "Duplicate"}},
@@ -74,11 +82,16 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
 
 def _ladder(module: BaseMultiqcModule) -> Set[str]:
     data: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
+    samples: Set[str] = set()
     for f in module.find_log_files("fgumi/dedup_ladder"):
         rows = load_rows(f, DuplicationLadderMetric)
         if rows is None:
             continue
         s_name = sample_name(module, f)
+        # Multi-library rows are keyed "<sample> (<library>)", so sample filters apply to the bare name here.
+        if module.is_ignore_sample(s_name):
+            continue
+        samples.add(s_name)
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
         libraries = sorted({r.library for r in rows})
@@ -89,7 +102,6 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
                 "cumulative": {r.templates_seen: pct(r.duplicate_fraction) for r in lib_rows},
                 "window": {r.templates_seen: pct(r.window_duplicate_fraction) for r in lib_rows},
             }
-    data = module.ignore_samples(data)
     if not data:
         return set()
     module.add_section(
@@ -114,4 +126,4 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
         ),
     )
     module.write_data_file(data, "multiqc_fgumi_dedup_ladder")
-    return {key.split(" (", 1)[0] for key in data}
+    return samples

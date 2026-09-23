@@ -36,3 +36,20 @@ def test_umi_correction_summary_counts_unmatched_all_n_row(run_fgumi):
         "other": 0,
         "unmatched": 10,
     }
+
+
+DUPLEX_UMI_COUNTS = (
+    "umi\traw_observations\traw_observations_with_errors\tunique_observations\tfraction_raw_observations"
+    "\tfraction_unique_observations\tfraction_unique_observations_expected\n"
+    "AAAA-CCCC\t2\t0\t1\t0.5\t0.5\t0.4\nCCCC-AAAA\t2\t0\t1\t0.5\t0.5\t0.4\n"
+)
+
+
+def test_duplex_umi_counts_summary(run_fgumi):
+    module = run_fgumi({"S1.duplex_umi_counts.txt": DUPLEX_UMI_COUNTS})
+    assert module.saved_raw_data["multiqc_fgumi_duplex_umi_counts"]["S1"] == {
+        "n": 2,
+        "median": 2.0,
+        "singleton_pct": 0.0,
+    }
+    assert "fgumi_duplex_umi_counts" in report.plot_by_id

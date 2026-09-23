@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Set, Tuple
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import heatmap, linegraph
+from multiqc.types import SectionAlert
 
 from .schemas import DuplexFamilySizeMetric, DuplexStrandFamilySizeMetric, SimplexFamilySizeMetric
 from .util import drop_none, load_rows, pct, safe_id, sample_name
@@ -21,6 +22,12 @@ HEATMAP_CAP = 20  # sizes at or above this fold into one "20+" row/column
 # Above this many samples the two per-sample heatmaps are skipped (they would swamp the report) and only the
 # cross-sample min(AB, BA) line is drawn. Override with `fgumi_config: {max_duplex_heatmap_samples: N}`.
 MAX_HEATMAP_SAMPLES = 10
+
+_HEATMAP_HELP = (
+    "Each cell counts duplex families by the number of reads from the AB and BA strands, as in fgbio "
+    "CollectDuplexSeqMetrics. Families on the diagonal are balanced; a family with 0 reads on one strand cannot "
+    "form a duplex."
+)
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -101,8 +108,9 @@ def _heatmap_matrix(
             cells[(min(r.ab_size, HEATMAP_CAP), min(r.ba_size, HEATMAP_CAP))] += r.count
     if not cells:
         return None
-    ab_sizes = sorted({ab for ab, _ in cells})
-    ba_sizes = sorted({ba for _, ba in cells})
+    # Contiguous axes, so a size with no families is an empty cell rather than missing from the axis.
+    ab_sizes = list(range(min(ab for ab, _ in cells), max(ab for ab, _ in cells) + 1))
+    ba_sizes = list(range(min(ba for _, ba in cells), max(ba for _, ba in cells) + 1))
     matrix = [[math.log10(cells[(ab, ba)]) if cells.get((ab, ba)) else None for ba in ba_sizes] for ab in ab_sizes]
     return matrix, [_label(ba) for ba in ba_sizes], [_label(ab) for ab in ab_sizes]
 
@@ -151,14 +159,25 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
     for s_name, rows in rows_by_sample_for_heatmaps.items():
         for suffix, min_ba, title in [("", 0, "all families"), ("_both", 1, "families with AB > 0 and BA > 0")]:
             built = _heatmap_matrix(rows, min_ba)
+            plot_id = f"fgumi_duplex_ab_ba{suffix}_{safe_id(s_name)}"
             if built is None:
+                # "No families with reads on both strands" is exactly what this plot exists to show.
+                module.add_section(
+                    name=f"Duplex family sizes: {html.escape(s_name)} ({title})",
+                    anchor=plot_id.replace("_", "-"),
+                    description="No families had reads from both strands, so no duplexes can be formed.",
+                    helptext=_HEATMAP_HELP,
+                    plot=None,
+                    alerts=[SectionAlert(message="No families with reads on both strands", affected_samples=[s_name])],
+                )
                 continue
             matrix, xcats, ycats = built
-            plot_id = f"fgumi_duplex_ab_ba{suffix}_{safe_id(s_name)}"
             module.add_section(
                 name=f"Duplex family sizes: {html.escape(s_name)} ({title})",
                 anchor=plot_id.replace("_", "-"),
-                description="log10(families) by AB and BA strand size; sizes of 20 or more are pooled as 20+.",
+                description=f"log10(families) by AB and BA strand size; sizes of {HEATMAP_CAP} or more are pooled "
+                f"as {HEATMAP_CAP}+.",
+                helptext=_HEATMAP_HELP,
                 plot=heatmap.plot(
                     matrix,
                     xcats,

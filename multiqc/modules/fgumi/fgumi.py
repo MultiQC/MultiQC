@@ -35,7 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
     - `correct`, `dedup` (metrics, family-size histogram, duplication ladder), `clip`, `filter`,
       `copy-umi`, `retag`, `downsample` histograms, and the `review` detail file
 
-    The column contract for all of these is published in fgumi as `crates/fgumi-metrics/metric_columns.json`.
+    The column contract for all of these is fgumi's `crates/fgumi-metrics/metric_columns.json`. The `copy-umi`
+    and `retag` metrics and the headered `filter --stats` layout need an fgumi release after 0.7.0; the headerless
+    `filter --stats` layout written by fgumi 0.7.0 and earlier is also read.
 
     #### Sample names
 

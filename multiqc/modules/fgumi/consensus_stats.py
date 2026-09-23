@@ -12,6 +12,8 @@ from .util import drop_none, load_rows, pct, sample_name
 log = logging.getLogger(__name__)
 
 REJECTED_PREFIX = "raw_reads_rejected_for_"
+# Keys every fgumi consensus caller writes, read directly for the General Statistics columns.
+REQUIRED_KEYS = ("consensus_reads_emitted", "frac_raw_reads_used")
 
 
 _GENERAL_STATS_HEADERS: Dict[str, Dict[str, Any]] = {
@@ -47,6 +49,10 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         if "raw_reads_considered" not in values:
             log.debug(f"{f['fn']}: key/value file is not an fgumi consensus --stats file, skipping")
             continue
+        missing = [key for key in REQUIRED_KEYS if key not in values]
+        if missing:
+            log.warning(f"Skipping {f['fn']}: fgumi consensus --stats file is missing {missing}")
+            continue
         s_name = sample_name(module, f)
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
@@ -75,13 +81,13 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         {
             s: drop_none(
                 {
-                    "consensus_reads_emitted": v.get("consensus_reads_emitted"),
-                    "frac_raw_reads_used": pct(v.get("frac_raw_reads_used")),
+                    "consensus_reads_emitted": v["consensus_reads_emitted"],
+                    "frac_raw_reads_used": pct(v["frac_raw_reads_used"]),
                 }
             )
             for s, v in stats.items()
         },
         _GENERAL_STATS_HEADERS,
     )
-    module.write_data_file(bars, "multiqc_fgumi_consensus_rejections")
+    module.write_data_file(stats, "multiqc_fgumi_consensus_stats")
     return set(stats)

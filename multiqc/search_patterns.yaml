@@ -419,55 +419,60 @@ fgbio/errorratebyreadposition:
   num_lines: 3
 fgumi/clip:
   contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
-  num_lines: 1
+  num_lines: 2
 fgumi/consensus_stats:
   contents: "key\tvalue\tdescription"
-  num_lines: 1
+  num_lines: 2
+  shared: true
 fgumi/copy_umi:
   contents: "total_records\trx_written\trx_overwritten"
-  num_lines: 1
+  num_lines: 2
 fgumi/correct:
   contents: "umi\ttotal_matches\tperfect_matches"
-  num_lines: 1
+  num_lines: 2
 fgumi/dedup:
   contents: "sample\tlibrary\tfiltered_templates"
-  num_lines: 1
+  num_lines: 2
 fgumi/dedup_ladder:
   contents: "library\ttemplates_seen\tduplicate_fraction"
-  num_lines: 1
+  num_lines: 2
 fgumi/downsample_histogram:
   contents_re: "^family_size\tcount$"
-  num_lines: 1
+  num_lines: 2
+  shared: true
 fgumi/duplex_family_sizes:
   contents: "ab_size\tba_size\tcount\tfraction"
-  num_lines: 1
+  num_lines: 2
 fgumi/family_sizes:
   contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
-  num_lines: 1
+  num_lines: 2
 fgumi/filter_stats:
-  contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
-  num_lines: 1
+  - contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
+    num_lines: 2
+  # fgumi 0.7.0 and earlier write filter --stats as headerless key/value rows
+  - contents_re: "^total_reads\t\\d+$"
+    num_lines: 2
 fgumi/grouping_metrics:
   contents: "accepted_sam_records\tdiscarded_non_pf"
-  num_lines: 1
+  num_lines: 2
 fgumi/position_group_sizes:
   contents: "position_group_size\tcount\tfraction"
-  num_lines: 1
+  num_lines: 2
 fgumi/retag:
   contents: "operation\tkind\trecords_applied"
-  num_lines: 1
+  num_lines: 2
 fgumi/review:
   contents: "chrom\tpos\tref\tgenotype\tfilters"
-  num_lines: 1
+  num_lines: 2
 fgumi/strand_family_sizes:
   contents: "family_size\tcs_count\tcs_fraction"
-  num_lines: 1
+  num_lines: 2
 fgumi/umi_counts:
   contents: "umi\traw_observations\traw_observations_with_errors"
-  num_lines: 1
+  num_lines: 2
 fgumi/yield:
   contents: "fraction\tread_pairs\tcs_families\tss_families"
-  num_lines: 1
+  num_lines: 2
 filtlong:
   contents: Scoring long reads
   contents_re: ".*Filtering long reads.*"

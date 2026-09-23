@@ -39,3 +39,33 @@ def test_downsample_pattern_does_not_steal_family_size_histograms(run_fgumi):
     module = run_fgumi({"S1.family_sizes.txt": FAMILY_SIZES})
     assert module.samples_parsed_by_tool["family_sizes"] == {"S1"}
     assert module.samples_parsed_by_tool["commands"] == set()
+
+
+LEGACY_FILTER = "total_reads\t1000\npassed_reads\t900\nfailed_reads\t100\npass_rate\t0.9000\n"
+
+
+def test_filter_stats_legacy_headerless_layout(run_fgumi):
+    # fgumi <= 0.7.0 writes filter --stats as headerless key/value rows.
+    module = run_fgumi({"Filt1.txt": LEGACY_FILTER})
+    filt = module.saved_raw_data["multiqc_fgumi_filter"]["Filt1"]
+    assert (filt["passed"], filt["failed"]) == (900, 100)
+    assert filt["pass_rate"] == pytest.approx(90.0)
+
+
+def test_clip_file_without_all_row_warns(run_fgumi, caplog):
+    no_all = "\n".join(line for line in CLIP.splitlines() if not line.startswith("All")) + "\n"
+    run_fgumi({"Clip1.txt": no_all, "Filt1.txt": FILTER})
+    assert any("Clip1.txt" in r.message and "All" in r.message for r in caplog.records)
+
+
+def test_retag_honours_sample_filters_on_the_sample_name(run_fgumi):
+    from multiqc import config
+
+    original = config.sample_names_only_include
+    config.sample_names_only_include = ["Retag1"]
+    try:
+        module = run_fgumi({"Retag1.txt": RETAG, "Filt1.txt": FILTER})
+    finally:
+        config.sample_names_only_include = original
+    assert module.samples_parsed_by_tool["commands"] == {"Retag1"}
+    assert list(module.saved_raw_data["multiqc_fgumi_retag"]) == ["Retag1 (RX::copy::BX)"]
