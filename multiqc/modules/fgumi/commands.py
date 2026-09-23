@@ -1,13 +1,13 @@
 """Small per-command metrics: `clip --metrics`, `filter --stats`, `copy-umi --metrics`, `retag --metrics` and
 `downsample --histogram-kept/--histogram-rejected`."""
 
-from typing import Dict, Set
+from typing import Any, Dict, Optional, Set, Union
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph, table
 
 from .schemas import ClippingMetric, CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
-from .util import load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, sample_name
 
 _CLIP_REASONS = {
     "five_prime": "5' end",
@@ -21,7 +21,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     return _clip(module) | _filter(module) | _copy_umi(module) | _retag(module) | _downsample(module)
 
 
-def _register(module: BaseMultiqcModule, f: Dict) -> str:
+def _register(module: BaseMultiqcModule, f: Any) -> str:
     s_name = sample_name(module, f)
     module.add_data_source(f, s_name)
     module.add_software_version(None, s_name)
@@ -62,7 +62,7 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _filter(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, object]] = {}
+    data: Dict[str, Dict[str, Optional[float]]] = {}
     for f in module.find_log_files("fgumi/filter_stats"):
         rows = load_rows(f, FilterStatsMetric)
         if not rows:
@@ -87,7 +87,7 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
         ),
     )
     module.general_stats_addcols(
-        {s: {"pass_rate": v["pass_rate"]} for s, v in data.items()},
+        {s: drop_none({"pass_rate": v["pass_rate"]}) for s, v in data.items()},
         {
             "pass_rate": {
                 "title": "% pass filter",
@@ -137,7 +137,7 @@ def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _retag(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, object]] = {}
+    data: Dict[str, Dict[str, Union[int, str]]] = {}
     for f in module.find_log_files("fgumi/retag"):
         rows = load_rows(f, RetagMetric)
         if not rows:

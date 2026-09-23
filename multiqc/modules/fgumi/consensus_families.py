@@ -11,7 +11,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import heatmap, linegraph
 
 from .schemas import DuplexFamilySizeMetric, DuplexStrandFamilySizeMetric, SimplexFamilySizeMetric
-from .util import load_rows, pct, safe_id, sample_name
+from .util import drop_none, load_rows, pct, safe_id, sample_name
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
-    by_kind: Dict[str, Dict[str, Dict[str, Dict[int, object]]]] = {"simplex": {}, "duplex": {}}
+    by_kind: Dict[str, Dict[str, Dict[str, Dict[int, Optional[float]]]]] = {"simplex": {}, "duplex": {}}
     for f in module.find_log_files("fgumi/strand_family_sizes"):
         if f["f"] is None:
             continue
@@ -35,7 +35,7 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
         strands = ["cs", "ss", "ds"] if is_duplex else ["cs", "ss"]
-        entry: Dict[str, Dict[int, object]] = {}
+        entry: Dict[str, Dict[int, Optional[float]]] = {}
         for strand in strands:
             entry[strand] = {r.family_size: getattr(r, f"{strand}_count") for r in rows}
             entry[f"{strand}_cumulative"] = {
@@ -50,8 +50,8 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         if not data:
             continue
         strands = ["cs", "ss", "ds"] if kind == "duplex" else ["cs", "ss"]
-        counts = [{s: data[s][strand] for s in data} for strand in strands]
-        cumulative = [{s: data[s][f"{strand}_cumulative"] for s in data} for strand in strands]
+        counts = [{s: drop_none(data[s][strand]) for s in data} for strand in strands]
+        cumulative = [{s: drop_none(data[s][f"{strand}_cumulative"]) for s in data} for strand in strands]
         module.add_section(
             name=f"{kind.capitalize()} family sizes",
             anchor=f"fgumi-{kind}-family-sizes",

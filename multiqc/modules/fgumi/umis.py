@@ -6,7 +6,7 @@ import itertools
 import logging
 import statistics
 from collections import Counter
-from typing import Dict, Iterable, List, Set
+from typing import Any, Dict, Iterable, List, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
@@ -17,7 +17,7 @@ from .util import sample_name, stream_dicts
 log = logging.getLogger(__name__)
 
 
-def summarize_observations(counts: Iterable[int]) -> Dict[str, object]:
+def summarize_observations(counts: Iterable[int]) -> Dict[str, Any]:
     """Number of UMIs, median raw observations, % seen once, and UMIs per log2 bin of raw observations."""
     values: List[int] = list(counts)
     bins: Counter = Counter(1 << (value - 1).bit_length() if value > 1 else 1 for value in values)
@@ -34,9 +34,10 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
-    summaries: Dict[str, Dict[str, Dict[str, object]]] = {"umi_counts": {}, "duplex_umi_counts": {}}
+    summaries: Dict[str, Dict[str, Dict[str, Any]]] = {"umi_counts": {}, "duplex_umi_counts": {}}
     for f in module.find_log_files("fgumi/umi_counts", filehandles=True):
-        header = f["f"].readline().rstrip("\r\n").split("\t")
+        handle: Any = f["f"]  # a text handle: found with filehandles=True
+        header = handle.readline().rstrip("\r\n").split("\t")
         kind = "duplex_umi_counts" if "fraction_unique_observations_expected" in header else "umi_counts"
         schema = DuplexUmiMetric if kind == "duplex_umi_counts" else UmiMetric
         try:
@@ -62,7 +63,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             helptext="Summarized from the per-UMI file written by `fgumi simplex-metrics` / `duplex-metrics`; "
             "individual UMIs are not listed.",
             plot=linegraph.plot(
-                {s: data[s]["bins"] for s in data},
+                {s: dict(data[s]["bins"]) for s in data},
                 {
                     "id": f"fgumi_{kind}",
                     "title": f"fgumi: {title}",
@@ -73,27 +74,24 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             ),
         )
         table = {s: {k: v for k, v in data[s].items() if k != "bins"} for s in data}
-        module.general_stats_addcols(
-            table,
-            {
-                "n": {
-                    "title": "UMIs" if kind == "umi_counts" else "Duplex UMIs",
-                    "hidden": True,
-                    "description": f"Distinct UMIs in {kind}",
-                    "format": "{:,.0f}",
-                },
-                "median": {"title": "Median obs", "hidden": True, "description": "Median raw observations per UMI"},
-                "singleton_pct": {
-                    "title": "% singleton",
-                    "hidden": True,
-                    "suffix": "%",
-                    "max": 100,
-                    "min": 0,
-                    "description": "UMIs seen in exactly one raw read",
-                },
+        headers: Dict[str, Dict[str, Any]] = {
+            "n": {
+                "title": "UMIs" if kind == "umi_counts" else "Duplex UMIs",
+                "hidden": True,
+                "description": f"Distinct UMIs in {kind}",
+                "format": "{:,.0f}",
             },
-            namespace=kind,
-        )
+            "median": {"title": "Median obs", "hidden": True, "description": "Median raw observations per UMI"},
+            "singleton_pct": {
+                "title": "% singleton",
+                "hidden": True,
+                "suffix": "%",
+                "max": 100,
+                "min": 0,
+                "description": "UMIs seen in exactly one raw read",
+            },
+        }
+        module.general_stats_addcols(table, headers, namespace=kind)
         module.write_data_file(table, f"multiqc_fgumi_{kind}")
         parsed |= set(data)
     return parsed

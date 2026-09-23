@@ -9,13 +9,13 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import FamilySizeMetric
-from .util import load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, sample_name
 
 log = logging.getLogger(__name__)
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    counts: Dict[str, Dict[int, int]] = {}
+    counts: Dict[str, Dict[int, float]] = {}
     percent: Dict[str, Dict[int, Optional[float]]] = {}
     cumulative: Dict[str, Dict[int, Optional[float]]] = {}
     for f in module.find_log_files("fgumi/family_sizes"):
@@ -45,7 +45,11 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         "`fgumi dedup --family-size-histogram`. The cumulative tab shows the percentage of families of at least "
         "each size.",
         plot=linegraph.plot(
-            [counts, percent, cumulative],
+            [
+                counts,
+                {s: drop_none(v) for s, v in percent.items()},
+                {s: drop_none(v) for s, v in cumulative.items()},
+            ],
             {
                 "id": "fgumi_family_sizes",
                 "title": "fgumi: Family sizes",

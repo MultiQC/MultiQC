@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import DeduplicationMetric, DuplicationLadderMetric
-from .util import load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, sample_name
 
 ALL_READS = "All Reads"
 
@@ -46,7 +46,9 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
     )
     module.general_stats_addcols(
         {
-            s: {"percent_duplication": v["percent_duplication"], "estimated_library_size": v["estimated_library_size"]}
+            s: drop_none(
+                {"percent_duplication": v["percent_duplication"], "estimated_library_size": v["estimated_library_size"]}
+            )
             for s, v in data.items()
         },
         {
@@ -96,7 +98,10 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
         description="Duplicate rate as templates accumulate: a flattening curve means the library is saturating.",
         helptext="Written by `fgumi dedup --duplication-ladder`.",
         plot=linegraph.plot(
-            [{s: v["cumulative"] for s, v in data.items()}, {s: v["window"] for s, v in data.items()}],
+            [
+                {s: drop_none(v["cumulative"]) for s, v in data.items()},
+                {s: drop_none(v["window"]) for s, v in data.items()},
+            ],
             {
                 "id": "fgumi_dedup_ladder",
                 "title": "fgumi: Duplication ladder",

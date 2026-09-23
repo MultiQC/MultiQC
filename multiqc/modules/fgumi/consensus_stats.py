@@ -1,17 +1,35 @@
 """`simplex` / `duplex` / `codec --stats`: key/value/description rows of consensus-calling statistics."""
 
 import logging
-from typing import Dict, Set
+from typing import Any, Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
 from .schemas import ConsensusStatMetric
-from .util import load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, sample_name
 
 log = logging.getLogger(__name__)
 
 REJECTED_PREFIX = "raw_reads_rejected_for_"
+
+
+_GENERAL_STATS_HEADERS: Dict[str, Dict[str, Any]] = {
+    "consensus_reads_emitted": {
+        "title": "Consensus reads",
+        "description": "Consensus reads emitted",
+        "format": "{:,.0f}",
+        "scale": "Greens",
+    },
+    "frac_raw_reads_used": {
+        "title": "% reads used",
+        "description": "Raw reads used in a consensus read",
+        "suffix": "%",
+        "max": 100,
+        "min": 0,
+        "hidden": True,
+    },
+}
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -55,28 +73,15 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     )
     module.general_stats_addcols(
         {
-            s: {
-                "consensus_reads_emitted": v.get("consensus_reads_emitted"),
-                "frac_raw_reads_used": pct(v.get("frac_raw_reads_used")),
-            }
+            s: drop_none(
+                {
+                    "consensus_reads_emitted": v.get("consensus_reads_emitted"),
+                    "frac_raw_reads_used": pct(v.get("frac_raw_reads_used")),
+                }
+            )
             for s, v in stats.items()
         },
-        {
-            "consensus_reads_emitted": {
-                "title": "Consensus reads",
-                "description": "Consensus reads emitted",
-                "format": "{:,.0f}",
-                "scale": "Greens",
-            },
-            "frac_raw_reads_used": {
-                "title": "% reads used",
-                "description": "Raw reads used in a consensus read",
-                "suffix": "%",
-                "max": 100,
-                "min": 0,
-                "hidden": True,
-            },
-        },
+        _GENERAL_STATS_HEADERS,
     )
     module.write_data_file(bars, "multiqc_fgumi_consensus_rejections")
     return set(stats)

@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import DuplexYieldMetric, SimplexYieldMetric
-from .util import finite, load_rows, sample_name
+from .util import drop_none, finite, load_rows, sample_name
 
 _DUPLEX_TABS = [
     ("duplexes", "Duplexes (actual)", "Duplexes"),
@@ -26,8 +26,8 @@ def _ratio(actual: float, ideal: float) -> Optional[float]:
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    duplex: Dict[str, Dict[str, Dict[int, object]]] = {}
-    simplex: Dict[str, Dict[str, Dict[int, object]]] = {}
+    duplex: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
+    simplex: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
     general: Dict[str, Dict[str, Optional[float]]] = {}
     for f in module.find_log_files("fgumi/yield"):
         if f["f"] is None:
@@ -48,16 +48,16 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 {"ds_duplexes": full.ds_duplexes, "ds_fraction_duplexes": finite(full.ds_fraction_duplexes)}
             )
         else:
-            rows = load_rows(f, SimplexYieldMetric)
-            if not rows:
+            simplex_rows = load_rows(f, SimplexYieldMetric)
+            if not simplex_rows:
                 continue
             simplex[s_name] = {
-                "consensus_families": {r.read_pairs: r.ss_consensus_families for r in rows},
-                "ss_families": {r.read_pairs: r.ss_families for r in rows},
-                "mean_family_size": {r.read_pairs: finite(r.mean_ss_family_size) for r in rows},
+                "consensus_families": {r.read_pairs: r.ss_consensus_families for r in simplex_rows},
+                "ss_families": {r.read_pairs: r.ss_families for r in simplex_rows},
+                "mean_family_size": {r.read_pairs: finite(r.mean_ss_family_size) for r in simplex_rows},
             }
-            full = max(rows, key=lambda r: r.fraction)
-            general.setdefault(s_name, {})["ss_consensus_families"] = full.ss_consensus_families
+            simplex_full = max(simplex_rows, key=lambda r: r.fraction)
+            general.setdefault(s_name, {})["ss_consensus_families"] = simplex_full.ss_consensus_families
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
 
@@ -71,7 +71,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             anchor=f"fgumi-{kind}-yield",
             description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics` downsampling.",
             plot=linegraph.plot(
-                [{s: data[s][key] for s in data} for key, _, _ in tabs],
+                [{s: drop_none(data[s][key]) for s in data} for key, _, _ in tabs],
                 {
                     "id": f"fgumi_{kind}_yield",
                     "title": f"fgumi: {kind.capitalize()} yield",
@@ -86,7 +86,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     general = {s: v for s, v in module.ignore_samples(general).items() if s in parsed}
     if general:
         module.general_stats_addcols(
-            general,
+            {s: drop_none(v) for s, v in general.items()},
             {
                 "ds_duplexes": {
                     "title": "Duplexes",

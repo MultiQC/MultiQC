@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import PositionGroupSizeMetric, UmiGroupingMetric
-from .util import load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, sample_name
 
 _CATEGORIES = {
     "accepted_sam_records": {"name": "Accepted"},
@@ -28,18 +28,18 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         module.add_software_version(None, s_name)
         grouping[s_name] = rows[0].model_dump()
 
-    positions: Dict[str, Dict[int, int]] = {}
+    positions: Dict[str, Dict[int, float]] = {}
     positions_cumulative: Dict[str, Dict[int, Optional[float]]] = {}
     for f in module.find_log_files("fgumi/position_group_sizes"):
-        rows = load_rows(f, PositionGroupSizeMetric)
-        if rows is None:
+        position_rows = load_rows(f, PositionGroupSizeMetric)
+        if position_rows is None:
             continue
         s_name = sample_name(module, f)
         module.add_data_source(f, s_name)
         module.add_software_version(None, s_name)
-        positions[s_name] = {r.position_group_size: r.count for r in rows}
+        positions[s_name] = {r.position_group_size: r.count for r in position_rows}
         positions_cumulative[s_name] = {
-            r.position_group_size: pct(r.fraction_gt_or_eq_position_group_size) for r in rows
+            r.position_group_size: pct(r.fraction_gt_or_eq_position_group_size) for r in position_rows
         }
 
     grouping = module.ignore_samples(grouping)
@@ -67,7 +67,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             description="How many UMI families were found at each genomic position.",
             helptext="Written by `fgumi group --metrics` as `<prefix>.position_group_sizes.txt`.",
             plot=linegraph.plot(
-                [positions, positions_cumulative],
+                [positions, {s: drop_none(v) for s, v in positions_cumulative.items()}],
                 {
                     "id": "fgumi_position_group_sizes",
                     "title": "fgumi: Position group sizes",
