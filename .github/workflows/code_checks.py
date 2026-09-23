@@ -90,7 +90,7 @@ for forbidden, suggestion, exempt in must_be_avoided_globally:
     print(f"[bold black on yellow]  Checking that '{forbidden}' is not found anywhere in multiqc/  [/]")
     found_files = []
     for fn in glob.glob(os.path.join(PACKAGE_DIR, "**", "*.py"), recursive=True):
-        relpath = os.path.relpath(fn, PACKAGE_DIR)
+        relpath = os.path.relpath(fn, PACKAGE_DIR).replace(os.sep, "/")
         if relpath in exempt:
             continue
         with open(fn, "r") as fh:
