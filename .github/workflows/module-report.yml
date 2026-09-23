@@ -3,11 +3,6 @@ name: Module preview report
 on:
   issue_comment:
     types: [created]
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: "PR number"
-        required: true
 
 permissions:
   contents: read
@@ -17,10 +12,9 @@ jobs:
     # PR code runs here, so this job gets a read-only token and no secrets.
     # The /review trigger phrase is kept in sync with claude-code-review-trigger.yml
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.issue.pull_request &&
-       (startsWith(github.event.comment.body, '/report') ||
-        contains(github.event.comment.body, '/review')))
+      github.event.issue.pull_request &&
+      (startsWith(github.event.comment.body, '/report') ||
+       contains(github.event.comment.body, '/review'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -32,24 +26,24 @@ jobs:
       report_url: ${{ steps.upload-report.outputs.artifact-url }}
       screenshot: ${{ steps.upload-screenshot.outputs.artifact-id != '' }}
     steps:
-      - name: Require maintainer access
-        if: github.event_name == 'issue_comment'
+      # Pin the head commit here: resolving it at checkout would let a push
+      # land after the maintainer commented but before the PR code runs.
+      - name: Require maintainer access and pin the PR head
+        id: pr
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           ACTOR: ${{ github.event.comment.user.login }}
+          PR: ${{ github.event.issue.number }}
         run: |
           PERM=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" -q '.permission')
           echo "${ACTOR} has permission: $PERM"
           [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
-
-      - name: Get PR number
-        id: pr
-        env:
-          PR: ${{ github.event.issue.number || inputs.pr }}
-        run: |
-          [[ "$PR" =~ ^[0-9]+$ ]] || { echo "Invalid PR number: $PR"; exit 1; }
           echo "pr=$PR" >> "$GITHUB_OUTPUT"
+          gh pr view "$PR" --repo "$REPO" \
+            --json headRefOid,headRepository,headRepositoryOwner \
+            -q '"sha=\(.headRefOid)", "repo=\(.headRepositoryOwner.login)/\(.headRepository.name)"' \
+            | tee -a "$GITHUB_OUTPUT"
 
       - name: Find edited modules
         id: modules
@@ -67,7 +61,8 @@ jobs:
         if: steps.modules.outputs.modules != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: refs/pull/${{ steps.pr.outputs.pr }}/head
+          repository: ${{ steps.pr.outputs.repo }}
+          ref: ${{ steps.pr.outputs.sha }}
           persist-credentials: false
 
       - name: Download test data
@@ -132,7 +127,7 @@ jobs:
     if: |
       always() && needs.build.outputs.pr != '' &&
       (needs.build.outputs.modules != '' || needs.build.result != 'success' ||
-       github.event_name == 'workflow_dispatch' || startsWith(github.event.comment.body, '/report'))
+       startsWith(github.event.comment.body, '/report'))
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
