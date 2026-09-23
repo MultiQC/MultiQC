@@ -432,6 +432,9 @@ fgumi/position_group_sizes:
 fgumi/strand_family_sizes:
   contents: "family_size\tcs_count\tcs_fraction"
   num_lines: 1
+fgumi/yield:
+  contents: "fraction\tread_pairs\tcs_families\tss_families"
+  num_lines: 1
 filtlong:
   contents: Scoring long reads
   contents_re: ".*Filtering long reads.*"
