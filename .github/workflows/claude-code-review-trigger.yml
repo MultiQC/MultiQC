@@ -14,6 +14,7 @@ jobs:
       contents: read
       pull-requests: read
     # Only run on PR comments (issue_comment fires for both issues and PRs)
+    # The /review trigger phrase is kept in sync with module-report.yml
     if: |
       github.event_name == 'pull_request' ||
       (github.event_name == 'issue_comment' &&
