@@ -40,6 +40,10 @@ contains "MUST post" / "post the comment", you're in CI mode.
 5. **Write up** using the Output template.
 6. **Deliver** based on mode: CI → post via `gh pr comment` (see Posting
    below for the correct invocation). Interactive → print to chat and wait.
+7. **Preview report** (interactive mode only, PRs touching
+   `multiqc/modules/`): run `gh pr comment <n> --body /report`
+   and tell the user a comment with the report will follow on the PR. CI
+   doesn't need this, as the `/review` comment already triggers it.
 
 ## Severity scheme
 
