@@ -14,12 +14,12 @@ jobs:
       contents: read
       pull-requests: read
     # Only run on PR comments (issue_comment fires for both issues and PRs)
-    # The /review trigger phrase is kept in sync with module-report.yml
+    # Keep the /review line-start match in sync with module-report.yml
     if: |
       github.event_name == 'pull_request' ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
-       contains(github.event.comment.body, '/review'))
+       contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"'))))
 
     steps:
       - name: Require maintainer access
@@ -44,7 +44,6 @@ jobs:
             echo "${{ github.event.pull_request.number }}" > pr-info/pr-number.txt
             echo "${{ github.event.pull_request.head.sha }}" > pr-info/head-sha.txt
           else
-            # For issue_comment, get PR number and fetch head SHA
             echo "${{ github.event.issue.number }}" > pr-info/pr-number.txt
             HEAD_SHA=$(gh pr view "${{ github.event.issue.number }}" --json headRefOid -q .headRefOid)
             echo "$HEAD_SHA" > pr-info/head-sha.txt
