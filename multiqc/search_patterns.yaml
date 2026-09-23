@@ -417,8 +417,14 @@ fgbio/groupreadsbyumi:
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+fgumi/clip:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
+  num_lines: 1
 fgumi/consensus_stats:
   contents: "key\tvalue\tdescription"
+  num_lines: 1
+fgumi/copy_umi:
+  contents: "total_records\trx_written\trx_overwritten"
   num_lines: 1
 fgumi/correct:
   contents: "umi\ttotal_matches\tperfect_matches"
@@ -429,17 +435,26 @@ fgumi/dedup:
 fgumi/dedup_ladder:
   contents: "library\ttemplates_seen\tduplicate_fraction"
   num_lines: 1
+fgumi/downsample_histogram:
+  contents_re: "^family_size\tcount$"
+  num_lines: 1
 fgumi/duplex_family_sizes:
   contents: "ab_size\tba_size\tcount\tfraction"
   num_lines: 1
 fgumi/family_sizes:
   contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
   num_lines: 1
+fgumi/filter_stats:
+  contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
+  num_lines: 1
 fgumi/grouping_metrics:
   contents: "accepted_sam_records\tdiscarded_non_pf"
   num_lines: 1
 fgumi/position_group_sizes:
   contents: "position_group_size\tcount\tfraction"
+  num_lines: 1
+fgumi/retag:
+  contents: "operation\tkind\trecords_applied"
   num_lines: 1
 fgumi/strand_family_sizes:
   contents: "family_size\tcs_count\tcs_fraction"
