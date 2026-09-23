@@ -3,9 +3,12 @@ from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import family_sizes
+from . import family_sizes, grouping
 
-_TOOL_MODULES = (family_sizes,)
+_TOOL_MODULES = (
+    family_sizes,
+    grouping,
+)
 
 log = logging.getLogger(__name__)
 

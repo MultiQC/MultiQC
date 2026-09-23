@@ -420,6 +420,12 @@ fgbio/errorratebyreadposition:
 fgumi/family_sizes:
   contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
   num_lines: 1
+fgumi/grouping_metrics:
+  contents: "accepted_sam_records\tdiscarded_non_pf"
+  num_lines: 1
+fgumi/position_group_sizes:
+  contents: "position_group_size\tcount\tfraction"
+  num_lines: 1
 filtlong:
   contents: Scoring long reads
   contents_re: ".*Filtering long reads.*"
