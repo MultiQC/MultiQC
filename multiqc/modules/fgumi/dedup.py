@@ -7,7 +7,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import DeduplicationMetric, DuplicationLadderMetric
-from .util import drop_none, load_rows, pct, sample_name
+from .util import drop_none, flatten, load_rows, pct, register, sample_name
 
 ALL_READS = "All Reads"
 
@@ -24,14 +24,13 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, DeduplicationMetric)
         if not rows:
             continue
-        total = next((r for r in rows if r.library == ALL_READS), None)
+        # fgumi writes the aggregate row last; a real library could also be named "All Reads".
+        total = next((r for r in reversed(rows) if r.library == ALL_READS), None)
         if total is None:
             log.warning(f"Skipping {f['fn']}: fgumi dedup metrics have no '{ALL_READS}' row")
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
-        data[s_name] = {
+        data[register(module, f)] = {
+            "filtered_templates": total.filtered_templates,
             "unique_templates": total.unique_templates,
             "duplicate_templates": total.duplicate_templates,
             "percent_duplication": pct(total.percent_duplication),
@@ -43,12 +42,17 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
     module.add_section(
         name="Deduplication",
         anchor="fgumi-dedup",
-        description="Unique and duplicate templates found by `fgumi dedup` (all libraries combined).",
-        helptext="Written by `fgumi dedup --metrics`, using the `All Reads` row. % Dup in General Statistics is Picard's "
-        "PERCENT_DUPLICATION.",
+        description="Unique, duplicate and filtered templates in `fgumi dedup` (all libraries combined).",
+        helptext="Written by `fgumi dedup --metrics`, using the `All Reads` row. Filtered templates were dropped before "
+        "duplicate marking (for example unmapped, low mapping quality, or a missing or N-containing UMI). % Dup in "
+        "General Statistics is Picard's PERCENT_DUPLICATION.",
         plot=bargraph.plot(
             data,
-            {"unique_templates": {"name": "Unique"}, "duplicate_templates": {"name": "Duplicate"}},
+            {
+                "unique_templates": {"name": "Unique"},
+                "duplicate_templates": {"name": "Duplicate"},
+                "filtered_templates": {"name": "Filtered"},
+            },
             {"id": "fgumi_dedup_templates", "title": "fgumi: Deduplication", "ylab": "Templates"},
         ),
     )
@@ -76,7 +80,7 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
             },
         },
     )
-    module.write_data_file(data, "multiqc_fgumi_dedup")
+    module.write_data_file(flatten(data), "multiqc_fgumi_dedup")
     return set(data)
 
 
@@ -91,9 +95,7 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
         # Multi-library rows are keyed "<sample> (<library>)", so sample filters apply to the bare name here.
         if module.is_ignore_sample(s_name):
             continue
-        samples.add(s_name)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
+        samples.add(register(module, f, s_name))
         libraries = sorted({r.library for r in rows})
         for library in libraries:
             key = s_name if len(libraries) == 1 else f"{s_name} ({library})"
@@ -107,8 +109,11 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
     module.add_section(
         name="Duplication ladder",
         anchor="fgumi-dedup-ladder",
-        description="Duplicate rate as templates accumulate: a flattening curve means the library is saturating.",
-        helptext="Written by `fgumi dedup --duplication-ladder`.",
+        description="Cumulative and per-window duplicate rate as templates are processed in coordinate order.",
+        helptext="Written by `fgumi dedup --duplication-ladder`, one line per library. Templates are counted in "
+        "coordinate order, not in random order, so this is not a saturation curve: the rate at a point is the "
+        "duplicate rate of the genome covered so far, and changes along the curve reflect regions with different "
+        "duplicate rates.",
         plot=linegraph.plot(
             [
                 {s: drop_none(v["cumulative"]) for s, v in data.items()},
@@ -125,5 +130,5 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
             },
         ),
     )
-    module.write_data_file(data, "multiqc_fgumi_dedup_ladder")
+    module.write_data_file(flatten(data), "multiqc_fgumi_dedup_ladder")
     return samples

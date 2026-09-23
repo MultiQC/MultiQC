@@ -7,7 +7,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
 from .schemas import ConsensusStatMetric
-from .util import drop_none, load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, register
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +25,7 @@ _GENERAL_STATS_HEADERS: Dict[str, Dict[str, Any]] = {
     },
     "frac_raw_reads_used": {
         "title": "% reads used",
+        "scale": "RdYlGn",
         "description": "Raw reads used in a consensus read",
         "suffix": "%",
         "max": 100,
@@ -45,7 +46,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             try:
                 values[row.key] = float(row.value)
             except ValueError:
-                continue
+                log.debug(f"{f['fn']}: ignoring non-numeric value {row.value!r} for {row.key!r}")
         if "raw_reads_considered" not in values:
             log.debug(f"{f['fn']}: key/value file is not an fgumi consensus --stats file, skipping")
             continue
@@ -53,10 +54,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         if missing:
             log.warning(f"Skipping {f['fn']}: fgumi consensus --stats file is missing {missing}")
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
-        stats[s_name] = values
+        stats[register(module, f)] = values
     stats = module.ignore_samples(stats)
     if not stats:
         return set()

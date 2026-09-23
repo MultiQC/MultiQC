@@ -14,7 +14,7 @@ from multiqc.plots import heatmap, linegraph
 from multiqc.types import SectionAlert
 
 from .schemas import DuplexFamilySizeMetric, DuplexStrandFamilySizeMetric, SimplexFamilySizeMetric
-from .util import drop_none, load_rows, pct, safe_id, sample_name
+from .util import drop_none, flatten, load_rows, pct, register, safe_id
 
 log = logging.getLogger(__name__)
 
@@ -43,9 +43,7 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, DuplexStrandFamilySizeMetric if is_duplex else SimplexFamilySizeMetric)
         if rows is None:
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
+        s_name = register(module, f, section=f"{'duplex' if is_duplex else 'simplex'}_family_sizes")
         strands = ["cs", "ss", "ds"] if is_duplex else ["cs", "ss"]
         entry: Dict[str, Dict[int, Optional[float]]] = {}
         for strand in strands:
@@ -67,10 +65,15 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         module.add_section(
             name=f"{kind.capitalize()} family sizes",
             anchor=f"fgumi-{kind}-family-sizes",
-            description=f"Family size distributions from `fgumi {kind}-metrics` (or fgbio CollectDuplexSeqMetrics), "
-            "one tab per grouping.",
-            helptext="CS: grouped by coordinate and strand only. SS: also by UMI (single-strand families). "
-            "DS: single-strand families paired into double-strand families. Matches fgbio CollectDuplexSeqMetrics.",
+            description=f"Family size distributions from `fgumi {kind}-metrics`"
+            + (" (or fgbio CollectDuplexSeqMetrics)" if kind == "duplex" else "")
+            + ", one tab per grouping.",
+            helptext="CS: grouped by coordinate and strand only. SS: also by UMI (single-strand families)."
+            + (
+                " DS: single-strand families paired into double-strand families. Matches fgbio CollectDuplexSeqMetrics."
+                if kind == "duplex"
+                else ""
+            ),
             plot=linegraph.plot(
                 counts + cumulative,
                 {
@@ -87,7 +90,7 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
             ),
         )
         module.write_data_file(
-            {s: {strand: data[s][strand] for strand in strands} for s in data},
+            flatten({s: {strand: data[s][strand] for strand in strands} for s in data}),
             f"multiqc_fgumi_{kind}_family_sizes",
         )
         parsed |= set(data)
@@ -101,7 +104,8 @@ def _label(size: int) -> str:
 def _heatmap_matrix(
     rows: List[DuplexFamilySizeMetric], min_ba: int
 ) -> Optional[Tuple[List[List[Optional[float]]], List[str], List[str]]]:
-    """log10(count) by (capped AB size, capped BA size); rows with ``ba_size < min_ba`` are dropped."""
+    """log10(count) with a row per capped BA size and a column per capped AB size (fgbio's x = AB, y = BA), and
+    the column and row labels; rows with ``ba_size < min_ba`` are dropped."""
     cells: Dict[Tuple[int, int], int] = defaultdict(int)
     for r in rows:
         if r.ba_size >= min_ba:
@@ -111,8 +115,8 @@ def _heatmap_matrix(
     # Contiguous axes, so a size with no families is an empty cell rather than missing from the axis.
     ab_sizes = list(range(min(ab for ab, _ in cells), max(ab for ab, _ in cells) + 1))
     ba_sizes = list(range(min(ba for _, ba in cells), max(ba for _, ba in cells) + 1))
-    matrix = [[math.log10(cells[(ab, ba)]) if cells.get((ab, ba)) else None for ba in ba_sizes] for ab in ab_sizes]
-    return matrix, [_label(ba) for ba in ba_sizes], [_label(ab) for ab in ab_sizes]
+    matrix = [[math.log10(cells[(ab, ba)]) if cells.get((ab, ba)) else None for ab in ab_sizes] for ba in ba_sizes]
+    return matrix, [_label(ab) for ab in ab_sizes], [_label(ba) for ba in ba_sizes]
 
 
 def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
@@ -121,10 +125,7 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, DuplexFamilySizeMetric)
         if rows is None:
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
-        rows_by_sample[s_name] = rows
+        rows_by_sample[register(module, f)] = rows
     rows_by_sample = module.ignore_samples(rows_by_sample)
     if not rows_by_sample:
         return set()
@@ -157,6 +158,16 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
     else:
         rows_by_sample_for_heatmaps = rows_by_sample
     for s_name, rows in rows_by_sample_for_heatmaps.items():
+        if not rows:
+            module.add_section(
+                name=f"Duplex family sizes: {html.escape(s_name)}",
+                anchor=f"fgumi_duplex_ab_ba_{safe_id(s_name)}".replace("_", "-"),
+                description="No duplex families were recorded.",
+                helptext=_HEATMAP_HELP,
+                plot=None,
+                alerts=[SectionAlert(message="No duplex families were recorded", affected_samples=[s_name])],
+            )
+            continue
         for suffix, min_ba, title in [("", 0, "all families"), ("_both", 1, "families with AB > 0 and BA > 0")]:
             built = _heatmap_matrix(rows, min_ba)
             plot_id = f"fgumi_duplex_ab_ba{suffix}_{safe_id(s_name)}"
@@ -185,8 +196,8 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
                     {
                         "id": plot_id,
                         "title": f"fgumi: Duplex AB x BA family sizes, {html.escape(s_name)}",
-                        "xlab": "BA reads",
-                        "ylab": "AB reads",
+                        "xlab": "AB reads",
+                        "ylab": "BA reads",
                         "zlab": "log10(families)",
                         "xcats_samples": False,
                         "ycats_samples": False,

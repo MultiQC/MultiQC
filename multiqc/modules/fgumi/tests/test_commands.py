@@ -1,5 +1,7 @@
 import pytest
 
+from .conftest import general_stats
+
 CLIP = (
     "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post\treads_clipped_five_prime"
     "\treads_clipped_three_prime\treads_clipped_overlapping\treads_clipped_extending\tbases\tbases_clipped_pre"
@@ -21,12 +23,14 @@ def test_small_command_metrics(run_fgumi):
         {"Clip1.txt": CLIP, "Filt1.txt": FILTER, "Copy1.txt": COPY_UMI, "Retag1.txt": RETAG, "Down1.txt": DOWNSAMPLE}
     )
     raw = module.saved_raw_data
-    assert raw["multiqc_fgumi_clip"]["Clip1"]["reads"] == {
-        "five_prime": 5,
-        "three_prime": 10,
-        "overlapping": 12,
-        "extending": 3,
+    # Data files are flat {sample: {column: value}} tables, with fgumi's own column names.
+    assert {k: v for k, v in raw["multiqc_fgumi_clip"]["Clip1"].items() if k.startswith("reads_")} == {
+        "reads_clipped_five_prime": 5,
+        "reads_clipped_three_prime": 10,
+        "reads_clipped_overlapping": 12,
+        "reads_clipped_extending": 3,
     }
+    assert general_stats("Filt1")["pass_rate"] == pytest.approx(90.0)
     filt = raw["multiqc_fgumi_filter"]["Filt1"]
     assert (filt["passed"], filt["failed"]) == (900, 100)
     assert filt["pass_rate"] == pytest.approx(90.0)
@@ -54,8 +58,10 @@ def test_filter_stats_legacy_headerless_layout(run_fgumi):
 
 def test_clip_file_without_all_row_warns(run_fgumi, caplog):
     no_all = "\n".join(line for line in CLIP.splitlines() if not line.startswith("All")) + "\n"
-    run_fgumi({"Clip1.txt": no_all, "Filt1.txt": FILTER})
+    module = run_fgumi({"Clip1.txt": no_all, "Filt1.txt": FILTER})
     assert any("Clip1.txt" in r.message and "All" in r.message for r in caplog.records)
+    assert module.samples_parsed_by_tool["commands"] == {"Filt1"}
+    assert "multiqc_fgumi_clip" not in module.saved_raw_data
 
 
 def test_retag_honours_sample_filters_on_the_sample_name(run_fgumi):
@@ -69,3 +75,19 @@ def test_retag_honours_sample_filters_on_the_sample_name(run_fgumi):
         config.sample_names_only_include = original
     assert module.samples_parsed_by_tool["commands"] == {"Retag1"}
     assert list(module.saved_raw_data["multiqc_fgumi_retag"]) == ["Retag1 (RX::copy::BX)"]
+
+
+def test_retag_keeps_a_repeated_operation(run_fgumi):
+    rows = RETAG + "RX::copy::BX\tcopy\t80\t80\t0\n"
+    module = run_fgumi({"Retag1.txt": rows})
+    retag = module.saved_raw_data["multiqc_fgumi_retag"]
+    assert retag["Retag1 (RX::copy::BX)"]["records_applied"] == 90
+    assert retag["Retag1 (RX::copy::BX #2)"]["records_applied"] == 80
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"], ids=["lf", "crlf"])
+def test_anchored_patterns_match_either_line_ending(run_fgumi, newline):
+    module = run_fgumi(
+        {"Down1.txt": DOWNSAMPLE.replace("\n", newline), "Filt1.txt": LEGACY_FILTER.replace("\n", newline)}
+    )
+    assert module.samples_parsed_by_tool["commands"] == {"Down1", "Filt1"}

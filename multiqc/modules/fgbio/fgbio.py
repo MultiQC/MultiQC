@@ -15,8 +15,9 @@ class MultiqcModule(BaseMultiqcModule):
     - [GroupReadsByUmi](http://fulcrumgenomics.github.io/fgbio/tools/latest/GroupReadsByUmi.html)
 
       fgumi writes this family-size histogram with identical columns, so when the fgumi module also runs (the
-      default) these files are reported in its "Family sizes" section instead. The fgbio section and the
-      `fgbio_umi` / `fgbio_umi_normed` data files are then only produced with `-m fgbio` or `--exclude fgumi`.
+      default) these files are reported in its "Family sizes" section instead: the fgbio section is not shown and
+      the `fgbio_umi` / `fgbio_umi_normed` data files are empty. Run with `-m fgbio` or `--exclude fgumi` to keep
+      them in the fgbio module.
     - [ErrorRateByReadPosition](http://fulcrumgenomics.github.io/fgbio/tools/latest/ErrorRateByReadPosition.html)
     """
 

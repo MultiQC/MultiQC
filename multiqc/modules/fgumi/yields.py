@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import DuplexYieldMetric, SimplexYieldMetric
-from .util import drop_none, finite, load_rows, pct, sample_name
+from .util import drop_none, finite, flatten, load_rows, pct, register
 
 _DUPLEX_TABS = [
     ("duplexes", "Duplexes (actual)", "Duplexes"),
@@ -34,11 +34,11 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     for f in module.find_log_files("fgumi/yield"):
         if f["f"] is None:
             continue
-        s_name = sample_name(module, f)
         if "ds_families" in f["f"].split("\n", 1)[0].split("\t"):
             rows = load_rows(f, DuplexYieldMetric)
             if not rows:
                 continue
+            s_name = register(module, f, section="duplex_yield")
             duplex[s_name] = {
                 "duplexes": {r.read_pairs: r.ds_duplexes for r in rows},
                 "ideal_duplexes": {r.read_pairs: finite(r.ds_families * r.ds_fraction_duplexes_ideal) for r in rows},
@@ -53,6 +53,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             simplex_rows = load_rows(f, SimplexYieldMetric)
             if not simplex_rows:
                 continue
+            s_name = register(module, f, section="simplex_yield")
             simplex[s_name] = {
                 "consensus_families": {r.read_pairs: r.ss_consensus_families for r in simplex_rows},
                 "ss_families": {r.read_pairs: r.ss_families for r in simplex_rows},
@@ -60,8 +61,6 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             }
             simplex_full = max(simplex_rows, key=lambda r: r.fraction)
             general.setdefault(s_name, {})["ss_consensus_families"] = simplex_full.ss_consensus_families
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
 
     parsed: Set[str] = set()
     for kind, data, tabs in [("duplex", duplex, _DUPLEX_TABS), ("simplex", simplex, _SIMPLEX_TABS)]:
@@ -71,8 +70,9 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         module.add_section(
             name=f"{kind.capitalize()} yield",
             anchor=f"fgumi-{kind}-yield",
-            description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics` "
-            "(or fgbio CollectDuplexSeqMetrics) downsampling.",
+            description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics`"
+            + (" (or fgbio CollectDuplexSeqMetrics)" if kind == "duplex" else "")
+            + " downsampling.",
             helptext="The input reads are downsampled to several fractions and the metrics recomputed at each, so the curves "
             "show how yield would grow with more sequencing. A curve that flattens means the library is saturating.",
             plot=linegraph.plot(
@@ -85,10 +85,10 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                 },
             ),
         )
-        module.write_data_file(data, f"multiqc_fgumi_{kind}_yield")
+        module.write_data_file(flatten(data), f"multiqc_fgumi_{kind}_yield")
         parsed |= set(data)
 
-    general = {s: v for s, v in module.ignore_samples(general).items() if s in parsed}
+    general = module.ignore_samples(general)
     if general:
         module.general_stats_addcols(
             {s: drop_none(v) for s, v in general.items()},

@@ -21,14 +21,54 @@ def test_user_named_histogram_is_detected_by_header(run_fgumi):
     assert module.samples_parsed_by_tool["family_sizes"] == {"my_hist"}
 
 
-def test_sample_name_strips_fgumi_suffixes(run_fgumi):
-    # A second file with a longer fgumi suffix must map to the same sample, not "S1.duplex_family_sizes".
+@pytest.mark.parametrize(
+    "fn",
+    [
+        "S1.family_sizes.txt",
+        "S1.duplex_family_sizes.txt",  # a longer suffix must not leave "S1.duplex_family_sizes"
+        "S1.grouping_metrics.txt",
+        "S1.umi_counts.txt",
+        # `fgumi runall --all-metrics S1` puts the stage before the suffix
+        "S1.group.family_sizes.txt",
+        "S1.duplex.umi_counts.txt",
+        "S1.simplex.simplex_yield_metrics.txt",
+        "S1.codec.family_sizes.txt",
+        "S1.correct.metrics.txt",
+        "S1.filter.stats.txt",
+    ],
+)
+def test_sample_name_strips_fgumi_suffixes(run_fgumi, fn):
     from multiqc.modules.fgumi.util import sample_name
 
     module = run_fgumi({"S1.family_sizes.txt": FAMILY_SIZES_TSV})
-    for fn in ["S1.duplex_family_sizes.txt", "S1.grouping_metrics.txt", "S1.umi_counts.txt.gz", "S1.family_sizes.txt"]:
-        f = {"fn": fn, "root": "", "s_name": fn, "sp_key": "fgumi/family_sizes"}  # the keys find_log_files provides
-        assert sample_name(module, f) == "S1", fn
+    f = {"fn": fn, "root": "", "s_name": fn, "sp_key": "fgumi/family_sizes"}  # the keys find_log_files provides
+    assert sample_name(module, f) == "S1"
+
+
+def test_fullnames_keeps_the_file_name(run_fgumi):
+    from multiqc import config
+
+    config.fn_clean_sample_names = False
+    module = run_fgumi({"S1.family_sizes.txt": FAMILY_SIZES_TSV})
+    assert module.samples_parsed_by_tool["family_sizes"] == {"S1.family_sizes.txt"}
+
+
+def test_runall_outputs_share_one_sample(run_fgumi):
+    grouping = "\t".join(
+        ["accepted_sam_records", "discarded_non_pf", "discarded_poor_alignment", "discarded_ns_in_umi"]
+        + ["discarded_umis_to_short"]
+    )
+    module = run_fgumi(
+        {
+            "S1.group.family_sizes.txt": FAMILY_SIZES_TSV,
+            "S1.group.grouping_metrics.txt": grouping + "\n10\t0\t0\t0\t0\n",
+        }
+    )
+    assert module.samples_parsed_by_tool["family_sizes"] == {"S1"}
+    assert module.samples_parsed_by_tool["grouping"] == {"S1"}
+    # Each file is listed as a source for the sample; neither replaces the other.
+    sources = {s for s, by_sample in report.data_sources["fgumi"].items() if "S1" in by_sample}
+    assert {"family_sizes", "grouping_metrics"} <= sources
 
 
 def test_family_sizes_claimed_by_fgumi_not_fgbio(tmp_path):

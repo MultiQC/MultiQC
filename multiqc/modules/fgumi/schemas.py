@@ -36,10 +36,6 @@ def _allows_none(annotation: object) -> bool:
     return get_origin(annotation) is Union and type(None) in get_args(annotation)
 
 
-def _is_float(annotation: object) -> bool:
-    return annotation is float or (get_origin(annotation) is Union and float in get_args(annotation))
-
-
 class FgumiMetric(BaseModel):
     """One row of an fgbio-style metric TSV: a header row of field names, then one row per record.
 
@@ -63,8 +59,7 @@ class FgumiMetric(BaseModel):
                 continue
             if value in cls.null_sentinels and _allows_none(field.annotation):
                 data[key] = None
-            elif _is_float(field.annotation):
-                data[key] = float(value)  # Python's float() accepts NaN / Infinity / -Infinity
+        # pydantic itself parses fgbio's "NaN" / "Infinity" / "-Infinity" cells into float fields.
         return data
 
     @classmethod
@@ -148,6 +143,7 @@ class DeduplicationMetric(FgumiMetric):
 
     sample: str
     library: str
+    filtered_templates: int
     total_templates: int
     unique_templates: int
     duplicate_templates: int

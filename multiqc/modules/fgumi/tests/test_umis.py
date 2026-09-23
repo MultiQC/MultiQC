@@ -1,4 +1,5 @@
 from multiqc import report
+from multiqc.modules.fgumi.tests.conftest import general_stats
 from multiqc.modules.fgumi.umis import summarize_observations
 
 UMI_COUNTS = (
@@ -53,3 +54,34 @@ def test_duplex_umi_counts_summary(run_fgumi):
         "singleton_pct": 0.0,
     }
     assert "fgumi_duplex_umi_counts" in report.plot_by_id
+
+
+def test_header_only_umi_counts_has_no_median_or_singleton_share(run_fgumi):
+    module = run_fgumi({"S1.umi_counts.txt": UMI_COUNTS.splitlines()[0] + "\n"})
+    # With no UMIs the median and singleton share are undefined: left out, not reported as 0.
+    assert module.saved_raw_data["multiqc_fgumi_umi_counts"]["S1"] == {"n": 0}
+    assert "median" not in general_stats("S1")
+
+
+def test_malformed_row_after_the_validated_rows_skips_the_file(run_fgumi, caplog):
+    from multiqc.modules.fgumi.util import STREAM_VALIDATE_ROWS
+
+    good = "AAAA\t1\t0\t1\t0.1\t0.25\n" * (STREAM_VALIDATE_ROWS + 1)
+    module = run_fgumi(
+        {"S1.umi_counts.txt": UMI_COUNTS + good + "CCCC\tnot-a-number\t0\t1\t0.1\t0.25\n", "S2.txt": CORRECT}
+    )
+    assert "multiqc_fgumi_umi_counts" not in module.saved_raw_data
+    assert any("S1.umi_counts.txt" in r.message for r in caplog.records)
+
+
+def test_undecodable_file_is_skipped_without_losing_other_samples(tmp_path, caplog):
+    from multiqc.modules.fgumi import MultiqcModule
+
+    (tmp_path / "S1.umi_counts.txt").write_bytes(UMI_COUNTS.encode() + b"GGGG\t\xff\xfe\t0\t1\t0.1\t0.25\n")
+    (tmp_path / "S2.txt").write_text(CORRECT)
+    report.reset()
+    report.analysis_files = [tmp_path / "S1.umi_counts.txt", tmp_path / "S2.txt"]
+    report.search_files(["fgumi"])
+    module = MultiqcModule()
+    assert module.samples_parsed_by_tool["umis"] == {"S2"}
+    assert any("S1.umi_counts.txt" in r.message for r in caplog.records)

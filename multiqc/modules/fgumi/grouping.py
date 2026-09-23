@@ -6,7 +6,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
 from .schemas import PositionGroupSizeMetric, UmiGroupingMetric
-from .util import drop_none, load_rows, pct, sample_name
+from .util import drop_none, load_rows, pct, register
 
 _CATEGORIES = {
     "accepted_sam_records": {"name": "Accepted"},
@@ -23,10 +23,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, UmiGroupingMetric)
         if not rows:
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
-        grouping[s_name] = rows[0].model_dump()
+        grouping[register(module, f)] = rows[0].model_dump()
 
     positions: Dict[str, Dict[int, float]] = {}
     positions_cumulative: Dict[str, Dict[int, Optional[float]]] = {}
@@ -34,9 +31,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         position_rows = load_rows(f, PositionGroupSizeMetric)
         if position_rows is None:
             continue
-        s_name = sample_name(module, f)
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
+        s_name = register(module, f)
         positions[s_name] = {r.position_group_size: r.count for r in position_rows}
         positions_cumulative[s_name] = {
             r.position_group_size: pct(r.fraction_gt_or_eq_position_group_size) for r in position_rows

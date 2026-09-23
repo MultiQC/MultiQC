@@ -99,15 +99,20 @@ def test_module_is_in_module_order():
 def test_docstring_names_the_fgbio_outputs_the_module_also_reads():
     from multiqc.modules.fgumi import MultiqcModule
 
-    for tool in ("GroupReadsByUmi", "CollectDuplexSeqMetrics", "CorrectUmis", "ClipBam"):
+    for tool in ("GroupReadsByUmi", "CollectDuplexSeqMetrics", "CorrectUmis", "ClipBam", "ReviewConsensusVariants"):
         assert tool in MultiqcModule.__doc__, tool
 
 
 def test_every_section_has_a_description_and_help_text(run_fgumi):
     # MultiQC's new-module checklist asks for both on every section.
-    data_dir = Path(__file__).parents[5] / "MultiQC-test-data" / "data" / "modules" / "fgumi"
+    from multiqc.utils import testing
+
+    try:
+        data_dir = testing.data_dir() / "modules" / "fgumi"
+    except FileNotFoundError:
+        pytest.skip("MultiQC test-data checkout not found")
     if not data_dir.is_dir():
-        pytest.skip("MultiQC test-data checkout not found next to the MultiQC repo")
+        pytest.skip("MultiQC test-data checkout has no fgumi data")
     module = run_fgumi({p.name: p.read_text() for p in data_dir.iterdir() if p.suffix == ".txt"})
     missing = [s.name for s in module.sections if not s.description or not s.helptext]
     assert not missing, missing

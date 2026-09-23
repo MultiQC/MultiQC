@@ -1,6 +1,7 @@
 """Small per-command metrics: `clip --metrics`, `filter --stats`, `copy-umi --metrics`, `retag --metrics` and
 `downsample --histogram-kept/--histogram-rejected`."""
 
+import itertools
 import logging
 from typing import Any, Dict, Optional, Set, Union
 
@@ -10,7 +11,7 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph, table
 
 from .schemas import ClippingMetric, CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
-from .util import drop_none, load_rows, pct, sample_name
+from .util import drop_none, flatten, load_rows, pct, register, sample_name
 
 log = logging.getLogger(__name__)
 
@@ -26,13 +27,6 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     return _clip(module) | _filter(module) | _copy_umi(module) | _retag(module) | _downsample(module)
 
 
-def _register(module: BaseMultiqcModule, f: Any) -> str:
-    s_name = sample_name(module, f)
-    module.add_data_source(f, s_name)
-    module.add_software_version(None, s_name)
-    return s_name
-
-
 def _clip(module: BaseMultiqcModule) -> Set[str]:
     data: Dict[str, Dict[str, Dict[str, int]]] = {}
     for f in module.find_log_files("fgumi/clip"):
@@ -43,8 +37,8 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
         if total is None:
             log.warning(f"Skipping {f['fn']}: fgumi clip metrics have no 'All' row")
             continue
-        data[_register(module, f)] = {
-            unit: {reason: getattr(total, f"{unit}_clipped_{reason}") for reason in _CLIP_REASONS}
+        data[register(module, f)] = {
+            f"{unit}_clipped": {reason: getattr(total, f"{unit}_clipped_{reason}") for reason in _CLIP_REASONS}
             for unit in ("reads", "bases")
         }
     data = module.ignore_samples(data)
@@ -58,7 +52,7 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
         "Overlapping-mate clipping removes bases a read shares with its mate; extending clipping removes bases past "
         "the mate's end.",
         plot=bargraph.plot(
-            [{s: v["reads"] for s, v in data.items()}, {s: v["bases"] for s, v in data.items()}],
+            [{s: v["reads_clipped"] for s, v in data.items()}, {s: v["bases_clipped"] for s, v in data.items()}],
             [{k: {"name": n} for k, n in _CLIP_REASONS.items()}] * 2,
             {
                 "id": "fgumi_clip",
@@ -68,7 +62,7 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
             },
         ),
     )
-    module.write_data_file(data, "multiqc_fgumi_clip")
+    module.write_data_file(flatten(data), "multiqc_fgumi_clip")
     return set(data)
 
 
@@ -94,7 +88,7 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
         row = _read_filter_stats(f)
         if row is None:
             continue
-        data[_register(module, f)] = {
+        data[register(module, f)] = {
             "passed": row.passed_reads,
             "failed": row.failed_reads,
             "pass_rate": pct(row.pass_rate),
@@ -127,7 +121,7 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
             }
         },
     )
-    module.write_data_file(data, "multiqc_fgumi_filter")
+    module.write_data_file(flatten(data), "multiqc_fgumi_filter")
     return set(data)
 
 
@@ -138,7 +132,7 @@ def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
         if not rows:
             continue
         row = rows[0]
-        data[_register(module, f)] = {
+        data[register(module, f)] = {
             "rx_written": row.rx_written,
             "rx_overwritten": row.rx_overwritten,
             "names_trimmed": row.names_trimmed,
@@ -174,12 +168,16 @@ def _retag(module: BaseMultiqcModule) -> Set[str]:
         if not rows:
             continue
         # Rows are keyed "<sample> (<operation>)", so sample filters are applied to the bare sample name here.
-        if module.is_ignore_sample(sample_name(module, f)):
+        s_name = sample_name(module, f)
+        if module.is_ignore_sample(s_name):
             continue
-        s_name = _register(module, f)
-        samples.add(s_name)
+        samples.add(register(module, f, s_name))
         for row in rows:
-            data[f"{s_name} ({row.operation})"] = {
+            key = f"{s_name} ({row.operation})"
+            if key in data:
+                # The same operation given twice: keep both rows, numbered in file order.
+                key = next(k for k in (f"{s_name} ({row.operation} #{n})" for n in itertools.count(2)) if k not in data)
+            data[key] = {
                 "kind": row.kind,
                 "records_applied": row.records_applied,
                 "dst_overwritten": row.dst_overwritten,
@@ -214,7 +212,7 @@ def _downsample(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, DownsampleHistogramMetric)
         if rows is None:
             continue
-        data[_register(module, f)] = {r.family_size: r.count for r in rows}
+        data[register(module, f)] = {r.family_size: r.count for r in rows}
     data = module.ignore_samples(data)
     if not data:
         return set()

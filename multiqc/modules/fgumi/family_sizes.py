@@ -1,17 +1,16 @@
 """Family size histograms: `group --family-size-histogram`, `group --metrics` (`<prefix>.family_sizes.txt`)
 and `dedup --family-size-histogram`. The columns are identical to fgbio GroupReadsByUmi's histogram, so the
-fgumi search pattern is ordered to claim these files ahead of the fgbio module."""
+fgumi module claims these files instead of the fgbio module: MultiQC tries search patterns with a smaller
+`num_lines` first, and a file claimed by a non-shared pattern is not offered to later ones, so `fgumi/family_sizes`
+(`num_lines: 2`) wins over `fgbio/groupreadsbyumi` (`num_lines: 3`)."""
 
-import logging
 from typing import Dict, Optional, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import FamilySizeMetric
-from .util import drop_none, load_rows, pct, sample_name
-
-log = logging.getLogger(__name__)
+from .util import drop_none, load_rows, pct, register
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -22,11 +21,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         rows = load_rows(f, FamilySizeMetric)
         if rows is None:
             continue
-        s_name = sample_name(module, f)
-        if s_name in counts:
-            log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
-        module.add_data_source(f, s_name)
-        module.add_software_version(None, s_name)
+        s_name = register(module, f)
         counts[s_name] = {r.family_size: r.count for r in rows}
         percent[s_name] = {r.family_size: pct(r.fraction) for r in rows}
         cumulative[s_name] = {r.family_size: pct(r.fraction_gt_or_eq_family_size) for r in rows}

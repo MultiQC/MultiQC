@@ -35,14 +35,16 @@ class MultiqcModule(BaseMultiqcModule):
     - `correct`, `dedup` (metrics, family-size histogram, duplication ladder), `clip`, `filter`,
       `copy-umi`, `retag`, `downsample` histograms, and the `review` detail file
 
-    The column contract for all of these is fgumi's `crates/fgumi-metrics/metric_columns.json`. The `copy-umi`
-    and `retag` metrics and the headered `filter --stats` layout need an fgumi release after 0.7.0; the headerless
-    `filter --stats` layout written by fgumi 0.7.0 and earlier is also read.
+    fgumi publishes the column contract for all of these as `crates/fgumi-metrics/metric_columns.json`, starting
+    with the release after 0.7.0. The `copy-umi` and `retag` metrics and the headered `filter --stats` layout also
+    need that release; the headerless `filter --stats` layout written by fgumi 0.7.0 and earlier is also read.
 
     #### Sample names
 
     Sample names come from the file name with fgumi's fixed suffixes (such as `.family_sizes.txt` or
-    `.duplex_yield_metrics.txt`) removed, so all of one sample's `--metrics <prefix>` files share a name.
+    `.duplex_yield_metrics.txt`) removed, so all of one sample's `--metrics <prefix>` files share a name. The stage
+    that `fgumi runall --all-metrics <prefix>` adds before the suffix (as in `<prefix>.duplex.umi_counts.txt`) is
+    removed too. With `--fullnames`, nothing is removed.
 
     #### fgbio outputs
 
@@ -54,6 +56,10 @@ class MultiqcModule(BaseMultiqcModule):
     - CollectDuplexSeqMetrics: family sizes, duplex family sizes, duplex yield, UMI counts, duplex UMI counts
     - CorrectUmis: `--metrics`
     - ClipBam: `--metrics`
+    - ReviewConsensusVariants: the `<output>.txt` detail file
+
+    fgumi's family-size histogram pattern is tried before fgbio's because it has a smaller `num_lines`; that is
+    what gives these files to fgumi.
 
     #### Duplex heatmaps
 

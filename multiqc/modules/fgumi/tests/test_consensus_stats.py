@@ -3,6 +3,8 @@ import pytest
 from multiqc import report
 from multiqc.base_module import ModuleNoSamplesFound
 
+from .conftest import general_stats
+
 STATS = (
     "key\tvalue\tdescription\n"
     "raw_reads_considered\t1000\tTotal raw reads considered\n"
@@ -33,6 +35,8 @@ def test_consensus_stats(run_fgumi):
         "raw_reads_rejected_for_minority_alignment": 50.0,
     }
     assert "fgumi_consensus_rejections" in report.plot_by_id
+    stats = general_stats("S1")
+    assert (stats["consensus_reads_emitted"], stats["frac_raw_reads_used"]) == (300.0, pytest.approx(80.0))
 
 
 def test_non_fgumi_kv_file_is_ignored(run_fgumi):
@@ -46,3 +50,10 @@ def test_consensus_stats_data_file_keeps_every_parsed_value(run_fgumi):
     assert saved["raw_reads_considered"] == 1000.0
     assert saved["consensus_reads_emitted"] == 300.0
     assert saved["raw_reads_rejected_for_orphan_consensus"] == 0.0
+
+
+def test_stats_missing_required_keys_are_skipped_with_a_warning(run_fgumi, caplog):
+    partial = "".join(line + "\n" for line in STATS.splitlines() if not line.startswith("consensus_reads_emitted"))
+    with pytest.raises(ModuleNoSamplesFound):
+        run_fgumi({"S1.txt": partial})
+    assert any("S1.txt" in r.message and "consensus_reads_emitted" in r.message for r in caplog.records)
