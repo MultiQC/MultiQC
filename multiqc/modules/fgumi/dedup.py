@@ -74,6 +74,7 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
             },
             "estimated_library_size": {
                 "title": "Library size",
+                "scale": "YlGn",
                 "description": "Estimated library size",
                 "format": "{:,.0f}",
                 "hidden": True,
@@ -105,9 +106,9 @@ def _ladder(module: BaseMultiqcModule) -> Set[str]:
         anchor="fgumi-dedup-ladder",
         description="Cumulative and per-window duplicate rate as templates are processed in coordinate order.",
         helptext="Written by `fgumi dedup --duplication-ladder`, one line per library. Templates are counted in "
-        "coordinate order, not in random order, so this is not a saturation curve: the rate at a point is the "
-        "duplicate rate of the genome covered so far, and changes along the curve reflect regions with different "
-        "duplicate rates.",
+        "coordinate order, so the rate at each point is the duplicate rate of the genome covered so far, and bumps "
+        "mark regions with a higher or lower duplicate rate. A flattening curve says nothing about library "
+        "saturation; use the yield or downsampling plots for that.",
         plot=linegraph.plot(
             [
                 {s: drop_none(v["cumulative"]) for s, v in data.items()},

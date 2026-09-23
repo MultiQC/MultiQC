@@ -35,9 +35,9 @@ class MultiqcModule(BaseMultiqcModule):
     - `correct`, `dedup` (metrics, family-size histogram, duplication ladder), `clip`, `filter`,
       `copy-umi`, `retag`, `downsample` histograms, and the `review` detail file
 
-    fgumi publishes the column contract for all of these as `crates/fgumi-metrics/metric_columns.json`, starting
-    with the release after 0.7.0. The `copy-umi` and `retag` metrics and the headered `filter --stats` layout also
-    need that release; the headerless `filter --stats` layout written by fgumi 0.7.0 and earlier is also read.
+    fgumi publishes the columns of every one of these files in `crates/fgumi-metrics/metric_columns.json`, starting
+    with the first release after 0.7.0. That release is also the first to write `copy-umi` and `retag` metrics and a
+    headered `filter --stats` file. The headerless `filter --stats` file from fgumi 0.7.0 and earlier is read too.
 
     #### Sample names
 
@@ -48,33 +48,43 @@ class MultiqcModule(BaseMultiqcModule):
 
     #### fgbio outputs
 
-    Several fgumi metrics files have exactly the columns of their fgbio equivalents, so the two cannot be
-    told apart, and this module also reads (and reports under fgumi) the fgbio versions of:
+    Several fgumi metrics files have exactly the columns of their fgbio equivalents. The two can't be told apart,
+    so this module also reads the fgbio versions and reports them under fgumi:
 
-    - GroupReadsByUmi: `--family-size-histogram` and `--grouping-metrics` (the family-size histogram was
-      previously shown by the fgbio module; it now appears under fgumi instead)
+    - GroupReadsByUmi: `--family-size-histogram` and `--grouping-metrics` (for the family-size histogram, see
+      below)
     - CollectDuplexSeqMetrics: family sizes, duplex family sizes, duplex yield, UMI counts, duplex UMI counts
     - CorrectUmis: `--metrics`
     - ClipBam: `--metrics`
     - ReviewConsensusVariants: the `<output>.txt` detail file
 
-    fgumi's family-size histogram pattern is tried before fgbio's because it has a smaller `num_lines`; that is
-    what gives these files to fgumi.
-
-    #### Duplex heatmaps
-
-    Each sample gets AB x BA family-size heatmaps unless there are more than 10 duplex samples, in which case
-    only the cross-sample plot is drawn. Change the limit with:
+    Of these, only the family-size histogram is also read by the fgbio module, and only one of the two modules
+    reports each file. The histogram's own directory decides, or the nearest parent directory if its own has no
+    evidence: fgumi when that directory holds files only fgumi writes (for example position group sizes, dedup,
+    filter, copy-umi, retag or downsample metrics) and no files only fgbio writes (ErrorRateByReadPosition), and
+    fgbio otherwise. With no evidence anywhere, fgbio reports it. Choose the module for every file with:
 
     ```yaml
     fgumi_config:
-      max_duplex_heatmap_samples: 10
+      family_sizes_module: fgumi # or fgbio
+    ```
+
+    #### Duplex heatmaps
+
+    Each sample gets an AB x BA family-size heatmap of all families, plus one of only the families with reads on
+    both strands when some families have no BA reads (otherwise the two would be identical). With more than 5
+    duplex samples only the cross-sample plot is drawn. Change the limit with:
+
+    ```yaml
+    fgumi_config:
+      max_duplex_heatmap_samples: 5
     ```
 
     #### Large per-UMI files
 
     UMI counts, UMI correction and review files can exceed MultiQC's default file size limit, in which case
-    they are skipped. Raise the limit to include them:
+    they are skipped. Raise the limit to include them (summarizing a large review file keeps every distinct
+    consensus read name in memory, roughly 100 bytes per read):
 
     ```yaml
     log_filesize_limit: 500000000
