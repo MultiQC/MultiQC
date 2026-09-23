@@ -41,7 +41,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         name="Family sizes",
         anchor="fgumi-family-sizes",
         description="Distribution of UMI family sizes: the number of templates grouped into each molecule.",
-        helptext="Written by `fgumi group` (`--family-size-histogram` or `--metrics`) and "
+        helptext="Written by `fgumi group` (`--family-size-histogram` or `--metrics`), fgbio GroupReadsByUmi, and "
         "`fgumi dedup --family-size-histogram`. The cumulative tab shows the percentage of families of at least "
         "each size.",
         plot=linegraph.plot(

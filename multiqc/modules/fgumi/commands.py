@@ -45,7 +45,7 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
     module.add_section(
         name="Clipping",
         anchor="fgumi-clip",
-        description="Reads and bases clipped by `fgumi clip`, by reason (all read types combined).",
+        description="Reads and bases clipped by `fgumi clip` (or fgbio ClipBam), by reason (all read types combined).",
         plot=bargraph.plot(
             [{s: v["reads"] for s, v in data.items()}, {s: v["bases"] for s, v in data.items()}],
             [{k: {"name": n} for k, n in _CLIP_REASONS.items()}] * 2,

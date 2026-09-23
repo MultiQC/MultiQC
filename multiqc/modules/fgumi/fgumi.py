@@ -42,11 +42,26 @@ class MultiqcModule(BaseMultiqcModule):
     Sample names come from the file name with fgumi's fixed suffixes (such as `.family_sizes.txt` or
     `.duplex_yield_metrics.txt`) removed, so all of one sample's `--metrics <prefix>` files share a name.
 
-    #### fgbio GroupReadsByUmi histograms
+    #### fgbio outputs
 
-    fgumi writes its family-size histogram with exactly the columns of fgbio GroupReadsByUmi's
-    `--family-size-histogram`, so the two cannot be told apart. This module claims those files, so they
-    appear under fgumi rather than fgbio.
+    Several fgumi metrics files have exactly the columns of their fgbio equivalents, so the two cannot be
+    told apart, and this module also reads (and reports under fgumi) the fgbio versions of:
+
+    - GroupReadsByUmi: `--family-size-histogram` and `--grouping-metrics` (the family-size histogram was
+      previously shown by the fgbio module; it now appears under fgumi instead)
+    - CollectDuplexSeqMetrics: family sizes, duplex family sizes, duplex yield, UMI counts, duplex UMI counts
+    - CorrectUmis: `--metrics`
+    - ClipBam: `--metrics`
+
+    #### Duplex heatmaps
+
+    Each sample gets AB x BA family-size heatmaps unless there are more than 10 duplex samples, in which case
+    only the cross-sample plot is drawn. Change the limit with:
+
+    ```yaml
+    fgumi_config:
+      max_duplex_heatmap_samples: 10
+    ```
 
     #### Large per-UMI files
 

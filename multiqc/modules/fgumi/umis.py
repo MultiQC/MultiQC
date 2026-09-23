@@ -60,7 +60,8 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             name=title,
             anchor=f"fgumi-{kind.replace('_', '-')}",
             description="How many UMIs were seen, binned by how many raw reads carried each one (log2 bins).",
-            helptext="Summarized from the per-UMI file written by `fgumi simplex-metrics` / `duplex-metrics`; "
+            helptext="Summarized from the per-UMI file written by `fgumi simplex-metrics` / `duplex-metrics` "
+            "(or fgbio CollectDuplexSeqMetrics); "
             "individual UMIs are not listed.",
             plot=linegraph.plot(
                 {s: dict(data[s]["bins"]) for s in data},
@@ -124,7 +125,8 @@ def _correct(module: BaseMultiqcModule) -> Set[str]:
         name="UMI correction",
         anchor="fgumi-correct",
         description="Reads whose UMI matched an expected UMI exactly, after correcting mismatches, or not at all.",
-        helptext="Written by `fgumi correct --metrics`; the all-N row counts reads whose UMI matched no expected UMI.",
+        helptext="Written by `fgumi correct --metrics` (or fgbio CorrectUmis); the all-N row counts reads whose UMI "
+        "matched no expected UMI.",
         plot=bargraph.plot(
             data,
             {

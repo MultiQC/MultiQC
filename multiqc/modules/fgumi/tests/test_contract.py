@@ -58,3 +58,45 @@ def test_schema_columns_are_an_ordered_subset_of_the_manifest(key):
 def test_schema_reads_a_manifest_header(key):
     # A header-only file with exactly fgumi's columns must parse (to zero rows) with the mapped schema.
     assert SCHEMA_BY_MANIFEST_KEY[key].read("\t".join(MANIFEST[key]) + "\n", key) == []
+
+
+def _fgumi_search_patterns():
+    import yaml
+
+    patterns = yaml.safe_load((Path(__file__).parents[3] / "search_patterns.yaml").read_text())
+    return {key: value for key, value in patterns.items() if key.startswith("fgumi/")}
+
+
+def _matches(pattern, header_line):
+    import re
+
+    specs = pattern if isinstance(pattern, list) else [pattern]
+    for spec in specs:
+        if "contents" in spec and spec["contents"] in header_line:
+            return True
+        if "contents_re" in spec and re.search(spec["contents_re"], header_line):
+            return True
+    return False
+
+
+@pytest.mark.parametrize("key", sorted(MANIFEST))
+def test_each_manifest_header_matches_exactly_one_search_pattern(key):
+    # Ties search_patterns.yaml to fgumi's contract: a renamed column used in a pattern would otherwise stop
+    # detection silently while the schema tests stay green.
+    header = "\t".join(MANIFEST[key])
+    matching = [name for name, pattern in _fgumi_search_patterns().items() if _matches(pattern, header)]
+    assert len(matching) == 1, f"{key}: header matched {matching}"
+
+
+def test_module_is_in_module_order():
+    from multiqc import config
+
+    names = [next(iter(entry)) if isinstance(entry, dict) else entry for entry in config.module_order]
+    assert "fgumi" in names
+
+
+def test_docstring_names_the_fgbio_outputs_the_module_also_reads():
+    from multiqc.modules.fgumi import MultiqcModule
+
+    for tool in ("GroupReadsByUmi", "CollectDuplexSeqMetrics", "CorrectUmis", "ClipBam"):
+        assert tool in MultiqcModule.__doc__, tool

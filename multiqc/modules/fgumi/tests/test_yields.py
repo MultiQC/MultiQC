@@ -26,3 +26,9 @@ def test_duplex_yield_curves_and_ratio_guards_zero_ideal(run_fgumi):
 def test_simplex_yield(run_fgumi):
     module = run_fgumi({"A.simplex_yield_metrics.txt": SIMPLEX_YIELD})
     assert module.saved_raw_data["multiqc_fgumi_simplex_yield"]["A"]["consensus_families"] == {1000: 200}
+
+
+def test_non_finite_ideal_fraction_gives_no_ratio_point_not_zero(run_fgumi):
+    rows = DUPLEX_YIELD.replace("0.5\t500\t200\t150\t100\t40\t0.4\t0.5", "0.5\t500\t200\t150\t100\t40\t0.4\tInfinity")
+    module = run_fgumi({"B.duplex_yield_metrics.txt": rows})
+    assert module.saved_raw_data["multiqc_fgumi_duplex_yield"]["B"]["ratio"][500] is None

@@ -22,7 +22,9 @@ _SIMPLEX_TABS = [
 
 
 def _ratio(actual: float, ideal: float) -> Optional[float]:
-    return finite(actual / ideal) if ideal else None
+    """actual / ideal, or ``None`` when ideal is zero or non-finite (never a misleading 0)."""
+    finite_ideal = finite(ideal)
+    return finite(actual / finite_ideal) if finite_ideal else None
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -69,7 +71,8 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
         module.add_section(
             name=f"{kind.capitalize()} yield",
             anchor=f"fgumi-{kind}-yield",
-            description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics` downsampling.",
+            description=f"How {kind} yield grows with sequencing depth, from `fgumi {kind}-metrics` "
+            "(or fgbio CollectDuplexSeqMetrics) downsampling.",
             plot=linegraph.plot(
                 [{s: drop_none(data[s][key]) for s in data} for key, _, _ in tabs],
                 {

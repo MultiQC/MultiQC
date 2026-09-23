@@ -51,7 +51,8 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             name="Grouping: primary records",
             anchor="fgumi-grouping-metrics",
             description="Primary alignment records accepted for grouping, and why the rest were discarded.",
-            helptext="Written by `fgumi group` (`--grouping-metrics` or `--metrics`). Counts are primary records, "
+            helptext="Written by `fgumi group` (`--grouping-metrics` or `--metrics`) or fgbio GroupReadsByUmi. "
+            "Counts are primary records, "
             "matching fgbio's UmiGroupingMetric.",
             plot=bargraph.plot(
                 grouping,

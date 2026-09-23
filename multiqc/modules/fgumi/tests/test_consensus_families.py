@@ -35,3 +35,19 @@ def test_duplex_ab_ba_heatmaps_and_min_strand_line(run_fgumi):
     assert module.saved_raw_data["multiqc_fgumi_duplex_min_strand"]["B"] == {0: 40, 1: 30, 22: 30}
     assert "fgumi_duplex_ab_ba_B" in report.plot_by_id
     assert "fgumi_duplex_ab_ba_both_B" in report.plot_by_id
+
+
+def test_per_sample_heatmaps_are_capped_for_large_runs(run_fgumi):
+    # Two heatmap sections per sample would swamp a large report; above the cap only the cross-sample line stays.
+    files = {f"S{i:02d}.duplex_family_sizes.txt": DUPLEX_AB_BA for i in range(11)}
+    module = run_fgumi(files)
+    assert len(module.samples_parsed_by_tool["consensus_families"]) == 11
+    assert "fgumi_duplex_min_strand" in report.plot_by_id
+    assert not [pid for pid in report.plot_by_id if str(pid).startswith("fgumi_duplex_ab_ba")]
+
+
+def test_sample_names_are_html_escaped_in_section_titles(run_fgumi):
+    module = run_fgumi({"<i>x.duplex_family_sizes.txt": DUPLEX_AB_BA})
+    names = [section.name for section in module.sections]
+    assert any("&lt;i&gt;x" in name for name in names), names
+    assert not any("<i>" in name for name in names), names

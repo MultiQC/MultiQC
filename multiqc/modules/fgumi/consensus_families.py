@@ -2,11 +2,13 @@
 per-strand family sizes (`<prefix>.family_sizes.txt`) and the duplex AB x BA family sizes
 (`<prefix>.duplex_family_sizes.txt`), drawn like fgbio CollectDuplexSeqMetrics' plots #1-#3."""
 
+import html
 import logging
 import math
 from collections import defaultdict
 from typing import Dict, List, Optional, Set, Tuple
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import heatmap, linegraph
 
@@ -16,6 +18,9 @@ from .util import drop_none, load_rows, pct, safe_id, sample_name
 log = logging.getLogger(__name__)
 
 HEATMAP_CAP = 20  # sizes at or above this fold into one "20+" row/column
+# Above this many samples the two per-sample heatmaps are skipped (they would swamp the report) and only the
+# cross-sample min(AB, BA) line is drawn. Override with `fgumi_config: {max_duplex_heatmap_samples: N}`.
+MAX_HEATMAP_SAMPLES = 10
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -55,7 +60,8 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         module.add_section(
             name=f"{kind.capitalize()} family sizes",
             anchor=f"fgumi-{kind}-family-sizes",
-            description=f"Family size distributions from `fgumi {kind}-metrics`, one tab per grouping.",
+            description=f"Family size distributions from `fgumi {kind}-metrics` (or fgbio CollectDuplexSeqMetrics), "
+            "one tab per grouping.",
             helptext="CS: grouped by coordinate and strand only. SS: also by UMI (single-strand families). "
             "DS: single-strand families paired into double-strand families. Matches fgbio CollectDuplexSeqMetrics.",
             plot=linegraph.plot(
@@ -136,7 +142,13 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
             },
         ),
     )
-    for s_name, rows in rows_by_sample.items():
+    max_samples = (getattr(config, "fgumi_config", None) or {}).get("max_duplex_heatmap_samples", MAX_HEATMAP_SAMPLES)
+    if len(rows_by_sample) > max_samples:
+        log.info(f"Skipping per-sample duplex heatmaps for {len(rows_by_sample)} samples (limit {max_samples})")
+        rows_by_sample_for_heatmaps: Dict[str, List[DuplexFamilySizeMetric]] = {}
+    else:
+        rows_by_sample_for_heatmaps = rows_by_sample
+    for s_name, rows in rows_by_sample_for_heatmaps.items():
         for suffix, min_ba, title in [("", 0, "all families"), ("_both", 1, "families with AB > 0 and BA > 0")]:
             built = _heatmap_matrix(rows, min_ba)
             if built is None:
@@ -144,7 +156,7 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
             matrix, xcats, ycats = built
             plot_id = f"fgumi_duplex_ab_ba{suffix}_{safe_id(s_name)}"
             module.add_section(
-                name=f"Duplex family sizes: {s_name} ({title})",
+                name=f"Duplex family sizes: {html.escape(s_name)} ({title})",
                 anchor=plot_id.replace("_", "-"),
                 description="log10(families) by AB and BA strand size; sizes of 20 or more are pooled as 20+.",
                 plot=heatmap.plot(
@@ -153,7 +165,7 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
                     ycats,
                     {
                         "id": plot_id,
-                        "title": f"fgumi: Duplex AB x BA family sizes, {s_name}",
+                        "title": f"fgumi: Duplex AB x BA family sizes, {html.escape(s_name)}",
                         "xlab": "BA reads",
                         "ylab": "AB reads",
                         "zlab": "log10(families)",
