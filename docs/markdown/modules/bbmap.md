@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/bbmap/bbmap.py
 Pre-processing, assembly, alignment, and statistics tools for DNA/RNA sequencing reads.
 
 [http://jgi.doe.gov/data-and-tools/bbtools/](http://jgi.doe.gov/data-and-tools/bbtools/)
+
+[BSD 3-Clause License](https://github.com/bbushnell/BBTools/blob/master/license.txt)
 :::
 
 The module produces summary statistics from the
@@ -152,4 +154,3 @@ bbmap/statsfile_machine:
   contents: Reads Used=
   num_lines: 10
 ```
-    

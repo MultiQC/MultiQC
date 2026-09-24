@@ -2,11 +2,11 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, Optional
 
 from multiqc.plots import linegraph
 
-from .util import read_tsv, to_int
+from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
 
@@ -18,9 +18,9 @@ def parse_reports(module):
     return parsed_samples
 
 
-def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
+def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, Optional[float]]]]:
     # data_by_sample[sample][orientation] = {col: value}
-    data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = {}
+    data_by_sample: Dict[str, Dict[str, Dict[str, Optional[float]]]] = {}
 
     for f in module.find_log_files("riker/isize_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -30,7 +30,7 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
                 continue
             s_name = module.clean_s_name(sample, f)
             try:
-                parsed = {col: float(val) for col, val in row.items()}
+                parsed = {col: to_float(val) for col, val in row.items()}
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
@@ -45,7 +45,7 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
 
     # Pick the FR orientation when present (the typical Illumina library), else the
     # first available orientation; there is always at least one row per sample.
-    primary_data: Dict[str, Dict[str, float]] = {}
+    primary_data: Dict[str, Dict[str, Optional[float]]] = {}
     for s_name, by_orient in data_by_sample.items():
         primary_data[s_name] = by_orient.get("FR", next(iter(by_orient.values())))
 

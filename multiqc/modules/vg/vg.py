@@ -56,6 +56,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/vgteam/vg",
             info="Toolkit to manipulate and analyze graphical genomes, including read alignment",
             doi="10.1038/nbt.4227",
+            license="MIT License",
+            license_url="https://github.com/vgteam/vg/blob/master/LICENSE",
         )
 
         # Parse vg stats data
@@ -165,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
                 var.append(s[0] + " (bp)")
                 val.append(s[1].split(" bp ")[0])
                 var.append(s[0] + " (reads)")
-                val.append(s[1].split(" bp in ")[1].split(" ")[0])
+                val.append(s[1].split(" read events")[0].split(" ")[-1])
             elif s[1].split(" ")[0].isnumeric():
                 unit = s[1].split(" ")[1]
                 var.append(s[0] + " (" + unit + ")")

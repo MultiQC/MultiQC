@@ -17,6 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/tophat/",
             info="Splice junction RNA-Seq reads mapper for mammalian-sized genomes.",
             doi=["10.1186/gb-2013-14-4-r36", "10.1093/bioinformatics/btp120"],
+            license="Boost Software License 1.0",
+            license_url="https://github.com/infphilo/tophat/blob/master/LICENSE",
         )
 
         # Find and load any Tophat reports

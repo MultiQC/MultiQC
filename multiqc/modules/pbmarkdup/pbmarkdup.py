@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or "
             "removes duplicates.",
             # Can't find a DOI // doi=
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/pbmarkdup/blob/master/LICENSE",
         )
 
         self.pbmarkdup = dict()

@@ -21,6 +21,21 @@ if [ $# -gt 0 ]; then
     # Build with Vite
     npm run build
 
+    # The 'disco' template re-exports the default template's JS, so its own bundle
+    # goes stale whenever the default sources change.
+    if [ -d "../disco" ]; then
+        cd ../disco
+        if [ ! -d "node_modules" ]; then
+            npm ci
+        fi
+        npm run build
+        cd ../default
+    fi
+
+    # 'original' loads plain script tags rather than a bundle, so it needs its own copy
+    # of DOMPurify. Copy it from node_modules so package.json stays the only version pin.
+    cp node_modules/dompurify/dist/purify.min.js ../original/assets/js/packages/dompurify.min.js
+
     echo "Build complete."
 else
     echo "No relevant source files modified."

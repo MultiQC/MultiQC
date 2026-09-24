@@ -367,6 +367,14 @@ async function generateCallback(e) {
 }
 
 $(function () {
+  // Summaries generated at report build time are stored as markdown and rendered here,
+  // so they go through exactly the same conversion and sanitising as ones generated in
+  // the browser. Escaped in the HTML at rest, so textContent gives back the markdown.
+  $(".ai-summary-markdown").each(function () {
+    const markdown = this.textContent.trim();
+    if (markdown) this.innerHTML = window.markdownToHtml(markdown);
+  });
+
   $("#global_ai_summary_expand").each(function () {
     const responseDiv = $("#global_ai_summary_detailed_analysis_response");
     const isLocalContent = responseDiv.hasClass("ai-local-content");

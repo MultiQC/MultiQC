@@ -26,11 +26,13 @@ class MultiqcModule(BaseMultiqcModule):
             extra="""
             The program `GLIMPSE2` is based on the GLIMPSE model and designed for reference panels containing
             hundreds of thousands of reference samples, with a special focus on rare variants.
-        
+
             The concordance rates values are displayed in a scatter plot, with the option to switch between
             the different concordance metrics.
             """,
             doi="10.1101/2022.11.28.518213 ",
+            license="MIT License",
+            license_url="https://github.com/odelaneau/GLIMPSE/blob/master/LICENSE",
         )
 
         # Call submodule functions

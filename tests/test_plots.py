@@ -10,7 +10,7 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot, process_batch_exports
-from multiqc.plots.table_object import ColumnDict
+from multiqc.plots.table_object import ColumnDict, render_html
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
@@ -95,6 +95,25 @@ def test_table():
             pconfig=table.TableConfig(id="table", title="Table"),
         )
     )
+
+
+def test_table_escapes_sample_names_and_values():
+    """Sample names and cell values come from tool output, so must not inject HTML."""
+    payload = "<img src=x onerror=alert(1)>"
+    plot = table.plot(
+        data={f"{payload}.fastq.gz": {"x": payload}},
+        headers={"x": {"title": "Metric X"}},
+        pconfig=table.TableConfig(id="table_xss", title="Table"),
+    )
+    assert isinstance(plot, Plot)
+    html, _ = render_html(
+        plot.datasets[0].dt,
+        violin_anchor=Anchor("violin_xss"),
+        module_anchor=Anchor("test"),
+        section_anchor=Anchor("test"),
+    )
+    assert payload not in html
+    assert "&lt;img src=x onerror=alert(1)&gt;" in html
 
 
 def test_violin():

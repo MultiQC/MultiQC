@@ -132,6 +132,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://https://github.com/shiquan/bamdst",
             info="Lightweight tool to stat the depth coverage of target regions of BAM file(s)",
             # doi="", # No DOI
+            license="MIT License",
+            license_url="https://github.com/shiquan/bamdst/blob/master/LICENSE",
         )
 
         self.cfg = _read_config()

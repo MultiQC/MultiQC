@@ -156,6 +156,9 @@ class MultiqcModule(BaseMultiqcModule):
             href=ELEMBIO_DOCS_URL,
             info="Demultiplexes and converts Element AVITI base calls into FASTQ files",
             doi="10.1038/s41587-023-01750-7",
+            # Proprietary (Element Biosciences); license could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Get configurable minimum polonies threshold
@@ -667,9 +670,8 @@ class MultiqcModule(BaseMultiqcModule):
                     if mask_info["Read"] not in indices:
                         indices.append(mask_info["Read"])
                     indices_cycles.append(str(len(mask_info["Cycles"])))
-            result[run_lane]["Indexing"] = (
-                f"{' + '.join(indices_cycles)} &nbsp; <span class='text-muted'>({' + '.join(indices)})</span>"
-            )
+            # Plain text, not HTML: index names come from the run manifest
+            result[run_lane]["Indexing"] = f"{' + '.join(indices_cycles)} ({' + '.join(indices)})"
             result[run_lane]["AdapterTrimType"] = lane_data.get("AdapterTrimType", "N/A")
             result[run_lane]["R1AdapterMinimumTrimmedLength"] = lane_data.get("R1AdapterMinimumTrimmedLength", "N/A")
             result[run_lane]["R2AdapterMinimumTrimmedLength"] = lane_data.get("R2AdapterMinimumTrimmedLength", "N/A")

@@ -182,6 +182,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/brentp/mosdepth",
             info="Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing",
             doi="10.1093/bioinformatics/btx699",
+            license="MIT License",
+            license_url="https://github.com/brentp/mosdepth/blob/master/LICENSE",
         )
 
         self.cfg = read_config()

@@ -130,6 +130,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.htslib.org",
             info="Toolkit for interacting with BAM/CRAM files.",
             doi="10.1093/bioinformatics/btp352",
+            license="MIT License",
+            license_url="https://github.com/samtools/samtools/blob/master/LICENSE",
         )
 
         n = dict()

@@ -60,6 +60,8 @@ class MultiqcModule(
             "Finally, using such normalized and standardized files, deepTools can create many publication-ready "
             "**visualizations** to identify enrichments and for functional annotations of the genome.",
             doi="10.1093/nar/gkw257",
+            license="MIT License",
+            license_url="https://github.com/deeptools/deepTools/blob/master/LICENSE.txt",
         )
 
         # Set up class objects to hold parsed data

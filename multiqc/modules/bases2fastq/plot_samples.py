@@ -432,7 +432,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     description = "Histogram of distributions of percentage GC in each read"
     helptext = """
     GC content across the whole length of each sequence.
-    
+
     In a normal random library you would expect to see a roughly normal distribution
     of GC content where the central peak corresponds to the overall GC content of
     the underlying genome. Since we don't know the GC content of the genome the

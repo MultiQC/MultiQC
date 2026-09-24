@@ -219,7 +219,8 @@ class LoadMultiqcData(BaseMultiqcModule):
                         continue  # Skip adding this module to report.modules
 
                     # Create module
-                    mod = BaseMultiqcModule(name=name, anchor=Anchor(anchor), info=info)
+                    # Reconstructed from a previous run; license metadata is restored separately
+                    mod = BaseMultiqcModule(name=name, anchor=Anchor(anchor), info=info, license=None, license_url=None)
                     mod.sections = sections
                     mod.versions = versions
                     mod.intro = intro

@@ -34,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
             info="Sample demultiplexing, barcode processing, alignment, quality control, variant calling, phasing, "
             "and structural variant calling.",
             doi="10.1101/gr.234443.118",
+            license="10x Genomics License",
+            license_url="https://github.com/10XGenomics/longranger/blob/master/LICENSE",
         )
 
         def try_float_lambda(x, func, base):

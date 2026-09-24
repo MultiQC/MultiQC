@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://compbio.cs.brown.edu/projects/theta/",
             info="Estimates tumour purity and clonal / subclonal copy number.",
             doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
+            license="Brown University non-commercial academic license",
+            license_url="https://github.com/raphael-group/THetA/blob/master/doc/LICENSE.txt",
         )
 
         # Find and load any THetA2 reports
