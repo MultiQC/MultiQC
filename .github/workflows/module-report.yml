@@ -38,6 +38,8 @@ jobs:
           sparse-checkout-cone-mode: false
           persist-credentials: false
 
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
       - name: Post preview comments
         env:
           GH_TOKEN: ${{ github.token }}
@@ -45,12 +47,8 @@ jobs:
           BOT_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
-          WR_EVENT: ${{ github.event.workflow_run.event }}
           WR_ID: ${{ github.event.workflow_run.id }}
-          WR_SHA: ${{ github.event.workflow_run.head_sha }}
-          WR_TITLE: ${{ github.event.workflow_run.display_title }}
-          WR_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
           ISSUE: ${{ github.event.issue.number }}
           COMMENT_ID: ${{ github.event.comment.id }}
           COMMENT_BODY: ${{ github.event.comment.body }}
-        run: python3 scripts/post_preview_reports.py
+        run: uv run scripts/post_preview_reports.py

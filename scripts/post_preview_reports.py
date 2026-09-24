@@ -1,3 +1,8 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["PyGithub==2.10.0", "requests"]
+# ///
 """
 Post MultiQC preview report comments on PRs, from builds made by module-report-build.yml.
 
@@ -5,24 +10,27 @@ Run by .github/workflows/module-report.yml. Never runs PR code: it only reads bu
 results and artifacts through the GitHub API, and comments with the bot token.
 """
 
-import json
 import os
 import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import List, Optional, Tuple
+
+import requests
+from github import Auth, Github
+from github.PullRequest import PullRequest
+from github.WorkflowRun import WorkflowRun
 
 REPO = os.environ["REPO"]
 EVENT = os.environ["EVENT"]
-RUN_URL_BASE = f"{os.environ['GITHUB_SERVER_URL']}/{REPO}/actions/runs"
 IS_REPORT = bool(re.search(r"(?m)^/report", os.environ.get("COMMENT_BODY", "")))
 
 # Every bot comment contains this, so it can be found and hidden later
 MARKER = "MultiQC preview report"
 SHA_RE = re.compile(r"<!-- preview-sha: ([0-9a-f]+) -->")
 # Keep in sync with module-report-build.yml
-MODULE_RE = re.compile(r"^multiqc/modules/([A-Za-z0-9_]+)/", re.MULTILINE)
+MODULE_RE = re.compile(r"^multiqc/modules/([A-Za-z0-9_]+)/")
 
 HOW = """
 
@@ -38,117 +46,74 @@ The bot only posts a new report when there are new commits. If there are none, i
 
 </details>"""
 
-COMMENTS_QUERY = """
-query($owner: String!, $name: String!, $pr: Int!) {
-  repository(owner: $owner, name: $name) { pullRequest(number: $pr) {
-    comments(last: 100) { nodes { id isMinimized viewerDidAuthor body } } } } }"""
-
-MINIMIZE_MUTATION = """
-mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OUTDATED}) { clientMutationId } }"""
-
-
-def gh(*args: str, bot: bool = False) -> str:
-    """Run gh. bot=True uses the bot PAT: needed for writes, viewerDidAuthor and --attach."""
-    env = dict(os.environ, GH_TOKEN=os.environ["BOT_TOKEN"]) if bot else None
-    return subprocess.run(["gh", *args], env=env, check=True, stdout=subprocess.PIPE, text=True).stdout
-
-
-def gh_json(*args: str, bot: bool = False) -> Any:
-    return json.loads(gh(*args, bot=bot))
+# Actions token: reads runs and artifacts. Bot PAT: comments, reactions and --attach.
+repo = Github(auth=Auth.Token(os.environ["GH_TOKEN"])).get_repo(REPO)
+bot = Github(auth=Auth.Token(os.environ["BOT_TOKEN"]))
+bot_repo = bot.get_repo(REPO)
+BOT_LOGIN = bot.get_user().login
 
 
 def react(content: str) -> None:
     if IS_REPORT:
-        gh(
-            "api",
-            f"repos/{REPO}/issues/comments/{os.environ['COMMENT_ID']}/reactions",
-            "-f",
-            f"content={content}",
-            bot=True,
-        )
+        bot_repo.get_issue(int(os.environ["ISSUE"])).get_comment(int(os.environ["COMMENT_ID"])).create_reaction(content)
 
 
-def pr_head(pr: str) -> str:
-    return gh("pr", "view", pr, "--repo", REPO, "--json", "headRefOid", "-q", ".headRefOid").strip()
-
-
-def post(pr: str, body: str, attach: Optional[str] = None) -> None:
-    args = ["pr", "comment", pr, "--repo", REPO, "--body", body + HOW]
+def post(pr: PullRequest, body: str, attach: Optional[Path] = None) -> None:
+    # gh, because the REST API can't upload images
+    args = ["gh", "pr", "comment", str(pr.number), "--repo", REPO, "--body", body + HOW]
     if attach:
-        args += ["--attach", attach]
-    gh(*args, bot=True)
+        args += ["--attach", f"./{attach}"]
+    subprocess.run(args, env=dict(os.environ, GH_TOKEN=os.environ["BOT_TOKEN"]), check=True)
 
 
-def get_targets() -> Tuple[List[Tuple[str, str]], str, Optional[Tuple[str, str]]]:
+def get_targets() -> Tuple[List[PullRequest], str, Optional[WorkflowRun]]:
     """
-    Return (PR, head SHA) pairs, the posting rule, and the build (run ID, conclusion) if known.
+    Return the PRs to consider, the posting rule, and the build if known.
 
     Rule "first": post only if the PR has no report yet, or has an unanswered /report.
     Rule "new": post only if the head moved since the last report.
     """
     if EVENT == "issue_comment":
-        pr = os.environ["ISSUE"]
-        return [(pr, pr_head(pr))], "new", None
+        return [bot_repo.get_pull(int(os.environ["ISSUE"]))], "new", None
     if EVENT == "schedule":
-        prs = gh_json("pr", "list", "--repo", REPO, "--state", "open", "--limit", "500", "--json", "number,headRefOid")
-        return [(str(p["number"]), p["headRefOid"]) for p in prs], "new", None
+        return list(bot_repo.get_pulls(state="open")), "new", None
 
     # workflow_run. Fork runs have an empty pull_requests payload, so the build's
     # run-name carries the PR number.
-    title = os.environ["WR_TITLE"]
-    match = re.match(r"#(\d+) ", title)
+    build = repo.get_workflow_run(int(os.environ["WR_ID"]))
+    match = re.match(r"#(\d+) ", build.display_title)
     if not match:
-        sys.exit(f"Can't parse PR from run name: {title}")
-    pr = match.group(1)
-    sha = pr_head(pr)
-    build = (os.environ["WR_ID"], os.environ["WR_CONCLUSION"])
-    if os.environ["WR_EVENT"] != "pull_request":
-        return [(pr, sha)], "new", build
+        sys.exit(f"Can't parse PR from run name: {build.display_title}")
+    pr = bot_repo.get_pull(int(match.group(1)))
+    if build.event != "pull_request":
+        return [pr], "new", build
     # Also rejects a fork run naming someone else's PR
-    if sha != os.environ["WR_SHA"]:
-        print(f"PR #{pr} head moved on or doesn't match this build")
+    if pr.head.sha != build.head_sha:
+        print(f"PR #{pr.number} head moved on or doesn't match this build")
         return [], "first", build
-    return [(pr, sha)], "first", build
+    return [pr], "first", build
 
 
-def find_build(sha: str) -> Optional[Tuple[str, str]]:
-    runs = gh_json(
-        "api", f"repos/{REPO}/actions/workflows/module-report-build.yml/runs?head_sha={sha}&status=completed"
-    )["workflow_runs"]
-    for run in runs:
-        if run["conclusion"] in ("success", "failure"):
-            return str(run["id"]), run["conclusion"]
-    return None
+def find_build(sha: str) -> Optional[WorkflowRun]:
+    runs = repo.get_workflow("module-report-build.yml").get_runs(head_sha=sha, status="completed")
+    return next((r for r in runs if r.conclusion in ("success", "failure")), None)
 
 
-def process(pr: str, sha: str, rule: str, build: Optional[Tuple[str, str]]) -> None:
-    modules = sorted(set(MODULE_RE.findall(gh("pr", "diff", pr, "--repo", REPO, "--name-only"))))
+def process(pr: PullRequest, rule: str, build: Optional[WorkflowRun]) -> None:
+    sha = pr.head.sha
+    modules = sorted({m.group(1) for f in pr.get_files() if (m := MODULE_RE.match(f.filename))})
     if not modules:
         if IS_REPORT:
             post(pr, f"ℹ️ No edited modules found, so no {MARKER}.")
         return
 
-    owner, name = REPO.split("/")
-    nodes = gh_json(
-        "api",
-        "graphql",
-        "-F",
-        f"owner={owner}",
-        "-F",
-        f"name={name}",
-        "-F",
-        f"pr={pr}",
-        "-f",
-        f"query={COMMENTS_QUERY}",
-        "--jq",
-        ".data.repository.pullRequest.comments.nodes",
-        bot=True,
-    )
-    mine = [i for i, n in enumerate(nodes) if n["viewerDidAuthor"] and MARKER in n["body"]]
-    shas = [m.group(1) for i in mine if (m := SHA_RE.search(nodes[i]["body"]))]
+    comments = list(pr.get_issue_comments())
+    mine = [c for c in comments if c.user.login == BOT_LOGIN and MARKER in c.body]
+    shas = [m.group(1) for c in mine if (m := SHA_RE.search(c.body))]
     last_sha = shas[-1] if shas else ""
     # A /report that arrived while the build was still running, not yet answered by a report
-    pending = any(re.search(r"(?m)^/report", n["body"]) for n in nodes[(mine[-1] + 1 if mine else 0) :])
+    after_last = comments[comments.index(mine[-1]) + 1 :] if mine else comments
+    pending = any(re.search(r"(?m)^/report", c.body) for c in after_last)
 
     if last_sha == sha:
         react("confused")
@@ -160,60 +125,58 @@ def process(pr: str, sha: str, rule: str, build: Optional[Tuple[str, str]]) -> N
     build = build or find_build(sha)
     if not build:
         return
-    run_id, result = build
-    run_url = f"{RUN_URL_BASE}/{run_id}"
 
     # The report is missing if MultiQC found no matching test data; the screenshot if it failed
-    artifacts = {
-        a["name"]: a["id"] for a in gh_json("api", f"repos/{REPO}/actions/runs/{run_id}/artifacts")["artifacts"]
-    }
-    report_id = artifacts.get(f"multiqc_report_pr{pr}.html")
-    shot = Path(f"report_pr{pr}.png")
-    shot_id = artifacts.get(shot.name)
+    artifacts = {a.name: a for a in build.get_artifacts()}
+    report = artifacts.get(f"multiqc_report_pr{pr.number}.html")
+    shot = Path(f"report_pr{pr.number}.png")
+    shot_artifact = artifacts.get(shot.name)
     shot.unlink(missing_ok=True)
-    if shot_id:
+    if shot_artifact:
         # archive: false artifacts download as the raw file
-        with shot.open("wb") as fh:
-            if subprocess.run(["gh", "api", f"repos/{REPO}/actions/artifacts/{shot_id}/zip"], stdout=fh).returncode:
-                shot.unlink()
+        resp = requests.get(
+            shot_artifact.archive_download_url,
+            headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}"},
+            timeout=60,
+        )
+        if resp.ok:
+            shot.write_bytes(resp.content)
 
-    for i in mine:
-        if not nodes[i]["isMinimized"]:
-            try:
-                gh("api", "graphql", "-f", f"id={nodes[i]['id']}", "-f", f"query={MINIMIZE_MUTATION}", bot=True)
-            except subprocess.CalledProcessError:
-                print(f"::warning::Couldn't hide comment {nodes[i]['id']} on PR #{pr}")
+    for c in mine:
+        try:
+            c.minimize()
+        except Exception as e:
+            print(f"::warning::Couldn't hide comment {c.id} on PR #{pr.number}: {e}")
 
     mods = ", ".join(f"`{m}`" for m in modules)
-    ok = f"✅ **[{MARKER}]({run_url}/artifacts/{report_id})** generated for {mods}"
-    run_link = f" See [run]({run_url}).<!-- preview-sha: {sha} -->"
-    if result != "success":
-        body = f"❌ {MARKER} failed."
-    elif not report_id:
-        body = f"⚠️ No {MARKER} generated for {mods}."
-    elif shot.exists():
-        details = f"\n\n<details><summary>Screenshot</summary>\n\n![MultiQC report screenshot](./{shot})\n\n</details>"
-        try:
-            post(pr, f"{ok}.{run_link}{details}", attach=f"./{shot}")
-            react("rocket")
-            return
-        except subprocess.CalledProcessError:
-            body = f"{ok} (⚠️ screenshot upload failed, [view it here]({run_url}/artifacts/{shot_id}))."
+    run_link = f" See [run]({build.html_url}).<!-- preview-sha: {sha} -->"
+    if build.conclusion != "success":
+        post(pr, f"❌ {MARKER} failed.{run_link}")
+    elif not report:
+        post(pr, f"⚠️ No {MARKER} generated for {mods}.{run_link}")
     else:
-        body = f"{ok} (⚠️ screenshot failed)."
-    post(pr, body + run_link)
+        ok = f"✅ **[{MARKER}]({build.html_url}/artifacts/{report.id})** generated for {mods}"
+        details = f"\n\n<details><summary>Screenshot</summary>\n\n![MultiQC report screenshot](./{shot})\n\n</details>"
+        if not (shot_artifact and shot.exists()):
+            post(pr, f"{ok} (⚠️ screenshot failed).{run_link}")
+        else:
+            try:
+                post(pr, f"{ok}.{run_link}{details}", attach=shot)
+            except subprocess.CalledProcessError:
+                shot_url = f"{build.html_url}/artifacts/{shot_artifact.id}"
+                post(pr, f"{ok} (⚠️ screenshot upload failed, [view it here]({shot_url})).{run_link}")
     react("rocket")
 
 
 def main() -> None:
     react("eyes")
-    targets, rule, build = get_targets()
+    prs, rule, build = get_targets()
     failed = False
-    for pr, sha in targets:
+    for pr in prs:
         try:
-            process(pr, sha, rule, build)
+            process(pr, rule, build)
         except Exception as e:
-            print(f"::warning::Preview comment for PR #{pr} failed: {e}")
+            print(f"::warning::Preview comment for PR #{pr.number} failed: {e}")
             failed = True
     sys.exit(1 if failed else 0)
 
