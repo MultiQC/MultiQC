@@ -4,6 +4,8 @@ import os
 import re
 import json
 
+from __future__ import annotations
+
 from typing import Any, Union
 
 from multiqc import config
@@ -31,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self) -> None:
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="LongReadSum",
             anchor="longreadsum",
             href="https://github.com/WGLab/LongReadSum.git",
@@ -629,7 +631,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add a read alignment statistics table if alignment data is present
         self.add_section(
             name="Read Alignment Types",
-            anchor="read-alignment-stats",
+            anchor="read-alignment-types",
             description="Statistics related to read alignment types.",
             helptext="Read alignment types include primary, secondary, and supplementary alignments.",
             plot=table.plot(
