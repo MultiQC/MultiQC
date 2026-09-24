@@ -8,19 +8,19 @@ from multiqc.types import SectionAlert
 
 log = logging.getLogger(__name__)
 
-OUTCOMES = {
-    "Total_Reads": "Total Reads",
-    "No_Alignment": "No Alignment",
-    "Primary_Alignment": "Primary Alignment",
-    "Secondary_Alignment": "Secondary Alignment",
-    "No_Gene": "No Gene Match",
-    "No_Hit": "No Transcript Hit",
-    "Gene": "Unique Gene Match",
-    "Multi_Gene": "Multi Gene Match",
-    "Partial": "Partial Unique Transcript Match",
-    "Unique": "Full Transcript Match",
-    "Same_Strand_Hit": "Same Strand Matches",
-    "Opposing_Strand_Hit": "Opposing Strand Matches",
+OUTCOMES: dict[str, dict[str, Any]] = {
+    "Total_Reads": {"title": "Total Reads", "scale": "Purples"},
+    "Primary_Alignment": {"title": "Primary Alignment", "scale": "Greens", "color": "#437bb1"},
+    "Secondary_Alignment": {"title": "Secondary Alignment", "scale": "YlGn", "color": "#7cb5ec", "hidden": True},
+    "No_Alignment": {"title": "No Alignment", "scale": "Reds", "color": "#AD002A"},
+    "Unique": {"title": "Full Transcript Match", "scale": "Blues", "color": "#2b8a3e"},
+    "Partial": {"title": "Partial Unique Transcript Match", "scale": "BuGn", "color": "#8ce99a", "hidden": True},
+    "Gene": {"title": "Unique Gene Match", "scale": "PuBu", "color": "#437bb1"},
+    "Multi_Gene": {"title": "Multi Gene Match", "scale": "Oranges", "color": "#f7a35c", "hidden": True},
+    "No_Gene": {"title": "No Gene Match", "scale": "OrRd", "color": "#AD002A"},
+    "No_Hit": {"title": "No Transcript Hit", "scale": "RdPu", "hidden": True},
+    "Same_Strand_Hit": {"title": "Same Strand Matches", "scale": "Purples", "color": "#437bb1", "hidden": True},
+    "Opposing_Strand_Hit": {"title": "Opposing Strand Matches", "scale": "Reds", "color": "#f7a35c", "hidden": True},
 }
 
 
@@ -33,8 +33,6 @@ class MultiqcModule(BaseMultiqcModule):
 
     Sample names come from the input BAM path stored in the statistics file, subject to
     MultiQC sample name cleaning and `use_filename_as_sample_name` configuration.
-    Match counts overlap: partial and full transcript matches are subsets of gene matches.
-    All outcome percentages use total reads as the denominator, including directionality.
     Distribution counts and bins are preserved, including the collapsed read length tail.
     Nexons statistics files do not contain a software version or run parameters.
     """
@@ -54,7 +52,8 @@ class MultiqcModule(BaseMultiqcModule):
             try:
                 data = self.parse_stats(f["f"])
             except (ValueError, TypeError, KeyError) as exc:
-                raise ValueError(f"Invalid nexons statistics in {f['root']}/{f['fn']}: {exc}") from exc
+                log.error(f"Invalid nexons statistics in {f['root']}/{f['fn']}: {exc}")
+                continue
             s_name = self.clean_s_name(data["file"], f)
             if s_name in self.nexons_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -78,28 +77,39 @@ class MultiqcModule(BaseMultiqcModule):
             description="All reported outcome counts. Gene and transcript match categories overlap.",
             plot=table.plot(
                 self.outcomes,
-                {k: {"title": title, "format": "{:,.0f}"} for k, title in OUTCOMES.items()},
+                {
+                    k: {
+                        "title": h["title"],
+                        "scale": h["scale"],
+                        "hidden": h.get("hidden", False),
+                        "shared_key": "long_read_count",
+                    }
+                    for k, h in OUTCOMES.items()
+                },
                 {"id": "nexons_summary_table", "title": "Nexons: Summary"},
             ),
         )
         self.add_outcome_plot(
             "read_fate",
             "Read Fate",
-            ["No_Alignment", "Primary_Alignment", "Secondary_Alignment"],
-            "Breakdown of types of alignment seen in the input BAM file",
+            ["Primary_Alignment", "Secondary_Alignment", "No_Alignment"],
+            "Breakdown of types of alignment seen in the input BAM file.",
         )
-        for key in ("Gene", "Partial", "Unique", "Multi_Gene", "No_Gene"):
-            self.add_outcome_plot(
-                key.lower(),
-                OUTCOMES[key],
-                [key],
-                "Reads assigned to features with different degrees of specificity. Individual reads can be in multiple classes, so all transcipt matching reads will also be gene matching.",
-            )
+        self.add_outcome_plot(
+            "gene_matching",
+            "Gene and Transcript Matching",
+            # Grouped horizontal bars draw bottom-up, so reversed to read best-to-worst from the top
+            ["No_Gene", "Multi_Gene", "Gene", "Partial", "Unique"],
+            "Reads assigned to features with different degrees of specificity.",
+            helptext="Categories overlap: individual reads can be in multiple classes, so all transcript matching reads are also gene matching. Bars are grouped rather than stacked for this reason.",
+            stacking="group",
+        )
         self.add_outcome_plot(
             "directionality",
             "Alignment Directionality",
             ["Same_Strand_Hit", "Opposing_Strand_Hit"],
-            "Direction of matches relative to annotated features",
+            "Direction of matches relative to annotated features.",
+            helptext="Percentages use total reads as the denominator, so they do not sum to 100%. The remainder is reads without a strand-assigned feature match, for example unaligned reads or reads with no gene match.",
         )
         self.add_distributions()
         self.write_data_file(self.outcomes, "multiqc_nexons")
@@ -112,6 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
             raise ValueError("Expected an object with an input filename")
 
         def check_count(value):
+            # Not isinstance: that would accept booleans
             if type(value) is not int or value < 0:
                 raise ValueError(f"Expected a non-negative integer count, found {value!r}")
 
@@ -131,7 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
             if not isinstance(data[key], dict):
                 raise TypeError(f"Expected an object for {key}")
             for position, value in data[key].items():
-                int(position)
+                int(position)  # Raises if the bin key is not an integer
                 check_count(value)
         return data
 
@@ -141,38 +152,39 @@ class MultiqcModule(BaseMultiqcModule):
             for s, d in self.outcomes.items()
         }
         headers: dict[str, dict[str, Any]] = {
-            "Total_Reads": {"title": "Reads", "description": "Total reads", "shared_key": "read_count"},
+            "Total_Reads": {"title": "Reads", "description": "Total reads", "shared_key": "long_read_count"},
             **{
                 k: {
                     "title": title,
-                    "description": f"{OUTCOMES[k]} as a percentage of all reads",
+                    "description": f"{OUTCOMES[k]['title']} as a percentage of all reads",
                     "suffix": "%",
                     "min": 0,
                     "max": 100,
-                    "scale": "Blues",
+                    "scale": scale,
                     "hidden": k == "Partial",
                 }
-                for k, title in (
-                    ("Gene", "% Gene"),
-                    ("Unique", "% Full Transcript"),
-                    ("Partial", "% Partial Transcript"),
+                for k, title, scale in (
+                    ("Gene", "% Gene", "PuBu"),
+                    ("Unique", "% Full Transcript", "Greens"),
+                    ("Partial", "% Partial Transcript", "BuGn"),
                 )
             },
         }
         self.general_stats_addcols(data, headers)
 
-    def add_outcome_plot(self, anchor: str, title: str, keys: list, description: str):
+    def add_outcome_plot(self, anchor: str, title: str, keys: list, description: str, helptext: str = "", **pconfig):
         # Explicit datasets avoid MultiQC normalising overlapping counts to their sum.
         self.add_section(
             name=title,
             anchor=f"nexons_{anchor}",
             description=description,
+            helptext=helptext,
             plot=bargraph.plot(
                 [
                     {s: {k: d[k] for k in keys} for s, d in dataset.items()}
                     for dataset in (self.percentages, self.outcomes)
                 ],
-                {k: {"name": OUTCOMES[k]} for k in keys},
+                {k: {"name": OUTCOMES[k]["title"], "color": OUTCOMES[k]["color"]} for k in keys},
                 {
                     "id": f"nexons_{anchor}_plot",
                     "title": f"Nexons: {title}",
@@ -182,6 +194,7 @@ class MultiqcModule(BaseMultiqcModule):
                         {"name": "Percentage of all reads", "ylab": "Percentage of all reads (%)", "ymax": 100},
                         {"name": "Counts", "ylab": "Count", "ymax": None},
                     ],
+                    **pconfig,
                 },
             ),
         )
@@ -198,9 +211,9 @@ class MultiqcModule(BaseMultiqcModule):
             (
                 "coverage",
                 "Transcript Coverage",
-                "Average percentile coverage over transcripts (5′ to 3′)",
+                "Average percentile coverage over transcripts (5' to 3')",
                 "Read count",
-                "Average relative coverage of transcript area from 5' to 3' - useful for detecting coverage bias in your libraries.",
+                "Average relative coverage of transcript area from 5' to 3', useful for detecting coverage bias in your libraries.",
             ),
             (
                 "inner_flex",
@@ -214,14 +227,14 @@ class MultiqcModule(BaseMultiqcModule):
                 "Transcript End Flex",
                 "Observed distances from annotated transcript ends (bp)",
                 "Junction count",
-                "Distribution of distances of observed transcript ends compared to the annotation in the GTF file.  Limited to whatever values was set for 'endflex' in the original analysis",
+                "Distribution of distances of observed transcript ends compared to the annotation in the GTF file. Limited to whatever value was set for 'endflex' in the original analysis.",
             ),
         ):
             data = {}
             for sample, stats in self.nexons_data.items():
                 values = stats[key]
                 if key == "coverage":
-                    points = dict(enumerate(values))
+                    points = {100 * i / max(len(values) - 1, 1): v for i, v in enumerate(values)}
                 elif key == "read_lengths":
                     points = dict(values)
                 else:
@@ -245,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
                         "ylab": ylab,
                         "ymin": 0,
                         "hide_empty": False,
-                        "smooth_points": max(len(points) for points in data.values()),
+                        "smooth_points": False,  # Spiky count data, binning would drop peaks
                     },
                 )
                 if data

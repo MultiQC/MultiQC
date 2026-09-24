@@ -783,6 +783,20 @@ def test_linegraph_smooth():
         assert min(len(in_series), SMOOTH_TO) == len(out_series["pairs"])
 
 
+@pytest.mark.parametrize("smooth_points", [False, 0, -1])
+def test_linegraph_smooth_disabled(smooth_points):
+    dataset = {"Sample": {x: x for x in range(1000)}}
+
+    plot = _verify_rendered(
+        linegraph.plot(
+            dataset,
+            {"id": "test_linegraph_smooth_disabled", "title": "Test: Line Graph", "smooth_points": smooth_points},
+        )
+    )
+
+    assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][0]["pairs"]) == 1000
+
+
 def test_linegraph_multiple_datasets():
     plot = _verify_rendered(
         linegraph.plot(

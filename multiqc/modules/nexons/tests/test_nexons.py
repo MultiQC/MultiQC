@@ -55,7 +55,7 @@ def run_module(tmp_path: Path, stats):
 def test_full_report(tmp_path, stats):
     module = run_module(tmp_path, stats)
     assert module.nexons_data["sample"] == stats
-    assert len(module.sections) == 12
+    assert len(module.sections) == 8
     assert module.percentages["sample"]["Gene"] == 70
     assert module.percentages["sample"]["Unique"] == 20
     # Directionality is divided by ALL reads, not just strand matches.
@@ -70,7 +70,7 @@ def test_zero_counts(tmp_path, stats):
     stats.update(read_lengths=[], coverage=[], inner_flex={}, end_flex={})
     module = run_module(tmp_path, stats)
     assert set(module.percentages["sample"].values()) == {0}
-    assert len(module.sections) == 12
+    assert len(module.sections) == 8
     assert module.sections[-1].alerts[0].affected_samples == ["sample"]
 
 

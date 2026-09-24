@@ -879,8 +879,7 @@ def smooth_array(items: List[T], numpoints: int) -> List[T]:
     Function to take an array and use binning to smooth to a maximum number of datapoints.
     Each datapoint in a smoothed dataset corresponds to the first point in a bin.
     """
-    # Check that we need to smooth this data
-    if len(items) <= numpoints or len(items) == 0:
+    if numpoints <= 0 or len(items) <= numpoints:
         return items
 
     result: List[T] = []
