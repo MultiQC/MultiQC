@@ -31,6 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             to be used for general QC.
             """,
             doi="10.1186/s13073-020-00761-2",
+            license="MIT License",
+            license_url="https://github.com/brentp/somalier/blob/master/LICENSE",
         )
 
         # Find and load any somalier reports
@@ -558,6 +560,7 @@ class MultiqcModule(BaseMultiqcModule):
     def somalier_sex_check_plot(self):
         data = {}
         sex_index = {"female": 0, "male": 1, "unknown": 2}
+        rng = random.Random(0)
 
         for s_name, d in self.somalier_data.items():
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
@@ -566,7 +569,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
-                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (random.random() - 0.5) * 0.1,
+                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (rng.random() - 0.5) * 0.1,
                     "y": y,
                 }
 

@@ -1,3 +1,5 @@
+import DOMPurify from "dompurify";
+
 function handleStreamError(error) {
   if (error.toString().includes("Failed to fetch")) {
     error = "Failed to connect to AI provider. Please check your internet connection and the API key, and try again.";
@@ -534,25 +536,37 @@ window.markdownToHtml = function (text) {
 
   text = deanonymizeSampleNames(text);
 
-  // Convert directives :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
-  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<span class="text-${p2}">${p1}</span>`;
-  });
-
-  // Convert directives :sample[text]{.text-color} -> <sample... (preserving underscores)
-  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
-    return `<sample data-bs-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
-  });
-
-  // Convert markdown to html
+  // Markdown first, so that code spans escape their own angle brackets and "`x < 5`"
+  // does not come out double-escaped.
   try {
     let converter = new showdown.Converter({
       literalMidWordUnderscores: true, // Prevents interpretation of underscores within words
     });
-    return converter.makeHtml(text);
+    text = converter.makeHtml(text);
   } catch (e) {
-    return text;
+    // Fall through and sanitise the unconverted text
   }
+
+  // The text can carry sample names straight from the analysed files, so a crafted name
+  // could otherwise inject markup into the report. Default profile: ordinary formatting
+  // and links survive, scripts, event handlers and javascript: URLs do not.
+  // The markdown -> sanitise -> directives order matters, and this function is forked
+  // into multiqc/templates/original/assets/js/ai-helpers.js - keep the two in step.
+  text = DOMPurify.sanitize(text);
+
+  // Directives last: this is our own markup, and the captured text is already
+  // sanitised, so re-inserting it here is safe. Do not move this above the sanitise.
+  // :span[text]{.text-color} -> <span class="text-color">... (preserving underscores)
+  text = text.replace(/:span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<span class="text-${p2}">${p1}</span>`;
+  });
+
+  // :sample[text]{.text-color} -> <sample... (preserving underscores)
+  text = text.replace(/:sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}/g, (match, p1, p2) => {
+    return `<sample data-bs-toggle="tooltip" title="Click to highlight in the report" class="text-${p2}">${p1}</sample>`;
+  });
+
+  return text;
 };
 
 window.multiqcDescription = `\
@@ -585,7 +599,7 @@ or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one 
 You must use only multiples of 4 spaces to indent nested lists.
 `;
 
-window.systemPromptReportShort =
+const defaultSystemPromptReportShort =
   window.systemPromptReport +
   `
 Limit the response to 1-2 bullet points. Two such examples of short summaries:
@@ -597,7 +611,7 @@ Limit the response to 1-2 bullet points. Two such examples of short summaries:
 - :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green})'
 `;
 
-window.systemPromptReportFull =
+const defaultSystemPromptReportFull =
   window.systemPromptReport +
   `
 Follow up with recommendations for the next steps.
@@ -630,6 +644,9 @@ This is the example response:
 - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
 - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
 `;
+
+window.systemPromptReportShort = aiPrompts.short || defaultSystemPromptReportShort;
+window.systemPromptReportFull = aiPrompts.full || defaultSystemPromptReportFull;
 
 window.systemPromptPlot =
   window.multiqcDescription +

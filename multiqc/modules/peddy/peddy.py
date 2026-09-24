@@ -21,6 +21,8 @@ class MultiqcModule(BaseMultiqcModule):
             "the relatedness calculation and to make ancestry predictions.\n\n"
             "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
+            license="MIT License",
+            license_url="https://github.com/brentp/peddy/blob/master/LICENSE",
         )
 
         # Find and load any Peddy reports
@@ -310,6 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
     def peddy_sex_check_plot(self):
         data = {}
         sex_index = {"female": 0, "male": 1, "unknown": 2}
+        rng = random.Random(0)
 
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
@@ -318,7 +321,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "female": "#f15c80",
                 }.get(d.get("predicted_sex_sex_check"), "#434348")
                 data[s_name] = {
-                    "x": sex_index.get(d["ped_sex_sex_check"], 2) + (random.random() - 0.5) * 0.1,
+                    "x": sex_index.get(d["ped_sex_sex_check"], 2) + (rng.random() - 0.5) * 0.1,
                     "y": d["sex_het_ratio"],
                     "color": color,
                 }

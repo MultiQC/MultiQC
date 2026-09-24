@@ -1,0 +1,123 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+minimum_prek_version = "0.4.12"
+
+# Pin hook repos to commit hashes rather than mutable tags, matching how
+# GitHub Actions are pinned in .github/workflows. `prek update` keeps them
+# current and rewrites the `# frozen:` comment with the tag it resolved.
+[update]
+freeze = true
+
+[[repos]]
+repo = "meta"
+hooks = [
+  { id = "check-hooks-apply" }
+]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "check-added-large-files" },
+  { id = "check-merge-conflict" },
+  # Replaces Lucas-C/pre-commit-hooks remove-crlf
+  { id = "mixed-line-ending", args = ["--fix=lf"] },
+  {
+    id = "trailing-whitespace",
+    # Keep markdown hard line breaks, which are two trailing spaces
+    args = ["--markdown-linebreak-ext=md"],
+    exclude = '''(?x)^(
+        multiqc/utils/material_icons/.*
+      | multiqc/templates/[^/]+/assets/(js/packages|fonts)/.*
+      | multiqc/templates/[^/]+/compiled/.*
+      | docs/images/.*\.svg
+      | .*\.min\.(js|css)
+    )$'''
+  },
+  { id = "end-of-file-fixer", exclude = '''(?x)^(
+        multiqc/utils/material_icons/.*
+      | multiqc/templates/[^/]+/assets/(js/packages|fonts)/.*
+      | multiqc/templates/[^/]+/compiled/.*
+      | docs/images/.*\.svg
+      | .*\.min\.(js|css)
+    )$''' }
+]
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "3e8a8703264a2f4a69428a0aa4dcb512790b2c8c"  # frozen: v6.0.0
+# Only hook here without a prek built-in equivalent
+hooks = [
+  { id = "debug-statements" }
+]
+
+[[repos]]
+repo = "https://github.com/rbubley/mirrors-prettier"
+rev = "0ee178619d696787ca73d210cc191d720868c631"  # frozen: v3.9.6
+hooks = [
+  {
+    id = "prettier",
+    additional_dependencies = [
+      "prettier@3.9.6",
+      "prettier-plugin-jinja-template@2.2.0"
+    ]
+  }
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+# Pinned: ruff 0.15+ broadened its default rule set, which flags thousands of new
+# findings in this repo. Bump deliberately alongside a `lint.select` in pyproject.toml.
+rev = "6ce4b4fc349b8881cbce40207dac3bf78824a88e"  # frozen: v0.14.11
+hooks = [
+  {
+    id = "ruff-check",
+    args = ["--fix"]
+  },
+  { id = "ruff-format" }
+]
+
+[[repos]]
+repo = "https://github.com/rhysd/actionlint"
+rev = "914e7df21a07ef503a81201c76d2b11c789d3fca"  # frozen: v1.7.12
+hooks = [
+  { id = "actionlint" }
+]
+
+[[repos]]
+repo = "https://github.com/codespell-project/codespell"
+rev = "57b21406f092110c18776e39b0bda50d37c945c8"  # frozen: v2.4.3
+hooks = [
+  {
+    id = "codespell",
+    # Module docs under docs/markdown/modules/ are generated from module
+    # docstrings and carry a DO NOT EDIT banner, so they are excluded here.
+    files = '^docs/markdown/.*\.md$',
+    exclude = '^docs/markdown/modules/'
+  }
+]
+
+[[repos]]
+repo = "local"
+hooks = [
+  {
+    id = "build-assets",
+    name = "Build assets with Vite",
+    language = "script",
+    entry = "scripts/build-assets.sh",
+    files = '^multiqc/templates/(default|disco)/src/.*\.(scss|js)$'
+  },
+  {
+    id = "code-checks",
+    name = "Module code style checks",
+    # The same checks the code_checks.py CI job used to run on its own. It scans
+    # the whole package rather than the files it is handed, so filenames are not
+    # passed; the file filter only decides whether it needs to run at all.
+    language = "python",
+    entry = "python .github/workflows/code_checks.py",
+    additional_dependencies = ["rich"],
+    files = '^multiqc/.*\.py$',
+    pass_filenames = false
+  }
+]

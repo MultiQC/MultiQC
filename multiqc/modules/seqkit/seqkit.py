@@ -41,6 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://bioinf.shenwei.me/seqkit/",
             info="Cross-platform and ultrafast toolkit for FASTA/Q file manipulation.",
             doi="10.1371/journal.pone.0163962",
+            license="MIT License",
+            license_url="https://github.com/shenwei356/seqkit/blob/master/LICENSE",
         )
 
         n = dict()

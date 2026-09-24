@@ -14,23 +14,26 @@ jobs:
       contents: read
       pull-requests: read
     # Only run on PR comments (issue_comment fires for both issues and PRs)
+    # Keep the /review line-start match in sync with module-report.yml
     if: |
       github.event_name == 'pull_request' ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
-       contains(github.event.comment.body, '/review'))
+       contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"'))))
 
     steps:
       - name: Require maintainer access
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.event.comment.user.login }}
         run: |
-          PERM=$(gh api "repos/${{ github.repository }}/collaborators/${{ github.event.comment.user.login }}/permission" -q '.permission')
-          echo "${{ github.event.comment.user.login }} has permission: $PERM"
+          PERM=$(gh api "repos/${REPO}/collaborators/${ACTOR}/permission" -q '.permission')
+          echo "${ACTOR} has permission: $PERM"
           [[ "$PERM" =~ ^(admin|maintain|write)$ ]] || exit 1
 
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -41,7 +44,6 @@ jobs:
             echo "${{ github.event.pull_request.number }}" > pr-info/pr-number.txt
             echo "${{ github.event.pull_request.head.sha }}" > pr-info/head-sha.txt
           else
-            # For issue_comment, get PR number and fetch head SHA
             echo "${{ github.event.issue.number }}" > pr-info/pr-number.txt
             HEAD_SHA=$(gh pr view "${{ github.event.issue.number }}" --json headRefOid -q .headRefOid)
             echo "$HEAD_SHA" > pr-info/head-sha.txt

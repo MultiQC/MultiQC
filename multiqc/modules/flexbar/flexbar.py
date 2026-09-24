@@ -17,11 +17,13 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/seqan/flexbar",
             info="Barcode and adapter removal tool.",
             extra="""
-            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes 
+            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes
             barcoded runs and removes adapter sequences. Moreover, trimming and filtering features are provided.
             Flexbar increases read mapping rates and improves genome as well as transcriptome assemblies.
             """,
             doi="10.1093/bioinformatics/btx330",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/seqan/flexbar/blob/master/LICENSE.md",
         )
 
         # Parse logs

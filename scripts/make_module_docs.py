@@ -70,6 +70,20 @@ def main():
 
         info_plain = markdownify(module.info).strip()
 
+        # Metadata lines shown in the note block: homepage link(s), DOI(s) and license.
+        # The license name (e.g. "MIT License") is self-describing, so no "License:" prefix.
+        meta_parts = []
+        if module.href:
+            meta_parts.append(", ".join(f"[{href}]({href})" for href in module.href))
+        if module.doi:
+            meta_parts.append("DOI: " + ", ".join(f"[{doi}](https://doi.org/{doi})" for doi in module.doi))
+        if module.license:
+            if module.license_url:
+                meta_parts.append(f"[{module.license}]({module.license_url})")
+            else:
+                meta_parts.append(module.license)
+        note_meta = "\n\n".join(meta_parts)
+
         text = f"""\
 ---
 title: {module.name}
@@ -89,7 +103,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
 :::note
 {info_plain}
 
-{", ".join([f"[{href}]({href})" for href in module.href])}
+{note_meta}
 :::
 
 {extra}{dedent(docstring)}
@@ -108,7 +122,7 @@ File path for the source of this content: multiqc/modules/{mod_id}/{mod_id}.py
         module_md_path = OUTPUT_PATH / "markdown/modules" / f"{mod_id}.md"
         module_md_path.parent.mkdir(parents=True, exist_ok=True)
         with module_md_path.open("w") as fh:
-            fh.write(text)
+            fh.write(text.rstrip() + "\n")
         print(f"Generated {module_md_path}")
 
     mdx_path = OUTPUT_PATH / "markdown/modules.mdx"
@@ -140,13 +154,8 @@ import MultiqcModules from "@site/src/components/MultiqcModules";
 <MultiqcModules
 modules={{{str(json.dumps(modules_data))}}}
 />
-
-    """
+"""
         )
-
-    # Format markdown files
-    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules/*.md"], check=True)
-    subprocess.run(["npx", "prettier", "--write", "docs/markdown/modules.mdx"], check=True)
 
 
 if __name__ == "__main__":

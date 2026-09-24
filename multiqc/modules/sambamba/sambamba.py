@@ -55,6 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
             extra="It is functionally similar to Samtools, but the source code is written in the D Language. "
             "It allows for faster performance while still being easy to use.",
             doi="10.1093/bioinformatics/btv098",
+            license="GNU General Public License v2.0",
+            license_url="https://github.com/biod/sambamba/blob/master/LICENSE",
         )
 
         n = dict()

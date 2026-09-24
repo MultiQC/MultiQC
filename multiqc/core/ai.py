@@ -9,7 +9,6 @@ from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
 
 import requests
 import yaml
-from markdown import markdown
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
@@ -39,6 +38,11 @@ REASONING_MODELS = {
     "claude-opus-4-5",
     "claude-opus-4-0",
 }
+
+
+REFURSAL_STUB_CONTENT = """\
+AI summary could not be generated as the request was refused by the model
+"""
 
 
 def is_reasoning_model(model_name: str) -> bool:
@@ -164,28 +168,6 @@ PROMPT_FULL = f"""\
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
     detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
-
-    def markdown_to_html(self, text: str) -> str:
-        """
-        Convert markdown to HTML
-        """
-        # First convert pseudonyms back to original names if needed
-        text = deanonymize_sample_names(text)
-
-        html = markdown(text)
-        # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
-        html = re.sub(
-            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<span class='text-\2'>\1</span>",
-            html,
-        )
-        # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
-        html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-bs-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
-            html,
-        )
-        return html
 
 
 class InterpretationResponse(BaseModel):
@@ -501,30 +483,39 @@ class AWSBedrockClient(Client):
 
     def _query(self, prompt: str) -> ApiResponse:
         # TODO consider error-handling/backoff
-        body = json.dumps(
-            {
-                # this is the only allowable value as of 2025/03/04
-                # if they ever add more, we can make it configurable
-                # or add smart logic to figure it out.
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-                "max_tokens": 4096,
-            }
-        )
+        body = {
+            # this is the only allowable value as of 2025/03/04
+            # if they ever add more, we can make it configurable
+            # or add smart logic to figure it out.
+            "anthropic_version": "bedrock-2023-05-31",
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            "max_tokens": 4096,
+        }
+
+        if config.ai_extended_thinking:
+            thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+            if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+            body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
+        else:
+            body["thinking"] = {"type": "disabled"}
 
         response = self.client.invoke_model(
-            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
         )
 
         response_body = json.loads(response["body"].read())
-        if (
-            "content" not in response_body
-            or len(response_body["content"]) != 1
-            or "text" not in response_body["content"][0]
-        ):
-            logger.error(f"bedrock response content: {response_body}")
+        if response_body["stop_reason"] == "refusal":
+            return AWSBedrockClient.ApiResponse(content=REFURSAL_STUB_CONTENT, model=self.model)
+        if not response_body.get("content", []):
+            logger.error(f"bedrock response does not have 'content': {response_body}")
             raise ValueError("Unexpected bedrock response body")
-        content = response_body["content"][0]["text"]  # Extract the assistant's response
+        text_blocks = [b for b in response_body["content"] if b["type"] == "text"]
+        if len(text_blocks) != 1:
+            logger.error(f"bedrock response does not contain 1 text block: {response_body}")
+            raise ValueError("Unexpected bedrock response body")
+        content = text_blocks[0]["text"]  # Extract the assistant's response
         return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
 
@@ -1053,6 +1044,14 @@ def add_ai_summary_to_report():
     report.ai_extra_query_options_base64 = base64.b64encode(
         json.dumps(config.ai_extra_query_options or {}).encode()
     ).decode()
+    report.ai_prompts_base64 = base64.b64encode(
+        json.dumps(
+            {
+                "short": config.ai_prompt_short or PROMPT_SHORT,
+                "full": config.ai_prompt_full or PROMPT_FULL,
+            }
+        ).encode()
+    ).decode()
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
@@ -1129,10 +1128,12 @@ def add_ai_summary_to_report():
     if response.thread_id:
         report.ai_thread_id = response.thread_id
 
+    # Stored as markdown: the report renders it in the browser, through the same
+    # sanitiser as summaries generated there, so there is only one rendering path.
     interpretation: InterpretationOutput = response.interpretation
-    report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
+    report.ai_global_summary = deanonymize_sample_names(interpretation.summary)
 
     if config.ai_summary_full and interpretation.detailed_analysis:
-        report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
+        report.ai_global_detailed_analysis = deanonymize_sample_names(interpretation.detailed_analysis)
 
     logger.info(f"Summarised report with {report.ai_provider_title}")

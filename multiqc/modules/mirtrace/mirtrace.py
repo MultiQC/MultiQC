@@ -28,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             e.g. parasitic RNAs.
             """,
             doi="10.1186/s13059-018-1588-9",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/friedlanderlab/mirtrace/blob/master/release-bundle-includes/LICENCE",
         )
 
         # Find and load miRTrace summary statistics table

@@ -10,6 +10,7 @@ import yaml
 
 import multiqc
 from multiqc import report
+from multiqc.core.special_case_modules.software_versions import MultiqcModule
 from multiqc.core.update_config import ClConfig
 
 
@@ -131,6 +132,112 @@ def test_software_versions_from_config_and_module(tmp_path, data_dir, capsys):
     multiqc.write_report(filename="stdout")
     captured = capsys.readouterr()
     assert "<td>Bismark</td><td><samp>0.14.0, 0.14.4, 1.4.2</samp></td>" in captured.out
+
+
+def test_software_metadata_defaults_from_module():
+    """
+    License, license URL and DOI default to the module-level values.
+    """
+    mod = multiqc.BaseMultiqcModule(
+        name="STAR",
+        doi="10.1093/bioinformatics/bts635",
+        license="MIT License",
+        license_url="https://github.com/alexdobin/STAR/blob/master/LICENSE",
+    )
+    mod.add_software_version("2.7.10a")
+
+    meta = report.software_versions_metadata["STAR"]["STAR"]
+    assert meta.license == "MIT License"
+    assert meta.license_url == "https://github.com/alexdobin/STAR/blob/master/LICENSE"
+    assert meta.doi == ["10.1093/bioinformatics/bts635"]
+
+
+def test_software_metadata_explicit_per_software():
+    """
+    Metadata can be provided per software, overriding the module-level values.
+    """
+    mod = multiqc.BaseMultiqcModule(name="mymodule", license="GPL-3.0")
+    mod.add_software_version("1.0.0", software_name="tool1")
+    mod.add_software_version("2.0.0", software_name="tool2", license="MIT", doi="10.1000/xyz")
+
+    assert report.software_versions_metadata["mymodule"]["tool1"].license == "GPL-3.0"
+    meta2 = report.software_versions_metadata["mymodule"]["tool2"]
+    assert meta2.license == "MIT"
+    assert meta2.doi == ["10.1000/xyz"]
+
+
+def test_software_metadata_absent_when_not_provided():
+    """
+    Modules that don't declare any metadata don't register empty entries.
+    """
+    mod = multiqc.BaseMultiqcModule(name="plain")
+    mod.add_software_version("1.0.0")
+
+    assert "plain" not in report.software_versions_metadata
+
+
+def test_software_versions_html_license_and_doi_columns():
+    """
+    The License and DOI columns are rendered only when metadata is present.
+    """
+    mod = multiqc.BaseMultiqcModule(
+        name="STAR",
+        doi="10.1093/bioinformatics/bts635",
+        license="MIT License",
+        license_url="https://github.com/alexdobin/STAR/blob/master/LICENSE",
+    )
+    mod.add_software_version("2.7.10a")
+
+    html = MultiqcModule._make_versions_html(report.software_versions)
+    assert "<th>License</th>" in html
+    assert "<th>DOI</th>" in html
+    assert '<a href="https://github.com/alexdobin/STAR/blob/master/LICENSE" target="_blank">MIT License</a>' in html
+    assert (
+        '<a href="https://doi.org/10.1093/bioinformatics/bts635" target="_blank">10.1093/bioinformatics/bts635</a>'
+        in html
+    )
+
+
+def test_license_shown_in_module_header():
+    """
+    The license is rendered as a linked name (no "License:" prefix) in the module
+    header, just after the DOI.
+    """
+    mod = multiqc.BaseMultiqcModule(
+        name="STAR",
+        href="https://github.com/alexdobin/STAR",
+        info="Universal RNA-seq aligner.",
+        doi="10.1093/bioinformatics/bts635",
+        license="MIT License",
+        license_url="https://opensource.org/license/mit",
+    )
+    intro = mod.intro
+    assert '<a class="module-license text-muted" href="https://opensource.org/license/mit"' in intro
+    assert ">MIT License</a>" in intro
+    # The link text is self-describing, so no "License:" label is added
+    assert "License:" not in intro
+    # License link comes after the DOI link
+    assert intro.index("module-doi") < intro.index("module-license")
+
+
+def test_license_absent_from_header_when_not_set():
+    """
+    Modules without a license don't render a license entry in the header.
+    """
+    mod = multiqc.BaseMultiqcModule(name="Plain", info="A tool.", doi="10.1/x")
+    assert "module-license" not in mod.intro
+
+
+def test_software_versions_html_no_extra_columns_without_metadata():
+    """
+    Without any metadata, the optional columns are not rendered.
+    """
+    mod = multiqc.BaseMultiqcModule(name="plain")
+    mod.add_software_version("1.0.0")
+
+    html = MultiqcModule._make_versions_html(report.software_versions)
+    assert "<th>License</th>" not in html
+    assert "<th>DOI</th>" not in html
 
 
 def test_software_versions_from_mqc_files(tmp_path, data_dir, capsys):

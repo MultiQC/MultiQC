@@ -36,6 +36,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/PacificBiosciences/IsoSeq",
             info="Identifies transcripts in PacBio single-molecule sequencing data (HiFi reads).",
             # doi=,  # Not published
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/IsoSeq/blob/master/LICENSE",
         )
 
         cnt_by_cluster_id_by_sample = self._parse_cluster()
@@ -177,8 +179,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="isoseq-cluster-size-distribution",
             description="A distribution of cluster size (number of CC clustered to form one Hifi read)",
             helptext="""
-            The CSV report <code>*.cluster_report.csv</code> files produced by Iso-Seq <code>cluster</code> 
-            shows which CCS have been clustered together to form one Hifi reads. The bargraph represent the 
+            The CSV report <code>*.cluster_report.csv</code> files produced by Iso-Seq <code>cluster</code>
+            shows which CCS have been clustered together to form one Hifi reads. The bargraph represent the
             distribution of the cluster size using four categories : -2, 3-10, 11-100, >100.
             """,
             plot=bargraph.plot(
@@ -219,7 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Statistics from the Iso-Seq <code>refine</code> summary JSON files.",
             helptext="""
             Iso-Seq <code>refine</code> performs the full-length read refinement by trimming poly(A) tails and
-            removing concatemers. It also outputs a summary JSON file <code>*.filter_summary.json</code> per each 
+            removing concatemers. It also outputs a summary JSON file <code>*.filter_summary.json</code> per each
             CCS file with statistics of refined full-length non-concatemer reads.
             """,
             plot=table.plot(
@@ -245,8 +247,8 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext="""
                 Iso-Seq <code>refine</code> performs the full-length read refinement by trimming poly(A) tails and
                 removing concatemers. It also outputs a report table <code>*.report.csv</code> per each CCS file,
-                providing statistics on each CCS: 5' prime and 3' primer lengths, insert length, poly(A) length, 
-                and couple of primers detected for each CCS. The box plots present the distribution showing the 
+                providing statistics on each CCS: 5' prime and 3' primer lengths, insert length, poly(A) length,
+                and couple of primers detected for each CCS. The box plots present the distribution showing the
                 min, max, mean, standard deviation statistics for each metric.
                 """,
                 plot=box.plot(

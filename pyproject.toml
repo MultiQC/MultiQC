@@ -17,7 +17,9 @@ dependencies = [
     "packaging",
     "requests",
     "Pillow>=10",         # to add a logo into flat plots
-    "plotly>=5.18",
+    # plotly 6.1 dropped the kaleido v0 export backend and requires kaleido>=1
+    # (which needs a system Chrome). Cap until we migrate off kaleido 0.2.1.
+    "plotly>=5.18,<6.1",
     "pyyaml>=4",
     "rich>=10",
     "rich-click",

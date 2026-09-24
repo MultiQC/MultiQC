@@ -43,6 +43,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
+            license="MIT License",
+            license_url="https://github.com/marcelm/cutadapt/blob/master/LICENSE",
         )
 
         # Find and load any Cutadapt reports

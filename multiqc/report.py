@@ -50,7 +50,16 @@ from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
+from multiqc.types import (
+    Anchor,
+    ColumnKey,
+    FileDict,
+    ModuleId,
+    SampleGroup,
+    Section,
+    SectionKey,
+    SoftwareVersionMetadata,
+)
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
@@ -108,6 +117,7 @@ ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 ai_extra_query_options_base64: str = ""
+ai_prompts_base64: str = ""
 sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
 ai_pseudonym_map: Dict[str, str] = {}
 ai_pseudonym_map_base64: str = ""
@@ -126,6 +136,8 @@ plot_data: Dict[Anchor, Dict[str, Any]] = dict()
 general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
+# Map group -> software -> FAIR metadata (license, DOI) shown in the Software Versions section
+software_versions_metadata: Dict[str, Dict[str, SoftwareVersionMetadata]]
 plot_compressed_json: str
 # to make sure write_data_file don't overwrite for repeated modules. dict for fast lookup and to preserve insertion order:
 saved_raw_data_keys: Dict[str, None]
@@ -164,6 +176,7 @@ def reset():
     global general_stats_data
     global general_stats_headers
     global software_versions
+    global software_versions_metadata
     global plot_compressed_json
     global saved_raw_data_keys
     global saved_raw_data
@@ -177,6 +190,7 @@ def reset():
     global ai_model_resolved
     global ai_report_metadata_base64
     global ai_extra_query_options_base64
+    global ai_prompts_base64
     global sample_names
     global ai_pseudonym_map
     global ai_pseudonym_map_base64
@@ -211,6 +225,7 @@ def reset():
     ai_model_resolved = ""
     ai_report_metadata_base64 = ""
     ai_extra_query_options_base64 = ""
+    ai_prompts_base64 = ""
     sample_names = []
     ai_pseudonym_map = {}
     ai_pseudonym_map_base64 = ""
@@ -222,6 +237,7 @@ def reset():
     general_stats_data = dict()
     general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
+    software_versions_metadata = defaultdict(dict)
     plot_compressed_json = ""
     saved_raw_data_keys = {}
     saved_raw_data = dict()

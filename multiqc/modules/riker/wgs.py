@@ -2,14 +2,14 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv, to_int
+from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ def parse_reports(module):
 
 
 def _parse_metrics(module) -> set:
-    data_by_sample: Dict[str, Dict[str, float]] = {}
+    data_by_sample: Dict[str, Dict[str, Optional[float]]] = {}
 
     for f in module.find_log_files("riker/wgs_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -33,7 +33,7 @@ def _parse_metrics(module) -> set:
                 continue
             s_name = module.clean_s_name(sample, f)
             try:
-                data_by_sample[s_name] = {col: float(val) for col, val in row.items()}
+                data_by_sample[s_name] = {col: to_float(val) for col, val in row.items()}
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
@@ -265,7 +265,10 @@ def _parse_metrics(module) -> set:
     ]
     excl_data: Dict[str, Dict[str, float]] = {}
     for s_name, row in data_by_sample.items():
-        excl_data[s_name] = {col: row.get(col, 0.0) * 100.0 for col, _ in excl_keys}
+        excl_data[s_name] = {}
+        for col, _ in excl_keys:
+            val = row.get(col)
+            excl_data[s_name][col] = val * 100.0 if val is not None else 0.0
     excl_cats = {col: {"name": label} for col, label in excl_keys}
     excl_config = BarPlotConfig(
         id=f"{module.anchor}_wgs_excluded_bases",
