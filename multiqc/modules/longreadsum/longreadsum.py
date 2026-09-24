@@ -1,10 +1,10 @@
+from __future__ import annotations
+
 import copy
 import logging
 import os
 import re
 import json
-
-from __future__ import annotations
 
 from typing import Any, Union
 
