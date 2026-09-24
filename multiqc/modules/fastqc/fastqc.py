@@ -148,15 +148,16 @@ class MultiqcModule(BaseMultiqcModule):
     #### Overrepresented sequences
 
     The overrepresented sequences table shows the most common sequences found,
-    measured by the number of samples they occur as overrepresented. By default, the
-    table shows top 20 sequences. This can be customised in the config:
+    measured by the number of samples they occur as overrepresented; ties are broken
+    by the total number of reads and  then alphabetically by the sequence itself.
+    By default, the table shows top 20 sequences. This can be customised in the config:
 
     ```yaml
     fastqc_config:
       top_overrepresented_sequences: 50
     ```
 
-    You can also choose to rank the top sequences by the total number of reads
+    You can also choose to rank the top sequences primarily by the total number of reads
     rather than by number of samples:
 
     ```yaml
@@ -1265,9 +1266,19 @@ class MultiqcModule(BaseMultiqcModule):
         top_n = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences", 20)
         by = getattr(config, "fastqc_config", {}).get("top_overrepresented_sequences_by", "samples")
         if by == "samples":
-            top_seqs = overrep_by_sample.most_common(top_n)
+            overrep_sorted = sorted(
+                overrep_by_sample.items(),
+                key=lambda kv: (-kv[1], -overrep_total_cnt[kv[0]], kv[0]),
+            )
+            by_secondary = "total_count"
         else:
-            top_seqs = overrep_total_cnt.most_common(top_n)
+            overrep_sorted = sorted(
+                overrep_total_cnt.items(),
+                key=lambda kv: (-kv[1], -overrep_by_sample[kv[0]], kv[0]),
+            )
+            by = "total_count"
+            by_secondary = "samples"
+        top_seqs = overrep_sorted[:top_n]
         table_data: Dict[str, Dict[str, Any]] = {
             seq: {
                 "sequence": seq,
@@ -1279,25 +1290,29 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         table_data = dict(
-            sorted(table_data.items(), key=lambda x: (x[1]["total_count"], x[1]["samples"]), reverse=True)
+            sorted(table_data.items(), key=lambda x: (x[1][by], x[1][by_secondary], x[1]["sequence"]), reverse=True)
         )
 
         ranked_by = (
             "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
+        )
+        ranked_secondary = (
+            "the number of occurrences across all samples" if by == "samples" else "the number of samples they occur in"
         )
         self.add_section(
             name="Top overrepresented sequences",
             anchor="fastqc_top_overrepresented_sequences",
             description=f"""
             Top overrepresented sequences across all samples. The table shows {top_n}
-            most overrepresented sequences across all samples, ranked by {ranked_by}.
+            most overrepresented sequences across all samples, ranked by {ranked_by},
+            with ties broken by {ranked_secondary} and then alphabetically by sequence itself.
             """,
             plot=table.plot(
                 table_data,
                 headers={
                     ColumnKey("samples"): {
                         "title": "Reports",
-                        "description": "Number of FastQC reports where this sequence is founds as overrepresented",
+                        "description": "Number of FastQC reports where this sequence is found as overrepresented",
                         "scale": "Greens",
                         "min": 0,
                         "format": "{:,d}",
@@ -1326,7 +1341,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
                     "rows_are_samples": False,
-                    "defaultsort": [{"column": "total_count"}, {"column": "samples"}],
+                    "defaultsort": [{"column": by}, {"column": by_secondary}, {"column": "Overrepresented sequence"}],
                 },
             ),
         )
