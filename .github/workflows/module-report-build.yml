@@ -1,0 +1,120 @@
+name: Module preview report build
+# module-report.yml parses the PR number from the leading "#<pr> "
+run-name: "#${{ github.event.pull_request.number || inputs.pr }} ${{ github.event.pull_request.title || 'Preview report build' }}"
+
+on:
+  pull_request:
+    paths: ["multiqc/modules/**"]
+  # TODO: remove after the one-off backfill of open PRs. It builds PR code in the
+  # default branch context, which can poison caches (CodeQL alert 120).
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: PR number
+        required: true
+        type: number
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || inputs.pr }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Runs PR code: never give this job write scopes or secrets.
+    # module-report.yml posts the results from a separate, trusted run.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      PR: ${{ github.event.pull_request.number || inputs.pr }}
+    steps:
+      - name: Pin the PR head
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh pr view "$PR" --repo "$REPO" \
+            --json headRefOid,headRepository,headRepositoryOwner \
+            -q '"sha=\(.headRefOid)", "repo=\(.headRepositoryOwner.login)/\(.headRepository.name)"' \
+            | tee -a "$GITHUB_OUTPUT"
+
+      - name: Find edited modules
+        id: modules
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        # Keep in sync with module-report.yml
+        run: |
+          MODULES=$(gh pr diff "$PR" --repo "$REPO" --name-only \
+            | grep -oP '^multiqc/modules/\K[A-Za-z0-9_]+(?=/)' | sort -u | xargs)
+          echo "Edited modules: ${MODULES:-none}"
+          echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
+
+      - name: Check out PR
+        if: steps.modules.outputs.modules != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ steps.pr.outputs.repo }}
+          ref: ${{ steps.pr.outputs.sha }}
+          persist-credentials: false
+
+      - name: Download test data
+        if: steps.modules.outputs.modules != ''
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: MultiQC/test-data
+          path: test-data
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        if: steps.modules.outputs.modules != ''
+        with:
+          python-version: "3.12"
+
+      - name: Install MultiQC
+        if: steps.modules.outputs.modules != ''
+        run: pip install .
+
+      # MultiQC exits 0 without writing a report when no data matches
+      - name: Run MultiQC
+        if: steps.modules.outputs.modules != ''
+        env:
+          MODULES: ${{ steps.modules.outputs.modules }}
+        run: |
+          ARGS=()
+          for m in $MODULES; do ARGS+=(-m "$m"); done
+          multiqc "${ARGS[@]}" test-data/data/modules -n "multiqc_report_pr${PR}.html" -o report
+
+      - name: Take screenshot
+        id: screenshot
+        if: hashFiles('report/*.html') != ''
+        continue-on-error: true
+        # --full-page leaves the fixed sidebar overlapping content; re-shoot with a page-tall viewport
+        run: |
+          URL="file://$PWD/report/multiqc_report_pr${PR}.html"
+          SHOT="report_pr${PR}.png"
+          npx -y playwright@1.63.0 screenshot --channel chrome --full-page --viewport-size=1400,900 "$URL" "$SHOT"
+          HEIGHT=$(python3 -c "import struct, sys; print(struct.unpack('>I', open(sys.argv[1], 'rb').read()[20:24])[0])" "$SHOT")
+          npx -y playwright@1.63.0 screenshot --channel chrome --viewport-size="1400,$HEIGHT" --wait-for-timeout=3000 "$URL" "$SHOT"
+
+      - name: Upload report
+        if: hashFiles('report/*.html') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: report/multiqc_report_pr${{ env.PR }}.html
+          archive: false
+          retention-days: 30
+
+      - name: Upload screenshot
+        if: steps.screenshot.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: report_pr${{ env.PR }}.png
+          archive: false
+          retention-days: 30

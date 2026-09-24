@@ -42,7 +42,8 @@ contains "MUST post" / "post the comment", you're in CI mode.
    below for the correct invocation). Interactive → print to chat and wait.
 7. **Preview report** (interactive mode only, PRs touching
    `multiqc/modules/`): run `gh pr comment <n> --body /report`
-   and tell the user a comment with the report will follow on the PR. CI
+   and tell the user a comment with the report will follow on the PR (or a
+   😕 reaction if the existing report already covers the latest commit). CI
    doesn't need this, as the `/review` comment already triggers it.
 
 ## Severity scheme
