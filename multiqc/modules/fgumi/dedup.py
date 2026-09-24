@@ -80,6 +80,7 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
                 "hidden": True,
             },
         },
+        namespace="dedup",
     )
     module.write_data_file(flatten(data), "multiqc_fgumi_dedup")
     return set(data)

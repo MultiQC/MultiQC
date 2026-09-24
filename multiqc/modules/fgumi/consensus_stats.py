@@ -59,7 +59,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     )
     headers: Dict[str, Dict[str, Any]] = {
         "consensus_reads_emitted": {
-            "title": "Consensus reads",
+            "title": f"Consensus reads ({config.read_count_prefix})",
             "description": f"Consensus reads emitted ({config.read_count_desc})",
             "scale": "Greens",
             "shared_key": "read_count",
@@ -85,6 +85,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             for s, v in stats.items()
         },
         headers,
+        namespace="consensus",
     )
     module.write_data_file(stats, "multiqc_fgumi_consensus_stats")
     return set(stats)

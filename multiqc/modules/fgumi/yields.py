@@ -117,5 +117,6 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
                     "format": "{:,.0f}",
                 },
             },
+            namespace="yield",
         )
     return parsed

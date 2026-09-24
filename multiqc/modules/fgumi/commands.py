@@ -126,6 +126,7 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
                 "hidden": True,
             }
         },
+        namespace="filter",
     )
     module.write_data_file(flatten(data), "multiqc_fgumi_filter")
     return set(data)
