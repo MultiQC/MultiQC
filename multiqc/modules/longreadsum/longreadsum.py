@@ -124,7 +124,9 @@ class MultiqcModule(BaseMultiqcModule):
         log.debug("Writing parsed data to file.")
         self.write_data_file(data_by_sample, "multiqc_longreadsum")
 
-    def create_stats_table(self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]) -> None:
+    def create_stats_table(
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
+    ) -> None:
         """
         Create a basic statistics table from the parsed data.
         """
@@ -421,7 +423,9 @@ class MultiqcModule(BaseMultiqcModule):
                     del mod_data["base_mod_counts_reverse"]
 
         # Update the keys for each sample
-        base_modification_data_fmt: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
+        base_modification_data_fmt: Dict[
+            Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]
+        ] = {}
         for sample, mod_data in base_modification_data.items():
             base_modification_data_fmt[sample] = {}
             if isinstance(mod_data, dict):
