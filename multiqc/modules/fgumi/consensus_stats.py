@@ -3,6 +3,7 @@
 import logging
 from typing import Any, Dict, Set
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph
 
@@ -14,25 +15,6 @@ log = logging.getLogger(__name__)
 REJECTED_PREFIX = "raw_reads_rejected_for_"
 # Keys every fgumi consensus caller writes, read directly for the General Statistics columns.
 REQUIRED_KEYS = ("consensus_reads_emitted", "frac_raw_reads_used")
-
-
-_GENERAL_STATS_HEADERS: Dict[str, Dict[str, Any]] = {
-    "consensus_reads_emitted": {
-        "title": "Consensus reads",
-        "description": "Consensus reads emitted",
-        "format": "{:,.0f}",
-        "scale": "Greens",
-    },
-    "frac_raw_reads_used": {
-        "title": "% reads used",
-        "scale": "RdYlGn",
-        "description": "Raw reads used in a consensus read",
-        "suffix": "%",
-        "max": 100,
-        "min": 0,
-        "hidden": True,
-    },
-}
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -75,6 +57,23 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             bars, cats, {"id": "fgumi_consensus_rejections", "title": "fgumi: Consensus calling", "ylab": "Raw reads"}
         ),
     )
+    headers: Dict[str, Dict[str, Any]] = {
+        "consensus_reads_emitted": {
+            "title": "Consensus reads",
+            "description": f"Consensus reads emitted ({config.read_count_desc})",
+            "scale": "Greens",
+            "shared_key": "read_count",
+        },
+        "frac_raw_reads_used": {
+            "title": "% reads used",
+            "scale": "RdYlGn",
+            "description": "Raw reads used in a consensus read",
+            "suffix": "%",
+            "max": 100,
+            "min": 0,
+            "hidden": True,
+        },
+    }
     module.general_stats_addcols(
         {
             s: drop_none(
@@ -85,7 +84,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             )
             for s, v in stats.items()
         },
-        _GENERAL_STATS_HEADERS,
+        headers,
     )
     module.write_data_file(stats, "multiqc_fgumi_consensus_stats")
     return set(stats)
