@@ -755,7 +755,7 @@ somalier/samples:
   num_lines: 5
 somalier/pairs:
   fn: "*.pairs.tsv"
-  contents: "hom_concordance"
+  contents: "concordance"
   num_lines: 5
 sourmash/compare:
   fn: "*.labels.txt"
