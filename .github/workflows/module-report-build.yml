@@ -5,7 +5,8 @@ run-name: "#${{ github.event.pull_request.number || inputs.pr }} ${{ github.even
 on:
   pull_request:
     paths: ["multiqc/modules/**"]
-  # Builds PR code in the base repo context, so it is for maintainers only (e.g. a one-off backfill)
+  # TODO: remove after the one-off backfill of open PRs. It builds PR code in the
+  # default branch context, which can poison caches (CodeQL alert 120).
   workflow_dispatch:
     inputs:
       pr:

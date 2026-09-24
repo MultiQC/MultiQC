@@ -1,6 +1,6 @@
 name: Module preview report
 
-# Posts results of module-report-build.yml. Never checks out or runs PR code: it holds the bot token.
+# Posts results of module-report-build.yml via scripts/post_preview_reports.py. Never runs PR code: it holds the bot token.
 on:
   # workflow_run is intentional: the build runs PR code unprivileged, this run only reads its artifacts
   workflow_run: # zizmor: ignore[dangerous-triggers]
@@ -31,10 +31,17 @@ jobs:
       actions: read
       pull-requests: read
     steps:
+      # Default branch only (the event's ref for all triggers here), never PR code
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/post_preview_reports.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
       - name: Post preview comments
         env:
           GH_TOKEN: ${{ github.token }}
-          # Writes, and GraphQL viewerDidAuthor. gh --attach rejects the Actions token; it needs a PAT.
+          # gh --attach rejects the Actions token; it needs a PAT
           BOT_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           EVENT: ${{ github.event_name }}
@@ -46,130 +53,4 @@ jobs:
           ISSUE: ${{ github.event.issue.number }}
           COMMENT_ID: ${{ github.event.comment.id }}
           COMMENT_BODY: ${{ github.event.comment.body }}
-        run: |
-          IS_REPORT=false
-          if grep -q '^/report' <<< "$COMMENT_BODY"; then IS_REPORT=true; fi
-          bot() { GH_TOKEN="$BOT_TOKEN" gh "$@"; }
-          react() { if [ "$IS_REPORT" = true ]; then bot api "repos/$REPO/issues/comments/$COMMENT_ID/reactions" -f content="$1" >/dev/null; fi; }
-          react eyes
-
-          HOW=$(cat <<'EOF'
-
-
-          <details><summary>How this works</summary>
-
-          The bot posts a preview report on PRs that edit modules:
-
-          1. When the first build finishes, a few minutes after the PR opens. If you push more fixes before then, the report uses the latest commit.
-          2. Each night, if there are new commits since the last report.
-          3. When anyone comments `/report`. If the build is still running, the report posts when it finishes.
-
-          The bot only posts a new report when there are new commits. If there are none, it reacts 😕 to your comment. The bot hides older report comments.
-
-          </details>
-          EOF
-          )
-
-          # "first": post only if the PR has no report yet, or has an unanswered /report.
-          # "new": post only if the head moved since the last report.
-          RULE=new
-          RUN=""
-          RESULT=""
-          case "$EVENT" in
-            issue_comment)
-              TARGETS="$ISSUE $(gh pr view "$ISSUE" --repo "$REPO" --json headRefOid -q .headRefOid)" ;;
-            schedule)
-              TARGETS=$(gh pr list --repo "$REPO" --state open --limit 500 --json number,headRefOid -q '.[] | "\(.number) \(.headRefOid)"') ;;
-            workflow_run)
-              RUN=$WR_ID RESULT=$WR_CONCLUSION
-              # Build run-name starts with "#<pr> ". Fork runs have an empty pull_requests payload.
-              PR=${WR_TITLE%% *} PR=${PR#\#}
-              [[ "$PR" =~ ^[0-9]+$ ]] || { echo "Can't parse PR from run name: $WR_TITLE"; exit 1; }
-              SHA=$(gh pr view "$PR" --repo "$REPO" --json headRefOid -q .headRefOid)
-              if [ "$WR_EVENT" = pull_request ]; then
-                RULE=first
-                # Also rejects a fork run naming someone else's PR
-                [ "$SHA" = "$WR_SHA" ] || { echo "PR #$PR head moved on or doesn't match this build"; exit 0; }
-              fi
-              TARGETS="$PR $SHA" ;;
-          esac
-
-          process() {
-            PR=$1 SHA=$2
-            SHOT="report_pr${PR}.png"
-            post() { bot pr comment "$PR" --repo "$REPO" --body "$1$HOW" "${@:2}"; }
-
-            # Keep in sync with module-report-build.yml
-            MODULES=$(gh pr diff "$PR" --repo "$REPO" --name-only \
-              | grep -oP '^multiqc/modules/\K[A-Za-z0-9_]+(?=/)' | sort -u | xargs)
-            if [ -z "$MODULES" ]; then
-              if [ "$IS_REPORT" = true ]; then post "ℹ️ No edited modules found, so no MultiQC preview report."; fi
-              return 0
-            fi
-
-            # shellcheck disable=SC2016
-            NODES=$(bot api graphql -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" -f query='
-              query($owner: String!, $name: String!, $pr: Int!) {
-                repository(owner: $owner, name: $name) { pullRequest(number: $pr) {
-                  comments(last: 100) { nodes { id isMinimized viewerDidAuthor body } } } } }' \
-              --jq '.data.repository.pullRequest.comments.nodes')
-            MINE='def mine: .viewerDidAuthor and (.body | contains("MultiQC preview report"));'
-            OLD=$(jq "$MINE"' [.[] | select(mine)]' <<< "$NODES")
-            # PENDING: a /report that arrived while the build was still running, not yet answered by a report
-            read -r PENDING LAST_SHA < <(jq -r "$MINE"'
-              (map(mine) | rindex(true)) as $i
-              | (.[(($i // -1) + 1):] | any(.body | test("(^|\n)/report"))) as $pending
-              | ([.[] | select(mine) | .body | capture("<!-- preview-sha: (?<s>[0-9a-f]+) -->").s] | last // "") as $sha
-              | "\($pending) \($sha)"' <<< "$NODES")
-            if [ "$LAST_SHA" = "$SHA" ]; then react confused; return 0; fi
-            if [ "$RULE" = first ] && [ -n "$LAST_SHA" ] && [ "$PENDING" != true ]; then return 0; fi
-
-            # No finished build yet: its workflow_run posts the report when it completes
-            if [ -z "$RUN" ]; then
-              read -r RUN RESULT < <(gh api "repos/$REPO/actions/workflows/module-report-build.yml/runs?head_sha=$SHA&status=completed" \
-                --jq '[.workflow_runs[] | select(.conclusion == "success" or .conclusion == "failure")][0] // empty | "\(.id) \(.conclusion)"') || true
-            fi
-            if [ -z "$RUN" ]; then return 0; fi
-
-            RUN_URL="$GITHUB_SERVER_URL/$REPO/actions/runs/$RUN"
-            ARTIFACTS=$(gh api "repos/$REPO/actions/runs/$RUN/artifacts" --jq '.artifacts[] | "\(.name) \(.id)"')
-            REPORT_ID=$(awk -v n="multiqc_report_pr${PR}.html" '$1 == n {print $2}' <<< "$ARTIFACTS")
-            SHOT_ID=$(awk -v n="$SHOT" '$1 == n {print $2}' <<< "$ARTIFACTS")
-            rm -f "$SHOT"
-            # archive: false artifacts download as the raw file
-            if [ -n "$SHOT_ID" ]; then gh api "repos/$REPO/actions/artifacts/$SHOT_ID/zip" > "$SHOT" || rm -f "$SHOT"; fi
-
-            jq -r '.[] | select(.isMinimized | not) | .id' <<< "$OLD" | while read -r ID; do
-              # shellcheck disable=SC2016
-              bot api graphql -f id="$ID" -f query='
-                mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OUTDATED}) { clientMutationId } }' >/dev/null || true
-            done
-
-            # shellcheck disable=SC2016
-            MODS=$(echo "$MODULES" | sed -E 's/[^ ]+/`&`/g; s/ /, /g')
-            OK="✅ **[MultiQC preview report]($RUN_URL/artifacts/$REPORT_ID)** generated for $MODS"
-            RUN_LINK=" See [run]($RUN_URL).<!-- preview-sha: $SHA -->"
-            if [ "$RESULT" != "success" ]; then
-              BODY="❌ MultiQC preview report failed."
-            elif [ -z "$REPORT_ID" ]; then
-              BODY="⚠️ No MultiQC preview report generated for $MODS."
-            elif [ -f "$SHOT" ]; then
-              DETAILS=$(printf '\n\n<details><summary>Screenshot</summary>\n\n![MultiQC report screenshot](./%s)\n\n</details>' "$SHOT")
-              if post "$OK.$RUN_LINK$DETAILS" --attach "./$SHOT"; then react rocket; return 0; fi
-              BODY="$OK (⚠️ screenshot upload failed, [view it here]($RUN_URL/artifacts/$SHOT_ID))."
-            else
-              BODY="$OK (⚠️ screenshot failed)."
-            fi
-            post "$BODY$RUN_LINK"
-            react rocket
-          }
-
-          # -e is ignored inside a subshell tested with || or if, hence the explicit status check
-          set +e
-          FAILED=0
-          while read -r PR SHA; do
-            [ -n "$PR" ] || continue
-            ( set -e; process "$PR" "$SHA" ); RC=$?
-            [ "$RC" -eq 0 ] || { echo "::warning::Preview comment for PR #$PR failed"; FAILED=1; }
-          done <<< "$TARGETS"
-          exit $FAILED
+        run: python3 scripts/post_preview_reports.py
