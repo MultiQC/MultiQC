@@ -142,6 +142,25 @@ jobs:
         with:
           name: report_pr${{ needs.build.outputs.pr }}.png
 
+      - name: Hide previous preview comments
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PR: ${{ needs.build.outputs.pr }}
+        run: |
+          # shellcheck disable=SC2016
+          gh api graphql -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" -f query='
+            query($owner: String!, $name: String!, $pr: Int!) {
+              repository(owner: $owner, name: $name) { pullRequest(number: $pr) {
+                comments(last: 100) { nodes { id isMinimized viewerDidAuthor body } } } } }' \
+            --jq '.data.repository.pullRequest.comments.nodes[]
+              | select(.viewerDidAuthor and (.isMinimized | not) and (.body | contains("MultiQC preview report"))) | .id' \
+          | while read -r ID; do
+              gh api graphql -f id="$ID" -f query='
+                mutation($id: ID!) { minimizeComment(input: {subjectId: $id, classifier: OUTDATED}) { clientMutationId } }' >/dev/null
+            done
+
       - name: Post comment
         env:
           # gh --attach rejects the Actions token; it needs a PAT
