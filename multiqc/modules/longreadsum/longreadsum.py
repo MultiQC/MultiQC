@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 import copy
 import logging
 import os
 import re
 import json
 
-from typing import Any, Union
+from typing import Any, Dict, Optional, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -43,10 +41,12 @@ class MultiqcModule(BaseMultiqcModule):
              summarization tool for long-read sequencing data.
             """,
             doi="10.1016/j.csbj.2025.01.019",
+            license="MIT",
+            license_url="https://github.com/WGLab/LongReadSum/blob/main/LICENSE",
         )
 
         # Get data by sample
-        data_by_sample: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = dict()
+        data_by_sample: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = dict()
         for f in self.find_log_files("longreadsum/summary"):
             sample_name = SampleName(f["s_name"])
             self.add_data_source(f, sample_name)
@@ -124,11 +124,11 @@ class MultiqcModule(BaseMultiqcModule):
         log.debug("Writing parsed data to file.")
         self.write_data_file(data_by_sample, "multiqc_longreadsum")
 
-    def create_stats_table(self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]) -> None:
+    def create_stats_table(self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]) -> None:
         """
         Create a basic statistics table from the parsed data.
         """
-        headers: dict[str, dict[str, Any]] = {
+        headers: Dict[str, Dict[str, Any]] = {
             "File Type": {
                 "title": "File Type",
                 "description": "Type of the file (e.g., fasta, fastq, bam, sequencing_summary)",
@@ -186,23 +186,23 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, headers)
 
     def add_tin_summary_table(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a TIN summary statistics table.
         """
         tin_data = {}
         for sample, sample_data in data.items():
-            tin_field_raw: int | float | str | bool | dict[str, Any] = sample_data.get("tin_data", {})
+            tin_field_raw: Union[int, float, str, bool, Dict[str, Any]] = sample_data.get("tin_data", {})
             if isinstance(tin_field_raw, dict):
-                tin_field: dict[str, Any] = tin_field_raw
+                tin_field: Dict[str, Any] = tin_field_raw
                 for filepath in tin_field.keys():
                     filename = os.path.basename(filepath)
 
                     # Extract TIN statistics from the sample data
-                    tin_stats_raw: int | float | str | bool | dict[str, Any] = tin_field.get(filepath, {})
+                    tin_stats_raw: Union[int, float, str, bool, Dict[str, Any]] = tin_field.get(filepath, {})
                     if isinstance(tin_stats_raw, dict):
-                        tin_stats: dict[str, Any] = tin_stats_raw
+                        tin_stats: Dict[str, Any] = tin_stats_raw
 
                         # Create a readable key for the sample
                         readable_sample = f"{sample} ({filename})"
@@ -214,7 +214,7 @@ class MultiqcModule(BaseMultiqcModule):
                         }
 
         # Prepare the headers for the TIN summary statistics table
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "Total Transcripts": {
                 "title": "Total Transcripts",
                 "description": "Total number of transcripts",
@@ -258,7 +258,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_passed_failed_reads_table(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a table for passed and failed reads statistics from sequencing_summary.txt files.
@@ -303,7 +303,7 @@ class MultiqcModule(BaseMultiqcModule):
                 failed_data_fmt[readable_key] = value
             failed_data_by_sample[sample] = failed_data_fmt
 
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "GC Content (%)": {
                 "title": "GC Content",
                 "description": "Percentage of G and C bases in the reads",
@@ -382,7 +382,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_base_modification_table(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a base modification statistics table.
@@ -421,7 +421,7 @@ class MultiqcModule(BaseMultiqcModule):
                     del mod_data["base_mod_counts_reverse"]
 
         # Update the keys for each sample
-        base_modification_data_fmt: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = {}
+        base_modification_data_fmt: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for sample, mod_data in base_modification_data.items():
             base_modification_data_fmt[sample] = {}
             if isinstance(mod_data, dict):
@@ -441,7 +441,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Define headers for the base modification statistics table
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "Total Predictions": {
                 "title": "Total Predictions",
                 "description": "Total number of base modification predictions",
@@ -497,7 +497,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_base_alignment_type_table(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a base alignment type statistics table.
@@ -505,7 +505,7 @@ class MultiqcModule(BaseMultiqcModule):
         mapped_dict = {sample: sample_data.get("base_alignment", 0) for sample, sample_data in data.items()}
 
         # Update the keys for each sample
-        mapped_dict_fmt: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = {}
+        mapped_dict_fmt: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for sample, aligned_data in mapped_dict.items():
             mapped_dict_fmt[sample] = {}
             if isinstance(aligned_data, dict):
@@ -514,7 +514,7 @@ class MultiqcModule(BaseMultiqcModule):
                     mapped_dict_fmt[sample][readable_key] = value
 
         # Define headers for the base alignment statistics table
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "Matched Bases": {
                 "title": "Matched Bases",
                 "description": "Number of bases that matched the reference",
@@ -561,7 +561,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_read_alignment_type_table(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a read alignment type statistics table.
@@ -569,7 +569,7 @@ class MultiqcModule(BaseMultiqcModule):
         mapped_dict = {sample: sample_data.get("alignments", 0) for sample, sample_data in data.items()}
 
         # Update the keys for each sample
-        mapped_dict_fmt: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = {}
+        mapped_dict_fmt: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for sample, aligned_data in mapped_dict.items():
             mapped_dict_fmt[sample] = {}
             if isinstance(aligned_data, dict):
@@ -577,7 +577,7 @@ class MultiqcModule(BaseMultiqcModule):
                     readable_key = get_read_alignment_label(key)
                     mapped_dict_fmt[sample][readable_key] = value
 
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "Primary Alignments": {
                 "title": "Primary Alignments",
                 "description": "Number of primary alignments for each read",
@@ -642,7 +642,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_read_alignment_stats(
-        self, data: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]]
+        self, data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]]
     ) -> None:
         """
         Add a read alignment statistics table.
@@ -650,7 +650,7 @@ class MultiqcModule(BaseMultiqcModule):
         mapped_dict = {sample: sample_data.get("mapped", 0) for sample, sample_data in data.items()}
 
         # Update the keys for each sample
-        mapped_dict_fmt: dict[SampleName | str, dict[ColumnKey | str, int | float | str | bool]] = {}
+        mapped_dict_fmt: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], Union[int, float, str, bool]]] = {}
         for sample, aligned_data in mapped_dict.items():
             mapped_dict_fmt[sample] = {}
             if isinstance(aligned_data, dict):
@@ -659,7 +659,7 @@ class MultiqcModule(BaseMultiqcModule):
                     mapped_dict_fmt[sample][readable_key] = value
 
         # Define headers for the read alignment statistics table
-        headers: dict[str | ColumnKey, ColumnDict] | None = {
+        headers: Optional[Dict[Union[str, ColumnKey], ColumnDict]] = {
             "GC Content (%)": {
                 "title": "GC Content",
                 "description": "Percentage of G and C bases in the reads",
@@ -795,11 +795,11 @@ def get_base_mod_label(key: ColumnKey) -> ColumnKey:
 
 
 # def parse_file(raw_text: str) -> Dict[ColumnKey, Union[float, int]]:
-def parse_file(raw_text: str) -> dict[ColumnKey | str, int | float | str | bool]:
+def parse_file(raw_text: str) -> Dict[Union[ColumnKey, str], Union[int, float, str, bool]]:
     """
     Parse the summary.json content from a raw text string and return a dictionary of values.
     """
-    data: dict[ColumnKey | str, int | float | str | bool] = {}
+    data: Dict[Union[ColumnKey, str], Union[int, float, str, bool]] = {}
     json_data = json.loads(raw_text)
     for key, value in json_data.items():
         # Convert keys to readable format
