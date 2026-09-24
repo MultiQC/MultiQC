@@ -41,6 +41,8 @@ class MultiqcModule(BaseMultiqcModule):
              summarization tool for long-read sequencing data.
             """,
             doi="10.1016/j.csbj.2025.01.019",
+            license="MIT",
+            license_url="https://github.com/WGLab/LongReadSum/blob/main/LICENSE",
         )
 
         # Get data by sample
