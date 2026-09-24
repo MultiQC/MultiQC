@@ -640,6 +640,10 @@ mgikit/mgi_sample_reads:
   fn: "*.mgikit.info"
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
+mgnifam:
+  fn: "*_stats.json"
+  contents: '"tool": "mgnifam"'
+  num_lines: 3
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
