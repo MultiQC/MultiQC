@@ -1,8 +1,7 @@
 ---
 title: ATAQV
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Toolkit for quality control and visualization of ATAC-seq data.</p>
+description: "Toolkit for quality control and visualization of ATAC-seq data."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/ataqv/ataqv.py
 -->
 
 :::note
-<p>Toolkit for quality control and visualization of ATAC-seq data.</p>
+Toolkit for quality control and visualization of ATAC-seq data.
 
 [https://github.com/ParkerLab/ataqv/](https://github.com/ParkerLab/ataqv/)
+
+DOI: [10.1093/bioinformatics/btx865](https://doi.org/10.1093/bioinformatics/btx865)
+
+[GNU General Public License v3.0](https://github.com/ParkerLab/ataqv/blob/master/LICENSE)
 :::
 
 ### File search patterns
@@ -28,4 +31,3 @@ ataqv:
   fn: '*.json'
   num_lines: 10
 ```
-    

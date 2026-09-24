@@ -48,12 +48,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="QualiMap",
             anchor="qualimap",
             href="http://qualimap.bioinfo.cipf.es/",
             info="Quality control of alignment data and its derivatives like feature counts.",
             doi=["10.1093/bioinformatics/btv566", "10.1093/bioinformatics/bts503"],
+            license="GNU General Public License v2.0",
+            license_url="https://bitbucket.org/kokonech/qualimap/src/master/LICENSE",
         )
 
         # Initialise the submodules

@@ -22,12 +22,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="STAR",
             anchor="star",
             href="https://github.com/alexdobin/STAR",
             info="Universal RNA-seq aligner.",
             doi="10.1093/bioinformatics/bts635",
+            license="MIT License",
+            license_url="https://github.com/alexdobin/STAR/blob/master/LICENSE",
         )
 
         # Find and load any STAR reports

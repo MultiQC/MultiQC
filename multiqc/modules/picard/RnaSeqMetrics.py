@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from Picard RnaSeqMetrics"""
 
 import logging
+from html import escape
 from typing import Dict
 
 from multiqc.modules.picard import util
@@ -138,7 +139,7 @@ def parse_reports(module):
             rrna_missing.append(s_name)
     if rrna_missing:
         if len(rrna_missing) < 5:
-            missing_samples = f"for samples <code>{'</code>, <code>'.join(rrna_missing)}</code>"
+            missing_samples = "for samples " + ", ".join(f"<code>{escape(s)}</code>" for s in rrna_missing)
         else:
             missing_samples = f"<strong>{len(rrna_missing)} samples</strong>"
         warn_rrna = f"""

@@ -1,8 +1,7 @@
 ---
 title: MetaPhlAn
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Profiles the composition of microbial communities from metagenomic shotgun sequencing data.</p>
+description: "Profiles the composition of microbial communities from metagenomic shotgun sequencing data."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/metaphlan/metaphlan.py
 -->
 
 :::note
-<p>Profiles the composition of microbial communities from metagenomic shotgun sequencing data.</p>
+Profiles the composition of microbial communities from metagenomic shotgun sequencing data.
 
 [https://github.com/biobakery/MetaPhlAn](https://github.com/biobakery/MetaPhlAn)
+
+DOI: [10.1038/s41587-023-01688-w](https://doi.org/10.1038/s41587-023-01688-w)
+
+[MIT License](https://github.com/biobakery/MetaPhlAn/blob/master/license.txt)
 :::
 
 The module supports outputs from MetaPhlAn, that look like the following:
@@ -48,4 +51,3 @@ metaphlan:
   contents: "#clade_name\tNCBI_tax_id\trelative_abundance\t"
   fn: '*.txt'
 ```
-    

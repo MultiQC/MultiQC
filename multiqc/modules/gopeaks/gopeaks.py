@@ -15,15 +15,17 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="GoPeaks",
             anchor="gopeaks",
             href="https://github.com/maxsonBraunLab/gopeaks",
             info="Calls peaks in CUT&TAG/CUT&RUN datasets.",
             extra="""
-            Gopeaks uses a binomial distribution to model the read counts in sliding windows across 
+            Gopeaks uses a binomial distribution to model the read counts in sliding windows across
             the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
+            license="MIT License",
+            license_url="https://github.com/maxsonBraunLab/gopeaks/blob/main/LICENSE",
         )
 
         # data vars ---------------------------------------------------------------------

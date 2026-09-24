@@ -1,8 +1,7 @@
 ---
 title: mgikit
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Demultiplexes FASTQ files from an MGI sequencing instrument.</p>
+description: "Demultiplexes FASTQ files from an MGI sequencing instrument."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/mgikit/mgikit.py
 -->
 
 :::note
-<p>Demultiplexes FASTQ files from an MGI sequencing instrument.</p>
+Demultiplexes FASTQ files from an MGI sequencing instrument.
 
 [https://github.com/sagc-bioinformatics/mgikit](https://github.com/sagc-bioinformatics/mgikit)
+
+DOI: [https://doi.org/10.1101/2024.01.09.574938](https://doi.org/https://doi.org/10.1101/2024.01.09.574938)
+
+[Academic Free License v3.0 (non-commercial only)](https://github.com/sagc-bioinformatics/mgikit/blob/main/LICENSE)
 :::
 
 Possible mgikit output files are:
@@ -56,4 +59,3 @@ mgikit/mgi_sample_stats:
 mgikit/mgi_undetermined_barcode:
   fn: '*.mgikit.undetermined_barcode'
 ```
-    

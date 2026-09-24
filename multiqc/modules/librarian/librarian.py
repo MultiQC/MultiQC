@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Librarian",
             anchor="librarian",
             href="https://github.com/DesmondWillowbrook/Librarian",
@@ -42,6 +42,8 @@ class MultiqcModule(BaseMultiqcModule):
             compositions are extracted and compared against previously published data sets from mouse and human.
             """,
             doi="10.12688/f1000research.125325.1",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DesmondWillowbrook/Librarian/blob/master/COPYING",
         )
 
         # To store the summary data

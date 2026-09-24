@@ -17,13 +17,15 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="fgbio",
             anchor="fgbio",
             target="fgbio",
             href="http://fulcrumgenomics.github.io/fgbio/",
             info="Processing and evaluating data containing UMIs",
             # No publication / DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/fulcrumgenomics/fgbio/blob/master/LICENSE",
         )
 
         # GroupReadsByUmi

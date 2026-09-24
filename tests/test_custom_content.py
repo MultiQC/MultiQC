@@ -1,5 +1,7 @@
+import base64
 import json
 import os
+import re
 import tempfile
 
 import pytest
@@ -887,6 +889,30 @@ sample2,20
     assert section2.description == "<p>This is the description for section 2</p>"
 
 
+def test_data_type_conflict_does_not_crash(tmp_path):
+    """
+    Regression test for https://github.com/MultiQC/MultiQC/issues/3484
+
+    When two custom content files resolve to the same section ID but produce
+    different data types (e.g. heatmap list vs bar dict), the module should
+    warn and overwrite rather than crash with an AssertionError.
+    """
+    # Square CSV: auto-detected as heatmap (data stored as list)
+    dir1 = tmp_path / "dir1"
+    dir1.mkdir()
+    (dir1 / "test_mqc.csv").write_text(",A,B,C\nX,1,2,3\nY,4,5,6\nZ,7,8,9\n")
+
+    # Non-square CSV: auto-detected as bar graph (data stored as dict)
+    dir2 = tmp_path / "dir2"
+    dir2.mkdir()
+    (dir2 / "test_mqc.csv").write_text(",A,B,C\nX,1,2,3\nY,4,5,6\nZ,7,8,9\nW,10,11,12\nQ,13,14,15\n")
+
+    report.analysis_files = [str(dir1), str(dir2)]
+    report.search_files(["custom_content"])
+    modules = custom_module_classes()
+    assert len(modules) >= 1
+
+
 def test_parent_name_without_parent_description(tmp_path):
     """Test that descriptions work when parent_name is set but parent_description is not."""
     file1 = tmp_path / "sample1_mqc.txt"
@@ -915,3 +941,56 @@ sample1,10
     # Check that the section has its description (HTML-wrapped)
     section1 = module.sections[0]
     assert section1.description == "<p>This is the description for section 1</p>"
+
+
+def test_ai_custom_prompt(tmp_path):
+    """Test custom prompt makes it to the AI summary output"""
+    os.chdir(tmp_path)
+
+    file = tmp_path / "ai_custom_prompt_mqc.json"
+    data = {
+        "plot_type": "generalstats",
+        "id": "Genome Info",
+        "pconfig": {
+            "Abundance": {
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "Blues",
+                "format": "{:,.4f}",
+                "description": "Reads assigned to the row's taxon / total read count X 100. This column only factors in reads directly classified to the listed taxon and does not include reads classified to the children of this taxon. The sum of this column is 100.",
+            }
+        },
+        "data": {"Root": {"Abundance": 0.3802136069332063}},
+    }
+    file.write_text(json.dumps(data))
+
+    os.chdir(tmp_path)
+    multiqc.run(
+        file,
+        cfg=ClConfig(
+            run_modules=["custom_content"],
+            ai_summary=False,
+            development=True,
+            ai_prompt_short="Use me short!",
+            ai_prompt_full="Use me full!",
+        ),
+    )
+
+    summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
+    assert summary_path.exists()
+    print(summary_path)
+    # assert that file contains the custom prompt
+    with summary_path.open() as f:
+        assert "Use me short!" in f.read()
+    html_path = tmp_path / "multiqc_report.html"
+    assert html_path.exists()
+    print(html_path)
+    with html_path.open() as f:
+        html = f.read()
+    match = re.search(r'aiPrompts = JSON\.parse\(atob\("([^"]+)"\)\);', html)
+    assert match is not None
+    assert json.loads(base64.b64decode(match.group(1))) == {
+        "short": "Use me short!",
+        "full": "Use me full!",
+    }

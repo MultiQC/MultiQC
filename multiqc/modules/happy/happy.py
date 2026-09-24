@@ -14,12 +14,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         """MultiQC module for processing hap.py output logs"""
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="hap.py",
             anchor="happy",
             href="https://github.com/Illumina/hap.py",
             info="Benchmarks variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
+            license="BSD 2-Clause License",
+            license_url="https://github.com/Illumina/hap.py/blob/master/LICENSE.txt",
         )
 
         self.happy_raw_sample_names = set()

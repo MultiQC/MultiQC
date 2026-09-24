@@ -1,8 +1,7 @@
 ---
 title: iVar
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Functions for viral amplicon-based sequencing.</p>
+description: "Functions for viral amplicon-based sequencing."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/ivar/ivar.py
 -->
 
 :::note
-<p>Functions for viral amplicon-based sequencing.</p>
+Functions for viral amplicon-based sequencing.
 
 [https://github.com/andersen-lab/ivar](https://github.com/andersen-lab/ivar)
+
+DOI: [10.1101/383513](https://doi.org/10.1101/383513)
+
+[GNU General Public License v3.0](https://github.com/andersen-lab/ivar/blob/master/LICENSE)
 :::
 
 This module parses the output from the `ivar trim` command and creates a table view.
@@ -30,4 +33,3 @@ ivar/trim:
   contents: Number of references
   num_lines: 8
 ```
-    

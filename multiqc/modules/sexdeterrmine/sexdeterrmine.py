@@ -9,13 +9,15 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="SexDetErrmine",
             anchor="sexdeterrmine",
             href="https://github.com/TCLamnidis/Sex.DetERRmine",
             info="Calculates relative coverage of X and Y chromosomes and their associated error bars from "
             "the depth of coverage at specified SNPs.",
             doi="10.1038/s41467-018-07483-5",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/TCLamnidis/Sex.DetERRmine/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports

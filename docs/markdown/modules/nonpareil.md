@@ -1,8 +1,7 @@
 ---
 title: Nonpareil
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Estimates metagenomic coverage and sequence diversity.</p>
+description: "Estimates metagenomic coverage and sequence diversity."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/nonpareil/nonpareil.py
 -->
 
 :::note
-<p>Estimates metagenomic coverage and sequence diversity.</p>
+Estimates metagenomic coverage and sequence diversity.
 
 [https://github.com/lmrodriguezr/nonpareil](https://github.com/lmrodriguezr/nonpareil)
+
+DOI: [10.1093/bioinformatics/btt584](https://doi.org/10.1093/bioinformatics/btt584)
+
+[Artistic License 2.0](https://github.com/lmrodriguezr/nonpareil/blob/main/LICENSE.txt)
 :::
 
 Nonpareil uses the redundancy of the reads in a metagenomic dataset to estimate
@@ -50,4 +53,3 @@ nonpareil:
   max_filesize: 1048576
   num_lines: 50
 ```
-    

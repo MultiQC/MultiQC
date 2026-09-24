@@ -126,12 +126,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bamdst",
             anchor="bamdst",
             href="https://https://github.com/shiquan/bamdst",
             info="Lightweight tool to stat the depth coverage of target regions of BAM file(s)",
             # doi="", # No DOI
+            license="MIT License",
+            license_url="https://github.com/shiquan/bamdst/blob/master/LICENSE",
         )
 
         self.cfg = _read_config()
@@ -450,7 +452,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "x",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
                 "ymin": 0,
             }
             if data_labels:
@@ -470,7 +471,6 @@ class MultiqcModule(BaseMultiqcModule):
                 "tt_suffix": "%",
                 "smooth_points": 500,
                 "logswitch": True,
-                "hide_zero_cats": False,
                 "ymax": 100,
                 "ymin": 0,
             }

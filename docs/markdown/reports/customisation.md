@@ -9,6 +9,8 @@ MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
+Most of the settings on this page live in `multiqc_config.yaml`. The [Config Wizard](../getting_started/config_wizard.md) helps you to build one in the browser with validation as you type.
+
 Note that much more extensive customisation of reports is possible using
 [custom templates](../development/templates.md).
 
@@ -45,20 +47,33 @@ show_analysis_paths: False
 show_analysis_time: False
 ```
 
-## Report Logo
+## Report Logo / Favicon
 
 To add your own custom logo to reports, you can add the following
-three lines to your MultiQC configuration file:
+lines to your MultiQC configuration file:
 
 ```yaml
 custom_logo: "/abs/path/to/logo.png"
+custom_logo_dark: "/abs/path/to/logo-for-dark-mode.png"
 custom_logo_url: "https://www.example.com"
 custom_logo_title: "Our Institute Name"
+custom_logo_width: 200 # Width in pixels
 ```
 
 Only `custom_logo` is needed. The URL will make the logo open up
 a new web browser tab with your address and the title sets the mouse
-hover title text.
+hover title text. Width allows you to adjust the logo size and dark
+lets you have an alternate variant shown when the report is in dark mode.
+
+If you like, you can also provide a custom favicon (the icon shown in the browser
+address bar):
+
+```yaml
+custom_favicon: "/abs/path/to/favicon.png"
+```
+
+Favicons and logos can be any of the following file formats:
+`.png`, `.svg`, `.ico`, `.gif`, `.jpg`, `.jpeg`, `.webp`.
 
 ## Project level information
 
@@ -509,6 +524,17 @@ Alternatively, you can set the following config flag in your MultiQC config:
 skip_generalstats: true
 ```
 
+#### General Statistics Help Text
+
+You can add a help button with collapsible explanatory text to the General Statistics table
+using the `general_stats_helptext` config option:
+
+```yaml
+general_stats_helptext: "This table shows key metrics for all samples. Click column headers to sort."
+```
+
+When set, a "Help" button will appear that users can click to expand a help text box.
+
 ## Order of modules
 
 By default, modules are included in the report as in the order specified in `config.module_order`.
@@ -554,16 +580,22 @@ These overwrite the defaults that are hardcoded in the module code. `path_filter
 | [seq]   | matches any character in seq     |
 | [!seq]  | matches any character not in seq |
 
-Note that exclusion superseeds inclusion for the path filters.
+Note that exclusion supersedes inclusion for the path filters.
 
 The other available configuration options are:
 
 - `name`: Section name
 - `anchor`: Section report ID
-- `target`: Intro link text
-- `href`: Intro link URL
-- `info`: Intro text
-- `extra`: Additional HTML after intro.
+- `href`: Tool homepage URL (or list of URLs)
+- `doi`: DOI (or list of DOIs)
+- `license`: Software license name (shown in the Software Versions section)
+- `license_url`: URL to the software license text
+- `info`: Intro text, rendered as markdown
+- `comment`: Comment text, rendered as markdown
+- `extra`: Additional HTML after intro
+- `path_filters`: Glob patterns; only files matching these are used by this module run
+- `path_filters_exclude`: Glob patterns; files matching these are excluded
+- `generalstats`: Set to `false` to suppress this module's General Statistics columns
 - `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
@@ -575,7 +607,6 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      target: ""
       path_filters:
         - "*_1_trimmed_fastqc.zip"
   - cutadapt
@@ -682,7 +713,7 @@ custom_plot_config:
   # Add a coloured band in the background to show what is a good result
   # Yes I know this doesn't make sense for this plot, it's just an example ;)
   bismark_mbias:
-    yPlotBands:
+    y_bands:
       - from: 0
         to: 40
         color: "#e6c3c3"
@@ -693,6 +724,25 @@ custom_plot_config:
         to: 100
         color: "#c3e6c3"
 ```
+
+### Targeting a single tab in a multi-dataset plot
+
+Some plots have a tab switch between multiple datasets — for example, the `samtools-coverage` line plot has tabs for _Reads_, _Bases_, _Coverage_, _Mean depth_, _BQ_ and _MQ_. By default, settings under a plot ID apply to every tab.
+
+To apply a setting to **just one tab**, nest it under `data_labels:` and key by the tab name (the label shown on the tab button):
+
+```yaml
+custom_plot_config:
+  samtools-coverage:
+    data_labels:
+      MQ:
+        y_bands:
+          - from: 50
+            to: 60
+            color: "#c3e6c3"
+```
+
+You can also use the integer position of the tab (`0:` for the first, `1:` for the second, …) if that is more convenient. Mix tab-level keys with plot-level keys freely — plot-level settings still apply to every tab, and tab-level settings layer on top of one specific tab.
 
 ## Customising tables
 
@@ -877,6 +927,8 @@ The following comparison operators are available:
 - `ne` - Value does not equal
 - `gt` - Value is greater than
 - `lt` - Value is less than
+- `ge` - Value is greater than or equal to
+- `le` - Value is less than or equal to
 
 To have matches for a specific table or column, use that ID instead of `all_columns`.
 
@@ -1104,3 +1156,16 @@ Each module must be configured to use this config option. If you find a MultiQC 
 :::tip
 This only works for tables, and doesn't affect plots. You might want to combine this option with `module_order` to [repeat the module in the report](#running-modules-multiple-times) for each grouping criteria, e.g., FastQC could be repeated for trimmed and untrimmed reads.
 :::
+
+### Modules with built-in auto-grouping
+
+Some modules know exactly which samples are paired from their own log output and group them automatically.
+
+If you also set `table_sample_merge`, the patterns layer on top of the auto-derived groups. For example, you can let the module group R1+R2 automatically and use `table_sample_merge` to additionally group multiple lanes of the same pair.
+
+Module that do this should expose an opt-out flag if you'd prefer per-sample rows everywhere. For example, with Trim Galore:
+
+```yaml
+trim_galore_config:
+  auto_group_pairs: false
+```

@@ -9,12 +9,14 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Sargasso",
             anchor="sargasso",
             href="http://biomedicalinformaticsgroup.github.io/Sargasso/",
             info="Separates mixed-species RNA-seq reads according to their species of origin.",
             doi="10.1038/s41596-018-0029-2",
+            license="MIT License",
+            license_url="https://github.com/biomedicalinformaticsgroup/sargasso/blob/master/LICENSE.txt",
         )
 
         # Find and load any Sargasso reports

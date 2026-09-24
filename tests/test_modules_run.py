@@ -51,6 +51,31 @@ def test_all_modules(module_id, entry_point, data_dir):
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0
 
 
+def test_bcftools_stats_zero_depth_samples(tmp_path):
+    """All-zero average depth values should still render a sequencing-depth plot."""
+    stats_file = tmp_path / "rotavirus.stats.txt"
+    stats_file.write_text(
+        """# This file was produced by bcftools stats (1.19+htslib-1.19.1) and can be plotted using plot-vcfstats.
+ID\t0\trotavirus.vcf.gz
+SN\t0\tnumber of records:\t2
+SN\t0\tnumber of SNPs:\t2
+ST\t0\tA>C\t2
+PSC\t0\tS1\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
+PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
+"""
+    )
+
+    report.analysis_files = [stats_file]
+    report.search_files(["bcftools"])
+
+    from multiqc.modules.bcftools.bcftools import MultiqcModule
+
+    module = MultiqcModule()
+
+    assert "bcftools-stats_sequencing_depth" in {section.id for section in module.sections}
+    assert "bcftools-stats-sequencing-depth" in report.plot_by_id
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """

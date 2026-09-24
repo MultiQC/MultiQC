@@ -1,0 +1,21 @@
+{
+  "Settings": [
+    {
+      "Lane": 1,
+      "AdapterTrimType": "N/A",
+      "R1AdapterMinimumTrimmedLength": "N/A",
+      "R2AdapterMinimumTrimmedLength": "N/A"
+    }
+  ],
+  "Samples": [
+    {
+      "SampleName": "Sample1",
+      "Indexes": [
+        {
+          "Index1": "AAA",
+          "Index2": "TTT"
+        }
+      ]
+    }
+  ]
+}

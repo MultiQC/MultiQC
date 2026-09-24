@@ -40,12 +40,14 @@ class MultiqcModule(BaseMultiqcModule):
         info="Profiles the composition of microbial communities from metagenomic shotgun sequencing data.",
         doi="10.1038/s41587-023-01688-w",
     ):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=name,
             anchor=anchor,
             href=href,
             info=info,
             doi=doi,
+            license="MIT License",
+            license_url="https://github.com/biobakery/MetaPhlAn/blob/master/license.txt",
         )
         # Custom options from user config that can overwrite base module values
         self.t_ranks = {

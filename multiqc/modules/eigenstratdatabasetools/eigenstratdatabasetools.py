@@ -8,13 +8,15 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="eigenstratdatabasetools",
             anchor="eigenstrat",
             href="https://github.com/TCLamnidis/EigenStratDatabaseTools",
             info="Tools to compare and manipulate the contents of EingenStrat databases, and to calculate "
             "SNP coverage statistics in such databases.",
             # No publication / DOI // doi=
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/TCLamnidis/EigenStratDatabaseTools/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports

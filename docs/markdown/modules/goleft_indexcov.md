@@ -1,8 +1,7 @@
 ---
 title: goleft indexcov
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution.</p>
+description: "Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/goleft_indexcov/goleft
 -->
 
 :::note
-<p>Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution.</p>
+Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution.
 
 [https://github.com/brentp/goleft/tree/master/indexcov](https://github.com/brentp/goleft/tree/master/indexcov)
+
+DOI: [10.1093/gigascience/gix090](https://doi.org/10.1093/gigascience/gix090)
+
+[MIT License](https://github.com/brentp/goleft/blob/master/LICENSE)
 :::
 
 This is useful as a quick QC to get coverage values across the genome.
@@ -52,4 +55,3 @@ goleft_indexcov/ped:
 goleft_indexcov/roc:
   fn: '*-indexcov.roc'
 ```
-    

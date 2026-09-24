@@ -246,8 +246,17 @@ kbd {
   column-gap: 10px;
 }
 
+.general-stats-help-btn {
+  overflow: auto;
+}
+
 h2.mqc-module-title {
   margin: 0;
+}
+
+/* help button is floated, ensure it is still bounded/contained */
+h3.mqc-section-name-helpbutton {
+  overflow: auto;
 }
 
 #analysis_dirs_wrapper {
@@ -973,10 +982,10 @@ tbody .sorthandle {
     display: none;
   }
 
-  /* make sure logos aren't dominantly huge */
+  /* make sure logos aren't excessively huge - can be overwritten with config.custom_logo_width */
   .multiqc_logo,
   .custom_logo {
-    width: 200px;
+    max-width: 200px;
   }
 
   /* print cell background colors in table */

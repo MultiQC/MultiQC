@@ -26,12 +26,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="UMICollapse",
             anchor="umicollapse",
             href="https://github.com/Daniel-Liu-c0deb0t/UMICollapse",
             info="Algorithms for efficiently collapsing reads with Unique Molecular Identifiers",
             doi="10.7717/peerj.8275",
+            license="MIT License",
+            license_url="https://github.com/Daniel-Liu-c0deb0t/UMICollapse/blob/master/LICENSE",
         )
 
         data_by_sample = dict()
@@ -155,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
                 keys,
                 {
                     "id": "umicollapse_deduplication_barplot",
-                    "title": "UMI-tools: Deduplication Counts",
+                    "title": "UMICollapse: Deduplication Counts",
                     "ylab": "# Reads",
                     "cpswitch_counts_label": "Number of Reads",
                 },

@@ -284,11 +284,13 @@ class MultiqcModule(BaseMultiqcModule):
         # No DOI to cite // doi=
         tools=tuple(TOOLS),
     ):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name=name,
             anchor=anchor,
             href=href,
             info=info,
+            license="MIT License",
+            license_url="https://github.com/broadinstitute/picard/blob/master/LICENSE.txt",
         )
 
         # Set up class objects to hold parsed data

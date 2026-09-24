@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Illumina InterOp Statistics",
             anchor="interop",
             href="http://illumina.github.io/interop/index.html",
@@ -34,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
             of a subset of the original data (collapsed quality scores).
             """,
             # No publication / DOI // doi=
+            license="PolyForm Strict License 1.0.0",
+            license_url="https://github.com/Illumina/interop/blob/master/LICENSE",
         )
 
         log = logging.getLogger(__name__)

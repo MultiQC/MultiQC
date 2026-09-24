@@ -174,6 +174,6 @@ class PlotFingerprintMixin:
             v2 = dict()
             v2[0.0] = 0.0
             for _ in x:
-                v2[xp[_]] = cs[_]
+                v2[float(xp[_])] = float(cs[_])
             d[k] = v2
         return d

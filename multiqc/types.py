@@ -1,10 +1,10 @@
 import dataclasses
 import io
 from enum import Enum
-from typing import Generic, List, NewType, Optional, TypeVar, Union
+from typing import ClassVar, Generic, List, NewType, Optional, TypeVar, Union
 
 # Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)
@@ -15,6 +15,19 @@ ColumnKey = NewType("ColumnKey", str)
 SectionKey = NewType("SectionKey", str)
 SampleName = NewType("SampleName", str)
 SampleGroup = NewType("SampleGroup", str)
+
+
+@dataclasses.dataclass
+class SoftwareVersionMetadata:
+    """
+    FAIR metadata about a software tool, shown alongside its version(s) in the
+    Software Versions section of the report: the software license and its
+    citation DOI(s).
+    """
+
+    license: Optional[str] = None
+    license_url: Optional[str] = None
+    doi: List[str] = dataclasses.field(default_factory=list)
 
 
 class FileDict(TypedDict):
@@ -98,6 +111,22 @@ class SampleNameMeta:
     labels: List[str] = dataclasses.field(default_factory=list)
 
 
+class SectionAlert(BaseModel):
+    valid_levels: ClassVar[set[str]] = {"primary", "secondary", "success", "danger", "warning", "info", "light", "dark"}
+
+    message: str
+    level: str = "info"
+    affected_samples: List[str] = Field(default_factory=list)
+
+    @field_validator("level")
+    @classmethod
+    def validate_level(cls, level: str) -> str:
+        if level not in cls.valid_levels:
+            valid_levels = ", ".join(sorted(cls.valid_levels))
+            raise ValueError(f"Alert level must be one of: {valid_levels}")
+        return level
+
+
 class Section(BaseModel):
     name: str
     anchor: Anchor
@@ -115,3 +144,4 @@ class Section(BaseModel):
     plot_anchor: Optional[Anchor] = None
     ai_summary: str = ""
     status_bar_html: str = ""
+    alerts: List[SectionAlert] = Field(default_factory=list)

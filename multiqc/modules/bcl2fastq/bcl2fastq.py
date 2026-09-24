@@ -23,12 +23,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="bcl2fastq",
             anchor="bcl2fastq",
             href="https://support.illumina.com/sequencing/sequencing_software/bcl2fastq-conversion-software.html",
             info="Demultiplexes data and converts BCL files to FASTQ file formats for downstream analysis.",
             # Can't find a DOI // doi=
+            # Proprietary (Illumina bcl2fastq); license could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Gather data from all json files

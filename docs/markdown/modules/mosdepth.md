@@ -1,8 +1,7 @@
 ---
 title: Mosdepth
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.</p>
+description: "Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/mosdepth/mosdepth.py
 -->
 
 :::note
-<p>Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.</p>
+Fast BAM/CRAM depth calculation for WGS, exome, or targeted sequencing.
 
 [https://github.com/brentp/mosdepth](https://github.com/brentp/mosdepth)
+
+DOI: [10.1093/bioinformatics/btx699](https://doi.org/10.1093/bioinformatics/btx699)
+
+[MIT License](https://github.com/brentp/mosdepth/blob/master/LICENSE)
 :::
 
 Mosdepth can generate several output files all with a common prefix and different endings:
@@ -125,4 +128,3 @@ mosdepth/region_dist:
 mosdepth/summary:
   fn: '*.mosdepth.summary.txt'
 ```
-    

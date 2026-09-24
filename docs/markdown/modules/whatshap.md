@@ -1,8 +1,7 @@
 ---
 title: WhatsHap
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly).</p>
+description: "Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/whatshap/whatshap.py
 -->
 
 :::note
-<p>Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly).</p>
+Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly).
 
 [https://whatshap.readthedocs.io/](https://whatshap.readthedocs.io/)
+
+DOI: [10.1101/085050](https://doi.org/10.1101/085050)
+
+[MIT License](https://github.com/whatshap/whatshap/blob/master/LICENSE)
 :::
 
 The module is currently restricted to the output from `whatshap stats --tsv`.
@@ -29,4 +32,3 @@ whatshap/stats:
   contents: "#sample\tchromosome\tfile_name\tvariants\tphased\tunphased\tsingletons"
   num_lines: 1
 ```
-    

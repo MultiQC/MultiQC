@@ -1,8 +1,7 @@
 ---
 title: SNPsplit
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
+description: "Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/snpsplit/snpsplit.py
 -->
 
 :::note
-<p>Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.</p>
+Allele-specific alignment sorter. Determines allelic origin of reads that cover known SNP positions.
 
 [https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/](https://www.bioinformatics.babraham.ac.uk/projects/SNPsplit/)
+
+DOI: [10.12688/f1000research.9037.2](https://doi.org/10.12688/f1000research.9037.2)
+
+[GNU General Public License v3.0](https://github.com/FelixKrueger/SNPsplit/blob/master/LICENSE)
 :::
 
 Currently only the "Allele-tagging" and "Allele-sorting" reports are supported.
@@ -37,4 +40,3 @@ snpsplit/old:
   contents: 'Writing allele-flagged output file to:'
   num_lines: 2
 ```
-    

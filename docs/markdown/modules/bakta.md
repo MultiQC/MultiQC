@@ -1,8 +1,7 @@
 ---
 title: Bakta
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Rapid &amp; standardized annotation of bacterial genomes, MAGs &amp; plasmids.</p>
+description: "Rapid & standardized annotation of bacterial genomes, MAGs & plasmids."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/bakta/bakta.py
 -->
 
 :::note
-<p>Rapid &amp; standardized annotation of bacterial genomes, MAGs &amp; plasmids.</p>
+Rapid & standardized annotation of bacterial genomes, MAGs & plasmids.
 
 [https://github.com/oschwengers/bakta](https://github.com/oschwengers/bakta)
+
+DOI: [10.1099/mgen.0.000685](https://doi.org/10.1099/mgen.0.000685)
+
+[GNU General Public License v3.0](https://github.com/oschwengers/bakta/blob/main/LICENSE)
 :::
 
 The module analyses summary results from the Bakta annotation pipeline for bacterial genomes. The
@@ -31,4 +34,3 @@ bakta:
   contents: 'Bakta:'
   fn: '*.txt'
 ```
-    

@@ -48,12 +48,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="RSeQC",
             anchor="rseqc",
             href="http://rseqc.sourceforge.net/",
             info="Evaluates high throughput RNA-seq data.",
             doi="10.1093/bioinformatics/bts356",
+            license="GNU General Public License v3.0",
+            license_url="https://rseqc.sourceforge.net/",
         )
 
         # Get the list of submodules (can be customised)

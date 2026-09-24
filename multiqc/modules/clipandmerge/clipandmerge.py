@@ -15,12 +15,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ClipAndMerge",
             anchor="clipandmerge",
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="Adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/apeltzer/ClipAndMerge/blob/master/LICENSE",
         )
 
         # Find and load any ClipAndMerge reports

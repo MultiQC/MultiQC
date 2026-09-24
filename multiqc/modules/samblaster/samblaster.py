@@ -12,12 +12,14 @@ VERSION_REGEX = r"Version\ (\d{1}.\d+.\d+)"
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Samblaster",
             anchor="samblaster",
             href="https://github.com/GregoryFaust/samblaster",
             info="Marks duplicates and extracts discordant and split reads from sam files.",
             doi="10.1093/bioinformatics/btu314",
+            license="MIT License",
+            license_url="https://github.com/GregoryFaust/samblaster/blob/master/LICENSE.txt",
         )
 
         self.samblaster_data = dict()

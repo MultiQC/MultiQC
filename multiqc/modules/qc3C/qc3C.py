@@ -130,21 +130,23 @@ def color_picker(degen):
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="qc3C",
             anchor="qc3C",
             href="http://github.com/cerebis/qc3C",
             info="Reference-free and BAM based quality control for Hi-C data",
             extra="""
-            qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product 
-            of proximity ligation -- in effect the Hi-C signal strength. Using a k-mer based approach, signal strength 
-            is inferred directly from reads and therefore no reference is required. Reference based assessment is also 
+            qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product
+            of proximity ligation -- in effect the Hi-C signal strength. Using a k-mer based approach, signal strength
+            is inferred directly from reads and therefore no reference is required. Reference based assessment is also
             available and can provide further details.
-        
-            With this information in hand, researchers are able to decide how much sequencing will be needed to achieve 
+
+            With this information in hand, researchers are able to decide how much sequencing will be needed to achieve
             their experimental aims.
             """,
             doi="10.1371/journal.pcbi.1008839",
+            license="GNU Affero General Public License v3.0",
+            license_url="https://github.com/cerebis/qc3C/blob/master/LICENSE",
         )
 
         self.qc3c_data: Dict[str, Dict] = defaultdict(dict)
@@ -950,7 +952,7 @@ class MultiqcModule(BaseMultiqcModule):
                     if parsed[k] is None:
                         parsed[k] = "Error - adjusted value would exceed 100"
                     else:
-                        parsed[k] = np.array(parsed[k]).mean() * 100
+                        parsed[k] = float(np.array(parsed[k]).mean() * 100)
 
                 self.qc3c_data["kmer"][s_name] = {
                     "k_qc3C_version": parsed["runtime_info"]["qc3C_version"],

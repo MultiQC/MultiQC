@@ -1,8 +1,7 @@
 ---
 title: SortMeRNA
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.</p>
+description: "Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/sortmerna/sortmerna.py
 -->
 
 :::note
-<p>Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.</p>
+Program for filtering, mapping and OTU-picking NGS reads in metatranscriptomic and metagenomic data.
 
 [http://bioinfo.lifl.fr/RNA/sortmerna/](http://bioinfo.lifl.fr/RNA/sortmerna/)
+
+DOI: [10.1093/bioinformatics/bts611](https://doi.org/10.1093/bioinformatics/bts611)
+
+[GNU General Public License v3.0](https://github.com/biocore/sortmerna/blob/master/LICENSE.txt)
 :::
 
 The core algorithm is based on approximate seeds and allows for fast and sensitive analyses of nucleotide sequences. The main application of SortMeRNA is filtering ribosomal RNA from metatranscriptomic data.
@@ -37,4 +40,3 @@ sortmerna:
 sortmerna:
   contents: Minimal SW score based on E-value
 ```
-    

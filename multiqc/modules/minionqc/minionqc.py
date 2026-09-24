@@ -18,7 +18,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MinIONQC",
             anchor="minionqc",
             href="https://github.com/roblanf/minion_qc",
@@ -29,6 +29,8 @@ class MultiqcModule(BaseMultiqcModule):
             multiple flowcells
             """,
             doi="10.1093/bioinformatics/bty654",
+            license="MIT License",
+            license_url="https://github.com/roblanf/minion_qc/blob/master/LICENSE",
         )
 
         # Find and load any minionqc reports

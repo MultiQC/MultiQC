@@ -20,12 +20,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Snippy",
             anchor="snippy",
             href="https://github.com/tseemann/snippy",
             info="Rapid haploid variant calling and core genome alignment.",
             # Can't find a DOI // doi=
+            license="GNU General Public License v2.0",
+            license_url="https://github.com/tseemann/snippy/blob/master/LICENSE",
         )
 
         data_by_sample: Dict[str, Dict] = {}

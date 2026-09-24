@@ -50,7 +50,7 @@ npm run watch
 - **Always edit source files** in `src/js/` and `src/scss/`
 - **NEVER add inline styles** like `style="--bs-btn-padding-y: .25rem;`, use `custom.scss` if you must.
 - Run `npm run build` after making changes before committing
-- The build is also run automatically by pre-commit hooks
+- The build is also run automatically by prek hooks
 
 ## Source Files
 

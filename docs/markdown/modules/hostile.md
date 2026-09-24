@@ -1,8 +1,7 @@
 ---
 title: Hostile
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].</p>
+description: "Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz]."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/hostile/hostile.py
 -->
 
 :::note
-<p>Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].</p>
+Removes host sequences from short and long read (meta)genomes, from paired or unpaired fastq[.gz].
 
 [https://github.com/bede/hostile](https://github.com/bede/hostile)
+
+DOI: [10.1093/bioinformatics/btad728](https://doi.org/10.1093/bioinformatics/btad728)
+
+[MIT License](https://github.com/bede/hostile/blob/main/LICENSE)
 :::
 
 Hostile write the log in JSON format. Which is being used to generate the report.
@@ -66,4 +69,3 @@ hostile:
   fn: '*.json'
   num_lines: 100
 ```
-    

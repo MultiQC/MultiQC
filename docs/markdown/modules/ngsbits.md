@@ -1,8 +1,7 @@
 ---
 title: ngs-bits
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Calculating statistics from FASTQ, BAM, and VCF.</p>
+description: "Calculating statistics from FASTQ, BAM, and VCF."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/ngsbits/ngsbits.py
 -->
 
 :::note
-<p>Calculating statistics from FASTQ, BAM, and VCF.</p>
+Calculating statistics from FASTQ, BAM, and VCF.
 
 [https://github.com/imgag/ngs-bits](https://github.com/imgag/ngs-bits)
+
+DOI: [10.1093/bioinformatics/btx032](https://doi.org/10.1093/bioinformatics/btx032)
+
+[MIT License](https://github.com/imgag/ngs-bits/blob/master/LICENSE)
 :::
 
 The ngs-bits module parses XML output generated for several tools in the ngs-bits collection:
@@ -42,4 +45,3 @@ ngsbits/readqc:
 ngsbits/samplegender:
 - fn: '*_ngsbits_sex.tsv'
 ```
-    

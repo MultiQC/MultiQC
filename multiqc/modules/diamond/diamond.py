@@ -15,7 +15,7 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DIAMOND",
             anchor="diamond",
             href="https://github.com/bbuchfink/diamond",
@@ -28,6 +28,8 @@ class MultiqcModule(BaseMultiqcModule):
             - Various output formats, including BLAST pairwise, tabular and XML, as well as taxonomic classification.
             """,
             doi="10.1038/s41592-021-01101-x",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/bbuchfink/diamond/blob/master/LICENSE",
         )
 
         # Find and load any DIAMOND reports

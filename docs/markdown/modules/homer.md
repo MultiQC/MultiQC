@@ -1,8 +1,7 @@
 ---
 title: HOMER
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Motif discovery and next-gen sequencing analysis.</p>
+description: "Motif discovery and next-gen sequencing analysis."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/homer/homer.py
 -->
 
 :::note
-<p>Motif discovery and next-gen sequencing analysis.</p>
+Motif discovery and next-gen sequencing analysis.
 
 [http://homer.ucsd.edu/homer/](http://homer.ucsd.edu/homer/)
+
+DOI: [10.1016/j.molcel.2010.05.004](https://doi.org/10.1016/j.molcel.2010.05.004)
+
+[GNU General Public License v3.0](http://homer.ucsd.edu/homer/)
 :::
 
 HOMER contains many useful tools for analyzing ChIP-Seq, GRO-Seq, RNA-Seq, DNase-Seq, Hi-C and numerous
@@ -56,4 +59,3 @@ homer/genomeGCcontent:
 homer/tagInfo:
   fn: tagInfo.txt
 ```
-    

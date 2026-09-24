@@ -100,6 +100,16 @@ class HeatmapPlot extends Plot {
     let [rows, xcats, ycats] = this.prepData();
     if (rows.length === 0 || xcats.length === 0 || ycats.length === 0) return [];
 
+    // Update layout tick labels to match current (possibly clustered) category order
+    if (this.layout.yaxis.tickmode === "array") {
+      this.layout.yaxis.ticktext = ycats;
+      this.layout.yaxis.tickvals = [...Array(ycats.length).keys()];
+    }
+    if (this.layout.xaxis.tickmode === "array") {
+      this.layout.xaxis.ticktext = xcats;
+      this.layout.xaxis.tickvals = [...Array(xcats.length).keys()];
+    }
+
     if (this.filtYCatsSettings.length > 0) {
       const maxYTicks = (this.layout.height - 200) / 12;
       this.recalculateTicks(this.filtYCatsSettings, this.layout.yaxis, maxYTicks);

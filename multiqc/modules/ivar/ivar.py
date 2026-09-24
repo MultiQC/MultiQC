@@ -15,12 +15,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="iVar",
             anchor="iVar",
             href="https://github.com/andersen-lab/ivar",
             info="Functions for viral amplicon-based sequencing.",
             doi="10.1101/383513",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/andersen-lab/ivar/blob/master/LICENSE",
         )
 
         # Find and load iVar trim results

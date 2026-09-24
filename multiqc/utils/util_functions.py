@@ -7,7 +7,6 @@ import math
 import shutil
 import sys
 import time
-from collections import OrderedDict, defaultdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -76,7 +75,7 @@ def replace_defaultdicts(data: Any) -> Any:
     """
 
     def _replace(obj: Any) -> Any:
-        if isinstance(obj, (defaultdict, OrderedDict, dict)):
+        if isinstance(obj, dict):
             return {k: _replace(v) for k, v in obj.items()}
         elif isinstance(obj, list):
             return [_replace(v) for v in obj]
@@ -162,7 +161,8 @@ def is_running_in_notebook() -> bool:
     try:
         from IPython import get_ipython  # type: ignore
 
-        if "IPKernelApp" in get_ipython().config:
+        ipython = get_ipython()
+        if ipython is not None and "IPKernelApp" in ipython.config:
             return True
     except (ImportError, AttributeError):
         pass

@@ -24,7 +24,7 @@ def cached_spectra_colour_scale(colours: Tuple[str]):
     return spectra.scale(list(colours))
 
 
-class mqc_colour_scale(object):
+class mqc_colour_scale:
     """Class to hold a colour scheme."""
 
     # ColorBrewer colours, taken from Chroma.js source code

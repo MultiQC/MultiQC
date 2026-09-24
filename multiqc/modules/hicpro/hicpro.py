@@ -20,12 +20,14 @@ class MultiqcModule(BaseMultiqcModule):
     """HiC-Pro module, parses log and stats files saved by HiC-Pro."""
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiC-Pro",
             anchor="hicpro",
             href="https://github.com/nservant/HiC-Pro",
             info="Pipeline for Hi-C data processing",
             doi="10.1186/s13059-015-0831-x",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/nservant/HiC-Pro/blob/master/LICENSE",
         )
 
         # Find and load any HiC-Pro summary reports

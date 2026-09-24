@@ -29,12 +29,14 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HOMER",
             anchor="homer",
             href="http://homer.ucsd.edu/homer/",
             info="Motif discovery and next-gen sequencing analysis.",
             doi="10.1016/j.molcel.2010.05.004",
+            license="GNU General Public License v3.0",
+            license_url="http://homer.ucsd.edu/homer/",
         )
 
         # Set up class objects to hold parsed data

@@ -18,12 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Pychopper",
             anchor="pychopper",
             href="https://github.com/nanoporetech/pychopper",
             info="Identifies, orients, trims and rescues full length Nanopore cDNA reads. Can also rescue fused reads.",
             # Can't find a DOI // doi=
+            license="Mozilla Public License 2.0",
+            license_url="https://github.com/nanoporetech/pychopper/blob/master/LICENSE.md",
         )
 
         # Parse stats file

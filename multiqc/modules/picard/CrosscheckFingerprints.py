@@ -2,7 +2,7 @@
 
 import logging
 import re
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from csv import DictReader
 from itertools import chain, groupby
 
@@ -60,7 +60,7 @@ def parse_reports(module):
         if not lines:
             continue
         found_reports.append(f["s_name"])
-        for row_number, row in lines:
+        for row_number_in_lines, row in lines:
             # Clean the sample names
             row["LEFT_SAMPLE"] = module.clean_s_name(row["LEFT_SAMPLE"], f)
             row["LEFT_GROUP_VALUE"] = module.clean_s_name(row["LEFT_GROUP_VALUE"], f)
@@ -72,7 +72,7 @@ def parse_reports(module):
             # Set the cli options of interest for this file
             row["LOD_THRESHOLD"] = lod_threshold
             row["TUMOR_AWARENESS"] = tumor_awareness
-            row_by_number[row_number] = row
+            row_by_number[row_number_in_lines] = row
 
             try:
                 row["LOD_SCORE"] = float(row["LOD_SCORE"])
@@ -331,7 +331,7 @@ def _get_table_headers(data_by_sample):
             "RIGHT_GROUP_VALUE",
         ] + table_cols
 
-    headers = OrderedDict()
+    headers = {}
     for h in FIELD_DESCRIPTIONS:
         # Skip anything not set to visible
         if h not in table_cols:

@@ -20,12 +20,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="RSEM",
             anchor="rsem",
             href="https://deweylab.github.io/RSEM/",
             info="Estimates gene and isoform expression levels from RNA-Seq data.",
             doi="10.1186/1471-2105-12-323",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/deweylab/RSEM/blob/master/COPYING",
         )
 
         self.rsem_mapped_data = dict()

@@ -1,8 +1,7 @@
 ---
 title: SeqyClean
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Filters adapters, vectors, and contaminants while quality trimming.</p>
+description: "Filters adapters, vectors, and contaminants while quality trimming."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/seqyclean/seqyclean.py
 -->
 
 :::note
-<p>Filters adapters, vectors, and contaminants while quality trimming.</p>
+Filters adapters, vectors, and contaminants while quality trimming.
 
 [https://github.com/ibest/seqyclean](https://github.com/ibest/seqyclean)
+
+DOI: [10.1145/3107411.3107446](https://doi.org/10.1145/3107411.3107446)
+
+[MIT License](https://github.com/ibest/seqyclean/blob/master/LICENSE)
 :::
 
 SeqyClean is a comprehensive preprocessing software application for NGS reads, that removes noise from FastQ
@@ -31,4 +34,3 @@ The module parses the `*SummaryStatistics.tsv` files that results from a SeqyCle
 seqyclean:
   fn: '*_SummaryStatistics.tsv'
 ```
-    

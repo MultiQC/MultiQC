@@ -23,7 +23,7 @@ class MultiqcModule(BaseMultiqcModule):
             developers optimise how they run MultiQC, to get the most efficient
             and fastest configuration possible. For more information, see the
             <a href="https://docs.seqera.io/multiqc/#optimising-run-time" target="_blank">MultiQC documentation</a>"""
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Run time " + ("and memory " if config.profile_memory else "") + "profiling",
             anchor=Anchor("multiqc_runtime"),
             info=info,

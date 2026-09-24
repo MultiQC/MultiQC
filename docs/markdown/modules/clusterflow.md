@@ -1,8 +1,7 @@
 ---
 title: Cluster Flow
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Simple and flexible bioinformatics pipeline tool.</p>
+description: "Simple and flexible bioinformatics pipeline tool."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/clusterflow/clusterflo
 -->
 
 :::note
-<p>Simple and flexible bioinformatics pipeline tool.</p>
+Simple and flexible bioinformatics pipeline tool.
 
 [http://clusterflow.io](http://clusterflow.io)
+
+DOI: [10.12688/f1000research.10335.2](https://doi.org/10.12688/f1000research.10335.2)
+
+[GNU General Public License v3.0](https://github.com/ewels/clusterflow/blob/master/license.txt)
 :::
 
 The module for Cluster Flow parses `*_clusterflow.txt` logs
@@ -37,4 +40,3 @@ clusterflow/runfiles:
   fn: '*.run'
   num_lines: 2
 ```
-    

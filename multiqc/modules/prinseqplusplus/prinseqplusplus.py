@@ -15,13 +15,15 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="PRINSEQ++",
             anchor="prinseqplusplus",
             href="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus",
             info="C++ implementation of the prinseq-lite.pl program. Filters, reformats, and trims genomic and "
             "metagenomic reads.",
             doi="10.7287/peerj.preprints.27553v1",
+            license="GNU General Public License v2.0",
+            license_url="https://github.com/Adrian-Cantu/PRINSEQ-plus-plus/blob/master/LICENSE",
         )
 
         # Find and load reports

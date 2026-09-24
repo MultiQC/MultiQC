@@ -29,13 +29,15 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Seqfu",
             anchor="seqfu",
             target="seqfu",
             href="https://telatin.github.io/seqfu2",
             info="Manipulate FASTA/FASTQ files.",
             doi="10.3390/bioengineering8050059",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/telatin/seqfu2/blob/master/LICENSE",
         )
 
         n = dict()

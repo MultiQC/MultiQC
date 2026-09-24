@@ -18,12 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="WhatsHap",
             anchor="whatshap",
             href="https://whatshap.readthedocs.io/",
             info="Phasing genomic variants using DNA reads (aka read-based phasing, or haplotype assembly)",
             doi="10.1101/085050",
+            license="MIT License",
+            license_url="https://github.com/whatshap/whatshap/blob/master/LICENSE",
         )
 
         # Store the whatshap stats results

@@ -77,12 +77,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ODGI",
             anchor="odgi",
             href="https://github.com/pangenome/odgi",
             info="Analysis and manipulation of pangenome graphs structured in the variation graph model.",
             # Can't find a DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/pangenome/odgi/blob/master/LICENSE",
         )
 
         # Parse odgi stats data

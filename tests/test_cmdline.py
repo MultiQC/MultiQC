@@ -85,7 +85,9 @@ def test_unknown_command_line_option(tmp_path):
     )
     assert result.returncode != 0
     err = result.stderr.decode()
-    assert "No such option: --unknown-command-line-flag" in err
+    # Click 8.1: "No such option: --unknown-command-line-flag"
+    # Click 8.2+: "No such option '--unknown-command-line-flag'."
+    assert "No such option" in err and "--unknown-command-line-flag" in err
 
 
 def test_no_files_found(tmp_path):

@@ -130,7 +130,12 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     # Set up key variables (overwrite config vars from command line)
     if cfg.template is not None:
-        config.template = cfg.template
+        # `cfg.template` is a `str` from click; click.Choice already
+        # validated it against the available template names.
+        config.template = cast(
+            Literal["default", "original", "simple", "sections", "gathered", "geo", "disco"],
+            cfg.template,
+        )
     if cfg.title is not None:
         config.title = cfg.title
         logger.info(f"Report title: {config.title}")
@@ -138,7 +143,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.report_comment = cfg.report_comment
     if cfg.prepend_dirs is not None:
         config.prepend_dirs = cfg.prepend_dirs
-        logger.info("Prepending directory to sample names")
+        if cfg.prepend_dirs:
+            logger.info("Prepending directory to sample names")
     if cfg.dirs_depth is not None:
         config.prepend_dirs = True
         config.prepend_dirs_depth = cfg.dirs_depth
@@ -157,7 +163,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     if cfg.zip_data_dir is not None:
         config.zip_data_dir = cfg.zip_data_dir
     if cfg.data_format is not None:
-        config.data_format = cfg.data_format
+        config.data_format = cast(Literal["tsv", "csv", "json", "yaml"], cfg.data_format)
     if cfg.export_plots is not None:
         config.export_plots = cfg.export_plots
     if cfg.make_report is not None:
@@ -183,7 +189,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.megaqc_upload = not cfg.no_megaqc_upload
     if cfg.fn_clean_sample_names is not None:
         config.fn_clean_sample_names = cfg.fn_clean_sample_names
-        logger.info("Not cleaning sample names")
+        if not cfg.fn_clean_sample_names:
+            logger.info("Not cleaning sample names")
     if cfg.replace_names:
         config.load_replace_names(Path(cfg.replace_names))
     if cfg.sample_names:

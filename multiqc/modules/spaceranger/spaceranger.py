@@ -26,12 +26,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Space Ranger",
             anchor="spaceranger",
             href="https://support.10xgenomics.com/spatial-gene-expression/software/pipelines/latest/what-is-space-ranger",
             info="Tool to analyze 10x Genomics spatial transcriptomics data.",
             doi=[],
+            license="10x Genomics License",
+            license_url="https://github.com/10XGenomics/spaceranger/blob/main/LICENSE",
         )
 
         n = dict()

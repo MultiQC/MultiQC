@@ -11,12 +11,14 @@ VERSION_REGEX = r"skewer v([\d\.]+) \[.+\]"
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Skewer",
             anchor="skewer",
             href="https://github.com/relipmoc/skewer",
             info="Adapter trimming tool for NGS paired-end sequences.",
             doi="10.1186/1471-2105-15-182",
+            license="MIT License",
+            license_url="https://github.com/relipmoc/skewer/blob/master/LICENSE",
         )
 
         self.skewer_data = dict()

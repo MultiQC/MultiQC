@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard RrbsSummaryMetrics"""
 
 import logging
-from collections import OrderedDict
 from typing import Dict
 
 from multiqc.modules.picard import util
@@ -144,7 +143,7 @@ def parse_reports(module):
             - pdata[s_name]["ignored_mismatches"]
         )
 
-    keys = OrderedDict()
+    keys = {}
     keys["not_ignored"] = {"name": "Utilised reads"}
     keys["with_no_cpg"] = {"name": "Ignored (no CpG sites)"}
     keys["ignored_short"] = {"name": "Ignored (too short)"}

@@ -18,12 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="biobambam2",
             anchor="biobambam2",
             href="https://gitlab.com/german.tischler/biobambam2",
             info="Tools for early stage alignment file processing",
             doi="10.1186/1751-0473-9-13",
+            license="GNU General Public License v3.0",
+            license_url="https://gitlab.com/german.tischler/biobambam2/-/blob/master/COPYING",
         )
 
         n = dict()

@@ -1,8 +1,7 @@
 ---
 title: GffCompare
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.</p>
+description: "Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/gffcompare/gffcompare.
 -->
 
 :::note
-<p>Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.</p>
+Tool to compare, merge and annotate one or more GFF files with a reference annotation in GFF format.
 
 [https://ccb.jhu.edu/software/stringtie/gffcompare.shtml](https://ccb.jhu.edu/software/stringtie/gffcompare.shtml)
+
+DOI: [10.12688/f1000research.23297.1](https://doi.org/10.12688/f1000research.23297.1)
+
+[MIT License](https://github.com/gpertea/gffcompare/blob/master/LICENSE)
 :::
 
 The program `gffcompare` can be used to compare, merge, annotate and estimate accuracy
@@ -44,4 +47,3 @@ gffcompare:
   fn: '*.stats'
   num_lines: 2
 ```
-    

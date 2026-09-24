@@ -20,12 +20,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Salmon",
             anchor="salmon",
             href="https://combine-lab.github.io/salmon/",
             info="Quantifies expression of transcripts using RNA-seq data.",
             doi="10.1038/nmeth.4197",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/COMBINE-lab/salmon/blob/master/LICENSE",
         )
 
         # Parse meta information. JSON win!

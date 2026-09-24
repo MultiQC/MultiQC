@@ -51,12 +51,15 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DRAGEN-FastQC",
             anchor="dragen-fastqc",
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
             info="Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data",
             # Can't find a DOI // doi=
+            # Proprietary (Illumina DRAGEN); license could not be determined
+            license=None,
+            license_url=None,
         )
 
         self.css = {

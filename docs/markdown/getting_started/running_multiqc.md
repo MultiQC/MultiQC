@@ -24,6 +24,8 @@ For a description of all command line parameters, run `multiqc --help`.
 :::info
 Every command-line flag mentioned on this page has a corresponding configuration variable that can be set in a MultiQC config YAML file.
 This may be preferable if using a lot of options, or running in a pipeline.
+
+See [Configuration](config.md) for the search paths, or use the [Config Wizard](config_wizard.md) to build a config file in your browser.
 :::
 
 ## Choosing where to scan
@@ -198,6 +200,16 @@ missing.
 :::note
 You can always save static image versions of plots from within MultiQC reports, using the [Export toolbox](../reports#exporting-plots) in the side bar.
 :::
+
+### Export timeout
+
+Static plot generation uses [Kaleido](https://github.com/plotly/Kaleido) under the hood,
+which can occasionally hang. To prevent this from blocking report generation indefinitely,
+MultiQC applies a timeout to each plot export. If the timeout is exceeded, the plot export
+is skipped and report generation continues.
+
+The default timeout is 60 seconds per plot. You can adjust this with the `export_plots_timeout`
+config option.
 
 ## PDF Reports
 

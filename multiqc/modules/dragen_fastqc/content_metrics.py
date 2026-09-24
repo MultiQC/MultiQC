@@ -162,7 +162,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
             id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data]),
+            d=json.dumps([self.anchor, data]),
             hand_icon=get_material_icon("mdi:hand-pointing-up", 16),
         )
 
@@ -243,7 +243,6 @@ class DragenContentMetrics(BaseMultiqcModule):
             "y_minrange": 5,
             "ymin": 0,
             "tt_label": "<b>Base {point.x}</b>: {point.y:.2f}%",
-            "hide_zero_cats": True,
             "y_bands": [
                 {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},
                 {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},

@@ -331,7 +331,6 @@ Note that the format is unstable as of 1.29 may change in 1.30, where it will be
 The `multiqc.parquet` file contains several different types of rows that can be distinguished by the `type` column:
 
 1. **`run_metadata`**: Contains metadata about the MultiQC run, including:
-
    - `creation_date`: Timestamp when the report was generated
    - `modules`: JSON-encoded list of modules included in the report
    - `data_sources`: JSON-encoded information about the data source files
@@ -339,7 +338,6 @@ The `multiqc.parquet` file contains several different types of rows that can be 
    - `multiqc_version`: The version of MultiQC used
 
 2. **`plot_input`**: Contains the serialized plot configuration and data:
-
    - `anchor`: Unique identifier for the plot
    - `plot_type`: Type of plot (e.g., "line", "bar", "heatmap", "violin", "scatter", "table")
    - `plot_input_data`: JSON-encoded representation of the plot data and configuration

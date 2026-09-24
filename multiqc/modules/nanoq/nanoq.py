@@ -17,12 +17,14 @@ class MultiqcModule(BaseMultiqcModule):
     _stat_types = ("summary", "quality")
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="nanoq",
             anchor="nanoq",
             href="https://github.com/nerdna/nanoq/",
             info="Reports read quality and length from nanopore sequencing data",
             doi="10.21105/joss.02991",
+            license="MIT License",
+            license_url="https://github.com/esteinig/nanoq/blob/master/LICENSE",
         )
 
         # Find and load any nanoq reports

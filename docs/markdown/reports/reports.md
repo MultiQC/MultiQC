@@ -65,7 +65,7 @@ You can inspect the individual samples within a group by clicking on the arrow:
 
 ![genstats_grouped_samples_expanded](../../../docs/images/genstats_grouping_expanded.png)
 
-To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping).
+To enable this feature in your runs, [use this configuration option](../reports/customisation.md#sample-grouping). Some modules (e.g. Trim Galore) also [auto-detect pairs](../reports/customisation.md#modules-with-built-in-auto-grouping) from their own log output — no config needed.
 
 ## Plots
 
@@ -167,7 +167,7 @@ delimiters are not needed (use `pattern`, not `/pattern/`).
 
 Here, we highlight any sample names that end in `_1`:
 
-![highligh regex](../../../docs/images/toolbox_highlight_regex.png)
+![highlight regex](../../../docs/images/toolbox_highlight_regex.png)
 
 Note that a new button appears above the General Statistics table when samples
 are highlighted, allowing you to sort the table according to highlights.

@@ -18,12 +18,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ngs-bits",
             anchor="ngsbits",
             href="https://github.com/imgag/ngs-bits",
             info="Calculating statistics from FASTQ, BAM, and VCF",
             doi="10.1093/bioinformatics/btx032",
+            license="MIT License",
+            license_url="https://github.com/imgag/ngs-bits/blob/master/LICENSE",
         )
 
         # Call submodule functions

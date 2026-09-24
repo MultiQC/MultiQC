@@ -98,17 +98,20 @@ window.initExport = function () {
                 // }
               } else {
                 // Can add logo to a PNG image
-                addLogo(img, function (imageWithLogo) {
-                  if (checked_plots.length <= zip_threshold) {
-                    // Not many plots to export, just trigger a download for each:"
-                    const blob = dataUrlToBlob(imageWithLogo, mime);
-                    saveAs(blob, target + "." + format);
-                  } else {
-                    // Lots of plots - add to a zip file for download:
-                    const fname = target + "." + format;
-                    const data = imageWithLogo.replace(/^data:image\/png;base64,/, "");
-                    zip.file(fname, data, { base64: true });
-                  }
+                return new Promise(function (resolve) {
+                  addLogo(img, function (imageWithLogo) {
+                    if (checked_plots.length <= zip_threshold) {
+                      // Not many plots to export, just trigger a download for each:
+                      const blob = dataUrlToBlob(imageWithLogo, mime);
+                      saveAs(blob, target + "." + format);
+                    } else {
+                      // Lots of plots - add to a zip file for download:
+                      const fname = target + "." + format;
+                      const data = imageWithLogo.replace(/^data:image\/png;base64,/, "");
+                      zip.file(fname, data, { base64: true });
+                    }
+                    resolve();
+                  });
                 });
               }
             }),

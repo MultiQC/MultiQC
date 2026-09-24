@@ -1,8 +1,7 @@
 ---
 title: GoPeaks
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
+description: "Calls peaks in CUT&TAG/CUT&RUN datasets."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/gopeaks/gopeaks.py
 -->
 
 :::note
-<p>Calls peaks in CUT&amp;TAG/CUT&amp;RUN datasets.</p>
+Calls peaks in CUT&TAG/CUT&RUN datasets.
 
 [https://github.com/maxsonBraunLab/gopeaks](https://github.com/maxsonBraunLab/gopeaks)
+
+DOI: [10.1186/s13059-022-02707-w](https://doi.org/10.1186/s13059-022-02707-w)
+
+[MIT License](https://github.com/maxsonBraunLab/gopeaks/blob/main/LICENSE)
 :::
 
 Gopeaks uses a binomial distribution to model the read counts in sliding windows across
@@ -32,4 +35,3 @@ the number of peaks called per sample via the general table and the bar plot.
 gopeaks:
   fn: '*_gopeaks.json'
 ```
-    

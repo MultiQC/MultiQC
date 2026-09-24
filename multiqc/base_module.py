@@ -49,9 +49,21 @@ from multiqc.plots.table_object import (
     SampleName,
     ValueT,
 )
-from multiqc.types import Anchor, FileDict, LoadedFileDict, ModuleId, SampleNameMeta, Section, SectionId, SectionKey
+from multiqc.types import (
+    Anchor,
+    FileDict,
+    LoadedFileDict,
+    ModuleId,
+    SampleNameMeta,
+    Section,
+    SectionAlert,
+    SectionId,
+    SectionKey,
+    SoftwareVersionMetadata,
+)
 
 logger = logging.getLogger(__name__)
+SectionAlertInput = Union[str, Mapping[str, Any], SectionAlert]
 
 
 class ModuleNoSamplesFound(Exception):
@@ -70,6 +82,10 @@ class SampleGroupingConfig:
     cols_to_average: Optional[List[ColumnKey]] = None
     cols_to_sum: Optional[List[ColumnKey]] = None
     extra_functions: Optional[List[ExtraFunctionType]] = dataclasses.field(default_factory=list)
+    # Module-supplied groups, mapping group display name -> sample names.
+    # When set, takes precedence over `config.table_sample_merge` name patterns
+    # (lets modules with authoritative pair / replicate info skip name-guessing).
+    explicit_groups: Optional[Dict[str, List[str]]] = None
 
 
 class BaseMultiqcModule:
@@ -89,6 +105,8 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         doi: Optional[Union[str, List[str]]] = None,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
     ):
         validation.reset()
 
@@ -136,6 +154,17 @@ class BaseMultiqcModule:
                 self.doi = [_cust_doi]
             elif isinstance(_cust_doi, list):
                 self.doi = [str(d) for d in _cust_doi]
+
+        # Software license, shown in the Software Versions section for FAIR reporting
+        self.license: Optional[str] = license
+        _cust_license = self.mod_cust_config.get("license")
+        if _cust_license is not None:
+            self.license = str(_cust_license)
+
+        self.license_url: Optional[str] = license_url
+        _cust_license_url = self.mod_cust_config.get("license_url")
+        if _cust_license_url is not None:
+            self.license_url = str(_cust_license_url)
 
         self.skip_generalstats = True if self.mod_cust_config.get("generalstats") is False else False
 
@@ -202,6 +231,17 @@ class BaseMultiqcModule:
                 )
             doi_html = '<span class="text-muted small ms-2">DOI: {}</span>'.format("; ".join(doi_links))
 
+        license_html = ""
+        if self.license:
+            if self.license_url:
+                license_inner = (
+                    f'<a class="module-license text-muted" href="{self.license_url}" target="_blank">{self.license}</a>'
+                )
+            else:
+                license_inner = self.license
+            # No "License:" prefix: the license name (e.g. "MIT License") is self-describing
+            license_html = f'<span class="text-muted small ms-2">{license_inner}</span>'
+
         url_link = ""
         if len(self.href) > 0:
             url_links: List[str] = []
@@ -209,7 +249,7 @@ class BaseMultiqcModule:
                 url_links.append(f'<a href="{url}" class="text-muted ms-2 small" target="_blank">{url.strip("/")}</a>')
             url_link = "; ".join(url_links)
 
-        info_html = f"{self.info}{url_link}{doi_html}"
+        info_html = f"{self.info}{url_link}{doi_html}{license_html}"
         if not info_html.startswith("<"):  # Assume markdown, convert to HTML
             info_html = markdown.markdown(info_html)
 
@@ -347,12 +387,12 @@ class BaseMultiqcModule:
                     # Custom content module can now handle image files
                     (ftype, _) = mimetypes.guess_type(os.path.join(f["root"], f["fn"]))
                     if ftype is not None and ftype.startswith("image"):
-                        with io.open(os.path.join(f["root"], f["fn"]), "rb") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "rb") as fh:
                             # always return file handles
                             yield {**f, "s_name": s_name, "f": fh}
                     else:
                         # Everything else - should be all text files
-                        with io.open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
+                        with open(os.path.join(f["root"], f["fn"]), "r", encoding="utf-8") as fh:
                             if filehandles:
                                 yield {**f, "s_name": s_name, "f": fh}
                             elif filecontents:
@@ -364,7 +404,7 @@ class BaseMultiqcModule:
                                         f"characters\n{e}"
                                     )
                                     try:
-                                        with io.open(
+                                        with open(
                                             os.path.join(f["root"], f["fn"]),
                                             "r",
                                             encoding="utf-8",
@@ -398,6 +438,7 @@ class BaseMultiqcModule:
         autoformat: bool = True,
         autoformat_type: str = "markdown",
         statuses: Optional[Dict[Literal["pass", "warn", "fail"], List[str]]] = None,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]] = None,
     ):
         """Add a section to the module report output
 
@@ -416,6 +457,8 @@ class BaseMultiqcModule:
             statuses: Optional dict with keys "pass", "warn", "fail" containing lists of sample names.
                       When provided, displays a status progress bar showing sample pass/warn/fail counts.
                       Can be disabled globally or per-section via `section_status_checks` config.
+            alerts: Optional section alert, or list of alerts. Alert messages are autoformatted like descriptions
+                    and rendered with Bootstrap contextual classes such as "info", "warning", or "danger".
         """
         if id is None and anchor is not None:
             id = str(anchor)
@@ -478,6 +521,8 @@ class BaseMultiqcModule:
                 if autoformat_type == "markdown":
                     helptext = markdown.markdown(helptext)
 
+        section_alerts = self._format_section_alerts(alerts, autoformat, autoformat_type)
+
         # Strip excess whitespace
         description = description.strip()
         comment = comment.strip()
@@ -500,8 +545,9 @@ class BaseMultiqcModule:
             helptext=helptext,
             content_before_plot=content_before_plot,
             content=content,
-            print_section=any([content_before_plot, plot, content]),
+            print_section=any([content_before_plot, plot, content, section_alerts]),
             status_bar_html=status_bar_html,
+            alerts=section_alerts,
         )
 
         if plot is not None:
@@ -514,6 +560,41 @@ class BaseMultiqcModule:
 
         # self.sections is passed into Jinja template:
         self.sections.append(section)
+
+    def _format_section_alerts(
+        self,
+        alerts: Optional[Union[SectionAlertInput, Sequence[SectionAlertInput]]],
+        autoformat: bool,
+        autoformat_type: str,
+    ) -> List[SectionAlert]:
+        if alerts is None:
+            return []
+
+        if isinstance(alerts, (str, SectionAlert)) or isinstance(alerts, Mapping):
+            alert_items: Sequence[SectionAlertInput] = [alerts]
+        else:
+            alert_items = alerts
+
+        formatted_alerts: List[SectionAlert] = []
+        for alert in alert_items:
+            if isinstance(alert, str):
+                section_alert = SectionAlert(message=alert)
+            elif isinstance(alert, SectionAlert):
+                section_alert = alert.model_copy()
+            else:
+                section_alert = SectionAlert(**alert)
+
+            if autoformat:
+                section_alert.message = textwrap.dedent(section_alert.message)
+                if autoformat_type == "markdown":
+                    section_alert.message = markdown.markdown(section_alert.message)
+            section_alert.message = section_alert.message.strip()
+
+            if not section_alert.message:
+                continue
+            formatted_alerts.append(section_alert)
+
+        return formatted_alerts
 
     def _should_add_status_bar(self, section_id: str) -> bool:
         """
@@ -719,7 +800,26 @@ class BaseMultiqcModule:
         """
 
         rows_by_grouped_samples: Dict[SampleGroup, List[InputRow]] = defaultdict(list)
-        for g_name, labels_s_names in self.group_samples_names([SampleName(s) for s in data_by_sample.keys()]).items():
+
+        # 1-member entries fall through to the singleton path below: rendering
+        # them as a renamed singleton row is rarely what callers want.
+        groups_iter: Dict[SampleGroup, List[Tuple[Optional[str], SampleName, SampleName]]]
+        if grouping_config.explicit_groups:
+            groups_iter = {}
+            grouped_originals: Set[str] = set()
+            for gname, members in grouping_config.explicit_groups.items():
+                if len(members) <= 1:
+                    continue
+                groups_iter[SampleGroup(gname)] = [(None, SampleName(s), SampleName(s)) for s in members]
+                grouped_originals.update(members)
+            for s_name in data_by_sample:
+                if str(s_name) in grouped_originals:
+                    continue
+                groups_iter[SampleGroup(str(s_name))] = [(None, SampleName(str(s_name)), SampleName(str(s_name)))]
+        else:
+            groups_iter = self.group_samples_names([SampleName(s) for s in data_by_sample.keys()])
+
+        for g_name, labels_s_names in groups_iter.items():
             if len(labels_s_names) == 0:
                 continue
 
@@ -1107,7 +1207,7 @@ class BaseMultiqcModule:
             return
 
         rows_by_group: Dict[SampleGroup, List[InputRow]]
-        if config.table_sample_merge:
+        if config.table_sample_merge or group_samples_config.explicit_groups:
             rows_by_group = self.group_samples_and_average_metrics(
                 data_by_sample,
                 group_samples_config,
@@ -1143,8 +1243,8 @@ class BaseMultiqcModule:
             if "description" not in _headers[col_id]:
                 _headers[col_id]["description"] = _col["title"] if "title" in _col else col_id
 
-            # Add grouping information to description if table_sample_merge is enabled
-            if config.table_sample_merge:
+            # Add grouping information to description when grouping is active
+            if config.table_sample_merge or group_samples_config.explicit_groups:
                 desc = _headers[col_id].get("description", "")
                 if group_samples_config.cols_to_weighted_average and any(
                     col_id == c for c, _ in group_samples_config.cols_to_weighted_average
@@ -1197,8 +1297,17 @@ class BaseMultiqcModule:
         version: Optional[str] = None,
         sample: Optional[str] = None,
         software_name: Optional[str] = None,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
     ):
-        """Save software versions for module."""
+        """
+        Save software versions for module.
+
+        ``license``, ``license_url`` and ``doi`` add FAIR metadata for the software,
+        shown as extra columns in the Software Versions section. When not given, they
+        default to the module-level ``license``, ``license_url`` and ``doi`` values.
+        """
         # Don't add if version is None. This allows every module to call this function
         # even those without a version to add. This is useful to check that all modules
         # are calling this function.
@@ -1217,6 +1326,10 @@ class BaseMultiqcModule:
         if software_name is None:
             software_name = self.name
 
+        # Register FAIR metadata (license, DOI) for the software, falling back to
+        # the module-level values when not provided explicitly.
+        self._add_software_metadata(software_name, license=license, license_url=license_url, doi=doi)
+
         # Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
         # Otherwise, use raw string is used for version.
         # - https://peps.python.org/pep-0440/
@@ -1232,6 +1345,42 @@ class BaseMultiqcModule:
         # Update version list for report section.
         group_name = self.name
         report.software_versions[group_name][software_name] = [v for _, v in self.versions[software_name]]
+
+    def _add_software_metadata(
+        self,
+        software_name: str,
+        license: Optional[str] = None,
+        license_url: Optional[str] = None,
+        doi: Optional[Union[str, List[str]]] = None,
+    ):
+        """
+        Register FAIR metadata (license, DOI) for a software in the Software Versions
+        section. Values not passed explicitly fall back to the module-level defaults.
+        """
+        license = license if license is not None else self.license
+        license_url = license_url if license_url is not None else self.license_url
+        if doi is None:
+            dois = list(self.doi)
+        elif isinstance(doi, str):
+            dois = [doi]
+        else:
+            dois = [str(d) for d in doi]
+        dois = [d for d in dois if d]
+
+        if license is None and license_url is None and not dois:
+            return
+
+        meta = report.software_versions_metadata[self.name].get(software_name)
+        if meta is None:
+            meta = SoftwareVersionMetadata()
+            report.software_versions_metadata[self.name][software_name] = meta
+        if license is not None:
+            meta.license = license
+        if license_url is not None:
+            meta.license_url = license_url
+        for d in dois:
+            if d not in meta.doi:
+                meta.doi.append(d)
 
     def write_data_file(self, data: Any, fn: str, sort_cols: bool = False, data_format: Optional[str] = None):
         """Saves raw data to a dictionary for downstream use, then redirects

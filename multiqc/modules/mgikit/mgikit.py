@@ -34,12 +34,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="mgikit",
             anchor="mgikit",
             href="https://github.com/sagc-bioinformatics/mgikit",
             info="Demultiplexes FASTQ files from an MGI sequencing instrument",
             doi="https://doi.org/10.1101/2024.01.09.574938",
+            license="Academic Free License v3.0 (non-commercial only)",
+            license_url="https://github.com/sagc-bioinformatics/mgikit/blob/main/LICENSE",
         )
 
         for f in self.find_log_files("mgikit"):

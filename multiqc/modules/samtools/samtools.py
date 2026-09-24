@@ -123,13 +123,15 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Samtools",
             anchor="samtools",
             target="samtools",
             href="http://www.htslib.org",
             info="Toolkit for interacting with BAM/CRAM files.",
             doi="10.1093/bioinformatics/btp352",
+            license="MIT License",
+            license_url="https://github.com/samtools/samtools/blob/master/LICENSE",
         )
 
         n = dict()

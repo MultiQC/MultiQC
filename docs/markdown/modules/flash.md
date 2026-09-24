@@ -1,8 +1,7 @@
 ---
 title: FLASh
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Merges paired-end reads from next-generation sequencing experiments.</p>
+description: "Merges paired-end reads from next-generation sequencing experiments."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/flash/flash.py
 -->
 
 :::note
-<p>Merges paired-end reads from next-generation sequencing experiments.</p>
+Merges paired-end reads from next-generation sequencing experiments.
 
 [https://ccb.jhu.edu/software/FLASH/](https://ccb.jhu.edu/software/FLASH/)
+
+DOI: [10.1093/bioinformatics/btr507](https://doi.org/10.1093/bioinformatics/btr507)
+
+[GNU General Public License v3.0](https://sourceforge.net/projects/flashpage/)
 :::
 
 To create a log file suitable for the module, you can use `tee`. From the FLASh help:
@@ -53,4 +56,3 @@ flash/hist:
 flash/log:
   contents: '[FLASH]'
 ```
-    

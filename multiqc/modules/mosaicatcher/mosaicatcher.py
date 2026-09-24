@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MosaiCatcher",
             anchor="mosaicatcher",
             href="https://github.com/friendsofstrandseq/mosaicatcher",
@@ -17,6 +17,8 @@ class MultiqcModule(BaseMultiqcModule):
                 "of each chromosome in each cell using a Hidden Markov Model."
             ),
             doi="10.1038/s41587-019-0366-x",
+            license="MIT License",
+            license_url="https://github.com/friendsofstrandseq/mosaicatcher/blob/master/LICENSE.md",
         )
 
         data_by_sample = dict()

@@ -14,12 +14,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HiCExplorer",
             anchor="hicexplorer",
             href="https://hicexplorer.readthedocs.io",
             info="Hi-C analysis from processing to visualization.",
             doi=["10.1093/nar/gky504", "10.1093/nar/gkaa220"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/deeptools/HiCExplorer/blob/master/LICENSE",
         )
 
         self.hicexplorer_data = dict()

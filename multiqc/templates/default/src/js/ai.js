@@ -9,8 +9,8 @@ window.continueInSeqeraChatHandler = function (event) {
   // Either report uuid, or encoded system and chat messages
   let threadId = el.data("thread-id");
 
-  let url = seqeraWebsite + "/ask-ai/";
-  if (threadId) url += "?messages=" + threadId;
+  let url = seqeraWebsite;
+  if (threadId) url += "/chat/" + threadId;
 
   window.open(url, "_blank");
 };
@@ -308,7 +308,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`).show();
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`).show();
         }
         // Enable tooltips in the new content
         const tooltipTriggerList = responseDiv.find('[data-bs-toggle="tooltip"]');
@@ -367,6 +367,14 @@ async function generateCallback(e) {
 }
 
 $(function () {
+  // Summaries generated at report build time are stored as markdown and rendered here,
+  // so they go through exactly the same conversion and sanitising as ones generated in
+  // the browser. Escaped in the HTML at rest, so textContent gives back the markdown.
+  $(".ai-summary-markdown").each(function () {
+    const markdown = this.textContent.trim();
+    if (markdown) this.innerHTML = window.markdownToHtml(markdown);
+  });
+
   $("#global_ai_summary_expand").each(function () {
     const responseDiv = $("#global_ai_summary_detailed_analysis_response");
     const isLocalContent = responseDiv.hasClass("ai-local-content");
@@ -449,7 +457,7 @@ $(function () {
 
         const threadId = cachedSummary.threadId;
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/ask-ai/?messages=${threadId}`);
+          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`);
           continueInChatButton.show();
         }
       }
@@ -470,20 +478,21 @@ $(function () {
       $(".mqc_regex_mode input").prop("checked", true);
     }
 
-    let color = $(this).css("color");
     let highlightedSamples = window.mqc_highlight_f_texts;
     if (!highlightedSamples.includes(sampleName)) {
       $("#mqc_colour_filter").val(sampleName);
-      $("#mqc_colour_filter_color").val(rgbToHex(color));
+      // Use the current color from the palette (set by highlights.js form handler)
       $(this).css("font-weight", "bold");
       // also highlight all <sample> elements in text that match the sample name
       $("sample").each(function () {
         if ($(this).text().indexOf(sampleName) > -1) $(this).css("font-weight", "bold");
       });
+      // Only submit form when adding a new highlight
+      $("#mqc_color_form").trigger("submit");
     } else {
       $("#mqc_col_filters li").each(function () {
-        if ($(this).children("input").attr("value") === sampleName) {
-          $(this).children(".close").click();
+        if ($(this).find(".f_text").val() === sampleName) {
+          $(this).find(".btn-close").click();
         }
       });
       $(this).css("font-weight", "normal");
@@ -493,7 +502,6 @@ $(function () {
       });
     }
 
-    $("#mqc_color_form").trigger("submit");
     $("#mqc_cols_apply").click();
   });
 

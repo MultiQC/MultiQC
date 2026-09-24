@@ -30,12 +30,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Prokka",
             anchor="prokka",
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/tseemann/prokka/blob/master/LICENSE",
         )
 
         # Parse logs

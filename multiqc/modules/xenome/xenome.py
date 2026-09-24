@@ -27,12 +27,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Xenome",
             anchor="xenome",
             href="https://github.com/data61/gossamer/blob/master/docs/xenome.md",
             info="Classifies reads from xenograft sources.",
             doi="doi.org/10.1093/bioinformatics/bts236",
+            license="CSIRO Open Source License (BSD/MIT variant)",
+            license_url="https://github.com/data61/gossamer/blob/master/LICENSE",
         )
 
         # Find and load any Xenome reports

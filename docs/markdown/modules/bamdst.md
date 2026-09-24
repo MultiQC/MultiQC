@@ -1,8 +1,7 @@
 ---
 title: Bamdst
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Lightweight tool to stat the depth coverage of target regions of BAM file(s).</p>
+description: "Lightweight tool to stat the depth coverage of target regions of BAM file(s)."
 ---
 
 <!--
@@ -15,9 +14,11 @@ File path for the source of this content: multiqc/modules/bamdst/bamdst.py
 -->
 
 :::note
-<p>Lightweight tool to stat the depth coverage of target regions of BAM file(s).</p>
+Lightweight tool to stat the depth coverage of target regions of BAM file(s).
 
 [https://https://github.com/shiquan/bamdst](https://https://github.com/shiquan/bamdst)
+
+[MIT License](https://github.com/shiquan/bamdst/blob/master/LICENSE)
 :::
 
 The module reads data from two types of Bamdst logs:
@@ -87,4 +88,3 @@ bamdst/coverage:
   contents: '## The file was created by bamdst'
   num_lines: 5
 ```
-    

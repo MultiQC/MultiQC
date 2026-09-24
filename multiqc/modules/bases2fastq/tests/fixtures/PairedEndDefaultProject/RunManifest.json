@@ -1,0 +1,22 @@
+{
+  "Settings": [
+    {
+      "Lane": 1,
+      "AdapterTrimType": "Paired-End",
+      "R1AdapterMinimumTrimmedLength": 16,
+      "R2AdapterMinimumTrimmedLength": 16
+    }
+  ],
+  "Samples": [
+    {
+      "SampleName": "Sample1",
+      "Indexes": [
+        {
+          "Lane": 1,
+          "Index1": "AAA",
+          "Index2": "TTT"
+        }
+      ]
+    }
+  ]
+}

@@ -1,8 +1,7 @@
 ---
 title: MEGAHIT
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>NGS read assembler.</p>
+description: "NGS read assembler."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/megahit/megahit.py
 -->
 
 :::note
-<p>NGS read assembler.</p>
+NGS read assembler.
 
 [https://github.com/voutcn/megahit](https://github.com/voutcn/megahit)
+
+DOI: [10.1093/bioinformatics/btv033](https://doi.org/10.1093/bioinformatics/btv033)
+
+[GNU General Public License v3.0](https://github.com/voutcn/megahit/blob/master/LICENSE)
 :::
 
 MultiQC will parse stdout/stderr logs from MEGAHIT runs. The sample name is taken from the file
@@ -30,4 +33,3 @@ megahit:
   contents: ' - MEGAHIT v'
   num_lines: 5
 ```
-    

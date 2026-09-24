@@ -17,12 +17,14 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="AfterQC",
             anchor="afterqc",
             href="https://github.com/OpenGene/AfterQC",
             info="Automatic filtering, trimming, error removing, and quality control for FastQ data.",
             doi="10.1186/s12859-017-1469-3",
+            license="MIT License",
+            license_url="https://github.com/OpenGene/AfterQC/blob/master/LICENSE",
         )
 
         # Find and load any Afterqc reports

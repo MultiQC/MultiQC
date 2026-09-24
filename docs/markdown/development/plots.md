@@ -226,6 +226,42 @@ html = bargraph.plot([data, data], cats, pconfig=...)
 
 Note that, as in this example, the plot data can be the same dictionary supplied twice.
 
+### Grouped stacked bar charts
+
+Use `sample_groups` to create grouped stacked bar charts where bars are organized into visual groups on the y-axis. The config is a dict mapping group labels to lists of `[sample name, group ID]` pairs:
+
+- **Group label** (dict key): Displayed on the y-axis
+- **Sample name**: The key in the data dict identifying this sample
+- **Group ID**: Determines the visual "lane" within each group. Samples with the same ID are aligned vertically across different group labels.
+
+```python
+from multiqc.plots import bargraph
+
+data = {
+    'sample1_25nt': {'Frame0': 50, 'Frame1': 30, 'Frame2': 20},
+    'sample1_26nt': {'Frame0': 60, 'Frame1': 25, 'Frame2': 15},
+    'sample2_25nt': {'Frame0': 55, 'Frame1': 28, 'Frame2': 17},
+    'sample2_26nt': {'Frame0': 65, 'Frame1': 22, 'Frame2': 13},
+}
+
+pconfig = {
+    'id': 'my_bargraph',
+    'title': 'My Bar Graph',
+    'sample_groups': {
+        '25nt': [['sample1_25nt', 'sample1'], ['sample2_25nt', 'sample2']],
+        '26nt': [['sample1_26nt', 'sample1'], ['sample2_26nt', 'sample2']],
+    }
+}
+
+html = bargraph.plot(data, cats, pconfig=pconfig)
+```
+
+In this example, for each read length group (`25nt`, `26nt`), bars with the same `offset_group` (`sample1` or `sample2`) are aligned at the same horizontal position, allowing direct visual comparison of sample1 vs sample2 across read lengths.
+
+![bargraph sample groups](../../../docs/images/bargraph_sample_groups.png)
+
+See the [custom content example file](https://github.com/MultiQC/test-data/blob/main/data/custom_content/embedded_config/frame_bargraph_mqc.csv) to reproduce this plot.
+
 ## Line graphs
 
 This base function works much like the above, but for two-dimensional
@@ -262,6 +298,7 @@ pconfig = {
     "logswitch": False,          # Show the 'Log10' switch?
     "logswitch_active": False,   # Initial display with 'Log10' active?
     "logswitch_label": "Log10",  # Label for 'Log10' button
+    "axis_controlled_by_switches": ["yaxis"], # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
     "extra_series": None,        # See section below
     # Plot configuration
     "title": None,               # Plot title - should be in format "Module Name: Plot Title"
@@ -285,7 +322,7 @@ pconfig = {
     "x_lines": None,             # Extra vertical lines
     "xsuffix": "%",              # Suffix for the X-axis values and labels. Parsed from tt_label by default
     "ysuffix": "%",              # Suffix for the Y-axis values and labels. Parsed from tt_label by default
-    "tt_label": "{x}: {y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
+    "tt_label": "{point.x}: {point.y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
     "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
     "height": 500,               # The default height of the plot, in pixels
     "style": "line",             # The style of the line. Can be "line" or "lines+markers"
@@ -682,6 +719,22 @@ key for that column. The default format string is `"{:,.1f}"`, which specifies a
 float number with a single decimal place. To remove decimals use `"{:,d}"`.
 To have two decimal places, use `"{:,.2f}"`.
 
+`format` also accepts a callable, which is given the cell value and returns the
+string to display. Unlike a format string, a callable may return HTML, so its
+return value is **not** escaped for you. Values parsed from tool output are
+attacker-controlled, so escape them yourself:
+
+```python
+from html import escape
+
+headers = {
+    "toolname_path": {
+        "title": "Path",
+        "format": lambda x: f"<code>{escape(str(x))}</code>",
+    }
+}
+```
+
 ### Table colour scales
 
 Colour scales are taken from [ColorBrewer2](http://colorbrewer2.org/).
@@ -812,7 +865,7 @@ button above the table in the report) will be sorted by "Largest contig".
 
 ### Configurable columns
 
-Table columns can be reodered and change visibility using the "Configure Columns" button
+Table columns can be reordered and change visibility using the "Configure Columns" button
 in the report. However, for very wide tables, the performance degrades, so the button is disabled when the number of rows exceeds `config.max_configurable_table_columns` (default is 200). You can adjust this value in the config file.
 
 ## Violin plots

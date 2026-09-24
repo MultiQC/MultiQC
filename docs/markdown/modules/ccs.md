@@ -1,8 +1,7 @@
 ---
 title: CCS
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads).</p>
+description: "PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)."
 ---
 
 <!--
@@ -15,9 +14,11 @@ File path for the source of this content: multiqc/modules/ccs/ccs.py
 -->
 
 :::note
-<p>PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads).</p>
+PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads).
 
 [https://github.com/PacificBiosciences/ccs](https://github.com/PacificBiosciences/ccs)
+
+[BSD 3-Clause Clear License](https://github.com/PacificBiosciences/ccs/blob/master/LICENSE)
 :::
 
 CCS takes multiple subreads of the same SMRTbell molecule and combines them
@@ -36,4 +37,3 @@ ccs/v5:
   contents: '"id": "ccs_processing"'
   fn: '*.json'
 ```
-    

@@ -1,8 +1,7 @@
 ---
 title: Supernova
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>De novo genome assembler of 10X Genomics linked-reads.</p>
+description: "De novo genome assembler of 10X Genomics linked-reads."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/supernova/supernova.py
 -->
 
 :::note
-<p>De novo genome assembler of 10X Genomics linked-reads.</p>
+De novo genome assembler of 10X Genomics linked-reads.
 
 [https://www.10xgenomics.com/](https://www.10xgenomics.com/)
+
+DOI: [10.1101/gr.214874.116](https://doi.org/10.1101/gr.214874.116)
+
+[10x Genomics License](https://github.com/10XGenomics/supernova/blob/master/LICENSE)
 :::
 
 The module parses the reports from an assembly run. As a bare minimum it requires the file `report.txt`,
@@ -65,4 +68,3 @@ supernova/summary:
   fn: summary.json
   num_lines: 120
 ```
-    

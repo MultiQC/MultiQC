@@ -48,6 +48,22 @@ This block generates the General Statistics table at the top of the report.
       ></div>
     </div>
 
+    {% if config.general_stats_helptext is not none and config.general_stats_helptext | length > 0 %}
+      <button
+        class="btn btn-outline-secondary btn-sm float-end btn-help"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#general_stats_table_helptext"
+        aria-expanded="false"
+        aria-controls="general_stats_table_helptext"
+      >
+        {{ material_icon('mdi:help-circle', 16) }} Help
+      </button>
+      <div class="collapse mqc-section-helptext" id="general_stats_table_helptext">
+        <div class="card card-body bg-body-tertiary mb-2">{{ config.general_stats_helptext }}</div>
+      </div>
+    {% endif %}
+
     {{ report.general_stats_html }}
   </div>
 {% endif %}

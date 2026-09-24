@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 import time
-from collections import OrderedDict, defaultdict
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path, PosixPath
 from typing import (
@@ -50,7 +50,16 @@ from multiqc.core.tmp_dir import data_tmp_dir
 from multiqc.plots.plot import NormalizedPlotInputData, Plot
 from multiqc.plots.table_object import Cell, ColumnDict, InputRow, SampleName, ValueT
 from multiqc.plots.violin import ViolinPlot
-from multiqc.types import Anchor, ColumnKey, FileDict, ModuleId, SampleGroup, Section, SectionKey
+from multiqc.types import (
+    Anchor,
+    ColumnKey,
+    FileDict,
+    ModuleId,
+    SampleGroup,
+    Section,
+    SectionKey,
+    SoftwareVersionMetadata,
+)
 from multiqc.utils import megaqc
 from multiqc.utils.util_functions import (
     dump_json,
@@ -108,6 +117,7 @@ ai_model: str = ""
 ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 ai_extra_query_options_base64: str = ""
+ai_prompts_base64: str = ""
 sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
 ai_pseudonym_map: Dict[str, str] = {}
 ai_pseudonym_map_base64: str = ""
@@ -126,8 +136,10 @@ plot_data: Dict[Anchor, Dict[str, Any]] = dict()
 general_stats_data: Dict[SectionKey, Dict[SampleGroup, List[InputRow]]]
 general_stats_headers: Dict[SectionKey, Dict[ColumnKey, ColumnDict]]
 software_versions: Dict[str, Dict[str, List[str]]]  # map software tools to unique versions
+# Map group -> software -> FAIR metadata (license, DOI) shown in the Software Versions section
+software_versions_metadata: Dict[str, Dict[str, SoftwareVersionMetadata]]
 plot_compressed_json: str
-# to make sure write_data_file don't overwrite for repeated modules. OrderedDict for fast lookup and to preserve insertion order:
+# to make sure write_data_file don't overwrite for repeated modules. dict for fast lookup and to preserve insertion order:
 saved_raw_data_keys: Dict[str, None]
 saved_raw_data: Dict[str, Any] = dict()  # only populated if preserve_module_raw_data is enabled
 
@@ -164,6 +176,7 @@ def reset():
     global general_stats_data
     global general_stats_headers
     global software_versions
+    global software_versions_metadata
     global plot_compressed_json
     global saved_raw_data_keys
     global saved_raw_data
@@ -177,6 +190,7 @@ def reset():
     global ai_model_resolved
     global ai_report_metadata_base64
     global ai_extra_query_options_base64
+    global ai_prompts_base64
     global sample_names
     global ai_pseudonym_map
     global ai_pseudonym_map_base64
@@ -211,6 +225,7 @@ def reset():
     ai_model_resolved = ""
     ai_report_metadata_base64 = ""
     ai_extra_query_options_base64 = ""
+    ai_prompts_base64 = ""
     sample_names = []
     ai_pseudonym_map = {}
     ai_pseudonym_map_base64 = ""
@@ -222,8 +237,9 @@ def reset():
     general_stats_data = dict()
     general_stats_headers = dict()
     software_versions = defaultdict(lambda: defaultdict(list))
+    software_versions_metadata = defaultdict(dict)
     plot_compressed_json = ""
-    saved_raw_data_keys = OrderedDict()
+    saved_raw_data_keys = {}
     saved_raw_data = dict()
 
     plot_data_store.reset()
@@ -350,7 +366,7 @@ class SearchFile:
             yield count_and_block_tuple
         if self._filehandle is None:
             try:
-                self._filehandle = io.open(self.path, "rt", encoding="utf-8")
+                self._filehandle = open(self.path, "rt", encoding="utf-8")
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
@@ -379,7 +395,7 @@ class SearchFile:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
             return  # No errors
         self._filehandle.close()
-        self._filehandle = io.open(self.path, "rt", encoding="utf-8", errors="ignore")
+        self._filehandle = open(self.path, "rt", encoding="utf-8", errors="ignore")
         self._iterator = file_line_block_iterator(self._filehandle)
         try:
             if self._blocks:
@@ -827,13 +843,15 @@ def exclude_file(sp, f: SearchFile):
 
 def data_sources_tofile(data_dir: Path):
     fn = f"multiqc_sources.{config.data_format_extensions[config.data_format]}"
-    with io.open(data_dir / fn, "w", encoding="utf-8") as f:
+    with open(data_dir / fn, "w", encoding="utf-8") as f:
         if config.data_format == "json":
             json.dump(data_sources, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data_sources), f, default_flow_style=False, Dumper=Dumper)
         else:
             lines = [["Module", "Section", "Sample Name", "Source"]]
             for mod in data_sources:
@@ -858,8 +876,10 @@ def dois_tofile(data_dir: Path, module_list: List["BaseMultiqcModule"]):
             json.dump(dois, f, indent=4, ensure_ascii=False)
         elif config.data_format == "yaml":
             # Unlike JSON, YAML represents defaultdicts as objects, so need to convert
-            # them to normal dicts
-            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False)
+            # them to normal dicts.
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(dois), f, default_flow_style=False, Dumper=Dumper)
         else:
             body = ""
             for mod_name, dois_strings in dois.items():
@@ -1035,7 +1055,9 @@ def write_data_file(
         if data_format == "json":
             dump_json(data, f, indent=4, ensure_ascii=False)
         elif data_format == "yaml":
-            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False)
+            # Use CSafeDumper for 3-4x faster serialization when libyaml is available
+            Dumper = getattr(yaml, "CSafeDumper", yaml.SafeDumper)
+            yaml.dump(replace_defaultdicts(data), f, default_flow_style=False, Dumper=Dumper)
         elif body:
             # Default - tab separated output
             print(body.encode("utf-8", "ignore").decode("utf-8"), file=f)

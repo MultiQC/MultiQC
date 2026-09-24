@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="CCS",
             anchor="ccs",
             href="https://github.com/PacificBiosciences/ccs",
@@ -23,6 +23,8 @@ class MultiqcModule(BaseMultiqcModule):
             Consensus Sequencing workflow in SMRT Link.
             """,
             # Can't find a DOI // doi=
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/ccs/blob/master/LICENSE",
         )
 
         # To store the mod data

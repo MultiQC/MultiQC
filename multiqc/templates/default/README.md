@@ -65,7 +65,7 @@ Assets are automatically built when:
 
 - You run `npm run build` manually
 - You have `npm run watch` running
-- You commit changes (via pre-commit hook)
+- You commit changes (via pre-commit hook with `prek`)
 
 ### Plotly bundle
 

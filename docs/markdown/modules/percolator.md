@@ -1,8 +1,7 @@
 ---
 title: Percolator
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
+description: "Semi-supervised learning for peptide identification from shotgun proteomics datasets."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/percolator/percolator.
 -->
 
 :::note
-<p>Semi-supervised learning for peptide identification from shotgun proteomics datasets.</p>
+Semi-supervised learning for peptide identification from shotgun proteomics datasets.
 
 [https://github.com/percolator/percolator](https://github.com/percolator/percolator)
+
+DOI: [10.1007/s13361-016-1460-7](https://doi.org/10.1007/s13361-016-1460-7)
+
+[Apache License 2.0](https://github.com/percolator/percolator/blob/master/license.txt)
 :::
 
 The module assumes that the Percolator output file is named `*percolator_feature_weights.tsv`.
@@ -44,4 +47,3 @@ percolator:
 percolator:
   fn: '*percolator_feature_weights.tsv'
 ```
-    

@@ -9,17 +9,19 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Nextclade",
             anchor="nextclade",
             href="https://github.com/nextstrain/nextclade",
             info="Viral genome alignment, clade assignment, mutation calling, and quality checks",
             extra="""
-            Nextclade assigns input sequences to SARS-Cov-2 clades based on differences between the input sequences 
-            and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of 
+            Nextclade assigns input sequences to clades and lineages based on differences between the input sequences
+            and [Nextstrain](https://nextstrain.org/) reference sequences. In addition, it judges the validity of
             the samples by performing several quality control checks on the input sequences.
             """,
             doi="10.21105/joss.03773",
+            license="MIT License",
+            license_url="https://github.com/nextstrain/nextclade/blob/master/LICENSE",
         )
 
         # Parse logs
@@ -98,6 +100,11 @@ class MultiqcModule(BaseMultiqcModule):
             "clade": {
                 "title": "Clade",
                 "description": "The inferred clade from the input sequence and reference tree",
+                "scale": False,
+            },
+            "lineage": {
+                "title": "Lineage",
+                "description": "The inferred lineage from the input sequence and reference tree",
                 "scale": False,
             },
             "qc_overallscore": {

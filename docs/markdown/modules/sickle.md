@@ -1,8 +1,7 @@
 ---
 title: Sickle
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>A windowed adaptive trimming tool for FASTQ files using quality.</p>
+description: "A windowed adaptive trimming tool for FASTQ files using quality."
 ---
 
 <!--
@@ -15,9 +14,11 @@ File path for the source of this content: multiqc/modules/sickle/sickle.py
 -->
 
 :::note
-<p>A windowed adaptive trimming tool for FASTQ files using quality.</p>
+A windowed adaptive trimming tool for FASTQ files using quality.
 
 [https://github.com/najoshi/sickle](https://github.com/najoshi/sickle)
+
+[MIT License](https://github.com/najoshi/sickle/blob/master/LICENSE)
 :::
 
 The `stdout` can be captured by directing it to a file e.g. `sickle command 2> sickle_out.log`
@@ -31,4 +32,3 @@ sickle:
   contents_re: 'FastQ \w*\s?records kept: .*'
   num_lines: 2
 ```
-    

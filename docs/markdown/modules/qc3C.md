@@ -1,8 +1,7 @@
 ---
 title: qc3C
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Reference-free and BAM based quality control for Hi-C data.</p>
+description: "Reference-free and BAM based quality control for Hi-C data."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/qc3C/qc3C.py
 -->
 
 :::note
-<p>Reference-free and BAM based quality control for Hi-C data.</p>
+Reference-free and BAM based quality control for Hi-C data.
 
 [http://github.com/cerebis/qc3C](http://github.com/cerebis/qc3C)
+
+DOI: [10.1371/journal.pcbi.1008839](https://doi.org/10.1371/journal.pcbi.1008839)
+
+[GNU Affero General Public License v3.0](https://github.com/cerebis/qc3C/blob/master/LICENSE)
 :::
 
 qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product
@@ -33,4 +36,3 @@ their experimental aims.
 qc3C:
   fn: '*.qc3C.json'
 ```
-    

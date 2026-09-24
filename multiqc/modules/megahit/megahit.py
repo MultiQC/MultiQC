@@ -16,12 +16,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="MEGAHIT",
             anchor="megahit",
             href="https://github.com/voutcn/megahit",
             info="NGS read assembler",
             doi="10.1093/bioinformatics/btv033",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/voutcn/megahit/blob/master/LICENSE",
         )
 
         data = dict()

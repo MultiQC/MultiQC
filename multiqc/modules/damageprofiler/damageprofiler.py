@@ -9,12 +9,14 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="DamageProfiler",
             anchor="damageprofiler",
             href="https://github.com/Integrative-Transcriptomics/DamageProfiler",
             info="DNA damage pattern retrieval for ancient DNA analysis",
             doi="10.1093/bioinformatics/btab190",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/Integrative-Transcriptomics/DamageProfiler/blob/master/LICENSE",
         )
 
         # Init empty dictionaries

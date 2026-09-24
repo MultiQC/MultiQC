@@ -1,8 +1,7 @@
 ---
 title: Kallisto
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data.</p>
+description: "Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/kallisto/kallisto.py
 -->
 
 :::note
-<p>Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data.</p>
+Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data.
 
 [http://pachterlab.github.io/kallisto/](http://pachterlab.github.io/kallisto/)
+
+DOI: [10.1038/nbt.3519](https://doi.org/10.1038/nbt.3519)
+
+[BSD 2-Clause License](https://github.com/pachterlab/kallisto/blob/master/license.txt)
 :::
 
 **Note** - MultiQC parses the standard out from Kallisto, _not_ any of its output files
@@ -30,4 +33,3 @@ Kallisto stdout to a file when running to use the MultiQC module.
 kallisto:
   contents: '[quant] finding pseudoalignments for the reads'
 ```
-    

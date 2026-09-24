@@ -19,12 +19,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Kallisto",
             anchor="kallisto",
             href="http://pachterlab.github.io/kallisto/",
             info="Quantifies abundances of transcripts (or more generally, of target sequences) from RNA-Seq data",
             doi="10.1038/nbt.3519",
+            license="BSD 2-Clause License",
+            license_url="https://github.com/pachterlab/kallisto/blob/master/license.txt",
         )
 
         # Find and load any Kallisto reports

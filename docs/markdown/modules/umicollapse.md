@@ -1,8 +1,7 @@
 ---
 title: UMICollapse
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Algorithms for efficiently collapsing reads with Unique Molecular Identifiers.</p>
+description: "Algorithms for efficiently collapsing reads with Unique Molecular Identifiers."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/umicollapse/umicollaps
 -->
 
 :::note
-<p>Algorithms for efficiently collapsing reads with Unique Molecular Identifiers.</p>
+Algorithms for efficiently collapsing reads with Unique Molecular Identifiers.
 
 [https://github.com/Daniel-Liu-c0deb0t/UMICollapse](https://github.com/Daniel-Liu-c0deb0t/UMICollapse)
+
+DOI: [10.7717/peerj.8275](https://doi.org/10.7717/peerj.8275)
+
+[MIT License](https://github.com/Daniel-Liu-c0deb0t/UMICollapse/blob/master/LICENSE)
 :::
 
 Sample names are extracted from log files if possible. In logs, the command
@@ -40,4 +43,3 @@ umicollapse:
   contents: 'UMI collapsing finished in '
   num_lines: 100
 ```
-    

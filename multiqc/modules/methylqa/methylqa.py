@@ -10,13 +10,16 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="methylQA",
             anchor="methylqa",
             target="methylqa",
             href="http://methylqa.sourceforge.net/",
             info="Methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any methylQA reports

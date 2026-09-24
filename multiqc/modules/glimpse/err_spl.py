@@ -144,6 +144,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "max": 100,
             "suffix": "%",
             "scale": "YlOrRd",
+            "format": "{:,.2f}",
         },
         "RA_het_mismatches_rate_percent": {
             "title": "Reference-Alternate heterozygous mismatches rate",
@@ -152,6 +153,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "max": 100,
             "suffix": "%",
             "scale": "YlOrRd",
+            "format": "{:,.2f}",
         },
         "AA_hom_mismatches_rate_percent": {
             "title": "Alternate-Alternate homozygous mismatches rate",
@@ -160,6 +162,7 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "max": 100,
             "suffix": "%",
             "scale": "YlOrRd",
+            "format": "{:,.2f}",
         },
         "non_reference_discordance_rate_percent": {
             "title": "Non-reference discordance rate",
@@ -168,20 +171,23 @@ def parse_glimpse_err_spl(module: BaseMultiqcModule) -> int:
             "max": 100,
             "suffix": "%",
             "scale": "YlOrRd",
+            "format": "{:,.2f}",
         },
         "best_gt_rsquared": {
-            "title": "Best genotype r-squared",
-            "description": "Best genotype r-squared",
+            "title": "Best genotype r<sup>2</sup>",
+            "description": "Best genotype r<sup>2</sup>",
             "min": 0,
             "max": 1,
             "scale": "YlGn",
+            "format": "{:,.4f}",
         },
         "imputed_ds_rsquared": {
-            "title": "Imputed dosage r-squared",
-            "description": "Imputed dosage r-squared",
+            "title": "Imputed dosage r<sup>2</sup>",
+            "description": "Imputed dosage r<sup>2</sup>",
             "min": 0,
             "max": 1,
             "scale": "YlGn",
+            "format": "{:,.4f}",
         },
     }
 

@@ -1,8 +1,7 @@
 ---
 title: VG
 displayed_sidebar: multiqcSidebar
-description: >
-    <p>Toolkit to manipulate and analyze graphical genomes, including read alignment.</p>
+description: "Toolkit to manipulate and analyze graphical genomes, including read alignment."
 ---
 
 <!--
@@ -15,9 +14,13 @@ File path for the source of this content: multiqc/modules/vg/vg.py
 -->
 
 :::note
-<p>Toolkit to manipulate and analyze graphical genomes, including read alignment.</p>
+Toolkit to manipulate and analyze graphical genomes, including read alignment.
 
 [https://github.com/vgteam/vg](https://github.com/vgteam/vg)
+
+DOI: [10.1038/nbt.4227](https://doi.org/10.1038/nbt.4227)
+
+[MIT License](https://github.com/vgteam/vg/blob/master/LICENSE)
 :::
 
 The module parses the
@@ -70,4 +73,3 @@ vg/stats:
   - 'Speed:'
   num_lines: 30
 ```
-    

@@ -3,7 +3,9 @@ import re
 from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
+from multiqc.base_module import SampleGroupingConfig
 from multiqc.plots import violin
+from multiqc.types import ColumnKey
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +61,15 @@ def parse_samtools_flagstat(module: BaseMultiqcModule):
 
     # Add headers to general stats table
     if general_stats_headers:
-        module.general_stats_addcols(samtools_flagstat, general_stats_headers, namespace="flagstat")
+        module.general_stats_addcols(
+            samtools_flagstat,
+            general_stats_headers,
+            namespace="flagstat",
+            group_samples_config=SampleGroupingConfig(
+                cols_to_sum=[ColumnKey("flagstat_total"), ColumnKey("mapped_passed"), ColumnKey("total_passed")],
+                cols_to_weighted_average=[(ColumnKey("mapped_passed_pct"), ColumnKey("total_passed"))],
+            ),
+        )
 
     # Make a violin plot
     reads = {

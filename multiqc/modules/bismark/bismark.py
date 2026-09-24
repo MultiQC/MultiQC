@@ -57,12 +57,14 @@ regexes = {
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Bismark",
             anchor="bismark",
             href="http://www.bioinformatics.babraham.ac.uk/projects/bismark/",
             info="Maps bisulfite converted sequence reads and determine cytosine methylation states.",
             doi="10.1093/bioinformatics/btr167",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/FelixKrueger/Bismark/blob/master/license.txt",
         )
 
         # Set up data structures

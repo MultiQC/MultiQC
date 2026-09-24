@@ -10,13 +10,15 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Anglerfish",
             anchor="Anglerfish",
             href="https://github.com/remiolsen/anglerfish",
             info="Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells",
             extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
+            license="MIT License",
+            license_url="https://github.com/remiolsen/anglerfish/blob/master/LICENSE",
         )
 
         # Find and load any anglerfish reports

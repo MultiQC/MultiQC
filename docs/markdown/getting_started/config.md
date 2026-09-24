@@ -25,6 +25,10 @@ it collects the configuration settings from the following places in this order
 1. Command line config (`--cl-config`)
 1. Specific command line options (_e.g._ `--force`)
 
+## Config Wizard
+
+You can build a config file visually in your browser with the [MultiQC Configuration Wizard](https://seqera.io/multiqc_config_wizard). It has every option as a form field, with live YAML editor and schema validation as you type. See the [Config Wizard docs](config_wizard.md) for more information.
+
 ## Sample name cleaning
 
 MultiQC typically generates sample names by taking the input or log file name,
@@ -475,7 +479,7 @@ As of MultiQC version 1.8, log output is coloured using the [coloredlogs](https:
 Python package. The code attempts to detect if the logs on the terminal are being redirected to a file
 or piped to another tool and will disable colours if so. If the colours annoy you or you're ending
 up with weird characters in your MultiQC output, you can disable this feature with the command line
-flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initilised
+flag `--no-ansi`. Sadly it's not possible to set this in a config file, as the logger is initialised
 before configs are loaded.
 
 ## Checks for new versions
@@ -487,7 +491,7 @@ This helps people stay up to date and reduces the number of bug reports that are
 due to outdated MultiQC versions.
 
 The timeout for the version check is set to 5 seconds, so if you're running offline it should
-fail silently and add negligable run time.
+fail silently and add negligible run time.
 However, if you prefer you can explicitly disable the version check by adding
 `no_version_check: true` to your MultiQC config.
 

@@ -55,12 +55,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="QUAST",
             anchor="quast",
             href="http://quast.bioinf.spbau.ru/",
             info="Quality assessment tool for genome assemblies",
             doi="10.1093/bioinformatics/btt086",
+            license="GNU General Public License v2.0",
+            license_url="https://github.com/ablab/quast/blob/master/LICENSE.txt",
         )
 
         # Get modifiers from config file

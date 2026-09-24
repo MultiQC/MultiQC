@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ngsderive",
             anchor="ngsderive",
             href="https://github.com/stjudecloud/ngsderive",
@@ -20,6 +20,8 @@ class MultiqcModule(BaseMultiqcModule):
             should be considered with that understanding. Please see the documentation for more information.
             """,
             # Can't find a DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/stjudecloud/ngsderive/blob/master/LICENSE.md",
         )
 
         self.strandedness = {}

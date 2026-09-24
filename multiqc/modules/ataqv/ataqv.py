@@ -11,12 +11,14 @@ log = logging.getLogger(__name__)
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="ATAQV",
             anchor="ataqv",
             href="https://github.com/ParkerLab/ataqv/",
             info="Toolkit for quality control and visualization of ATAC-seq data",
             doi="10.1093/bioinformatics/btx865",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/ParkerLab/ataqv/blob/master/LICENSE",
         )
 
         # Find and parse JSON files
@@ -277,7 +279,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="ataqv-peak-percentiles",
                 description="Cumulative distribution of reads in peaks and of genomic territory.",
                 helptext="""
-                This plot shows the cumulative fraction of high-quality autosomal alignments, 
+                This plot shows the cumulative fraction of high-quality autosomal alignments,
                 and the cumulative fraction of the genome territory covered by those peaks.
 
                 * A steeper curve indicates better enrichment

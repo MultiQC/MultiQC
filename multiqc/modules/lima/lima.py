@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def __init__(self):
         # Initialse the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="Lima",
             anchor="lima",
             href="https://github.com/PacificBiosciences/barcoding",
@@ -36,6 +36,8 @@ class MultiqcModule(BaseMultiqcModule):
             "sequences in PacBio single-molecule sequencing data. Starting in SMRT Link v5.1.0, it is the "
             "tool that powers the Demultiplex Barcodes GUI-based analysis application.",
             # No publication / DOI // doi=
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/barcoding/blob/master/LICENSE",
         )
 
         # To store the summary data
@@ -129,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
         # A dictionary to store the results
         lima_counts = dict()
         for line in file_content:
-            spline = line.strip().split()
+            spline = line.strip().split("\t")
             data = {field: value for field, value in zip(header, spline)}
 
             first_barcode = data["IdxFirstNamed"]

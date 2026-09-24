@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard QualityYieldMetrics"""
 
 import logging
-from collections import OrderedDict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -9,21 +8,19 @@ from multiqc.modules.picard import util
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-DESC = OrderedDict(
-    [
-        ("TOTAL_READS", "The total number of reads in the input file"),
-        ("PF_READS", "The number of reads that are PF - pass filter"),
-        ("READ_LENGTH", "The average read length of all the reads (will be fixed for a lane)"),
-        ("TOTAL_BASES", "The total number of bases in all reads"),
-        ("PF_BASES", "The total number of bases in all PF reads"),
-        ("Q20_BASES", "The number of bases in all reads that achieve quality score 20 or higher"),
-        ("PF_Q20_BASES", "The number of bases in PF reads that achieve quality score 20 or higher"),
-        ("Q30_BASES", "The number of bases in all reads that achieve quality score 30 or higher"),
-        ("PF_Q30_BASES", "The number of bases in PF reads that achieve quality score 30 or higher"),
-        ("Q20_EQUIVALENT_YIELD", "The sum of quality scores of all bases divided by 20"),
-        ("PF_Q20_EQUIVALENT_YIELD", "The sum of quality scores of all bases in PF reads divided by 20"),
-    ]
-)
+DESC = {
+    "TOTAL_READS": "The total number of reads in the input file",
+    "PF_READS": "The number of reads that are PF - pass filter",
+    "READ_LENGTH": "The average read length of all the reads (will be fixed for a lane)",
+    "TOTAL_BASES": "The total number of bases in all reads",
+    "PF_BASES": "The total number of bases in all PF reads",
+    "Q20_BASES": "The number of bases in all reads that achieve quality score 20 or higher",
+    "PF_Q20_BASES": "The number of bases in PF reads that achieve quality score 20 or higher",
+    "Q30_BASES": "The number of bases in all reads that achieve quality score 30 or higher",
+    "PF_Q30_BASES": "The number of bases in PF reads that achieve quality score 30 or higher",
+    "Q20_EQUIVALENT_YIELD": "The sum of quality scores of all bases divided by 20",
+    "PF_Q20_EQUIVALENT_YIELD": "The sum of quality scores of all bases in PF reads divided by 20",
+}
 
 
 def parse_reports(module):

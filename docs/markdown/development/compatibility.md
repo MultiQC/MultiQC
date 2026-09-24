@@ -170,6 +170,7 @@ self.add_section(
 ```
 
 Text passed as `description` and `helptext` is wrapped in `<p>` tags, and additional raw content can be provided with a `content` or `content_before_plot` string if required.
+Use the `alerts` parameter for Bootstrap alert boxes instead of appending raw alert HTML to `description` or `content`.
 
 #### Updated number formatting
 

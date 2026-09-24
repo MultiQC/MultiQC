@@ -47,12 +47,14 @@ class MultiqcModule(BaseMultiqcModule):
     """
 
     def __init__(self):
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="FLASh",
             anchor="flash",
             href="https://ccb.jhu.edu/software/FLASH/",
             info="Merges paired-end reads from next-generation sequencing experiments.",
             doi="10.1093/bioinformatics/btr507",
+            license="GNU General Public License v3.0",
+            license_url="https://sourceforge.net/projects/flashpage/",
         )
 
         flash_results = self.parse_flash()
@@ -219,8 +221,7 @@ class MultiqcModule(BaseMultiqcModule):
                 nameddata[histf["s_name"]] = data
             else:
                 log.debug("%s is empty.", histf["fn"])
-        finally:
-            return nameddata
+        return nameddata
 
     @staticmethod
     def get_colors(n):
