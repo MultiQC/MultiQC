@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -43,7 +42,7 @@ class CutTrim:
             read_data[key] = {"Left_Trim": json[key]["Ct_Left_Trimmed"], "Right_Trim": json[key]["Ct_Right_Trimmed"]}
 
         # Create categories for multidataset bargraph
-        cats = [OrderedDict(), OrderedDict()]
+        cats = [{}, {}]
         cats[0]["Perc_Left_Trim"] = {"name": "Left Trimmed"}
         cats[0]["Perc_Right_Trim"] = {"name": "Right Trimmed"}
         cats[1]["Left_Trim"] = {"name": "Left Trimmed"}
@@ -54,7 +53,7 @@ class CutTrim:
     ########################
     # MainFunction
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         for key in json.keys():

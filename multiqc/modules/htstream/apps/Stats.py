@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 from random import random
 
@@ -38,7 +37,7 @@ class Stats:
         config = {"id": "htstream_stats_table_line_" + unique_id, "title": "HTStream: Stats"}
 
         # striaght forward table function, right from MultiQC documentation
-        headers = OrderedDict()
+        headers = {}
 
         # "St_PE_Fraction" + index
         headers["St_R1_Q30" + index] = {
@@ -314,7 +313,7 @@ class Stats:
         if len(uniform_dict.keys()) == len(json.keys()):
             config = {"id": "htstream_stats_read_length_" + unique_id, "title": "HTStream: Stats"}
 
-            headers = OrderedDict()
+            headers = {}
 
             headers["St_Read_Lengths_SE_" + unique_id] = {
                 "title": "SE Read Lengths",
@@ -348,9 +347,9 @@ class Stats:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
-        SE_json = OrderedDict()
-        PE_json = OrderedDict()
+        stats_json = {}
+        SE_json = {}
+        PE_json = {}
         overview_stats = {}
 
         for key in json.keys():

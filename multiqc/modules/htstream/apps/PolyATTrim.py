@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -60,7 +59,7 @@ class PolyATTrim:
                 }
 
             # bargraph dictionary. Exact use of example in MultiQC docs.
-            categories = [OrderedDict(), OrderedDict()]
+            categories = [{}, {}]
 
             # Colors for sections
             categories[0]["Perc_R1_lost"] = {"name": "Read 1", "color": "#779BCC"}
@@ -77,7 +76,7 @@ class PolyATTrim:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         # accumulator variable. Used to prevent empty bargraphs

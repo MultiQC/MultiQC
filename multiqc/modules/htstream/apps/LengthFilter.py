@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -56,7 +55,7 @@ class LengthFilter:
                 }
 
             # Create categories for multidataset bargraph
-            cats = [OrderedDict(), OrderedDict()]
+            cats = [{}, {}]
             cats[0]["Perc_PE"] = {"name": "Paired End"}
             cats[0]["Perc_SE"] = {"name": "Single End"}
             cats[1]["Reads_PE"] = {"name": "Paired End"}
@@ -70,7 +69,7 @@ class LengthFilter:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         # Accumulator vars

@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -55,7 +54,7 @@ class QWindowTrim:
                 se_data[key] = {"LT_SE": json[key]["Qt_Left_Trimmed_SE"], "RT_SE": json[key]["Qt_Right_Trimmed_SE"]}
 
             # Create categores for multidatatset bragraphs
-            cats = [OrderedDict(), OrderedDict(), OrderedDict()]
+            cats = [{}, {}, {}]
             cats[0]["LT_R1"] = {"name": "Left Trimmmed"}
             cats[0]["RT_R1"] = {"name": "Right Trimmmed"}
             cats[1]["LT_R2"] = {"name": "Left Trimmmed"}
@@ -70,7 +69,7 @@ class QWindowTrim:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         overall_trim = 0

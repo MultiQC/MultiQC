@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -48,7 +47,7 @@ class SeqScreener:
                 read_data[key] = {"Reads_PE": json[key]["Ss_PE_hits"], "Reads_SE": json[key]["Ss_SE_hits"]}
 
             # Create categories for multidataset bargraph
-            cats = [OrderedDict(), OrderedDict()]
+            cats = [{}, {}]
             cats[0]["Perc_PE"] = {"name": "Paired End"}
             cats[0]["Perc_SE"] = {"name": "Single End"}
             cats[1]["Reads_PE"] = {"name": "Paired End"}
@@ -61,7 +60,7 @@ class SeqScreener:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         reads_screened = 0

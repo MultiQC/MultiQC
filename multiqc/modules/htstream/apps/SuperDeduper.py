@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import linegraph
@@ -60,7 +59,7 @@ class SuperDeduper:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         for key in json.keys():

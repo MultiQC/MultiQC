@@ -55,11 +55,10 @@ def parse_json(name, f):
 
             app_dict[app_name] = a
 
-    except:
+    except (KeyError, TypeError):
         # Used to parse older json files. Will likely be removed in future.
         app_dict = json.loads(f, object_pairs_hook=resolve)
         log.warning("Sample " + name + " uses old json format. Please update to a newer version of HTStream.")
-        raise
 
     return app_dict, repeated_apps
 

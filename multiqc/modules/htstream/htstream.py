@@ -1,7 +1,5 @@
 """MultiQC module to parse output from HTStream"""
 
-from __future__ import print_function
-from collections import OrderedDict
 import logging
 import json
 
@@ -29,16 +27,18 @@ class MultiqcModule(BaseMultiqcModule):
         self.sample_statistics = {}
 
         # Initialise the parent object
-        super(MultiqcModule, self).__init__(
+        super().__init__(
             name="HTStream",
             anchor="htstream",
             href="https://s4hts.github.io/HTStream/",
-            info=" quality control and processing pipeline for High Throughput Sequencing data.",
+            info="Quality control and processing pipeline for High Throughput Sequencing data.",
             doi="",
+            license="Apache License 2.0",
+            license_url="https://github.com/s4hts/HTStream/blob/master/LICENSE",
         )
 
-        # Initialize ordered dictionary (key: samples, values: their respective json files)
-        self.htstream_data = OrderedDict()
+        # Sample data (key: samples, values: their respective json files)
+        self.htstream_data = {}
         self.overview_stats = {}
         self.report_sections = {}
         self.app_order = []
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
                             split_line = line.split("\t")
                             hconfig["sample_colors"][split_line[0]] = split_line[1].strip()
 
-            except:
+            except (OSError, IndexError):
                 log.warning(
                     "Sample Coloring file could not be parsed. Check for proper path, TSV format, and HTML color codes."
                 )
@@ -151,7 +151,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # creat app specific dictionary, each entry will be a sample
-            stats_dict = OrderedDict()
+            stats_dict = {}
 
             # get input reads
             for key in sample_keys:
@@ -186,11 +186,7 @@ class MultiqcModule(BaseMultiqcModule):
                 section_dict = app.execute(stats_dict, index)
                 self.overview_stats[app_name] = section_dict["Overview"]
 
-                try:
-                    notes = stats_dict[list(stats_dict.keys())[0]]["Program_details"]["options"]["notes"]
-                except:
-                    notes = ""
-                    raise
+                notes = stats_dict[next(iter(stats_dict))]["Program_details"]["options"].get("notes", "")
 
                 if program != "Stats":
                     # if dictionary is not empty
@@ -235,8 +231,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                         self.report_sections[rtype + " Base by Cycle " + index] = {
                             "name": rtype + " Base by Cycle " + index,
-                            "description": """Provides a measure of the uniformity of a distribution. 
-                                                                                                    The higher the average deviation from 25% is, 
+                            "description": """Provides a measure of the uniformity of a distribution.
+                                                                                                    The higher the average deviation from 25% is,
                                                                                                     the more unequal the base pair composition. N's are excluded from this calculation.""",
                             "figure": section_dict[rtype]["Base_by_Cycle"],
                             "content": "",
@@ -245,8 +241,8 @@ class MultiqcModule(BaseMultiqcModule):
 
                         self.report_sections[rtype + " Quality by Cycle " + index] = {
                             "name": rtype + " Quality by Cycle " + index,
-                            "description": """Mean quality score for each position along the read. 
-                                                                                                    Sample is colored red if less than 60% of bps have mean score of at least Q30, 
+                            "description": """Mean quality score for each position along the read.
+                                                                                                    Sample is colored red if less than 60% of bps have mean score of at least Q30,
                                                                                                     orange if between 60% and 80%, and green otherwise.""",
                             "figure": section_dict[rtype]["Quality_by_Cycle"],
                             "content": "",
@@ -270,7 +266,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.add_section(name="Processing Overview", description=description, plot=plot)
 
-            except:
+            except Exception:
                 log.warning("Report Section for Processing Overview Failed.")
                 raise
 
@@ -292,7 +288,7 @@ class MultiqcModule(BaseMultiqcModule):
                         continue
 
                 # create header dict for table
-                headers = OrderedDict()
+                headers = {}
                 headers["Input Reads"] = {
                     "title": "M Input",
                     "description": "Reads input to HTStream (millions).",
@@ -309,7 +305,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # add data to general table
                 self.general_stats_addcols(self.gen_report_stats, headers)
 
-            except:
+            except Exception:
                 log.warning("Adding Columns to General Table Failed.")
                 raise
 
@@ -328,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
                     content=content["content"],
                 )
 
-            except:
+            except Exception:
                 log = logging.getLogger(__name__)
                 msg = "Report Section for " + section + " Failed."
                 log.warning(msg)

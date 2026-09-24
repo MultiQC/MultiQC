@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 import statistics
 
@@ -42,7 +41,7 @@ class Overlapper:
 
         else:
             # bargraph dictionary. Exact use of example in MultiQC docs.
-            categories = OrderedDict()
+            categories = {}
 
             # Create blocks for bargrapph
             categories["Ov_Sins"] = {"name": "Short Inserts", "color": "#779BCC"}
@@ -106,7 +105,7 @@ class Overlapper:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
 
         # accumulator for inserts, used to prevent empty bar graph
@@ -125,10 +124,9 @@ class Overlapper:
             try:
                 ov_hist = json[key]["Fragment"].get("overlap_histogram", [[0, 0]])
                 parsed_hist_stats = self.parse_histogram_stats(ov_hist)
-            except:
+            except (statistics.StatisticsError, IndexError, KeyError):
                 parsed_hist_stats = -1
                 ov_hist = -1
-                raise
 
             # if no histogram, assign zeroes to median and max
             if parsed_hist_stats == -1:

@@ -1,4 +1,3 @@
-from collections import OrderedDict
 import logging
 
 from multiqc.plots import bargraph
@@ -55,7 +54,7 @@ class AdapterTrimmer:
                 bp_data[key] = {"Avg_adapter": json[key]["At_Avg_BP_Trimmed" + index]}
 
             # Create categories for multidataset bargraph
-            cats = [OrderedDict(), OrderedDict(), OrderedDict()]
+            cats = [{}, {}, {}]
             cats[0]["Perc_bp_lost"] = {"name": "Percentage"}
             cats[1]["Perc_adapters"] = {"name": "Percentage"}
             cats[2]["Avg_adapter"] = {"name": "Basepairs"}
@@ -67,7 +66,7 @@ class AdapterTrimmer:
     ########################
     # Main Function
     def execute(self, json, index):
-        stats_json = OrderedDict()
+        stats_json = {}
         overview_dict = {}
         total = 0
 
