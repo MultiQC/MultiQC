@@ -1,24 +1,16 @@
 name: Module preview report build
 # module-report.yml parses the PR number from the leading "#<pr> "
-run-name: "#${{ github.event.pull_request.number || inputs.pr }} ${{ github.event.pull_request.title || 'Preview report build' }}"
+run-name: "#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
 
 on:
   pull_request:
     paths: ["multiqc/modules/**"]
-  # TODO: remove after the one-off backfill of open PRs. It builds PR code in the
-  # default branch context, which can poison caches (CodeQL alert 120).
-  workflow_dispatch:
-    inputs:
-      pr:
-        description: PR number
-        required: true
-        type: number
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || inputs.pr }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -31,19 +23,8 @@ jobs:
       contents: read
       pull-requests: read
     env:
-      PR: ${{ github.event.pull_request.number || inputs.pr }}
+      PR: ${{ github.event.pull_request.number }}
     steps:
-      - name: Pin the PR head
-        id: pr
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          gh pr view "$PR" --repo "$REPO" \
-            --json headRefOid,headRepository,headRepositoryOwner \
-            -q '"sha=\(.headRefOid)", "repo=\(.headRepositoryOwner.login)/\(.headRepository.name)"' \
-            | tee -a "$GITHUB_OUTPUT"
-
       - name: Find edited modules
         id: modules
         env:
@@ -60,8 +41,8 @@ jobs:
         if: steps.modules.outputs.modules != ''
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: ${{ steps.pr.outputs.repo }}
-          ref: ${{ steps.pr.outputs.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.sha }}
           persist-credentials: false
 
       - name: Download test data

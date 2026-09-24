@@ -85,8 +85,6 @@ def get_targets() -> Tuple[List[PullRequest], str, Optional[WorkflowRun]]:
     if not match:
         sys.exit(f"Can't parse PR from run name: {build.display_title}")
     pr = bot_repo.get_pull(int(match.group(1)))
-    if build.event != "pull_request":
-        return [pr], "new", build
     # Also rejects a fork run naming someone else's PR
     if pr.head.sha != build.head_sha:
         print(f"PR #{pr.number} head moved on or doesn't match this build")
