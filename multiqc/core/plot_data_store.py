@@ -100,13 +100,14 @@ def flush_to_parquet() -> None:
                 merged_wide_tables = table_df
             elif table_df.height > 0:
                 # Merge by joining on sample and creation_date
-                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="outer")
-                # Ensure all columns are present
-                all_cols = merged_wide_tables.columns
-                for col in table_df.columns:
-                    if col not in all_cols:
-                        all_cols.append(col)
-                merged_wide_tables = merged_wide_tables.select([c for c in all_cols if c in merged_wide_tables.columns])
+                join_keys = ["anchor", "type", "creation_date", "plot_type", "plot_input_data", "sample"]
+                merged_wide_tables = merged_wide_tables.join(
+                    table_df,
+                    on=join_keys,
+                    how="outer",
+                    coalesce=True,
+                    nulls_equal=True,
+                )
 
     # Build list of dataframes to concatenate
     all_dfs: List[pl.DataFrame] = []
