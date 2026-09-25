@@ -1,0 +1,16 @@
+	species_a	species_b	species_c
+Number of genes	20000	18000	22000
+Number of genes in orthogroups	18000	16200	19800
+Number of unassigned genes	2000	1800	2200
+Percentage of genes in orthogroups	90.0	90.0	90.0
+Percentage of unassigned genes	10.0	10.0	10.0
+Number of orthogroups containing species	6000	5400	6600
+Percentage of orthogroups containing species	66.7	60.0	73.3
+Number of species-specific orthogroups	400	300	500
+Number of genes in species-specific orthogroups	1600	1200	2000
+Percentage of genes in species-specific orthogroups	8.0	6.7	9.1
+
+
+Number of genes per-species in orthogroup
+'0	100	200	300
+'1	4000	3800	4200
