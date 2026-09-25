@@ -93,7 +93,7 @@ The side navigation for the report.
       <ul class="mqc-nav">
         {% if not config.skip_generalstats %}
           <li>
-            <a href="#general_stats" class="nav-l1">General Stats</a>
+            <a href="#general_stats" class="nav-l1">{{ report.general_stats_title or "General Stats" }}</a>
           </li>
         {% endif -%}
         {% for m in report.modules %}

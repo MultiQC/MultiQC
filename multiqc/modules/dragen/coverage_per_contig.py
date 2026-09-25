@@ -12,6 +12,13 @@ log = logging.getLogger(__name__)
 
 class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
+        has_rna_outputs = any(self.find_log_files("dragen/rna_quant_metrics", filecontents=False)) or any(
+            self.find_log_files("dragen/rna_transcript_cov", filecontents=False)
+        )
+        if has_rna_outputs:
+            log.debug("Skipping DRAGEN coverage-per-contig plots for RNA-seq data")
+            return set()
+
         perchrom_data_by_phenotype_by_sample: Dict[str, Dict] = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_contig_mean_cov"):

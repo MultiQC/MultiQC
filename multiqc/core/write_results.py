@@ -12,7 +12,7 @@ import time
 import traceback
 import uuid
 from pathlib import Path
-from typing import Optional, cast
+from typing import Dict, Optional, cast
 
 import jinja2
 
@@ -87,6 +87,11 @@ def write_results(return_html: bool = False) -> Optional[str]:
     # Did we find anything?
     if len(report.modules) == 0:
         raise NoAnalysisFound("No analysis data for any module. Check that input files and directories exist")
+
+    # If the global table is disabled, expose General Stats per tool by adding
+    # a dedicated table section to each module that contributed columns.
+    if config.skip_generalstats:
+        _add_per_module_general_stats_sections()
 
     output_file_names: OutputNames = _set_output_names()
 
@@ -381,6 +386,26 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
                 # all_hidden = False
                 break
 
+    # Build a display title from the tools that contributed General Stats columns.
+    tool_names: List[str] = []
+    for headers in report.general_stats_headers.values():
+        for col in headers.values():
+            namespace = str(col.get("namespace", "")).strip()
+            if not namespace:
+                continue
+            tool_name = namespace.split(":", 1)[0].strip()
+            if tool_name and tool_name not in tool_names:
+                tool_names.append(tool_name)
+
+    if len(tool_names) == 1:
+        report.general_stats_title = f"{tool_names[0]} Statistics"
+    elif 1 < len(tool_names) <= 3:
+        report.general_stats_title = f"General Statistics ({', '.join(tool_names)})"
+    elif len(tool_names) > 3:
+        report.general_stats_title = f"General Statistics ({len(tool_names)} tools)"
+    else:
+        report.general_stats_title = "General Statistics"
+
     # Generate the General Statistics HTML & write to file
     # Clean previous general stats table if running write_report interactively second time:
     if Anchor("general_stats_table") in report.html_ids_by_scope[None]:
@@ -393,7 +418,7 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
         headers=report.general_stats_headers,  # type: ignore
         pconfig={
             "id": "general_stats_table",
-            "title": "General Statistics",
+            "title": report.general_stats_title,
             "save_file": True,
             "raw_data_fn": "multiqc_general_stats",
         },
@@ -420,6 +445,55 @@ def _render_general_stats_table(plots_dir_name: str) -> Optional[Plot]:
     else:
         config.skip_generalstats = True
     return None
+
+
+def _add_per_module_general_stats_sections() -> None:
+    """Attach per-module General Statistics tables when global table is skipped."""
+    if not report.general_stats_data:
+        return
+
+    for mod in report.modules:
+        section_id = f"{mod.anchor}-general-stats"
+        section_anchor = f"{mod.anchor}-general-stats"
+        plot_id = f"{mod.anchor}_general_stats_table"
+
+        # Avoid duplicating sections in interactive reruns.
+        if any(str(s.id) == section_id or str(s.anchor) == section_anchor for s in mod.sections):
+            continue
+
+        mod_data: Dict = {}
+        mod_headers: Dict = {}
+        for section_key, rows in report.general_stats_data.items():
+            sk = str(section_key)
+            if sk == mod.anchor or sk.startswith(f"{mod.anchor}_"):
+                mod_data[section_key] = rows
+                mod_headers[section_key] = report.general_stats_headers[section_key]
+
+        if not mod_data:
+            continue
+
+        plot = table.plot_with_sections(
+            data=mod_data,  # type: ignore[arg-type]
+            headers=mod_headers,  # type: ignore[arg-type]
+            pconfig={
+                "id": plot_id,
+                "title": f"{mod.name}: General Statistics",
+                "save_file": True,
+                "raw_data_fn": f"{mod.anchor}_general_stats",
+            },
+        )
+        if plot is None:
+            continue
+
+        mod.add_section(
+            name=f"General statistics ({mod.name})",
+            anchor=section_anchor,
+            id=section_id,
+            description="Per-tool General Statistics summary table.",
+            plot=plot,
+        )
+        # Keep per-tool stats at the top of each module section list.
+        mod.sections.insert(0, mod.sections.pop())
 
 
 def _write_data_files(data_dir: Path) -> None:

@@ -44,7 +44,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
                 self.add_software_version(self.salmon_meta[s_name]["salmon_version"], s_name)
 
-        # Parse Fragment Length Distribution logs
+        # Parse library insert size distribution logs
         self.salmon_fld = dict()
         for f in self.find_log_files("salmon/fld"):
             # Get the s_name from the parent directory
@@ -79,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.info(f"Found {len(self.salmon_meta)} meta reports")
             self.write_data_file(self.salmon_meta, "multiqc_salmon")
         if len(self.salmon_fld) > 0:
-            log.info(f"Found {len(self.salmon_fld)} fragment length distributions")
+            log.info(f"Found {len(self.salmon_fld)} library insert size distributions")
         if len(self.salmon_lfc) > 0:
             log.info(f"Found {len(self.salmon_lfc)} library format counts reports")
 
@@ -141,15 +141,24 @@ class MultiqcModule(BaseMultiqcModule):
             self.general_stats_addcols(self.salmon_lfc, lfc_headers)
 
         if self.salmon_fld:
-            # Fragment length distribution plot
+            salmon_fld_pct = {
+                sample: {x: y * 100.0 for x, y in series.items()} for sample, series in self.salmon_fld.items()
+            }
+
+            # Library insert size distribution plot
             pconfig = {
                 "smooth_points": 500,
                 "id": "salmon_plot",
-                "title": "Salmon: Fragment Length Distribution",
-                "ylab": "Fraction",
-                "xlab": "Fragment Length (bp)",
+                "title": "Salmon: Inferred Library Insert Size Distribution",
+                "ylab": "Percentage",
+                "ysuffix": "%",
+                "xlab": "Library Insert Size (bp)",
                 "ymin": 0,
                 "xmin": 0,
-                "tt_label": "<b>{point.x:,.0f} bp</b>: {point.y:,.0f}",
+                "tt_label": "<b>{point.x:,.0f} bp</b>: {point.y:.2f}%",
             }
-            self.add_section(plot=linegraph.plot(self.salmon_fld, pconfig))
+            self.add_section(
+                name="Library Insert Size Distribution",
+                description="Inferred library insert size density estimated by Salmon.",
+                plot=linegraph.plot(salmon_fld_pct, pconfig),
+            )

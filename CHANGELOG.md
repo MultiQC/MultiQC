@@ -1,5 +1,25 @@
 # MultiQC Version History
 
+## [Unreleased](https://github.com/MultiQC/MultiQC/releases)
+
+### Module updates
+
+- QoRTs: Visualize all parsed metrics with expanded module output.
+- FastQC: Generate adapter content plots per adapter with toggleable views.
+- Salmon: Improve library insert size plot title handling.
+- Dragen: Mapping metrics section now has toggleable tabs for absolute values and percentages.
+
+### Module fixes
+
+- Fastp: Fix insert size parsing and plotting bug in the module.
+- Dragen: Fix multiple DRAGEN module issues across mapping, fragment length, coverage, and RNA quant metrics.
+- Dragen: Remove redundant "Mapped / paired / duplicated" section from mapping metrics output.
+
+### Feature updates and improvements
+
+- Report: Improve report appearance across templates, navigation, and general stats presentation.
+- Core: Update report writing and plot handling to support the report appearance changes.
+
 ## [MultiQC v1.35](https://github.com/MultiQC/MultiQC/releases/tag/v1.35) - 2026-05-13
 
 This release has a very nice shiny new feature for you: the _MultiQC Configuration Wizard_! 👨🏻‍🎨 🎨

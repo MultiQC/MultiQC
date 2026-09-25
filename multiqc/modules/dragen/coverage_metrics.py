@@ -507,6 +507,13 @@ class DragenCoverageMetrics(BaseMultiqcModule):
         The public members of the BaseMultiqcModule and dragen modules defined in
         MultiqcModule are available within it. Returns a set with sample names."""
 
+        has_rna_outputs = any(self.find_log_files("dragen/rna_quant_metrics", filecontents=False)) or any(
+            self.find_log_files("dragen/rna_transcript_cov", filecontents=False)
+        )
+        if has_rna_outputs:
+            log.debug("Skipping DRAGEN coverage metrics tables for RNA-seq data")
+            return set()
+
         cov_data = defaultdict(dict)
 
         # Stores cleaned sample names with references to file handlers.
