@@ -720,7 +720,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_label": "<b>Phred {point.x}</b>: {point.y} reads",
             "data_labels": [
                 {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
-                {"name": "Counts", "ylab": "Count", "tt_suffix": ""},
+                {"name": "Counts", "ylab": "Count", "tt_suffix": "", "active": True},
             ],
             "showlegend": False,
             "colors": self.get_status_cols("per_sequence_quality_scores"),
@@ -1067,7 +1067,7 @@ class MultiqcModule(BaseMultiqcModule):
                 tt_label="<b>{point.x} bp</b>: {point.y}",
                 data_labels=[
                     {"name": "Percentages", "ylab": "Percentage", "tt_suffix": "%"},
-                    {"name": "Counts", "ylab": "Read Count", "tt_suffix": ""},
+                    {"name": "Counts", "ylab": "Read Count", "tt_suffix": "", "active": True},
                 ],
                 showlegend=False,
                 colors=self.get_status_cols("sequence_length_distribution"),
