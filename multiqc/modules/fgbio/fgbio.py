@@ -13,6 +13,11 @@ class MultiqcModule(BaseMultiqcModule):
     The module currently supports tool the following outputs:
 
     - [GroupReadsByUmi](http://fulcrumgenomics.github.io/fgbio/tools/latest/GroupReadsByUmi.html)
+
+      fgumi writes this family-size histogram with identical columns, and the fgumi module reads it too. The fgbio
+      module keeps reporting it unless its directory also holds files only fgumi writes, in which case it appears
+      under fgumi instead. Set `fgumi_config: {family_sizes_module: fgbio}` to always keep it here (see the fgumi
+      module docs).
     - [ErrorRateByReadPosition](http://fulcrumgenomics.github.io/fgbio/tools/latest/ErrorRateByReadPosition.html)
     """
 
