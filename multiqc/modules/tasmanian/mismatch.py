@@ -255,7 +255,10 @@ def _add_profile_section(module: BaseMultiqcModule, mismatch_data: Dict[str, Dic
             if by_class[name]:
                 datasets[i][s_name] = by_class[name]
 
-    data_labels = [{"name": name, "ylab": f"{name} (%)"} for name in CLASSES]
+    data_labels = [
+        {"name": (label := " + ".join(members) if name in GROUPS else name), "ylab": f"{label} (%)"}
+        for name, members in CLASSES.items()
+    ]
     # Drop classes without any bases, such as a reference base that never occurs
     keep = [i for i, ds in enumerate(datasets) if ds]
     datasets, data_labels = [datasets[i] for i in keep], [data_labels[i] for i in keep]
@@ -269,10 +272,10 @@ def _add_profile_section(module: BaseMultiqcModule, mismatch_data: Dict[str, Dic
             "each class is a percentage of the bases with that reference base."
         ),
         helptext=(
-            "Artifacts such as oxidation (G>T and C>A) or deamination (C>T and G>A) appear as raised "
-            "rates concentrated at the ends of fragments, whereas true variants and sequencing "
-            "errors are spread evenly along the fragment. The deamination and oxidation buttons pool "
-            "their two substitutions, and read 1 and read 2 are merged."
+            "Raised rates concentrated at the ends of fragments are often associated with damage such as "
+            "oxidation (elevated G>T + C>A) or deamination (elevated C>T + G>A) from FFPE, acoustic shearing, degradation, etc."
+            "Sequencing errors and mutations are spread more evenly along the fragment. The C>T + G>A and G>T + C>A buttons "
+            "each pool their substitutions over all bases with either reference base."
         ),
         plot=linegraph.plot(
             datasets,
