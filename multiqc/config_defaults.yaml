@@ -521,6 +521,7 @@ module_order:
   - bcftools
   - featurecounts
   - fgbio
+  - fgumi
   - dragen
   - dragen_fastqc
   - dedup
@@ -642,6 +643,7 @@ module_order:
   - telseq
   - ataqv
   - mgikit
+  - mgnifam
   - mosaicatcher
 
 # Preserves `saved_raw_data` section in modules - default for interactive runs
