@@ -16,14 +16,16 @@ ALL_BASE_CHANGES = {f"{ref}>{alt}" for ref in BASES for alt in BASES}
 ALL_MISMATCHES = "All Mismatches"
 
 # Pooled classes: the rate is the summed count of the member substitutions over all bases with
-# one of the member reference bases, so a group is not an average of its members' rates
-DEAMINATION = "Deamination (C>T + G>A)"
-OXIDATION = "Oxidation (G>T + C>A)"
-GROUPS: Dict[str, List[str]] = {DEAMINATION: ["C>T", "G>A"], OXIDATION: ["G>T", "C>A"]}
+# one of the member reference bases.
+GROUP_CT_GA = "C>T + G>A"
+GROUP_GT_CA = "G>T + C>A"
+GROUPS: Dict[str, List[str]] = {GROUP_CT_GA: ["C>T", "G>A"], GROUP_GT_CA: ["G>T", "C>A"]}
 # Class name -> the substitutions it counts, for the profile plot, heatmaps and general stats
 CLASSES: Dict[str, List[str]] = {ALL_MISMATCHES: MISMATCHES, **GROUPS, **{m: [m] for m in MISMATCHES}}
 HEATMAP_CLASSES = [ALL_MISMATCHES, *GROUPS]
 HEATMAP_UNITS = "Mismatches (%)"
+# Anchors/ids for the heatmap sections, kept stable and independent of the class name's punctuation
+HEATMAP_SLUGS: Dict[str, str] = {ALL_MISMATCHES: "all-mismatches", GROUP_CT_GA: "ct-ga", GROUP_GT_CA: "gt-ca"}
 
 # read number -> position -> base change -> count
 Profile = Dict[int, Dict[int, Dict[str, int]]]
@@ -131,8 +133,8 @@ def _add_general_stats(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
         if rates is not None:
             stats[s_name] = {
                 "mismatch_rate": rates[ALL_MISMATCHES],
-                "deamination_rate": rates[DEAMINATION],
-                "oxidation_rate": rates[OXIDATION],
+                "ct_ga_rate": rates[GROUP_CT_GA],
+                "gt_ca_rate": rates[GROUP_GT_CA],
                 "total_bases": rates["total_bases"],
             }
     headers: Dict = {
@@ -144,8 +146,8 @@ def _add_general_stats(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
             "scale": "OrRd",
             "format": "{:,.3f}",
         },
-        "deamination_rate": {
-            "title": "Deamination Rate",
+        "ct_ga_rate": {
+            "title": "C>T + G>A Rate",
             "description": (
                 "Percentage of C and G bases read as T or A respectively, C>T and G>A (tasmanian-mismatch)"
             ),
@@ -154,8 +156,8 @@ def _add_general_stats(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
             "scale": "PuRd",
             "format": "{:,.3f}",
         },
-        "oxidation_rate": {
-            "title": "Oxidation Rate",
+        "gt_ca_rate": {
+            "title": "G>T + C>A Rate",
             "description": "Percentage of G and C bases read as T or A respectively, G>T and C>A (tasmanian-mismatch)",
             "min": 0,
             "suffix": "%",
@@ -202,13 +204,16 @@ def _add_summary_table(module: BaseMultiqcModule, mismatch_data: Dict[str, Dict]
         description=(
             "Mismatch rates from <code>tasmanian-mismatch</code>, over all fragment positions. "
             "Each substitution class is the percentage of bases with that reference base "
-            "that were sequenced as the alternative base. Deamination and oxidation pool their two "
-            "substitutions over all bases with either reference base."
+            "that were sequenced as the alternative base. The C>T + G>A and G>T + C>A classes each pool their "
+            "two substitutions over all bases with either reference base."
         ),
         helptext=(
             "The individual substitutions are hidden by default; show them with the columns button to compare "
             "every class between libraries. All columns are the same kind of value, a percentage where higher "
-            "means more mismatches, so they share one color scale."
+            "means more mismatches, so they share one color scale.<br>"
+            "End-elevated C>T + G>A rate is a signature of cytosine deamination. Likewise, elevated G>T + C>A can result from "
+            "oxidative damage. Sequencing errors and true variation are also possible causes, "
+            "but these are typically not related to read position."
         ),
         plot=table.plot(
             rates,
@@ -272,10 +277,11 @@ def _add_profile_section(module: BaseMultiqcModule, mismatch_data: Dict[str, Dic
             "each class is a percentage of the bases with that reference base."
         ),
         helptext=(
-            "Raised rates concentrated at the ends of fragments are often associated with damage such as "
-            "oxidation (elevated G>T + C>A) or deamination (elevated C>T + G>A) from FFPE, acoustic shearing, degradation, etc."
-            "Sequencing errors and mutations are spread more evenly along the fragment. The C>T + G>A and G>T + C>A buttons "
-            "each pool their substitutions over all bases with either reference base."
+            "Rates concentrated at the ends of fragments, rather than spread evenly, are a signature of "
+            "damage rather than sequencing errors or true variation."
+            "Oxidative damage (elevated G>T + C>A) or deamination (elevated C>T + G>A) "
+            "can result from FFPE preservation, acoustic shearing, degradation, etc. "
+            "Positional trimming can help mitigate effects damage on downstream analysis."
         ),
         plot=linegraph.plot(
             datasets,
@@ -301,7 +307,7 @@ def _add_heatmap_sections(module: BaseMultiqcModule, mismatch_data: Dict[str, Di
     for name in HEATMAP_CLASSES:
         data: Dict = {s_name: by_class[name] for s_name, by_class in rates.items()}
         positions = sorted({pos for by_pos in data.values() for pos in by_pos})
-        slug = name.split(" (")[0].lower().replace(" ", "-")
+        slug = HEATMAP_SLUGS[name]
         plot = heatmap.plot(
             data,
             xcats=positions,
@@ -333,7 +339,7 @@ def _add_heatmap_sections(module: BaseMultiqcModule, mismatch_data: Dict[str, Di
                 "Rows are libraries and columns are normalized fragment positions."
             ),
             helptext=(
-                "Libraries with the same damage pattern have similar rows. Use the plot's cluster switch to group "
+                "Libraries with the same pattern have similar rows. Use the plot's cluster switch to group "
                 "similar libraries together; positions are never reordered. Positions beyond the length of a "
                 "library's longest fragment are empty."
             ),

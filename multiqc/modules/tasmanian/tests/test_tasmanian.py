@@ -3,6 +3,8 @@ import pytest
 from multiqc.modules.tasmanian.inconsistencies import parse_inconsistencies_table
 from multiqc.modules.tasmanian.mismatch import (
     ALL_MISMATCHES,
+    GROUP_CT_GA,
+    GROUP_GT_CA,
     _profile_rates,
     class_rate,
     overall_rates,
@@ -74,14 +76,14 @@ def test_overall_rates_include_groups():
     rates = overall_rates(parse_mismatch_table(RAW))
     assert rates is not None
     # C>T 20 and G>A 0 over reference C (220) and G (100)
-    assert rates["Deamination (C>T + G>A)"] == pytest.approx(100 * 20 / 320)
+    assert rates[GROUP_CT_GA] == pytest.approx(100 * 20 / 320)
     # G>T 5 and C>A 0 over the same bases
-    assert rates["Oxidation (G>T + C>A)"] == pytest.approx(100 * 5 / 320)
+    assert rates[GROUP_GT_CA] == pytest.approx(100 * 5 / 320)
 
 
 def test_profile_rates_groups():
     rates = _profile_rates(parse_mismatch_table(RAW))
-    assert rates["Deamination (C>T + G>A)"] == {1: pytest.approx(100 * 20 / 320)}
+    assert rates[GROUP_CT_GA] == {1: pytest.approx(100 * 20 / 320)}
 
 
 def test_profile_rates_merges_reads():

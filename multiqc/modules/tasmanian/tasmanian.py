@@ -29,9 +29,9 @@ class MultiqcModule(BaseMultiqcModule):
     (the default). Tables written with `--position-mode read` or `--normalize` are not supported.
     It plots the percentage of each substitution class at every normalized fragment position, as
     a line plot and as heatmaps that compare many libraries, and adds the overall mismatch,
-    deamination (C>T and G>A) and oxidation (G>T and C>A) rates to the general statistics table.
-    Counts are summed over the `reference_order` column, and reads 1 and 2 are merged into a
-    single profile.
+    C>T + G>A, and G>T + C>A rates to the general statistics table (raised rates in the latter two
+    are associated with deamination and oxidative damage). Counts are
+    summed over the `reference_order` column, and reads 1 and 2 are merged into a single profile.
 
     ```bash
     tasmanian-mismatch sample.bam reference.fa --position-mode insert -o sample.mismatch.tsv
