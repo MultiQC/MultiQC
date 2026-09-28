@@ -332,7 +332,7 @@ in the warning above the plot.
         )
 
     def _histogram_data(
-        self, key: str, s_names: list[str], bin_width: float | None = None
+        self, key: str, s_names: list[str], bin_width: Optional[float] = None
     ) -> tuple[dict[str, dict[float, int]], list[str]]:
         """Per-sample {value: family count} for one histogram, and the samples with nothing to plot."""
         data: dict[str, dict[float, int]] = {}
@@ -349,7 +349,7 @@ in the warning above the plot.
         return data, sorted(set(s_names) - set(data))
 
     @staticmethod
-    def _empty_chunks_alert(empty: list[str]) -> SectionAlert | None:
+    def _empty_chunks_alert(empty: list[str]) -> Optional[SectionAlert]:
         if not empty:
             return None
         return SectionAlert(
