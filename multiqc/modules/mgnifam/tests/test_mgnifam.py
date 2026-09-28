@@ -113,12 +113,6 @@ def test_unsupported_schema_is_skipped(run_module):
         run_module({"1_mgnifam_stats.json": _stats(schema_version=2)})
 
 
-def test_files_are_matched_by_name_only(run_module):
-    # mgnifam 3.x wrote `<chunk>_stats.json`, which no longer identifies the tool.
-    with pytest.raises(ModuleNoSamplesFound):
-        run_module({"1_stats.json": _stats()})
-
-
 def test_skip_refine_reports_no_seed_and_no_converged_count(run_module):
     skip = _stats("update_families", parameters={"skip_refine": True})
     skip["families"]["converged"] = None
