@@ -1044,6 +1044,14 @@ def add_ai_summary_to_report():
     report.ai_extra_query_options_base64 = base64.b64encode(
         json.dumps(config.ai_extra_query_options or {}).encode()
     ).decode()
+    report.ai_prompts_base64 = base64.b64encode(
+        json.dumps(
+            {
+                "short": config.ai_prompt_short or PROMPT_SHORT,
+                "full": config.ai_prompt_full or PROMPT_FULL,
+            }
+        ).encode()
+    ).decode()
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,

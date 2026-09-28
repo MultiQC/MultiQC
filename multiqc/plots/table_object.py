@@ -767,6 +767,22 @@ def _collect_shared_keys(sections: Dict[SectionKey, TableSection]) -> Dict[str, 
     return shared_keys
 
 
+def _col_cls(col_anchor: ColumnAnchor) -> str:
+    """
+    CSS class used to tie a table header, its cells and its config-modal row together.
+
+    The column anchor is derived from the column ID, so using it bare as a class name lets
+    columns called "h1", "small", "row", "table" etc. pick up Bootstrap's utility styles.
+    Prefixing keeps the class in a namespace of our own.
+
+    Do not shorten the prefix to "mqc-col-": Bootstrap matches its grid classes with
+    substring selectors such as `table th[class*="col-"]`, which would then override
+    `column-hidden` and break the show/hide controls. Must stay in sync with the
+    selectors in the templates' tables.js.
+    """
+    return f"mqc-column-{col_anchor}"
+
+
 def render_html(
     dt: DataTable,
     violin_anchor: Anchor,
@@ -828,7 +844,7 @@ def render_html(
         )
 
         col_to_th[col_anchor] = (
-            f'<th id="header_{col_anchor}" class="{col_anchor}{td_hide_cls}" {data_attr}>{cell_contents}</th>'
+            f'<th id="header_{col_anchor}" class="{_col_cls(col_anchor)}{td_hide_cls}" {data_attr}>{cell_contents}</th>'
         )
         col_to_hidden[col_anchor] = header.hidden
 
@@ -837,7 +853,7 @@ def render_html(
         if violin_anchor:
             data += f" data-violin-anchor='{violin_anchor}'"
         col_to_modal_headers[col_anchor] = f"""
-        <tr class="{col_anchor}{tr_muted_cls}" style="background-color: rgba({header.color}, 0.15);">
+        <tr class="{_col_cls(col_anchor)}{tr_muted_cls}" style="background-color: rgba({header.color}, 0.15);">
           <td class="sorthandle ui-sortable-handle">||</span></td>
           <td style="text-align:center;">
             <input class="mqc_table_col_visible" type="checkbox" {checked} value="{col_anchor}" {data}>
@@ -986,7 +1002,7 @@ def render_html(
                 if isinstance(val, str) and val in header.bgcols.keys():
                     col = f'style="background-color:{header.bgcols[val]} !important;"'
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}" {col}>{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{_col_cls(col_anchor)} {td_hide_cls}" {col}>{valstr}</td>'
                     )
 
                 # Build table cell background colour bar
@@ -1002,13 +1018,13 @@ def render_html(
                     wrapper_html = f'<div class="wrapper">{bar_html}{val_html}</div>'
 
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {col_anchor} {td_hide_cls}">{wrapper_html}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="data-coloured {_col_cls(col_anchor)} {td_hide_cls}">{wrapper_html}</td>'
                     )
 
                 # Scale / background colours are disabled
                 else:
                     group_to_sample_to_anchor_to_td[group_name][row.sample][col_anchor] = (
-                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{col_anchor} {td_hide_cls}">{valstr}</td>'
+                        f'<td data-sorting-val="{escape(str(sorting_val))}" class="{_col_cls(col_anchor)} {td_hide_cls}">{valstr}</td>'
                     )
 
                 # Is this cell hidden or empty?
@@ -1237,9 +1253,7 @@ def render_html(
                 if not cell_html:
                     td_hide_cls = "column-hidden" if col_to_hidden[col_anchor] else ""
                     sorting_val = group_to_sorting_to_anchor_to_val.get(g_name, {}).get(col_anchor, "")
-                    cell_html = (
-                        f'<td class="data-coloured {col_anchor} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
-                    )
+                    cell_html = f'<td class="data-coloured {_col_cls(col_anchor)} {td_hide_cls}" data-sorting-val="{sorting_val}"></td>'
                 html += cell_html
             html += "</tr>"
     html += "</tbody></table></div>"

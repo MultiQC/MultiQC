@@ -599,7 +599,7 @@ or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one 
 You must use only multiples of 4 spaces to indent nested lists.
 `;
 
-window.systemPromptReportShort =
+const defaultSystemPromptReportShort =
   window.systemPromptReport +
   `
 Limit the response to 1-2 bullet points. Two such examples of short summaries:
@@ -611,7 +611,7 @@ Limit the response to 1-2 bullet points. Two such examples of short summaries:
 - :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green})'
 `;
 
-window.systemPromptReportFull =
+const defaultSystemPromptReportFull =
   window.systemPromptReport +
   `
 Follow up with recommendations for the next steps.
@@ -644,6 +644,9 @@ This is the example response:
 - Investigate the cause of higher duplication rates in :sample[A1002]{.text-yellow} group compared to :sample[A1003]{.text-green} group, although they are still within acceptable ranges.
 - Consider adjusting the Hi-C protocol or library preparation steps to improve the percentage of valid pairs, especially for :sample[A1002]{.text-yellow} group.
 `;
+
+window.systemPromptReportShort = aiPrompts.short || defaultSystemPromptReportShort;
+window.systemPromptReportFull = aiPrompts.full || defaultSystemPromptReportFull;
 
 window.systemPromptPlot =
   window.multiqcDescription +

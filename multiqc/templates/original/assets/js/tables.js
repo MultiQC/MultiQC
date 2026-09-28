@@ -357,10 +357,10 @@ $(function () {
         let tr = $(this);
         let sName = $(this).children("th.rowheader").find(".th-sample-name").text();
         let val_1 = $(this)
-          .children("td." + col1)
+          .children("td.mqc-column-" + col1)
           .data("sorting-val");
         let val_2 = $(this)
-          .children("td." + col2)
+          .children("td.mqc-column-" + col2)
           .data("sorting-val");
 
         // Get settings for this sample
@@ -499,11 +499,11 @@ $(function () {
 
     Object.entries(metricsHidden).map(([metric, hidden]) => {
       if (hidden) {
-        $(target + " ." + metric).addClass("column-hidden");
-        $(target + "_config_modal_table ." + metric).addClass("text-muted");
+        $(target + " .mqc-column-" + metric).addClass("column-hidden");
+        $(target + "_config_modal_table .mqc-column-" + metric).addClass("text-muted");
       } else {
-        $(target + " ." + metric).removeClass("column-hidden");
-        $(target + "_config_modal_table ." + metric).removeClass("text-muted");
+        $(target + " .mqc-column-" + metric).removeClass("column-hidden");
+        $(target + "_config_modal_table .mqc-column-" + metric).removeClass("text-muted");
       }
     });
     // Hide empty rows
