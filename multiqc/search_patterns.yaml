@@ -411,12 +411,73 @@ fastqc/theoretical_gc:
 featurecounts:
   fn: "*.summary"
   shared: true
+# fgumi/family_sizes also finds these files; fgumi.util.family_sizes_module picks which module reports them.
 fgbio/groupreadsbyumi:
   contents: "fraction_gt_or_eq_family_size"
   num_lines: 3
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+fgumi/clip:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
+  num_lines: 2
+fgumi/consensus_stats:
+  contents: "key\tvalue\tdescription"
+  num_lines: 2
+  shared: true
+fgumi/copy_umi:
+  contents: "total_records\trx_written\trx_overwritten"
+  num_lines: 2
+fgumi/correct:
+  contents: "umi\ttotal_matches\tperfect_matches"
+  num_lines: 2
+fgumi/dedup:
+  contents: "sample\tlibrary\tfiltered_templates"
+  num_lines: 2
+fgumi/dedup_ladder:
+  contents: "library\ttemplates_seen\tduplicate_fraction"
+  num_lines: 2
+fgumi/downsample_histogram:
+  contents_re: "^family_size\tcount$"
+  num_lines: 2
+  shared: true
+fgumi/duplex_family_sizes:
+  contents: "ab_size\tba_size\tcount\tfraction"
+  num_lines: 2
+# Identical to fgbio GroupReadsByUmi histograms, so shared with fgbio/groupreadsbyumi.
+fgumi/family_sizes:
+  contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
+  num_lines: 2
+  shared: true
+fgumi/filter_stats:
+  - contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
+    num_lines: 2
+  # fgumi 0.7.0 and earlier write filter --stats as headerless key/value rows. Shared because the first line alone
+  # is generic; the parser only accepts files whose keys are exactly fgumi's.
+  - contents_re: "^total_reads\t\\d+$"
+    num_lines: 2
+    shared: true
+fgumi/grouping_metrics:
+  contents: "accepted_sam_records\tdiscarded_non_pf"
+  num_lines: 2
+fgumi/position_group_sizes:
+  contents: "position_group_size\tcount\tfraction"
+  num_lines: 2
+fgumi/retag:
+  contents: "operation\tkind\trecords_applied"
+  num_lines: 2
+fgumi/review:
+  contents: "chrom\tpos\tref\tgenotype\tfilters"
+  num_lines: 2
+fgumi/strand_family_sizes:
+  contents: "family_size\tcs_count\tcs_fraction"
+  num_lines: 2
+fgumi/umi_counts:
+  contents: "umi\traw_observations\traw_observations_with_errors"
+  num_lines: 2
+fgumi/yield:
+  contents: "fraction\tread_pairs\tcs_families\tss_families"
+  num_lines: 2
 filtlong:
   contents: Scoring long reads
   contents_re: ".*Filtering long reads.*"
@@ -640,6 +701,10 @@ mgikit/mgi_sample_reads:
   fn: "*.mgikit.info"
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
+mgnifam:
+  fn: "*_stats.json"
+  contents: '"tool": "mgnifam"'
+  num_lines: 3
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
