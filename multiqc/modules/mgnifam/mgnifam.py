@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 COMMANDS = ("generate_families", "update_families")
-STATS_SUFFIX = "_stats.json"
+STATS_SUFFIX = "_mgnifam_stats.json"
 # Retention is stored exactly; for display it is binned 0.05 wide.
 RETENTION_BIN_WIDTH = 0.05
 
@@ -25,17 +25,22 @@ class MultiqcModule(BaseMultiqcModule):
     sequence database (`mgnifam update_families`).
 
     The module parses the run summary each command writes after a completed run:
-    `<chunk>_stats.json` for `generate_families` and `<chunk>_updated_stats.json` for
-    `update_families`. One file describes one chunk, and each chunk is one sample. The
-    sample name is the file name without the `_stats.json` suffix, so a chunk `1` reports
-    as `1` for generation and `1_updated` for an update. Files with a `schema_version`
-    other than 1 are skipped with a warning.
+    `<chunk>_mgnifam_stats.json` for `generate_families` and
+    `<chunk>_updated_mgnifam_stats.json` for `update_families`. One file describes one
+    chunk, and each chunk is one sample. The sample name is the file name without the
+    `_mgnifam_stats.json` suffix, so a chunk `1` reports as `1` for generation and
+    `1_updated` for an update. Files with a `schema_version` other than 1 are skipped with
+    a warning.
+
+    An update run with `--skip_refine` builds no seed alignment and tests nothing for
+    convergence, so those chunks are left out of the seed MSA size plot and report no
+    converged count.
 
     A summary is only written when a run completes, so every sample in the report comes
     from consumable output. A run that completed with contained family crashes (exit
     status 3) is flagged in the outcomes section.
 
-    Version 3.1.0 of mgnifam is tested.
+    Version 4.0.0 of mgnifam is tested.
     """
 
     def __init__(self):
@@ -64,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
             if stats["command"] not in COMMANDS:
                 log.warning(f"Skipping {f['fn']}: unknown mgnifam command {stats['command']}")
                 continue
-            # Manually remove '_stats' suffix: too generic to have as part of clean_s_name()
+            # Manually remove the suffix: every sample shares it, so it carries no information.
             s_name = self.clean_s_name(f["fn"].removesuffix(STATS_SUFFIX), f)
             if s_name in self.mgnifam_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
@@ -81,6 +86,32 @@ class MultiqcModule(BaseMultiqcModule):
         self._add_outcomes_section()
         all_samples = list(self.mgnifam_data)
         update_samples = [s for s, stats in self.mgnifam_data.items() if stats["command"] == "update_families"]
+        # A recruit-only update builds no seed; listing it as a chunk with nothing to plot would mislead.
+        seed_samples = [s for s, stats in self.mgnifam_data.items() if not stats["parameters"].get("skip_refine")]
+
+        if seed_samples:
+            data, empty = self._histogram_data("seed_msa_size", seed_samples)
+            self.add_section(
+                name="Seed MSA size",
+                anchor="mgnifam-seed-msa-size",
+                description="Number of families per seed alignment size.",
+                helptext="Each successful family's seed alignment is the one its final model was built from, "
+                "after redundancy trimming. Compare it with the full alignment size to see how much of a "
+                "family the model was trained on.",
+                plot=linegraph.plot(
+                    data,
+                    pconfig={
+                        "id": "mgnifam-seed-msa-size-plot",
+                        "title": "mgnifam: Seed MSA size",
+                        "xlab": "Sequences in the seed alignment",
+                        "ylab": "Families",
+                        "y_decimals": False,
+                    },
+                )
+                if data
+                else None,
+                alerts=self._empty_chunks_alert(empty),
+            )
 
         data, empty = self._histogram_data("full_msa_size", all_samples)
         self.add_section(
@@ -182,7 +213,8 @@ class MultiqcModule(BaseMultiqcModule):
                     "chunk_id": stats["chunk_id"],
                     "version": stats["version"],
                     "exit_status": stats["exit_status"],
-                    **stats["families"],
+                    # `converged` is null for an update run with `--skip_refine`: leave it blank.
+                    **{key: value for key, value in stats["families"].items() if value is not None},
                 }
                 for s_name, stats in self.mgnifam_data.items()
             },
@@ -199,10 +231,10 @@ class MultiqcModule(BaseMultiqcModule):
         data: dict[SampleName | str, dict[ColumnKey | str, ValueT]] = {}
         for s_name, stats in self.mgnifam_data.items():
             families = stats["families"]
-            row: dict[ColumnKey | str, ValueT] = {
-                "families_input": families["input"],
-                "converged": families["converged"],
-            }
+            row: dict[ColumnKey | str, ValueT] = {"families_input": families["input"]}
+            # Null when nothing was tested for convergence (`--skip_refine`): unknown, not zero.
+            if families["converged"] is not None:
+                row["converged"] = families["converged"]
             # An empty chunk is valid output: leave the percentage out rather than divide by zero.
             if families["input"]:
                 row["successful_pct"] = 100 * families["successful"] / families["input"]
@@ -300,7 +332,7 @@ in the warning above the plot.
         )
 
     def _histogram_data(
-        self, key: str, s_names: list[str], bin_width: Optional[float] = None
+        self, key: str, s_names: list[str], bin_width: float | None = None
     ) -> tuple[dict[str, dict[float, int]], list[str]]:
         """Per-sample {value: family count} for one histogram, and the samples with nothing to plot."""
         data: dict[str, dict[float, int]] = {}
@@ -317,7 +349,7 @@ in the warning above the plot.
         return data, sorted(set(s_names) - set(data))
 
     @staticmethod
-    def _empty_chunks_alert(empty: list[str]) -> Optional[SectionAlert]:
+    def _empty_chunks_alert(empty: list[str]) -> SectionAlert | None:
         if not empty:
             return None
         return SectionAlert(
