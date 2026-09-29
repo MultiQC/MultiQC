@@ -67,26 +67,18 @@ def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List
         genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
-
-def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
-    median_cov = None
-    for this_cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
-        if cum_fraction >= 0.5:
-            median_cov = this_cov
-            break
-    return median_cov
+def cov_at_cum_fraction(cum_fraction_by_cov: Dict[int, float], fraction: float) -> Optional[int]:
+    """Highest coverage at which at least `fraction` of bases are still covered."""
+    for cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
+        if cum_fraction >= fraction:
+            return cov
+    return None
 
 
-def calc_iqr_coverage(cum_fraction_by_cov) -> Optional[float]:
-    q3_cov = None
-    q1_cov = None
+def calc_iqr_coverage(cum_fraction_by_cov: Dict[int, float]) -> Optional[int]:
+    q3_cov = cov_at_cum_fraction(cum_fraction_by_cov, 0.25)
+    q1_cov = cov_at_cum_fraction(cum_fraction_by_cov, 0.75)
     iqr = None
-    for this_cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
-        if q3_cov is None and cum_fraction >= 0.25:
-            q3_cov = this_cov
-        if q1_cov is None and cum_fraction >= 0.75:
-            q1_cov = this_cov
-            break
     if q3_cov is not None and q1_cov is not None:
         iqr = q3_cov - q1_cov
     return iqr
@@ -444,12 +436,13 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,d}",
                     "hidden": True,
                 },
-                "coefficient_of_iqr_variance": {
-                    "title": "IQR CV",
-                    "description": "Coefficient of interquartile range variance",
+                "coverage_iqr_cv": {
+                    "title": "IQR/Median",
+                    "description": "Coverage uniformity: interquartile range of the coverage distribution divided by median coverage. Lower is more uniform.",
                     "min": 0,
-                    "suffix": "",
                     "scale": "BuPu",
+                    "format": "{:,.2f}",
+                    "hidden": True,  
                 },
             },
         )
@@ -547,7 +540,7 @@ class MultiqcModule(BaseMultiqcModule):
             genstats_by_sample[s_name] = {}
             for k, v in genstats_cov_thresholds(cum_fraction_by_cov, threshs).items():
                 genstats_by_sample[s_name][k] = v
-            median_coverage = calc_median_coverage(cum_fraction_by_cov)
+            median_coverage = cov_at_cum_fraction(cum_fraction_by_cov, 0.5)
             genstats_by_sample[s_name]["median_coverage"] = median_coverage
             iqr_coverage = calc_iqr_coverage(cum_fraction_by_cov)
             if iqr_coverage is not None and median_coverage not in (None, 0):
