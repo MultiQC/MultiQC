@@ -421,6 +421,12 @@ class MultiqcModule(BaseMultiqcModule):
             s_name: filter_karyotype_contigs(karyotype, self.cfg["include_contigs"], self.cfg["exclude_contigs"])
             for s_name, karyotype in karyotype_by_sample.items()
         }
+        if not any(filtered_by_sample.values()):
+            log.warning(
+                "All contigs would be filtered out by cramino_config include_contigs/exclude_contigs. "
+                "Keeping all contigs."
+            )
+            filtered_by_sample = karyotype_by_sample
 
         self.add_section(
             name="Normalized read count per chromosome",
