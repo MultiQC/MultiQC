@@ -180,12 +180,14 @@ class MultiqcModule(BaseMultiqcModule):
     (not available when the genome size is unknown, e.g. for `--ubam`). Identity statistics
     (median/mean/modal percent identity to the reference) are included for aligned input, and
     cramino v2 also estimates them from base qualities for `--ubam` input. Both cramino v1 and v2
-    output are supported.
+    output are supported. Phasing statistics (`--phased`) and splice statistics (`--spliced`) are
+    added as hidden columns to the summary table when cramino reports them.
 
     When cramino was run with `--karyotype`, a normalized read count per chromosome is also
     included, and the module adds a per-chromosome plot useful for spotting chromosomal
-    imbalances or off-target enrichment. By default, alt/decoy/random/unplaced contigs are
-    hidden from that plot; this can be customised in the config file:
+    imbalances or off-target enrichment. Contigs are sorted naturally (chr1, chr2, ..., chr10).
+    By default, alt/decoy/fix/random/unplaced contigs are hidden from that plot; this can be
+    customised in the config file:
 
     ```yaml
     cramino_config:
@@ -202,7 +204,9 @@ class MultiqcModule(BaseMultiqcModule):
         - "chrEBV"
     ```
 
-    Note that exclusion takes precedence over inclusion.
+    Note that exclusion takes precedence over inclusion. If the patterns would remove every
+    contig, all contigs are shown instead (with a warning in the log). The exported data file
+    always contains all contigs.
     """
 
     def __init__(self):
@@ -303,7 +307,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "pct_from_total_alignments": {
                 "title": "% Counted",
-                "description": "Percentage of all alignment records in the file counted towards these statistics",
+                "description": "Percentage of all records in the file (alignments in cramino v1, reads in v2) counted towards these statistics",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -495,9 +499,10 @@ class MultiqcModule(BaseMultiqcModule):
             indicate aneuploidies (e.g. a 1.5x signal for a trisomy) or, for a targeted/enrichment
             experiment, off-target chromosomes.
 
-            By default, alt/decoy/random/unplaced contigs are hidden; this can be customised with
+            By default, alt/decoy/fix/random/unplaced contigs are hidden; this can be customised with
             `cramino_config.include_contigs` / `cramino_config.exclude_contigs` in the MultiQC
-            config file.
+            config file. If the patterns would remove every contig, all contigs are shown instead.
+            The exported data file always contains all contigs.
             """,
             plot=linegraph.plot(
                 filtered_by_sample,
