@@ -2,6 +2,7 @@ import fnmatch
 import gzip
 import logging
 import os
+import zlib
 from collections import Counter, defaultdict
 from typing import Dict, Iterable, List, Optional, Tuple, Union, cast
 
@@ -79,6 +80,10 @@ def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
     return median_cov
 
 
+# Reading a same-named file that isn't valid mosdepth output: bad content or not gzip/truncated
+# (UnicodeDecodeError is a ValueError; gzip.BadGzipFile is an OSError)
+PARSE_ERRORS = (ValueError, OSError, EOFError, zlib.error)
+
 # (chrom, start, end)
 RegionKey = Tuple[str, int, int]
 # region -> (name or None, mean_coverage); name is only present if the --by BED file had one
@@ -89,7 +94,7 @@ ThresholdsByRegion = Dict[RegionKey, Tuple[str, List[int]]]
 ThresholdsBySample = Dict[str, Tuple[List[int], ThresholdsByRegion]]
 
 
-def parse_regions_bed_lines(lines: Iterable[str]) -> RegionsByRegion:
+def parse_regions_bed_lines(lines: Iterable[str], max_rows: Optional[int] = None) -> RegionsByRegion:
     """
     Parse lines of a decompressed {prefix}.regions.bed.gz file:
 
@@ -99,9 +104,13 @@ def parse_regions_bed_lines(lines: Iterable[str]) -> RegionsByRegion:
     {prefix}.thresholds.bed.gz is also present (mosdepth was run with --thresholds too), its
     region name takes priority (it always has one, see parse_thresholds_bed_lines); this one is
     the fallback for a regions-only run (--by without --thresholds).
+
+    Raises ValueError if the file has more than `max_rows` rows, before all of them are held in memory.
     """
     by_region: RegionsByRegion = {}
     for line in lines:
+        if max_rows is not None and len(by_region) >= max_rows:
+            raise ValueError(f"More than {max_rows} regions")
         fields = line.rstrip("\n").split("\t")
         name: Optional[str]
         if len(fields) == 5:
@@ -115,13 +124,17 @@ def parse_regions_bed_lines(lines: Iterable[str]) -> RegionsByRegion:
     return by_region
 
 
-def parse_thresholds_bed_lines(lines: Iterable[str]) -> Tuple[List[int], ThresholdsByRegion]:
+def parse_thresholds_bed_lines(
+    lines: Iterable[str], max_rows: Optional[int] = None
+) -> Tuple[List[int], ThresholdsByRegion]:
     """
     Parse lines of a decompressed {prefix}.thresholds.bed.gz file:
 
     #chrom  start  end  region  1X  10X  20X  30X  (threshold columns vary with --thresholds)
 
     The region name is "unknown" for every row when the BED file passed to --by had no 4th column.
+
+    Raises ValueError if the file has more than `max_rows` rows, before all of them are held in memory.
     """
     lines_iter = iter(lines)
     header_line = next(lines_iter, None)
@@ -134,7 +147,11 @@ def parse_thresholds_bed_lines(lines: Iterable[str]) -> Tuple[List[int], Thresho
 
     by_region: ThresholdsByRegion = {}
     for line in lines_iter:
+        if max_rows is not None and len(by_region) >= max_rows:
+            raise ValueError(f"More than {max_rows} regions")
         fields = line.rstrip("\n").split("\t")
+        if len(fields) != 4 + len(thresholds):
+            raise ValueError(f"Expected {4 + len(thresholds)} columns to match the header, got {len(fields)}: {fields}")
         chrom, start, end, name = fields[:4]
         counts = [int(x) for x in fields[4:]]
         by_region[(chrom, int(start), int(end))] = (name, counts)
@@ -150,8 +167,6 @@ def build_per_region_rows(
     """
     Combine one sample's parsed regions and thresholds data into per-region table rows, keyed by
     a display label built from the region name. Either input may be empty: mosdepth produces
-        if len(fields) != 4 + len(thresholds):
-            raise ValueError(f"Expected {4 + len(thresholds)} columns to match the header, got {len(fields)}: {fields}")
     regions.bed.gz whenever --by is used, independently of --thresholds, so a sample may have
     mean coverage only, threshold percentages only, or both.
 
@@ -212,9 +227,9 @@ class MultiqcModule(BaseMultiqcModule):
     If `--thresholds` was also used, it's joined with `{prefix}.thresholds.bed.gz` to add the
     percentage of bases at or above each requested threshold. This is useful for targeted
     sequencing (panels, adaptive sampling), where mean coverage alone can hide dropout in part
-    of a target. This table is intended for panel-scale runs (hundreds of regions); for a
-    whole-genome `--by <window_size>` run with many rows, MultiQC automatically renders a
-    distribution plot instead of the full table (see `max_table_rows` in the MultiQC docs).
+    of a target. This table is intended for panel-scale runs (hundreds of regions); a
+    `regions.bed.gz` or `thresholds.bed.gz` file with more than `max_table_rows` regions (default 500,
+    e.g. a whole-genome `--by <window_size>` run) is skipped with a warning to avoid a huge report.
 
     `*.regions.bed.gz` and `*.thresholds.bed.gz` are always exactly those suffixes in mosdepth's
     own output, but they're matched by filename only, since they're gzip-compressed and MultiQC's
@@ -759,14 +774,15 @@ class MultiqcModule(BaseMultiqcModule):
         mean_cov_by_region_by_sample: Dict[str, RegionsByRegion] = {}
         for f in self.find_log_files("mosdepth/regions_bed", filecontents=False, filehandles=False):
             s_name = self.clean_s_name(f["fn"], f)
-            with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
-                try:
-                    mean_cov_by_region = parse_regions_bed_lines(fh)
-                except ValueError as e:
-                    # *.regions.bed.gz is a generic name other tools could coincidentally produce;
-                    # skip rather than crash the whole module on a file that isn't really ours.
-                    log.debug(f"Skipping {f['fn']}: doesn't look like mosdepth regions.bed.gz output ({e})")
-                    continue
+            try:
+                with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
+                    mean_cov_by_region = parse_regions_bed_lines(fh, max_rows=config.max_table_rows)
+            except PARSE_ERRORS as e:
+                # *.regions.bed.gz is a generic name other tools could coincidentally produce, and
+                # genome-wide --by <window_size> runs produce huge ones; skip rather than crash
+                # the whole module (or exhaust memory) on a file that isn't a targeted-panel one.
+                log.warning(f"Skipping {f['fn']} in the per-region coverage: not usable mosdepth regions.bed.gz ({e})")
+                continue
 
             if mean_cov_by_region:
                 self.add_data_source(f, s_name=s_name, section="regions_bed")
@@ -781,14 +797,15 @@ class MultiqcModule(BaseMultiqcModule):
         thresholds_by_region_by_sample: ThresholdsBySample = {}
         for f in self.find_log_files("mosdepth/thresholds_bed", filecontents=False, filehandles=False):
             s_name = self.clean_s_name(f["fn"], f)
-            with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
-                try:
-                    thresholds, by_region = parse_thresholds_bed_lines(fh)
-                except ValueError as e:
-                    # *.thresholds.bed.gz is a generic name other tools could coincidentally produce;
-                    # skip rather than crash the whole module on a file that isn't really ours.
-                    log.debug(f"Skipping {f['fn']}: doesn't look like mosdepth thresholds.bed.gz output ({e})")
-                    continue
+            try:
+                with gzip.open(os.path.join(f["root"], f["fn"]), "rt") as fh:
+                    thresholds, by_region = parse_thresholds_bed_lines(fh, max_rows=config.max_table_rows)
+            except PARSE_ERRORS as e:
+                # See parse_regions_bed: same reasons to skip instead of crash.
+                log.warning(
+                    f"Skipping {f['fn']} in the per-region coverage: not usable mosdepth thresholds.bed.gz ({e})"
+                )
+                continue
 
             if by_region:
                 self.add_data_source(f, s_name=s_name, section="thresholds_bed")
@@ -869,9 +886,12 @@ class MultiqcModule(BaseMultiqcModule):
 
             This is intended for targeted sequencing (panels, adaptive sampling), where a region
             can have a high mean coverage while still having a dropout that never reaches a
-            clinically required depth. For a whole-genome `--by <window_size>` run, this table can
-            get very large; MultiQC will automatically switch to a distribution plot instead of a
-            full table past `max_table_rows` samples/regions (default 500).
+            clinically required depth. For a whole-genome `--by <window_size>` run, this table would
+            get very large, so a `regions.bed.gz` or `thresholds.bed.gz` file with more than
+            `max_table_rows` regions (default 500) is skipped with a warning; raise
+            `max_table_rows` if you want to include larger region sets. Past `max_table_rows`
+            sample/region rows in total, MultiQC switches to a distribution plot instead of a
+            full table.
             """,
             plot=table.plot(
                 data,
