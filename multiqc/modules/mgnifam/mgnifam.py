@@ -87,7 +87,12 @@ class MultiqcModule(BaseMultiqcModule):
         all_samples = list(self.mgnifam_data)
         update_samples = [s for s, stats in self.mgnifam_data.items() if stats["command"] == "update_families"]
         # A recruit-only update builds no seed; listing it as a chunk with nothing to plot would mislead.
-        seed_samples = [s for s, stats in self.mgnifam_data.items() if not stats["parameters"].get("skip_refine")]
+        # `skip_refine` is always present in an update run's parameters, so a renamed flag fails loudly.
+        seed_samples = [
+            s
+            for s, stats in self.mgnifam_data.items()
+            if stats["command"] != "update_families" or not stats["parameters"]["skip_refine"]
+        ]
 
         if seed_samples:
             data, empty = self._histogram_data("seed_msa_size", seed_samples)
@@ -214,7 +219,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "version": stats["version"],
                     "exit_status": stats["exit_status"],
                     # `converged` is null for an update run with `--skip_refine`: leave it blank.
-                    **{key: value for key, value in stats["families"].items() if value is not None},
+                    **{
+                        key: value
+                        for key, value in stats["families"].items()
+                        if not (key == "converged" and value is None)
+                    },
                 }
                 for s_name, stats in self.mgnifam_data.items()
             },

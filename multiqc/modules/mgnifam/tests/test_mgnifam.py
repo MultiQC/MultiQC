@@ -27,6 +27,7 @@ def _stats(command="generate_families", **changes):
         },
     }
     if command == "update_families":
+        stats["parameters"]["skip_refine"] = False
         stats["histograms"].update(
             {"model_length_change": {"-1": 1, "0": 2}, "rounds_run": {"2": 3}, "retention": {"0.5": 1, "1.0": 2}}
         )
@@ -117,9 +118,13 @@ def test_skip_refine_reports_no_seed_and_no_converged_count(run_module):
     skip = _stats("update_families", parameters={"skip_refine": True})
     skip["families"]["converged"] = None
     skip["histograms"]["seed_msa_size"] = {}
-    module = run_module({"1_mgnifam_stats.json": _stats(), "1_updated_mgnifam_stats.json": skip})
+    module = run_module(
+        {"1_mgnifam_stats.json": _stats(), "1_updated_mgnifam_stats.json": skip}, preserve_module_raw_data=True
+    )
 
     assert ColumnKey("converged") not in _general_stats("1_updated")
+    assert "converged" not in report.saved_raw_data["multiqc_mgnifam"]["1_updated"]
+    assert report.saved_raw_data["multiqc_mgnifam"]["1"]["converged"] == 2
     assert _general_stats("1")[ColumnKey("converged")] == 2
     # Left out of the seed plot entirely, not listed as a chunk with nothing to plot.
     section = next(s for s in module.sections if s.anchor == "mgnifam-seed-msa-size")
@@ -163,6 +168,13 @@ def test_histograms_are_exported_exactly(run_module):
 def test_update_without_retention_is_a_format_break(run_module):
     stats = _stats("update_families")
     del stats["histograms"]["retention"]
+    with pytest.raises(KeyError):
+        run_module({"1_updated_mgnifam_stats.json": stats})
+
+
+def test_update_without_skip_refine_is_a_format_break(run_module):
+    stats = _stats("update_families")
+    del stats["parameters"]["skip_refine"]
     with pytest.raises(KeyError):
         run_module({"1_updated_mgnifam_stats.json": stats})
 
