@@ -14,12 +14,16 @@ log = logging.getLogger(__name__)
 KARYOTYPE_HEADER = "# Normalized read count per chromosome"
 KARYOTYPE_EMPTY_WARNING = "# Warning - no contigs found in BAM file!"
 
+# cramino v2 renamed "% from total alignments" to "% from total reads"
+PCT_FROM_TOTAL_KEYS = ("% from total alignments", "% from total reads")
+
 # cramino prints "Median/Mean/Modal identity" for CIGAR-based identity, or "... est. identity"
-# when an estimation mode was used instead; both represent the same metric.
+# (v1) / "... estimated identity" (v2) when it was estimated from base qualities instead;
+# all represent the same metric.
 IDENTITY_KEY_ALIASES = {
-    "median_identity": ("Median identity", "Median est. identity"),
-    "mean_identity": ("Mean identity", "Mean est. identity"),
-    "modal_identity": ("Modal identity", "Modal est. identity"),
+    "median_identity": ("Median identity", "Median est. identity", "Median estimated identity"),
+    "mean_identity": ("Mean identity", "Mean est. identity", "Mean estimated identity"),
+    "modal_identity": ("Modal identity", "Modal est. identity", "Modal estimated identity"),
 }
 
 # Sensible default for the per-chromosome plot on a typical GRCh37/38 BAM: hide alt/decoy/
@@ -92,21 +96,27 @@ def parse_cramino_lines(lines: Iterable[str]) -> Tuple[Dict[str, str], Dict[str,
 
 def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]:
     """
-    Extract the fields cramino always emits, plus optional identity stats (populated only for
-    aligned input; absent when cramino was run on unaligned reads with `--ubam`).
+    Extract the fields cramino always emits, plus optional identity stats (absent for unaligned
+    input in cramino v1; v2 estimates them from base qualities with `--ubam`, if there are any).
+    Mean coverage is "NA" when cramino doesn't know the genome size (e.g. `--ubam`); it is left out.
     """
+    pct_from_total_key = next((key for key in PCT_FROM_TOTAL_KEYS if key in summary), None)
+    if pct_from_total_key is None:
+        raise KeyError(" or ".join(PCT_FROM_TOTAL_KEYS))
+
     stats: Dict[str, Union[int, float]] = {
         "num_alignments": int(summary["Number of alignments"]),
-        "pct_from_total_alignments": float(summary["% from total alignments"]),
+        "pct_from_total_alignments": float(summary[pct_from_total_key]),
         "num_reads": int(summary["Number of reads"]),
         "yield_gb": float(summary["Yield [Gb]"]),
-        "mean_coverage": float(summary["Mean coverage"]),
         "yield_gb_long": float(summary["Yield [Gb] (>25kb)"]),
         "n50": int(summary["N50"]),
         "n75": int(summary["N75"]),
         "median_length": float(summary["Median length"]),
         "mean_length": float(summary["Mean length"]),
     }
+    if summary["Mean coverage"] != "NA":
+        stats["mean_coverage"] = float(summary["Mean coverage"])
 
     for stat_key, aliases in IDENTITY_KEY_ALIASES.items():
         for alias in aliases:
@@ -139,9 +149,11 @@ class MultiqcModule(BaseMultiqcModule):
     data (Oxford Nanopore or PacBio) in BAM or CRAM format.
 
     The module parses cramino's default text output (`cramino > sample.txt`), which always
-    reports the number of reads, yield, read length (N50/N75, median, mean), and mean coverage.
-    Identity statistics (median/mean/modal percent identity to the reference) are included when
-    the input was aligned (not `--ubam`).
+    reports the number of reads, yield, read length (N50/N75, median, mean), and mean coverage
+    (not available when the genome size is unknown, e.g. for `--ubam`). Identity statistics
+    (median/mean/modal percent identity to the reference) are included for aligned input, and
+    cramino v2 also estimates them from base qualities for `--ubam` input. Both cramino v1 and v2
+    output are supported.
 
     When cramino was run with `--karyotype`, a normalized read count per chromosome is also
     included, and the module adds a per-chromosome plot useful for spotting chromosomal

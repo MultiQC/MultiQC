@@ -91,6 +91,30 @@ Path\t/work/sample.bam
 Creation time\tNA
 """
 
+V2_UBAM = """File name\tsample.ubam.bam
+Number of alignments\t500
+% from total reads\t100.00
+Number of reads\t500
+Yield [Gb]\t0.01
+Mean coverage\tNA
+Yield [Gb] (>25kb)\t0.00
+N50\t400
+N75\t350
+Median length\t380.00
+Mean length\t390.50
+N50 aligned\t400
+N75 aligned\t350
+Median length aligned\t380.00
+Mean length aligned\t390.50
+
+Median estimated identity\t97.00
+Mean estimated identity\t96.50
+Modal estimated identity\t98.0
+
+Path\t/work/sample.ubam.bam
+Creation time\tNA
+"""
+
 INVALID_FORMAT = """This is not cramino output
 just some random text
 """
@@ -153,6 +177,15 @@ class TestBuildCraminoStats:
     def test_estimated_identity_mapped_to_canonical_keys(self):
         summary, _ = parse_cramino_lines(ESTIMATED_IDENTITY.splitlines())
         stats = build_cramino_stats(summary)
+        assert stats["median_identity"] == 97.00
+        assert stats["mean_identity"] == 96.50
+        assert stats["modal_identity"] == 98.0
+
+    def test_v2_renamed_fields_and_na_coverage(self):
+        summary, _ = parse_cramino_lines(V2_UBAM.splitlines())
+        stats = build_cramino_stats(summary)
+        assert stats["pct_from_total_alignments"] == 100.0
+        assert "mean_coverage" not in stats
         assert stats["median_identity"] == 97.00
         assert stats["mean_identity"] == 96.50
         assert stats["modal_identity"] == 98.0
