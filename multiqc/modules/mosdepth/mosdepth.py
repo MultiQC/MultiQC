@@ -150,6 +150,8 @@ def build_per_region_rows(
     """
     Combine one sample's parsed regions and thresholds data into per-region table rows, keyed by
     a display label built from the region name. Either input may be empty: mosdepth produces
+        if len(fields) != 4 + len(thresholds):
+            raise ValueError(f"Expected {4 + len(thresholds)} columns to match the header, got {len(fields)}: {fields}")
     regions.bed.gz whenever --by is used, independently of --thresholds, so a sample may have
     mean coverage only, threshold percentages only, or both.
 
