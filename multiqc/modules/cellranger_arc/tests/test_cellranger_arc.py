@@ -73,20 +73,20 @@ def test_atac_gex_metric_separation(data_dir):
     # Test each sample for proper ATAC/GEX separation
     for sample_name, sample_data in data.items():
         # Verify ATAC metrics exist with namespace prefix
-        assert (
-            "ATAC_Sequenced read pairs" in sample_data
-        ), f"Sample {sample_name}: Missing 'ATAC_Sequenced read pairs' (namespace not applied)"
-        assert (
-            "ATAC_Valid barcodes" in sample_data
-        ), f"Sample {sample_name}: Missing 'ATAC_Valid barcodes' (namespace not applied)"
+        assert "ATAC_Sequenced read pairs" in sample_data, (
+            f"Sample {sample_name}: Missing 'ATAC_Sequenced read pairs' (namespace not applied)"
+        )
+        assert "ATAC_Valid barcodes" in sample_data, (
+            f"Sample {sample_name}: Missing 'ATAC_Valid barcodes' (namespace not applied)"
+        )
 
         # Verify GEX metrics exist with namespace prefix
-        assert (
-            "GEX_Sequenced read pairs" in sample_data
-        ), f"Sample {sample_name}: Missing 'GEX_Sequenced read pairs' (namespace not applied)"
-        assert (
-            "GEX_Valid barcodes" in sample_data
-        ), f"Sample {sample_name}: Missing 'GEX_Valid barcodes' (namespace not applied)"
+        assert "GEX_Sequenced read pairs" in sample_data, (
+            f"Sample {sample_name}: Missing 'GEX_Sequenced read pairs' (namespace not applied)"
+        )
+        assert "GEX_Valid barcodes" in sample_data, (
+            f"Sample {sample_name}: Missing 'GEX_Valid barcodes' (namespace not applied)"
+        )
 
         # Critical test: Verify ATAC and GEX values are different (the bug was they collided)
         atac_reads = sample_data["ATAC_Sequenced read pairs"]
