@@ -249,6 +249,12 @@ class TestFilterKaryotypeContigs:
         result = filter_karyotype_contigs(self.KARYOTYPE, include_contigs=[], exclude_contigs=[])
         assert result == self.KARYOTYPE
 
+    def test_contigs_are_naturally_sorted(self):
+        result = filter_karyotype_contigs(
+            {"chr10": 1.0, "chr2": 1.0, "chr1": 1.0, "chrX": 1.0}, include_contigs=[], exclude_contigs=[]
+        )
+        assert list(result) == ["chr1", "chr2", "chr10", "chrX"]
+
     def test_exclude_patterns(self):
         result = filter_karyotype_contigs(
             self.KARYOTYPE,

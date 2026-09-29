@@ -4,6 +4,8 @@ import fnmatch
 import logging
 from typing import Dict, Iterable, List, Tuple, Union, cast
 
+from natsort import natsorted
+
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
@@ -145,9 +147,12 @@ def filter_karyotype_contigs(
     include_contigs: List[str],
     exclude_contigs: List[str],
 ) -> Dict[str, float]:
-    """Apply glob include/exclude patterns to a sample's per-chromosome data."""
+    """
+    Apply glob include/exclude patterns to a sample's per-chromosome data, and sort the contigs
+    naturally (chr1, chr2, ..., chr10), as cramino's own order differs between versions.
+    """
     filtered: Dict[str, float] = {}
-    for contig, value in karyotype.items():
+    for contig, value in natsorted(karyotype.items(), key=lambda item: item[0]):
         if exclude_contigs and any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
             continue
         if include_contigs and not any(fnmatch.fnmatch(contig, pattern) for pattern in include_contigs):
