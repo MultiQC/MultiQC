@@ -20,6 +20,7 @@ def test_genstats_cov_thresholds():
         "200_x_pc": 0.0,
     }
 
+
 @pytest.mark.parametrize(
     "cum_fraction_by_cov,expected_median,expected_iqr",
     [
@@ -33,6 +34,6 @@ def test_calc_median_and_iqr_coverage(cum_fraction_by_cov, expected_median, expe
     assert actual_median == expected_median
     actual_iqr = calc_iqr_coverage(cum_fraction_by_cov)
     assert actual_iqr == expected_iqr
-    if actual_iqr is not None and actual_median is not None: 
-        actual_iqr_cv = actual_iqr / actual_median 
+    if actual_iqr is not None and actual_median is not None:
+        actual_iqr_cv = actual_iqr / actual_median
         assert actual_iqr_cv == expected_iqr / expected_median

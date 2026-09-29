@@ -67,6 +67,7 @@ def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List
         genstats[f"{t}_x_pc"] = cov_val * 100.0
     return genstats
 
+
 def cov_at_cum_fraction(cum_fraction_by_cov: Dict[int, float], fraction: float) -> Optional[int]:
     """Highest coverage at which at least `fraction` of bases are still covered."""
     for cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
@@ -442,7 +443,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "min": 0,
                     "scale": "BuPu",
                     "format": "{:,.2f}",
-                    "hidden": True,  
+                    "hidden": True,
                 },
             },
         )
