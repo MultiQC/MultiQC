@@ -67,3 +67,14 @@ def test_patterns_removing_all_contigs_keep_all_with_warning(tmp_path, caplog, m
     karyotype_section = next(section for section in module.sections if section.anchor == "cramino-karyotype")
     assert karyotype_section.plot_anchor is not None
     assert "Keeping all contigs" in caplog.text
+
+
+def test_unexpected_format_raises_with_file_name(tmp_path, monkeypatch):
+    (tmp_path / "sample.cramino.txt").write_text(
+        "File name\tsample.bam\nNumber of alignments\t10\nNumber of reads\t10\n"
+    )
+    report.analysis_files = [tmp_path]
+    report.search_files(["cramino"])
+
+    with pytest.raises(ValueError, match="sample.cramino.txt"):
+        MultiqcModule()

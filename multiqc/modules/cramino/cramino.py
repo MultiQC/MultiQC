@@ -212,8 +212,7 @@ class MultiqcModule(BaseMultiqcModule):
                 summary, karyotype = parse_cramino_lines(f["f"])
                 stats = build_cramino_stats(summary)
             except (ValueError, KeyError) as e:
-                log.warning(f"Could not parse cramino output in '{f['fn']}': {e}")
-                continue
+                raise ValueError(f"Could not parse cramino output in '{f['fn']}': {e!r}") from e
 
             if s_name in cramino_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
