@@ -411,19 +411,22 @@ fastqc/theoretical_gc:
 featurecounts:
   fn: "*.summary"
   shared: true
-# fgumi/family_sizes also finds these files; fgumi.util.family_sizes_module picks which module reports them.
+# fgumi/family_sizes also finds these files; fgumi.util.shared_file_module picks which module reports them.
 fgbio/groupreadsbyumi:
   contents: "fraction_gt_or_eq_family_size"
   num_lines: 3
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+# fgumi/clip also finds these files; fgumi.util.shared_file_module picks which module reports them.
 fgbio/clipbam:
   contents: "read_type	reads	reads_unmapped	reads_clipped_pre	reads_clipped_post"
   num_lines: 3
+  shared: true
 fgumi/clip:
   contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
   num_lines: 2
+  shared: true
 fgumi/consensus_stats:
   contents: "key\tvalue\tdescription"
   num_lines: 2

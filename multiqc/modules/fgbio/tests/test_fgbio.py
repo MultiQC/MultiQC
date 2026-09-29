@@ -10,6 +10,7 @@ sum of `Fragment` and `Pair`, and the per-reason clipped-base counts add up to
 import pytest
 
 from multiqc import config, report
+from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.modules.fgbio import MultiqcModule
 from multiqc.types import ColumnKey, SampleGroup
 
@@ -198,4 +199,29 @@ def test_other_fgbio_patterns_do_not_match_clipbam_output(run_fgbio_module):
 
     assert list(module.find_log_files("fgbio/groupreadsbyumi")) == []
     assert list(module.find_log_files("fgbio/errorratebyreadposition")) == []
-    assert {section.anchor for section in module.sections} == {"fgbio-clipbam-bases", "fgbio-clipbam"}
+    assert {section.anchor for section in module.sections} == {
+        "fgbio-clipbam-bases",
+        "fgbio-clipbam-reads",
+        "fgbio-clipbam",
+    }
+
+
+def test_reads_by_reason_are_percentages_of_all_reads_and_not_stacked(run_fgbio_module):
+    """A read clipped for several reasons counts under each, so the per-reason read bars are
+    percentages of `reads` drawn side by side; the bases plot stays stacked."""
+    run_fgbio_module({"sampleA.txt": CLIPBAM_PAIRED_TSV})
+
+    reads_plot = report.plot_by_id["fgbio-clipbam-reads-plot"]
+    assert reads_plot.pconfig.stacking == "group"
+    assert not reads_plot.pconfig.cpswitch
+    values = {cat.name: cat.data[0] for cat in reads_plot.datasets[0].cats}
+    assert values["Clipped for mate overlap"] == pytest.approx(100.0 * 1150 / 2000)
+    assert values["Already clipped in input"] == pytest.approx(100.0 * 150 / 2000)
+    assert report.plot_by_id["fgbio-clipbam-bases-plot"].pconfig.stacking != "group"
+
+
+def test_file_without_all_row_is_skipped_with_a_warning(run_fgbio_module, caplog):
+    no_all = "".join(line for line in CLIPBAM_PAIRED_TSV.splitlines(keepends=True) if not line.startswith("All"))
+    with pytest.raises(ModuleNoSamplesFound):
+        run_fgbio_module({"sampleA.txt": no_all})
+    assert any("sampleA.txt" in r.message and "'All'" in r.message for r in caplog.records)

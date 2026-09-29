@@ -8,19 +8,23 @@ from typing import Any, Dict, Optional, Set, Union
 from pydantic import ValidationError
 
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.modules.fgbio.clip_bam import run_clip_bam
 from multiqc.plots import bargraph, linegraph, table
 
-from .schemas import ClippingMetric, CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
-from .util import drop_none, flatten, iter_samples, load_rows, pct, register
+from .schemas import CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
+from .util import (
+    drop_none,
+    flatten,
+    found_by,
+    iter_samples,
+    load_rows,
+    pct,
+    register,
+    shared_file_evidence,
+    shared_file_module,
+)
 
 log = logging.getLogger(__name__)
-
-_CLIP_REASONS = {
-    "five_prime": "5' end",
-    "three_prime": "3' end",
-    "overlapping": "Overlapping mate",
-    "extending": "Extending past mate",
-}
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
@@ -28,42 +32,13 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
 
 
 def _clip(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Dict[str, int]]] = {}
-    for f in module.find_log_files("fgumi/clip"):
-        rows = load_rows(f, ClippingMetric)
-        if rows is None:
-            continue
-        total = next((r for r in rows if r.read_type == "All"), None)
-        if total is None:
-            log.warning(f"Skipping {f['fn']}: fgumi clip metrics have no 'All' row")
-            continue
-        data[register(module, f)] = {
-            f"{unit}_clipped": {reason: getattr(total, f"{unit}_clipped_{reason}") for reason in _CLIP_REASONS}
-            for unit in ("reads", "bases")
-        }
-    data = module.ignore_samples(data)
-    if not data:
-        return set()
-    module.add_section(
-        name="Clipping",
-        anchor="fgumi-clip",
-        description="Reads and bases clipped by `fgumi clip` (or fgbio ClipBam), by reason (all read types combined).",
-        helptext="Clipping reasons can overlap for a read, so the bars are shown side by side rather than stacked. "
-        "Overlapping-mate clipping removes bases a read shares with its mate; extending clipping removes bases past "
-        "the mate's end.",
-        plot=bargraph.plot(
-            [{s: v["reads_clipped"] for s, v in data.items()}, {s: v["bases_clipped"] for s, v in data.items()}],
-            [{k: {"name": n} for k, n in _CLIP_REASONS.items()}] * 2,
-            {
-                "id": "fgumi_clip",
-                "title": "fgumi: Clipping",
-                "stacking": "group",
-                "data_labels": [{"name": "Reads", "ylab": "Reads"}, {"name": "Bases", "ylab": "Bases"}],
-            },
-        ),
+    evidence = shared_file_evidence()
+    clipped = run_clip_bam(
+        module,
+        "fgumi/clip",
+        skip=lambda f: found_by(f, "fgbio/clipbam") and shared_file_module(f, evidence) == "fgbio",
     )
-    module.write_data_file(flatten(data), "multiqc_fgumi_clip")
-    return set(data)
+    return set(clipped)
 
 
 def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:

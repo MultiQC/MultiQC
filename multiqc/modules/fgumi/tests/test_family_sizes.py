@@ -87,7 +87,7 @@ FGBIO_ONLY = FGBIO_ERROR_RATE  # a file only fgbio writes
 
 
 @pytest.mark.parametrize(
-    "layout, family_sizes_module, modules, expected",
+    "layout, shared_files_module, modules, expected",
     [
         pytest.param({"A.family_sizes.txt": HIST}, None, ["fgbio", "fgumi"], {"A": "fgbio"}, id="no-evidence-fgbio"),
         pytest.param(
@@ -153,14 +153,14 @@ FGBIO_ONLY = FGBIO_ERROR_RATE  # a file only fgbio writes
         pytest.param({"A.family_sizes.txt": HIST}, "fgumi", ["fgbio"], {"A": "fgbio"}, id="only-fgbio-running"),
     ],
 )
-def test_one_module_reports_each_family_size_histogram(tmp_path, layout, family_sizes_module, modules, expected):
+def test_one_module_reports_each_family_size_histogram(tmp_path, layout, shared_files_module, modules, expected):
     # fgumi and fgbio GroupReadsByUmi histograms are identical; exactly one module may report each file.
     from multiqc import config
     from multiqc.modules.fgbio import MultiqcModule as FgbioModule
 
     config.reset()
-    if family_sizes_module is not None:
-        config.fgumi_config = {"family_sizes_module": family_sizes_module}
+    if shared_files_module is not None:
+        config.fgumi_config = {"shared_files_module": shared_files_module}
     paths = []
     for name, content in layout.items():
         path = tmp_path / name

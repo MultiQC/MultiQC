@@ -490,11 +490,11 @@ class TestIntegration:
         m = MultiqcModule()
         # Test-data has multiple run roots (WGS, WES, PairedEndNoProject, PairedEndDefaultProject, etc.)
         total_samples = len(m.run_level_samples) + len(m.project_level_samples)
-        assert len(m.run_level_data) >= 2 or len(m.project_level_data) >= 1, (
-            "expected at least 2 runs or at least 1 project from test-data"
-        )
+        assert (
+            len(m.run_level_data) >= 2 or len(m.project_level_data) >= 1
+        ), "expected at least 2 runs or at least 1 project from test-data"
         assert total_samples >= 10, "expected at least 10 samples from test-data"
         # Module must produce output (general stats and/or sections)
-        assert len(report.general_stats_data) > 0 or len(m.sections) > 0, (
-            "expected general stats or report sections to be populated"
-        )
+        assert (
+            len(report.general_stats_data) > 0 or len(m.sections) > 0
+        ), "expected general stats or report sections to be populated"
