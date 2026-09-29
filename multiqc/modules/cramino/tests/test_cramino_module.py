@@ -36,7 +36,9 @@ Creation time\tNA
 
 @pytest.fixture(autouse=True)
 def _reset_report():
-    """Isolate from file-search state left behind by other tests running in the same process."""
+    """Isolate from file-search state left behind by other tests, and leave none behind for them."""
+    reset()
+    yield
     reset()
 
 
