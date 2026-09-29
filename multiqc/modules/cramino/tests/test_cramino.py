@@ -214,6 +214,24 @@ class TestBuildCraminoStats:
         assert stats["mean_identity"] == 96.50
         assert stats["modal_identity"] == 98.0
 
+    def test_phase_stats(self):
+        summary, _ = parse_cramino_lines(
+            [
+                *ALIGNED_WITH_KARYOTYPE.splitlines(),
+                "Fraction reads phased\t0.75",
+                "Number of phaseblocks\t12",
+                "Total bases phased [Gb]\t1.20",
+                "Median phaseblock length\t50000.00",
+                "N50 phaseblock length\t80000",
+            ]
+        )
+        stats = build_cramino_stats(summary)
+        assert stats["fraction_phased"] == 0.75
+        assert stats["num_phaseblocks"] == 12
+        assert stats["total_bases_phased_gb"] == 1.20
+        assert stats["median_phaseblock_length"] == 50000.0
+        assert stats["n50_phaseblock_length"] == 80000
+
     def test_splice_stats(self):
         summary, _ = parse_cramino_lines(SPLICED_WITH_KARYOTYPE.splitlines())
         stats = build_cramino_stats(summary)

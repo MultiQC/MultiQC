@@ -28,6 +28,15 @@ IDENTITY_KEY_ALIASES = {
     "modal_identity": ("Modal identity", "Modal est. identity", "Modal estimated identity"),
 }
 
+# Only printed by cramino with --phased
+PHASE_KEYS = {
+    "fraction_phased": "Fraction reads phased",
+    "num_phaseblocks": "Number of phaseblocks",
+    "total_bases_phased_gb": "Total bases phased [Gb]",
+    "median_phaseblock_length": "Median phaseblock length",
+    "n50_phaseblock_length": "N50 phaseblock length",
+}
+
 # Only printed by cramino for spliced (RNA) data
 SPLICE_KEYS = {
     "median_exons": "Median number of exons",
@@ -129,7 +138,7 @@ def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]
     if summary["Mean coverage"] != "NA":
         stats["mean_coverage"] = float(summary["Mean coverage"])
 
-    for stat_key, summary_key in SPLICE_KEYS.items():
+    for stat_key, summary_key in {**PHASE_KEYS, **SPLICE_KEYS}.items():
         if summary_key in summary:
             stats[stat_key] = float(summary[summary_key])
 
@@ -371,6 +380,47 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "suffix": "%",
                 "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "fraction_phased": {
+                "title": "Phased Reads",
+                "description": "Fraction of reads that are phased (phased data only)",
+                "min": 0,
+                "max": 1,
+                "scale": "Greens",
+                "hidden": True,
+            },
+            "num_phaseblocks": {
+                "title": "Phaseblocks",
+                "description": "Number of phaseblocks (phased data only)",
+                "min": 0,
+                "format": "{:,.0f}",
+                "scale": "Greens",
+                "hidden": True,
+            },
+            "total_bases_phased_gb": {
+                "title": "Phased (Gb)",
+                "description": "Total bases in phased reads, in gigabases (phased data only)",
+                "min": 0,
+                "scale": "Greens",
+                "hidden": True,
+            },
+            "median_phaseblock_length": {
+                "title": "Median Phaseblock",
+                "description": "Median phaseblock length (phased data only)",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,.0f}",
+                "scale": "Greens",
+                "hidden": True,
+            },
+            "n50_phaseblock_length": {
+                "title": "N50 Phaseblock",
+                "description": "N50 of the phaseblock length (phased data only)",
+                "min": 0,
+                "suffix": " bp",
+                "format": "{:,.0f}",
+                "scale": "Greens",
                 "hidden": True,
             },
             "median_exons": {
