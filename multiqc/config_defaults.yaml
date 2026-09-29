@@ -341,8 +341,8 @@ fn_clean_exts:
   - ".cutadapt"
   - ".qcML"
   - ".mosdepth"
-  - ".regions.bed"
-  - ".thresholds.bed"
+  - { type: "truncate", pattern: ".regions.bed", module: "mosdepth" }
+  - { type: "truncate", pattern: ".thresholds.bed", module: "mosdepth" }
   - "_gopeaks"
   - ".readCounts"
   - ".wgs_contig_mean_cov"
