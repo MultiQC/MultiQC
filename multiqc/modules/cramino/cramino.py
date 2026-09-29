@@ -38,7 +38,7 @@ SPLICE_KEYS = {
 # Sensible default for the per-chromosome plot on a typical GRCh37/38 BAM: hide alt/decoy/
 # random/unplaced contigs, which are noise for spotting whole-chromosome imbalances. Mirrors
 # the example given in the mosdepth module's docstring for the same purpose.
-DEFAULT_EXCLUDE_CONTIGS = ["*_alt", "*_decoy", "*_random", "chrUn*", "HLA*", "chrM", "chrEBV"]
+DEFAULT_EXCLUDE_CONTIGS = ["*_alt", "*_decoy", "*_fix", "*_random", "chrUn*", "HLA*", "chrM", "chrEBV"]
 
 
 def read_config() -> Dict:
@@ -185,6 +185,7 @@ class MultiqcModule(BaseMultiqcModule):
       exclude_contigs:
         - "*_alt"
         - "*_decoy"
+        - "*_fix"
         - "*_random"
         - "chrUn*"
         - "HLA*"
