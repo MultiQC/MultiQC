@@ -236,7 +236,10 @@ class MultiqcModule(BaseMultiqcModule):
         if karyotype_by_sample:
             self.add_karyotype_section(karyotype_by_sample)
 
+        # Export everything: the contig filtering below only applies to the plot
         self.write_data_file(cramino_data, "multiqc_cramino")
+        if karyotype_by_sample:
+            self.write_data_file(karyotype_by_sample, "multiqc_cramino_karyotype")
 
     def add_general_stats(self, data: Dict[str, Dict[str, Union[int, float]]]) -> None:
         headers: Dict[str, ColumnDict] = {
@@ -418,8 +421,6 @@ class MultiqcModule(BaseMultiqcModule):
             s_name: filter_karyotype_contigs(karyotype, self.cfg["include_contigs"], self.cfg["exclude_contigs"])
             for s_name, karyotype in karyotype_by_sample.items()
         }
-
-        self.write_data_file(filtered_by_sample, "multiqc_cramino_karyotype")
 
         self.add_section(
             name="Normalized read count per chromosome",
