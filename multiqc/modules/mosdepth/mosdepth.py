@@ -161,7 +161,7 @@ def build_per_region_rows(
     gene, or "unknown"/no name for every row when --by had no name column), so whenever a name
     repeats, the region's coordinates are appended to disambiguate.
     """
-    region_keys = set(by_region) | set(mean_cov_by_region)
+    region_keys = sorted(set(by_region) | set(mean_cov_by_region))
 
     def region_name(key: RegionKey) -> str:
         threshold_name = by_region[key][0] if key in by_region else None
@@ -812,7 +812,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_thresholds: List[int] = sorted({t for thresholds, _ in thresholds_by_sample.values() for t in thresholds})
 
         data: Dict[str, Dict[str, Union[str, int, float]]] = {}
-        for s_name in set(thresholds_by_sample) | set(mean_cov_by_region_by_sample):
+        for s_name in sorted(set(thresholds_by_sample) | set(mean_cov_by_region_by_sample)):
             thresholds, by_region = thresholds_by_sample.get(s_name, ([], {}))
             mean_cov_by_region = mean_cov_by_region_by_sample.get(s_name, {})
             rows = build_per_region_rows(thresholds, by_region, mean_cov_by_region)
