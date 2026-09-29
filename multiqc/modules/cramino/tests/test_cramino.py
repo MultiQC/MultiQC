@@ -115,6 +115,33 @@ Path\t/work/sample.ubam.bam
 Creation time\tNA
 """
 
+SPLICED_WITH_KARYOTYPE = """File name\tsample.bam
+Number of alignments\t1000
+% from total reads\t96.00
+Number of reads\t950
+Yield [Gb]\t1.50
+Mean coverage\t5.00
+Yield [Gb] (>25kb)\t0.20
+N50\t600
+N75\t500
+Median length\t550.00
+Mean length\t700.00
+
+
+
+# Normalized read count per chromosome
+
+chr1\t0.90
+chrX\t0.80
+
+Median number of exons\t3
+Mean number of exons\t3.20
+Fraction unspliced reads\t0.10
+
+Path\t/work/sample.bam
+Creation time\tNA
+"""
+
 INVALID_FORMAT = """This is not cramino output
 just some random text
 """
@@ -143,6 +170,12 @@ class TestParseCraminoLines:
         summary, karyotype = parse_cramino_lines(NO_CONTIGS_FOUND.splitlines())
         assert karyotype == {}
         assert summary["Number of alignments"] == "10"
+
+    def test_splice_stats_are_not_karyotype(self):
+        summary, karyotype = parse_cramino_lines(SPLICED_WITH_KARYOTYPE.splitlines())
+        assert karyotype == {"chr1": 0.90, "chrX": 0.80}
+        assert summary["Median number of exons"] == "3"
+        assert summary["Fraction unspliced reads"] == "0.10"
 
     def test_empty_file(self):
         summary, karyotype = parse_cramino_lines([])
@@ -180,6 +213,13 @@ class TestBuildCraminoStats:
         assert stats["median_identity"] == 97.00
         assert stats["mean_identity"] == 96.50
         assert stats["modal_identity"] == 98.0
+
+    def test_splice_stats(self):
+        summary, _ = parse_cramino_lines(SPLICED_WITH_KARYOTYPE.splitlines())
+        stats = build_cramino_stats(summary)
+        assert stats["median_exons"] == 3.0
+        assert stats["mean_exons"] == 3.20
+        assert stats["fraction_unspliced"] == 0.10
 
     def test_v2_renamed_fields_and_na_coverage(self):
         summary, _ = parse_cramino_lines(V2_UBAM.splitlines())

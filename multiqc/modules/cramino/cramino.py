@@ -26,6 +26,13 @@ IDENTITY_KEY_ALIASES = {
     "modal_identity": ("Modal identity", "Modal est. identity", "Modal estimated identity"),
 }
 
+# Only printed by cramino for spliced (RNA) data
+SPLICE_KEYS = {
+    "median_exons": "Median number of exons",
+    "mean_exons": "Mean number of exons",
+    "fraction_unspliced": "Fraction unspliced reads",
+}
+
 # Sensible default for the per-chromosome plot on a typical GRCh37/38 BAM: hide alt/decoy/
 # random/unplaced contigs, which are noise for spotting whole-chromosome imbalances. Mirrors
 # the example given in the mosdepth module's docstring for the same purpose.
@@ -70,9 +77,11 @@ def parse_cramino_lines(lines: Iterable[str]) -> Tuple[Dict[str, str], Dict[str,
             in_karyotype = False
             continue
         if not stripped:
-            # Blank lines are just block separators (including right after the karyotype
-            # header itself); never carry data, so they can't be used to detect the end of
-            # the karyotype block.
+            # Blank lines never carry data. The one right after the karyotype header is just a
+            # separator, but a blank line after at least one contig ends the block: numeric
+            # key<TAB>value lines that follow (e.g. splice stats) are not chromosomes.
+            if in_karyotype and karyotype:
+                in_karyotype = False
             continue
 
         fields = stripped.split("\t")
@@ -117,6 +126,10 @@ def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]
     }
     if summary["Mean coverage"] != "NA":
         stats["mean_coverage"] = float(summary["Mean coverage"])
+
+    for stat_key, summary_key in SPLICE_KEYS.items():
+        if summary_key in summary:
+            stats[stat_key] = float(summary[summary_key])
 
     for stat_key, aliases in IDENTITY_KEY_ALIASES.items():
         for alias in aliases:
@@ -350,6 +363,28 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "suffix": "%",
                 "scale": "RdYlGn",
+                "hidden": True,
+            },
+            "median_exons": {
+                "title": "Median Exons",
+                "description": "Median number of exons per read (spliced data only)",
+                "min": 0,
+                "scale": "Oranges",
+                "hidden": True,
+            },
+            "mean_exons": {
+                "title": "Mean Exons",
+                "description": "Mean number of exons per read (spliced data only)",
+                "min": 0,
+                "scale": "Oranges",
+                "hidden": True,
+            },
+            "fraction_unspliced": {
+                "title": "Unspliced Reads",
+                "description": "Fraction of reads without any splice junction (spliced data only)",
+                "min": 0,
+                "max": 1,
+                "scale": "Oranges",
                 "hidden": True,
             },
             "modal_identity": {
