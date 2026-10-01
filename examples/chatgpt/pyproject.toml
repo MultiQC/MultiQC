@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multiqc-chatgpt"
+version = "0.1.0"
+description = "Run MultiQC on ChatGPT attachments and return downloadable reports"
+requires-python = ">=3.10"
+dependencies = ["multiqc>=1.35", "mcp>=1.30,<2"]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+multiqc-chatgpt = "multiqc_chatgpt:main"
+
+[tool.setuptools]
+py-modules = ["multiqc_chatgpt"]
+
+[tool.uv.sources]
+multiqc = { path = "../..", editable = true }
