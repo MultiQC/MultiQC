@@ -16,6 +16,26 @@ MultiQC reports should work in any modern browser. They have been tested
 using OSX Chrome, Firefox and Safari. If you find any report bugs, please
 report them as a [GitHub issue](https://github.com/MultiQC/MultiQC/issues).
 
+## Browser agents (WebMCP)
+
+The default report template exposes three [WebMCP tools](https://developer.chrome.com/docs/ai/webmcp/imperative-api)
+when the browser provides `document.modelContext`:
+
+- `multiqc_get_report_summary`: list modules, sections and available interactive plots.
+- `multiqc_get_plot_data`: read plot data, including General Statistics, with paginated text output.
+- `multiqc_show_section`: scroll to and focus a report section.
+
+Plot data uses the same formatting as MultiQC's AI summaries, including current sample and column
+filters and AI sample anonymization. Values may be scaled or downsampled for plotting; these tools
+do not provide the original analysis logs. Static image plots have no interactive data to query.
+
+WebMCP is an experimental browser API and requires a supporting browser and a secure context.
+For local testing in Chrome, enable `chrome://flags/#enable-webmcp-testing` and relaunch the browser.
+Opening an HTML report alone does not connect it to ChatGPT or another agent. The browser or agent
+must support discovering and calling WebMCP tools. Reports still work when WebMCP is unavailable
+or blocked by a permissions policy. Registration and execution use the data already in the report;
+they require no server, API key, or additional network requests. Tools are not exposed to other origins.
+
 ## Report layout
 
 MultiQC reports have three main page sections:

@@ -43,6 +43,7 @@ import "./plots/violin.js";
 // AI features
 import "./ai-helpers.js";
 import "./ai.js";
+import "./webmcp.js";
 
 // Render script should be last as it initializes everything
 import "./render.js";
