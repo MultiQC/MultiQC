@@ -25,6 +25,10 @@ when the browser provides `document.modelContext`:
 - `multiqc_get_plot_data`: read plot data, including General Statistics, with paginated text output.
 - `multiqc_show_section`: scroll to and focus a report section.
 
+Click **WebMCP** near the top of the report to see what the tools do and how to use them.
+The adjacent status shows how many tools were successfully enabled in the current browser,
+or explains that they are unavailable. This status does not indicate that an agent is connected.
+
 Plot data uses the same formatting as MultiQC's AI summaries, including current sample and column
 filters and AI sample anonymization. Values may be scaled or downsampled for plotting; these tools
 do not provide the original analysis logs. Static image plots have no interactive data to query.

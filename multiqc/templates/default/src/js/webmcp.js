@@ -1,6 +1,10 @@
 // Register after plot initialization, including plots whose rendering is deferred.
 window.callAfterDecompressed.push(async function () {
-  if (typeof document.modelContext?.registerTool !== "function") return;
+  const statusElements = document.querySelectorAll("[data-webmcp-status]");
+  if (typeof document.modelContext?.registerTool !== "function") {
+    for (const element of statusElements) element.textContent = "Unavailable in this browser";
+    return;
+  }
 
   const sections = Object.entries(window.aiReportMetadata.sections)
     .filter(([anchor]) => document.getElementById(anchor))
@@ -42,8 +46,19 @@ window.callAfterDecompressed.push(async function () {
         type: "object",
         properties: {
           anchor: { type: "string", minLength: 1, description: "A plot anchor from multiqc_get_report_summary." },
-          offset: { type: "integer", minimum: 0, default: 0 },
-          limit: { type: "integer", minimum: 1, maximum: 50000, default: 10000 },
+          offset: {
+            type: "integer",
+            minimum: 0,
+            default: 0,
+            description: "Character offset, or next_offset from a previous result.",
+          },
+          limit: {
+            type: "integer",
+            minimum: 1,
+            maximum: 50000,
+            default: 10000,
+            description: "Maximum characters to return in this page.",
+          },
         },
         required: ["anchor"],
         additionalProperties: false,
@@ -100,12 +115,22 @@ window.callAfterDecompressed.push(async function () {
     },
   ];
 
+  let registered = 0;
   for (const tool of tools) {
     try {
       await document.modelContext.registerTool(tool);
+      registered++;
     } catch (error) {
       // Permission policies or experimental API changes must not break the report.
       console.warn(`Could not register WebMCP tool ${tool.name}:`, error);
     }
+  }
+  for (const element of statusElements) {
+    element.textContent =
+      registered === tools.length
+        ? `${registered} tools available`
+        : registered > 0
+          ? `${registered} of ${tools.length} tools available`
+          : "Tools could not be enabled";
   }
 });

@@ -21,6 +21,10 @@ test("WebMCP reads existing plot data, bounds output and only navigates report s
     },
   };
   const elements = new Map(["general_stats", "qc", "qc_section", "qc_plot", "ai-api-key"].map((id) => [id, section]));
+  const statusElements = [
+    { textContent: "Checking browser support..." },
+    { textContent: "Checking browser support..." },
+  ];
   // Exercise the real table formatter: small scaled counts must retain precision and units.
   const plotWindow = {};
   runInNewContext(
@@ -65,18 +69,21 @@ test("WebMCP reads existing plot data, bounds output and only navigates report s
   const document = {
     title: "Test MultiQC report",
     getElementById: (id) => elements.get(id),
+    querySelectorAll: (selector) => (selector === "[data-webmcp-status]" ? statusElements : []),
   };
   const console = { warn: (...args) => warnings.push(args) };
   runInNewContext(source, { window, document, console });
   assert.equal(window.callAfterDecompressed.length, 1);
   const initialize = window.callAfterDecompressed[0];
-  await initialize(); // Unsupported browsers leave the report alone.
+  await initialize(); // Unsupported browsers still explain the report's WebMCP capability.
   assert.equal(registered.size, 0);
+  assert.ok(statusElements.every((element) => element.textContent === "Unavailable in this browser"));
   document.modelContext = {
     registerTool: async (tool) => registered.set(tool.name, tool),
   };
   await initialize();
   assert.equal(registered.size, 3);
+  assert.ok(statusElements.every((element) => element.textContent === "3 tools available"));
   for (const tool of registered.values()) {
     assert.equal(tool.inputSchema.type, "object");
     assert.equal(tool.annotations.untrustedContentHint, true);
@@ -120,4 +127,12 @@ test("WebMCP reads existing plot data, bounds output and only navigates report s
   };
   await initialize();
   assert.equal(warnings.length, 3); // Registration failures never reject report initialization.
+  assert.ok(statusElements.every((element) => element.textContent === "Tools could not be enabled"));
+  document.modelContext.registerTool = async (tool) => {
+    if (tool.name !== "multiqc_get_report_summary") throw new Error("Registration failed");
+  };
+  await initialize();
+  assert.ok(statusElements.every((element) => element.textContent === "1 of 3 tools available"));
+  statusElements.length = 0; // Themes can omit the indicator without breaking tool registration.
+  await initialize();
 });
