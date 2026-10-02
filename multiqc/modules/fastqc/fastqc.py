@@ -463,7 +463,9 @@ class MultiqcModule(BaseMultiqcModule):
             # Add count of fail statuses
             num_statuses = 0
             num_fails = 0
-            for s in sample_data["statuses"].values():
+            for section, s in sample_data["statuses"].items():
+                if section == "basic_statistics":
+                    continue
                 num_statuses += 1
                 if s == "fail":
                     num_fails += 1
@@ -484,7 +486,9 @@ class MultiqcModule(BaseMultiqcModule):
             _num_statuses = 0
             _num_fails = 0
             for _, _, original_sn in group_s_names:
-                for st in self.fastqc_data[original_sn]["statuses"].values():
+                for section, st in self.fastqc_data[original_sn]["statuses"].items():
+                    if section == "basic_statistics":
+                        continue
                     _num_statuses += 1
                     if st == "fail":
                         _num_fails += 1
@@ -1438,7 +1442,9 @@ class MultiqcModule(BaseMultiqcModule):
         status_cats: Dict[str, str] = {}
         for s_name in sorted(self.fastqc_data.keys()):
             s_names.append(str(s_name))
-            for status_cat, _ in self.fastqc_data[s_name]["statuses"].items():
+            for status_cat in self.fastqc_data[s_name]["statuses"]:
+                if status_cat == "basic_statistics":
+                    continue
                 if status_cat not in status_cats:
                     status_cats[status_cat] = status_cat.replace("_", " ").title().replace("Gc", "GC")
         for s_name in s_names:
