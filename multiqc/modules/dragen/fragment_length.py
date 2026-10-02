@@ -10,13 +10,16 @@ log = logging.getLogger(__name__)
 
 
 MIN_CNT_TO_SHOW_ON_PLOT = 5
+FRAGMENT_LENGTH_HIST_KEY = "dragen/fragment_length_hist"
+RNA_TRANSCRIPT_FRAGMENT_LENGTHS_KEY = "dragen/rna_transcript_fragment_lengths"
 
 
 class DragenFragmentLength(BaseMultiqcModule):
     def add_fragment_length_hist(self):
         data_by_rg_by_sample = defaultdict(dict)
+        has_rna_pmf_data = False
 
-        for f in self.find_log_files("dragen/fragment_length_hist"):
+        for f in self.find_log_files(FRAGMENT_LENGTH_HIST_KEY):
             data_by_rg = parse_fragment_length_hist_file(f)
             s_name = f["s_name"]
             if s_name in data_by_rg_by_sample:
@@ -30,6 +33,21 @@ class DragenFragmentLength(BaseMultiqcModule):
 
             # Superfluous function call to confirm that it is used in this module
             # Replace None with actual version if it is available
+            self.add_software_version(None, s_name)
+
+        for f in self.find_log_files(RNA_TRANSCRIPT_FRAGMENT_LENGTHS_KEY):
+            data_by_rg = parse_rna_fragment_length_file(f)
+            s_name = f["s_name"]
+            if s_name in data_by_rg_by_sample:
+                log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
+            self.add_data_source(f, section="fragment_length_hist")
+
+            for rg, data in data_by_rg.items():
+                if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
+                    log.debug(f"Duplicate read group name {rg} found for {s_name}! Overwriting")
+            data_by_rg_by_sample[s_name].update(data_by_rg)
+            has_rna_pmf_data = True
+
             self.add_software_version(None, s_name)
 
         # Filter to strip out ignored sample names:
@@ -52,6 +70,9 @@ class DragenFragmentLength(BaseMultiqcModule):
         if not data_by_rg:
             return set()
 
+        y_label = "Probability mass (pmf)" if has_rna_pmf_data else "Number of reads"
+        tt_label = "<b>{point.x} bp</b>: {point.y:.6f} pmf" if has_rna_pmf_data else "<b>{point.x} bp</b>: {point.y} reads"
+
         smooth_points = 300
         self.add_section(
             name="Fragment length hist",
@@ -66,11 +87,11 @@ class DragenFragmentLength(BaseMultiqcModule):
                 {
                     "id": "dragen_fragment_length",
                     "title": "Dragen: Fragment length hist",
-                    "ylab": "Number of reads",
+                    "ylab": y_label,
                     "xlab": "Fragment length (bp)",
                     "ymin": 0,
                     "xmin": 0,
-                    "tt_label": "<b>{point.x} bp</b>: {point.y} reads",
+                    "tt_label": tt_label,
                     "smooth_points": smooth_points,
                 },
             ),
@@ -120,5 +141,39 @@ def parse_fragment_length_hist_file(f):
             else:
                 if cnt >= MIN_CNT_TO_SHOW_ON_PLOT:  # to prevent long flat tail
                     data_by_rg[read_group][frag_len] = cnt
+
+    return data_by_rg
+
+
+def parse_rna_fragment_length_file(f):
+    """
+    sample.quant.transcript_fragment_lengths.txt
+
+    Length  pmf
+    127     3.51562e-08
+    128     2.34375e-08
+    ...
+    """
+
+    data_by_rg = defaultdict(dict)
+    read_group = f["s_name"]
+
+    for line in f["f"].splitlines():
+        if line.strip() == "" or line.startswith("Length"):
+            continue
+
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+
+        frag_len_raw, pmf_raw = parts
+        try:
+            frag_len = int(frag_len_raw)
+            pmf = float(pmf_raw)
+        except ValueError:
+            continue
+
+        if pmf > 0:
+            data_by_rg[read_group][frag_len] = pmf
 
     return data_by_rg

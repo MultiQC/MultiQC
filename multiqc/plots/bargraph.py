@@ -69,6 +69,7 @@ class BarPlotConfig(PConfig):
     suffix: Optional[str] = None
     lab_format: Optional[str] = None
     sample_groups: Optional[Dict[str, List[SampleGroupEntry]]] = None
+    pct_denominators: Optional[List[Dict[str, float]]] = None
 
     def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
         if "suffix" in data:
@@ -1050,7 +1051,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
 
         # Calculate and save percentages
         if model.add_pct_tab:
-            for _, dataset in enumerate(model.datasets):
+            for ds_idx, dataset in enumerate(model.datasets):
                 # Count totals for each category
                 sums: List[float] = [0 for _ in dataset.cats[0].data]
                 for cat in dataset.cats:
@@ -1058,12 +1059,22 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                         if not math.isnan(val):
                             sums[sample_idx] += abs(val)
 
+                # Optional override: use explicit per-sample denominators.
+                # This lets modules show percentages against a domain-specific total
+                # (for example, total reads in a read group) instead of only
+                # normalizing to the sum of displayed categories.
+                denoms_by_sample: Dict[str, float] = {}
+                if pconfig.pct_denominators and ds_idx < len(pconfig.pct_denominators):
+                    denoms_by_sample = pconfig.pct_denominators[ds_idx]
+
                 # Now, calculate percentages for each category
                 for cat in dataset.cats:
                     values = [x for x in cat.data]
                     for sample_idx, val in enumerate(values):
-                        sum_for_sample = sums[sample_idx]
-                        if sum_for_sample == 0:
+                        sample_name = dataset.samples[sample_idx]
+                        explicit_denom = denoms_by_sample.get(sample_name)
+                        sum_for_sample = explicit_denom if explicit_denom is not None else sums[sample_idx]
+                        if sum_for_sample == 0 or math.isnan(sum_for_sample):
                             values[sample_idx] = 0
                         else:
                             values[sample_idx] = float(val + 0.0) / float(sum_for_sample) * 100.0

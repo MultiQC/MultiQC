@@ -96,91 +96,173 @@ class DragenMappingMetics(BaseMultiqcModule):
             for rg, data in d_by_rg.items():
                 for m in data.keys():
                     all_metric_names.add(m)
+
+        # Keep predefined metrics present in the current report input.
+        metrics_in_report = [m for m in MAPPING_METRICS if m.id in all_metric_names]
+
+        # Add fallback columns for parsed metric keys not defined in MAPPING_METRICS.
+        predefined_metric_ids = {m.id for m in MAPPING_METRICS}
+        fallback_metric_ids = sorted(
+            m
+            for m in all_metric_names
+            if m not in predefined_metric_ids
+            and not (m.endswith(" pct") and m[: -len(" pct")] in predefined_metric_ids)
+        )
+        for metric_id in fallback_metric_ids:
+            metric_unit = "%" if metric_id.endswith(" pct") else None
+            metrics_in_report.append(
+                Metric(
+                    metric_id,
+                    metric_id,
+                    in_genstats=None,
+                    in_own_tabl="#",
+                    unit=metric_unit,
+                    descr=f"Value for '{metric_id}' reported by DRAGEN mapping metrics",
+                )
+            )
+
         # and making headers
-        genstats_headers, own_tabl_headers = make_headers(all_metric_names, MAPPING_METRICS)
+        genstats_headers, own_tabl_headers = make_headers(all_metric_names, metrics_in_report)
 
         self.general_stats_addcols(data_by_sample, genstats_headers, namespace=NAMESPACE)
+
+        # Split into two togglable tables in the same section:
+        # one for absolute values and one for percentages.
+        data_by_rg_counts = {
+            rg: {metric: val for metric, val in row.items() if not str(metric).endswith(" pct")}
+            for rg, row in data_by_rg.items()
+        }
+        data_by_rg_pcts = {
+            rg: {metric: val for metric, val in row.items() if str(metric).endswith(" pct")}
+            for rg, row in data_by_rg.items()
+        }
+        count_headers = {
+            metric: conf for metric, conf in own_tabl_headers.items() if not str(metric).endswith(" pct")
+        }
+        pct_headers = {
+            metric: conf for metric, conf in own_tabl_headers.items() if str(metric).endswith(" pct")
+        }
+
+        counts_table_plot = table.plot(
+            data_by_rg_counts,
+            count_headers,
+            pconfig={
+                "id": "dragen-mapping-metrics-table-counts",
+                "namespace": NAMESPACE,
+                "title": "DRAGEN: Mapping metrics (Counts)",
+            },
+        )
+        pcts_table_plot = table.plot(
+            data_by_rg_pcts,
+            pct_headers,
+            pconfig={
+                "id": "dragen-mapping-metrics-table-percentages",
+                "namespace": NAMESPACE,
+                "title": "DRAGEN: Mapping metrics (Percentages)",
+            },
+        )
+
+        def _render_table(plot_obj, empty_message):
+            if plot_obj is None:
+                return f"<p class='text-muted'>{empty_message}</p>"
+            if isinstance(plot_obj, str):
+                return plot_obj
+
+            # Persist data files for export parity with standard section plots.
+            plot_obj.save_data_files()
+            return plot_obj.add_to_report(self.anchor, "dragen-mapping-metrics")
+
+        counts_table_html = _render_table(counts_table_plot, "No absolute-value metrics found.")
+        pcts_table_html = _render_table(pcts_table_plot, "No percentage metrics found.")
+
+        mapping_metrics_plot_html = f"""
+            <ul class=\"nav nav-tabs\" id=\"dragen-mapping-metrics-tabs\" role=\"tablist\">
+              <li class=\"nav-item\" role=\"presentation\">
+                <button class=\"nav-link active\" id=\"dragen-mapping-metrics-counts-tab\" data-bs-toggle=\"tab\"
+                  data-bs-target=\"#dragen-mapping-metrics-counts\" type=\"button\" role=\"tab\"
+                  aria-controls=\"dragen-mapping-metrics-counts\" aria-selected=\"true\">Absolute values</button>
+              </li>
+              <li class=\"nav-item\" role=\"presentation\">
+                <button class=\"nav-link\" id=\"dragen-mapping-metrics-pct-tab\" data-bs-toggle=\"tab\"
+                  data-bs-target=\"#dragen-mapping-metrics-pct\" type=\"button\" role=\"tab\"
+                  aria-controls=\"dragen-mapping-metrics-pct\" aria-selected=\"false\">Percentages</button>
+              </li>
+            </ul>
+            <div class=\"tab-content pt-3\" id=\"dragen-mapping-metrics-tab-content\">
+              <div class=\"tab-pane fade show active\" id=\"dragen-mapping-metrics-counts\" role=\"tabpanel\"
+                aria-labelledby=\"dragen-mapping-metrics-counts-tab\">{counts_table_html}</div>
+              <div class=\"tab-pane fade\" id=\"dragen-mapping-metrics-pct\" role=\"tabpanel\"
+                aria-labelledby=\"dragen-mapping-metrics-pct-tab\">{pcts_table_html}</div>
+            </div>
+        """
 
         self.add_section(
             name="Mapping metrics",
             anchor="dragen-mapping-metrics",
             description="""
             Mapping metrics, similar to the metrics computed by the samtools-stats command.
-            Shown on per read group level. To see per-sample level metrics, refer to the general
-            stats table.
+            Shown on per read group level. Use the tabs to switch between absolute values and percentages.
+            To see per-sample level metrics, refer to the general stats table.
             """,
-            plot=table.plot(
-                data_by_rg,
-                own_tabl_headers,
-                pconfig={
-                    "id": "dragen-mapping-metrics-table",
-                    "namespace": NAMESPACE,
-                    "title": "DRAGEN: Mapping metrics",
-                },
-            ),
+            plot=mapping_metrics_plot_html,
+            autoformat_type="html",
         )
 
-        # Skip adding the barplot if it's not informative, such as if all
-        #  reads are unmapped due to a FastQcOnly workflow
-        all_unmapped = True
-        unmapped_key = "Unmapped reads pct"
-        for rg, data in data_by_rg.items():
-            if unmapped_key in data and data[unmapped_key] < 100.0:
-                all_unmapped = False
-
-        if all_unmapped:
-            return set()
-
-        # Make bargraph plots of mapped, dupped and paired reads
-        self.__map_pair_dup_read_chart(data_by_rg)
+        # The mapped/paired/duplicated chart is intentionally omitted.
+        # The mapping metrics table now provides the needed information in
+        # dedicated absolute-value and percentage tabs.
 
     def __map_pair_dup_read_chart(self, data_by_sample):
         paired_reads_data = {}
+        paired_pct_denominator_by_sample = {}
         mapped_reads_data = {}
+        mapped_pct_denominator_by_sample = {}
         category_labels = []
         data_labels = []
 
         add_paired_label = False
         add_mapped_label = False
-        for sample_id, data in data_by_sample.items():
-            # Dragen 3.9 has replaced 'rRNA filtered reads' with 'Adjustment of reads matching filter contigs'
-            if "rRNA filtered reads" in data.keys():
-                rrna_filtered_reads_key = "rRNA filtered reads"
-            elif "Adjustment of reads matching filter contigs" in data.keys():
-                rrna_filtered_reads_key = "Adjustment of reads matching filter contigs"
-            else:
-                rrna_filtered_reads_key = None
 
+        paired_count_keys = [
+            "Properly paired reads",
+            "Not properly paired reads (discordant)",
+            "Singleton reads (itself mapped; mate unmapped)",
+            "Unmapped reads",
+        ]
+
+        mapped_count_keys = [
+            "Number of unique & mapped reads (excl. duplicate marked reads)",
+            "Number of duplicate marked reads",
+            "Unmapped reads",
+        ]
+
+        excluded_read_keys = [
+            "Mapped reads (RNA) to rRNA and filtered",
+            "Mapped reads (RNA) to chrM and excluded from metrics",
+        ]
+
+        for sample_id, data in data_by_sample.items():
             if data.get("Mapped reads R2", None) == 0:
                 log.debug(f"single-ended data detected, skipping mapping/paired percentages plot for: {sample_id}")
-            elif data.get("Not properly paired reads (discordant)", 0) + data.get(
-                "Properly paired reads", 0
-            ) + data.get("Singleton reads (itself mapped; mate unmapped)", 0) + data.get("Unmapped reads", 0) + (
-                data.get(rrna_filtered_reads_key, 0)
-                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
-                else 0
-            ) != data.get("Total reads in RG", 0):
-                log.warning(
-                    "sum of unpaired/discordant/proppaired/unmapped reads not matching total, "
-                    "skipping mapping/paired percentages plot for: {}".format(sample_id)
-                )
             else:
-                paired_reads_data[sample_id] = data
-                add_paired_label = True
+                paired_row = {k: data.get(k, 0) for k in paired_count_keys}
+                if sum(v for v in paired_row.values() if isinstance(v, (int, float))) > 0:
+                    paired_reads_data[sample_id] = paired_row
+                    total_reads_in_rg = data.get("Total reads in RG", None)
+                    if isinstance(total_reads_in_rg, (int, float)) and total_reads_in_rg > 0:
+                        paired_pct_denominator_by_sample[sample_id] = float(total_reads_in_rg)
+                    add_paired_label = True
 
-            if data.get("Number of unique & mapped reads (excl. duplicate marked reads)", 0) + data.get(
-                "Number of duplicate marked reads", 0
-            ) + data.get("Unmapped reads", 0) + (
-                data.get(rrna_filtered_reads_key, 0)
-                if rrna_filtered_reads_key is not None and rrna_filtered_reads_key == "rRNA filtered reads"
-                else 0
-            ) != data.get("Total reads in RG", 0):
-                log.warning(
-                    "sum of unique/duplicate/unmapped reads not matching total, "
-                    "skipping mapping/duplicates percentages plot for: {}".format(sample_id)
-                )
-            else:
-                mapped_reads_data[sample_id] = data
+            if any(data.get(k, 0) for k in mapped_count_keys + excluded_read_keys):
+                row = {k: data.get(k, 0) for k in mapped_count_keys}
+                for key in excluded_read_keys:
+                    if key in data:
+                        row[key] = data.get(key, 0)
+                mapped_reads_data[sample_id] = row
+
+                total_reads_in_rg = data.get("Total reads in RG", None)
+                if isinstance(total_reads_in_rg, (int, float)) and total_reads_in_rg > 0:
+                    mapped_pct_denominator_by_sample[sample_id] = float(total_reads_in_rg)
                 add_mapped_label = True
 
         # Add labels
@@ -194,7 +276,11 @@ class DragenMappingMetics(BaseMultiqcModule):
                 }
             )
             data_labels.append(
-                {"name": "Paired vs. discordant vs. singleton", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
+                {
+                    "name": "Pairing status (proper, discordant, singleton, unmapped)",
+                    "ylab": "Reads",
+                    "cpswitch_counts_label": "Reads",
+                }
             )
         if add_mapped_label:
             mapped_chart_labels = {
@@ -205,28 +291,66 @@ class DragenMappingMetics(BaseMultiqcModule):
                 "Number of duplicate marked reads": {"color": "#f5a742", "name": "Duplicated"},
                 "Unmapped reads": {"color": "#b1084c", "name": "Unmapped"},
             }
-            if "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
+            first_sample_data = next(iter(data_by_sample.values()))
+            if "Mapped reads (RNA) to rRNA and filtered" in first_sample_data:
+                mapped_chart_labels["Mapped reads (RNA) to rRNA and filtered"] = {
                     "color": "#43b14a",
                     "name": "rRNA filtered",
                 }
-            elif "rRNA filtered reads" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["rRNA filtered reads"] = {"color": "#43b14a", "name": "rRNA filtered"}
-            elif "Adjustment of reads matching filter contigs" in next(iter(data_by_sample.values())):
-                mapped_chart_labels["Adjustment of reads matching filter contigs"] = {
-                    "color": "#43b14a",
-                    "name": "rRNA filtered",
+            if "Mapped reads (RNA) to chrM and excluded from metrics" in first_sample_data:
+                mapped_chart_labels["Mapped reads (RNA) to chrM and excluded from metrics"] = {
+                    "color": "#249b8f",
+                    "name": "chrM excluded",
                 }
+
+            # Build an accurate label from categories that are actually present
+            # in plotted data (non-zero in at least one sample).
+            mapped_panel_order = [
+                "Number of unique & mapped reads (excl. duplicate marked reads)",
+                "Number of duplicate marked reads",
+                "Unmapped reads",
+                "Mapped reads (RNA) to rRNA and filtered",
+                "Mapped reads (RNA) to chrM and excluded from metrics",
+            ]
+            mapped_label_by_key = {
+                "Number of unique & mapped reads (excl. duplicate marked reads)": "unique",
+                "Number of duplicate marked reads": "duplicated",
+                "Unmapped reads": "unmapped",
+                "Mapped reads (RNA) to rRNA and filtered": "rRNA filtered",
+                "Mapped reads (RNA) to chrM and excluded from metrics": "chrM excluded",
+            }
+            included_labels = []
+            for key in mapped_panel_order:
+                if key not in mapped_chart_labels:
+                    continue
+                if any(sample_row.get(key, 0) for sample_row in mapped_reads_data.values()):
+                    included_labels.append(mapped_label_by_key[key])
+
+            if included_labels:
+                mapped_panel_name = "Read status (" + ", ".join(included_labels) + ")"
+            else:
+                mapped_panel_name = "Read status"
             category_labels.append(mapped_chart_labels)
             data_labels.append(
-                {"name": "Unique vs duplicated vs unmapped", "ylab": "Reads", "cpswitch_counts_label": "Reads"}
+                {"name": mapped_panel_name, "ylab": "Reads", "cpswitch_counts_label": "Reads"}
             )
 
-        data_to_plot = [d for d in [paired_reads_data, mapped_reads_data] if d]  # Leaves out empty dicts
+        data_to_plot = []
+        pct_denominators = []
+        if paired_reads_data:
+            data_to_plot.append(paired_reads_data)
+            pct_denominators.append(paired_pct_denominator_by_sample)
+        if mapped_reads_data:
+            data_to_plot.append(mapped_reads_data)
+            pct_denominators.append(mapped_pct_denominator_by_sample)
+
         self.add_section(
             name="Mapped / paired / duplicated",
             anchor="dragen-mapped-paired-duplicated",
-            description="Distribution of reads based on pairing, duplication and mapping.",
+            description=(
+                "Distribution of reads based on pairing, duplication and mapping. "
+                "Percent is calculated against total reads in the read group."
+            ),
             plot=bargraph.plot(
                 data_to_plot,
                 category_labels,
@@ -234,8 +358,10 @@ class DragenMappingMetics(BaseMultiqcModule):
                     "id": "mapping_dup_percentage_plot",
                     "title": "Dragen: Mapped/paired/duplicated reads per read group",
                     "ylab": "Reads",
-                    "cpswitch_counts_label": "Reads",
+                    "cpswitch_counts_label": "Count",
+                    "cpswitch_percent_label": "Percent",
                     "data_labels": data_labels,
+                    "pct_denominators": pct_denominators,
                 },
             ),
         )
@@ -487,7 +613,22 @@ MAPPING_METRICS = [
     Metric("Mapped reads R2", "Map R2", None, "hid", "reads", "Number of mapped reads R2, {}"),
     Metric("Unmapped reads", "Unmap", "%", "%", "reads", "Number of unmapped reads, {}", the_higher_the_worse=True),
     Metric(
-        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
+        "Mapped reads (RNA) to rRNA and filtered",
+        "RNA rRNA filt",
+        "%",
+        "%",
+        "reads",
+        "Number of mapped RNA reads to rRNA and filtered, {}",
+        the_higher_the_worse=True,
+    ),
+    Metric(
+        "Mapped reads (RNA) to chrM and excluded from metrics",
+        "RNA chrM excl",
+        "%",
+        "%",
+        "reads",
+        "Number of mapped RNA reads to chrM and excluded from metrics, {}",
+        the_higher_the_worse=True,
     ),
     Metric("Reads with MAPQ [40:inf)", "MQ⩾40", None, "hid", "reads", "Number of reads with MAPQ [40:inf), {}"),
     Metric(
@@ -727,18 +868,6 @@ MAPPING_METRICS = [
         "proportion",
         "Fraction of estimated sample contamination",
         precision=2,
-        the_higher_the_worse=True,
-    ),
-    Metric(
-        "rRNA filtered reads", "rRNA", "%", "%", "reads", "Number of rRNA filtered reads, {}", the_higher_the_worse=True
-    ),
-    Metric(
-        "Adjustment of reads matching filter contigs",
-        "rRNA / Filtered Contigs",
-        "%",
-        "%",
-        "reads",
-        "Number of filtered reads, {}",
         the_higher_the_worse=True,
     ),
 ]

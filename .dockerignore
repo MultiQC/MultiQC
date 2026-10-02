@@ -1,31 +1,18 @@
-# Git things
-.git/
-.gitignore
-.github/
+# Minimize Docker build context using an allowlist.
+# Exclude everything by default, then include only files used by Dockerfile.
+**
 
-# Python build things
-*.pyc
-*.pyo
-__pycache__
-build/
-dist/
-*.egg-info
-.pytest_cache
-.ruff_cache
-.mypy_cache
-venv
-venv*
+!Dockerfile
+!.dockerignore
+!LICENSE
+!README.md
+!pyproject.toml
+!MANIFEST.in
+!setup.py
 
-# MultiQC results
-multiqc_config.yaml
-multiqc_report.html
-multiqc_data/
-multiqc_plots/
-result
-benchmarks
-demo
-
-# Other things
-.idea
-.vscode
-test-data
+!docs/
+!docs/**
+!multiqc/
+!multiqc/**
+!scripts/
+!scripts/**

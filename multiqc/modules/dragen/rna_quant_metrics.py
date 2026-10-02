@@ -131,6 +131,10 @@ def parse_metrics_file(f):
     """
     data = {}
     for line in f["f"].splitlines():
+        line = line.strip()
+        if not line:
+            continue
+
         tokens = line.split(",")
         if len(tokens) == 4:
             analysis, _, metric, stat = tokens
@@ -138,7 +142,11 @@ def parse_metrics_file(f):
         elif len(tokens) == 5:
             analysis, _, metric, stat, percentage = tokens
         else:
-            raise ValueError(f"Unexpected number of tokens in line {line}")
+            log.debug(f"Skipping malformed RNA quant metrics line in {f['fn']}: {line}")
+            continue
+
+        if not metric:
+            continue
 
         try:
             stat = float(stat)
