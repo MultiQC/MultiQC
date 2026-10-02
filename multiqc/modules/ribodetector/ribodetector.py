@@ -8,7 +8,6 @@ from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
-
 class MultiqcModule(BaseMultiqcModule):
     """
     RiboDetector is a deep learning-based tool for rapid and accurate identification
