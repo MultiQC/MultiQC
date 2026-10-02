@@ -498,3 +498,14 @@ class TestIntegration:
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0, (
             "expected general stats or report sections to be populated"
         )
+
+
+class TestDataFileNames:
+    def test_data_file_names_are_filesystem_safe(self, fixtures_dir):
+        report.reset()
+        report.analysis_files = [str(fixtures_dir / "PairedEndNoProject")]
+        report.search_files(["bases2fastq"])
+        MultiqcModule()
+        names = [k for k in report.saved_raw_data_keys if "bases2fastq" in k]
+        assert len(names) > 1
+        assert all(k.startswith("bases2fastq") and ":" not in k and " " not in k for k in names), names
