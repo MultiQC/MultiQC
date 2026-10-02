@@ -24,6 +24,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ncbi/amr",
             info="Finds acquired antimicrobial resistance genes and point mutations in protein and/or assembled nucleotide sequences",
             doi="10.1038/s41598-021-91456-0",
+            license="NCBI License",
+            license_url="https://github.com/ncbi/amr/blob/master/LICENSE",
         )
 
         self.plot_data = []
@@ -77,6 +79,8 @@ class MultiqcModule(BaseMultiqcModule):
                 AMRFinderPlus does not predict phenotypic resistance." Additional information from NCBI on interpreting results can be found [here](https://github.com/ncbi/amr/wiki/Interpreting-results).""",
         )
 
+        self.write_data_file(self.general_stats_data, "multiqc_amrfinder")
+
     def parse_amrfinder_log(self, f):
         sample_name = f["s_name"]
         row_count = 0
@@ -99,8 +103,16 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.plot_data.append(row)
                 row_count += 1
-                coverage_sum += float(row["% Coverage of reference"]) if row["% Coverage of reference"] != "NA" else 0.0
-                identity_sum += float(row["% Identity to reference"]) if row["% Identity to reference"] != "NA" else 0.0
+                coverage_sum += (
+                    float(row["% Coverage of reference"])
+                    if row["% Coverage of reference"] != "NA"
+                    else 0.0
+                )
+                identity_sum += (
+                    float(row["% Identity to reference"])
+                    if row["% Identity to reference"] != "NA"
+                    else 0.0
+                )
             # adding a row to general stats data for this sample that has the count of elements, average coverage, and average identity
             self.general_stats_data[sample_name] = {
                 "elements": row_count,
@@ -175,7 +187,9 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 0,
         }
 
-        return bargraph.plot([element_type_counts, element_subtype_counts], pconfig=pconfig)
+        return bargraph.plot(
+            [element_type_counts, element_subtype_counts], pconfig=pconfig
+        )
 
     def amrfinder_heatmap(self):
         # Sort plot data by % coverage for each row. This should mean that the highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a combined protein and nucleotide run.
