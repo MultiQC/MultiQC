@@ -209,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
             except ValueError:
                 log.warning(
                     f"Skipping {f['root']}/{f['fn']}: could not parse line {line!r}. "
-                    f"The file may be truncated or corrupted, for example if mosdepth was interrupted or ran out of disk space."
+                    f"The file may be truncated or corrupted."
                 )
                 continue
             if sample_stats:
@@ -535,15 +535,11 @@ class MultiqcModule(BaseMultiqcModule):
                         bases_fraction_sum_per_contig[contig] += float(bases_fraction)
             except ValueError:
                 log.warning(
-                    f"Skipping {f['root']}/{f['fn']}: could not parse line {line_num}. The file may be "
-                    f"truncated or corrupted, for example if mosdepth was interrupted or ran out of disk space."
+                    f"Skipping {f['root']}/{f['fn']}: could not parse line {line_num}. The file may be truncated or corrupted."
                 )
                 continue
             if not cum_fraction_by_cov:
-                log.warning(
-                    f"Skipping {f['root']}/{f['fn']}: no 'total' rows found. The file may be truncated, "
-                    f"for example if mosdepth was interrupted or ran out of disk space."
-                )
+                log.warning(f"Skipping {f['root']}/{f['fn']}: no 'total' rows found. The file may be truncated.")
                 continue
 
             self.add_data_source(f, s_name=s_name, section="genome_results")
