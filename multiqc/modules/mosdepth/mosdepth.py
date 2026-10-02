@@ -192,19 +192,29 @@ class MultiqcModule(BaseMultiqcModule):
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
-            for line in f["f"].splitlines():
-                # The first column can be a contig name, "total", "total_region".
-                # We want to use "total_region" if available. It is available when
-                # --by is specified. It always goes after "total", so we can just
-                # assume it will override the information collected for "total":
-                if line.startswith("total\t") or line.startswith("total_region\t"):
-                    contig, length, bases, mean, min_cov, max_cov = line.split("\t")
-                    genstats_by_sample[s_name]["mean_coverage"] = float(mean)
-                    genstats_by_sample[s_name]["min_coverage"] = float(min_cov)
-                    genstats_by_sample[s_name]["max_coverage"] = float(max_cov)
-                    genstats_by_sample[s_name]["coverage_bases"] = int(bases)
-                    genstats_by_sample[s_name]["length"] = int(length)
-                    self.add_data_source(f, s_name=s_name, section="summary")
+            sample_stats: Dict[str, Union[int, float]] = {}
+            try:
+                for line in f["f"].splitlines():
+                    # The first column can be a contig name, "total", "total_region".
+                    # We want to use "total_region" if available. It is available when
+                    # --by is specified. It always goes after "total", so we can just
+                    # assume it will override the information collected for "total":
+                    if line.startswith("total\t") or line.startswith("total_region\t"):
+                        contig, length, bases, mean, min_cov, max_cov = line.split("\t")
+                        sample_stats["mean_coverage"] = float(mean)
+                        sample_stats["min_coverage"] = float(min_cov)
+                        sample_stats["max_coverage"] = float(max_cov)
+                        sample_stats["coverage_bases"] = int(bases)
+                        sample_stats["length"] = int(length)
+            except ValueError:
+                log.warning(
+                    f"Skipping {f['root']}/{f['fn']}: could not parse line {line!r}. "
+                    f"The file may be truncated or corrupted, for example if mosdepth was interrupted or ran out of disk space."
+                )
+                continue
+            if sample_stats:
+                genstats_by_sample[s_name].update(sample_stats)
+                self.add_data_source(f, s_name=s_name, section="summary")
 
         # Filter out any samples from --ignore-samples
         genstats_by_sample = defaultdict(dict, self.ignore_samples(genstats_by_sample))
@@ -485,44 +495,58 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name in cumulative_pct_by_cov_by_sample:  # both region and global might exist, prioritizing region
                 continue
 
-            self.add_data_source(f, s_name=s_name, section="genome_results")
-
             bases_fraction_sum_per_contig: Dict[str, float] = defaultdict(float)
             cum_fraction_by_cov: Dict[int, float] = dict()
 
-            for line in f["f"]:
-                contig, cutoff_reads, bases_fraction = str(line).split("\t")
-                if bases_fraction == "0.00\n":
-                    continue
-
-                # Parse cumulative coverage
-                if contig == "total":
-                    cum_fraction_by_cov[int(cutoff_reads)] = float(bases_fraction)
-
-                # Calculate per-contig coverage
-                else:
-                    # filter out contigs based on exclusion patterns
-                    if contig in excluded_contigs:
+            line_num = 0
+            try:
+                for line_num, line in enumerate(f["f"], start=1):
+                    contig, cutoff_reads, bases_fraction = str(line).rstrip("\r\n").split("\t")
+                    if bases_fraction == "0.00":
                         continue
 
-                    if contig not in included_contigs:
-                        if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in self.cfg["exclude_contigs"]):
-                            excluded_contigs.add(contig)
-                            if show_excluded_debug_logs:
-                                log.debug(f"Skipping excluded contig '{contig}'")
+                    # Parse cumulative coverage
+                    if contig == "total":
+                        cum_fraction_by_cov[int(cutoff_reads)] = float(bases_fraction)
+
+                    # Calculate per-contig coverage
+                    else:
+                        # filter out contigs based on exclusion patterns
+                        if contig in excluded_contigs:
                             continue
 
-                        # filter out contigs based on inclusion patterns
-                        if len(self.cfg["include_contigs"]) > 0 and not any(
-                            fnmatch.fnmatch(contig, pattern) for pattern in self.cfg["include_contigs"]
-                        ):
-                            # Commented out since this could be many thousands of contigs!
-                            # log.debug(f"Skipping not included contig '{contig}'")
-                            continue
+                        if contig not in included_contigs:
+                            if any(fnmatch.fnmatch(contig, str(pattern)) for pattern in self.cfg["exclude_contigs"]):
+                                excluded_contigs.add(contig)
+                                if show_excluded_debug_logs:
+                                    log.debug(f"Skipping excluded contig '{contig}'")
+                                continue
 
-                        included_contigs.add(contig)
+                            # filter out contigs based on inclusion patterns
+                            if len(self.cfg["include_contigs"]) > 0 and not any(
+                                fnmatch.fnmatch(contig, pattern) for pattern in self.cfg["include_contigs"]
+                            ):
+                                # Commented out since this could be many thousands of contigs!
+                                # log.debug(f"Skipping not included contig '{contig}'")
+                                continue
 
-                    bases_fraction_sum_per_contig[contig] += float(bases_fraction)
+                            included_contigs.add(contig)
+
+                        bases_fraction_sum_per_contig[contig] += float(bases_fraction)
+            except ValueError:
+                log.warning(
+                    f"Skipping {f['root']}/{f['fn']}: could not parse line {line_num}. The file may be "
+                    f"truncated or corrupted, for example if mosdepth was interrupted or ran out of disk space."
+                )
+                continue
+            if not cum_fraction_by_cov:
+                log.warning(
+                    f"Skipping {f['root']}/{f['fn']}: no 'total' rows found. The file may be truncated, "
+                    f"for example if mosdepth was interrupted or ran out of disk space."
+                )
+                continue
+
+            self.add_data_source(f, s_name=s_name, section="genome_results")
 
             genstats_by_sample[s_name] = {}
             for k, v in genstats_cov_thresholds(cum_fraction_by_cov, threshs).items():
