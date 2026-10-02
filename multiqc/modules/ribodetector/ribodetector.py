@@ -187,17 +187,17 @@ class MultiqcModule(BaseMultiqcModule):
                 "description": "Number of sequences classified as rRNA",
                 "placement": 300,
             },
-            "rRNA_pct": {
-                "title": "% rRNA",
-                "description": "Percentage of processed sequences classified as rRNA",
+            "non_rRNA_pct": {
+                "title": "% non-rRNA",
+                "description": "Percentage of processed sequences classified as non-rRNA",
                 "format": "{:.3f}",
                 "suffix": "%",
                 "max": 100,
                 "placement": 400,
             },
-            "non_rRNA_pct": {
-                "title": "% non-rRNA",
-                "description": "Percentage of processed sequences classified as non-rRNA",
+            "rRNA_pct": {
+                "title": "% rRNA",
+                "description": "Percentage of processed sequences classified as rRNA",
                 "format": "{:.3f}",
                 "suffix": "%",
                 "max": 100,
@@ -208,8 +208,8 @@ class MultiqcModule(BaseMultiqcModule):
         headers["total"]["scale"] = "Blues"
         headers["non_rRNA"]["scale"] = "Greens"
         headers["rRNA"]["scale"] = "Reds"
-        headers["rRNA_pct"]["scale"] = "Reds"
         headers["non_rRNA_pct"]["scale"] = "Greens"
+        headers["rRNA_pct"]["scale"] = "Reds"
         
         pconfig = {
             "id": "ribodetector_classification_table",
