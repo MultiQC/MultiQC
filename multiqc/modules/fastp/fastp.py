@@ -455,7 +455,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "before_filtering_total_reads": {
                     "title": "Reads Before Filtering",
                     "description": f"Total reads before filtering ({config.read_count_desc})",
-                    "scale": "Blues",
+                    "scale": "Purples",
                     "shared_key": "read_count",
                 },
                 "filtering_result_passed_filter_reads": {
