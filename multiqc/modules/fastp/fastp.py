@@ -363,14 +363,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Insert size plot data
         try:
             # First count the total read count in the insert size analysis
-            total_reads = 0
+            classified_reads = 0
             max_i = 0
             for i, v in enumerate(parsed_json["insert_size"]["histogram"]):
-                total_reads += v
+                classified_reads += v
                 if float(v) > 0:
                     max_i = i
-            if total_reads == 0:
+            if classified_reads == 0:
                 raise KeyError
+            total_reads = classified_reads + parsed_json["insert_size"]["unknown"]
             # Calculate percentages
             for i, v in enumerate(parsed_json["insert_size"]["histogram"]):
                 if i <= max_i:
