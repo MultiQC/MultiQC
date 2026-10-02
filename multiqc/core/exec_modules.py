@@ -96,7 +96,7 @@ def exec_modules(mod_dicts_in_order: List[Dict[str, Dict]]) -> None:
             trace_memory("after cleaning up attributes")
 
             # Override duplicated outputs
-            for prev_mod in report.modules:
+            for prev_mod in list(report.modules):
                 for new_mod in these_modules:
                     if prev_mod.anchor == new_mod.anchor:
                         new_mod.merge(prev_mod)

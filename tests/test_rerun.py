@@ -453,3 +453,17 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     assert len(group_a) == 3
     agg = next(r for r in group_a if str(r.sample) == "SampleA")
     assert agg.data[ColumnKey("reads")].raw == 20000
+
+
+def test_rerun_in_same_dir_no_duplicate_modules(tmp_path, monkeypatch):
+    """Running twice in one directory picks up the first run's parquet; fresh custom content must replace, not duplicate, those modules."""
+    for i in range(1, 6):
+        (tmp_path / f"plot{i}_mqc.png").touch()
+    monkeypatch.chdir(tmp_path)
+
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, prepend_dirs=False, filename="run1", force=True))
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run2", force=True))
+
+    html = (tmp_path / "run2.html").read_text()
+    for i in range(1, 6):
+        assert html.count(f'id="mqc-module-section-plot{i}"') == 1
