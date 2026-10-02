@@ -445,6 +445,27 @@ class MultiqcModule(BaseMultiqcModule):
                     "suffix": "%",
                     "hidden": True,
                 },
+                "before_filtering_total_bases": {
+                    "title": f"{config.base_count_prefix} Bases Before Filtering",
+                    "description": f"Total bases before filtering ({config.base_count_desc})",
+                    "scale": "Blues",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "after_filtering_total_bases": {
+                    "title": f"{config.base_count_prefix} Bases After Filtering",
+                    "description": f"Total bases after filtering ({config.base_count_desc})",
+                    "scale": "Blues",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "before_filtering_q30_bases": {
+                    "title": f"{config.base_count_prefix} Q30 bases (before filtering)",
+                    "description": f"Bases > Q30 before filtering ({config.base_count_desc})",
+                    "scale": "GnBu",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
                 "after_filtering_q30_bases": {
                     "title": f"{config.base_count_prefix} Q30 bases",
                     "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
