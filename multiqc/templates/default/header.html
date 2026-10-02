@@ -47,6 +47,19 @@ was generated and the button that launches the welcome tour.
   </p>
 {% endif %}
 
+<div class="d-flex align-items-center flex-wrap gap-2 mb-3 d-print-none">
+  <button
+    type="button"
+    class="btn btn-outline-secondary btn-sm"
+    data-bs-toggle="modal"
+    data-bs-target="#webmcp_help_modal"
+    aria-haspopup="dialog"
+  >
+    {{ material_icon('mdi:link', 16) }} WebMCP
+  </button>
+  <span class="small text-body-secondary" data-webmcp-status role="status">Checking browser support...</span>
+</div>
+
 {% if config.report_comment and config.report_comment | length > 0 %}
   <blockquote class="report_comment">{{ config.report_comment }}</blockquote>
 {% endif %}

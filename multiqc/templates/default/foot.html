@@ -7,6 +7,35 @@ eg. Modals / other HTML to be hidden out of the way.
 
 #}
 
+<div class="modal fade" id="webmcp_help_modal" tabindex="-1" aria-labelledby="webmcp_help_title" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="webmcp_help_title">Browser agents (WebMCP)</h3>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>This report includes WebMCP tools that let a browser AI agent:</p>
+        <ul>
+          <li>Read an overview of the report's modules and plots.</li>
+          <li>Read QC data from interactive plots and General Statistics.</li>
+          <li>Navigate to a report section.</li>
+        </ul>
+        <p><strong>Browser status:</strong> <span data-webmcp-status>Checking browser support...</span></p>
+        <p>
+          Your browser and AI agent must support WebMCP. Use your browser agent's site tool controls to allow access to
+          this report. The tools work from this HTML file without a MultiQC server or API key.
+        </p>
+        <p>
+          When you ask an agent to use these tools, it can read the report's QC data. Current sample and column filters
+          and AI sample anonymization apply. Plot values may be scaled or downsampled.
+        </p>
+        <a href="https://developer.chrome.com/docs/ai/webmcp" target="_blank" rel="noopener">About WebMCP</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Table Scatter Plot Modal -->
 <div class="modal fade" id="table_scatter_modal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-lg" role="document">

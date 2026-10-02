@@ -152,8 +152,7 @@ class ViolinPlot extends Plot {
               if (value === undefined || value === null) return "";
               if (typeof value === "string") return value + (suffix ?? "");
               if (Number.isFinite(value)) {
-                if (Number.isInteger(value)) return value;
-                return value.toFixed(2);
+                return value + (suffix ?? "");
               }
               return "";
             })
