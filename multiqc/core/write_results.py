@@ -255,6 +255,9 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
                 shutil.rmtree(paths.plots_dir)
         else:
             # Set up the base names of the report and the data dir
+            report_base, report_ext = os.path.splitext(output_names.output_fn_name)
+            dir_base = output_names.data_dir_name
+            plots_base = output_names.plots_dir_name
             report_num = 1
 
             # Iterate through appended numbers until we find one that's free
@@ -264,13 +267,10 @@ def _create_or_override_dirs(output_names: OutputNames) -> OutputPaths:
                 or (config.export_plots and paths.plots_dir and paths.plots_dir.exists())
             ):
                 if config.make_report:
-                    report_base, report_ext = os.path.splitext(output_names.output_fn_name)
                     paths.report_path = output_dir / f"{report_base}_{report_num}{report_ext}"
                 if paths.data_dir:
-                    dir_base = paths.data_dir.name
                     paths.data_dir = output_dir / f"{dir_base}_{report_num}"
                 if paths.plots_dir:
-                    plots_base = paths.plots_dir.name
                     paths.plots_dir = output_dir / f"{plots_base}_{report_num}"
                 report_num += 1
             if config.make_report and isinstance(paths.report_path, Path):
