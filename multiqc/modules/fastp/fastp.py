@@ -452,6 +452,12 @@ class MultiqcModule(BaseMultiqcModule):
                     "shared_key": "base_count",
                     "hidden": True,
                 },
+                "before_filtering_total_reads": {
+                    "title": "Reads Before Filtering",
+                    "description": f"Total reads before filtering ({config.read_count_desc})",
+                    "scale": "Purples",
+                    "shared_key": "read_count",
+                },
                 "filtering_result_passed_filter_reads": {
                     "title": "Reads After Filtering",
                     "description": f"Total reads after filtering ({config.read_count_desc})",
