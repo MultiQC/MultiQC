@@ -72,7 +72,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="Classification of reads as rRNA or non-rRNA by RiboDetector.",
             plot=self.ribodetector_summary_table(),
         )
-        
+
         # Write parsed data to file
         self.write_data_file(self.ribodetector, "multiqc_ribodetector")
 
@@ -207,7 +207,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers["rRNA"]["scale"] = "Reds"
         headers["non_rRNA_pct"]["scale"] = "Greens"
         headers["rRNA_pct"]["scale"] = "Reds"
-        
+
         pconfig = {
             "id": "ribodetector_classification_table",
             "title": "RiboDetector: Read Classification",
