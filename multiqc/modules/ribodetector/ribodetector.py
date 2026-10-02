@@ -190,7 +190,6 @@ class MultiqcModule(BaseMultiqcModule):
             "non_rRNA_pct": {
                 "title": "% non-rRNA",
                 "description": "Percentage of processed sequences classified as non-rRNA",
-                "format": "{:.3f}",
                 "suffix": "%",
                 "max": 100,
                 "placement": 400,
@@ -198,7 +197,6 @@ class MultiqcModule(BaseMultiqcModule):
             "rRNA_pct": {
                 "title": "% rRNA",
                 "description": "Percentage of processed sequences classified as rRNA",
-                "format": "{:.3f}",
                 "suffix": "%",
                 "max": 100,
                 "placement": 500,
