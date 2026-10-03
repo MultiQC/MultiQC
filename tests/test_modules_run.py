@@ -7,7 +7,7 @@ import pytest
 from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import ClConfig, update_config
-from multiqc.types import SectionKey
+from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -74,6 +74,41 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
 
     assert "bcftools-stats_sequencing_depth" in {section.id for section in module.sections}
     assert "bcftools-stats-sequencing-depth" in report.plot_by_id
+
+
+def test_ribodetector_summary_table(data_dir):
+    """Check summary columns and values against the official WT_REP1 log."""
+    from multiqc.plots.violin import ViolinPlot
+
+    config.strict = True
+    report.analysis_files = [data_dir / "modules" / "ribodetector" / "WT_REP1.log"]
+    report.search_files(["ribodetector"])
+    module_cls: Callable[[], BaseMultiqcModule] = config.avail_modules["ribodetector"].load()
+    module = module_cls()
+
+    assert "ribodetector_summary" in {section.id for section in module.sections}
+    assert "ribodetector_classification" in report.plot_by_id
+    plot = report.plot_by_id[Anchor("ribodetector_classification_table")]
+    assert isinstance(plot, ViolinPlot)
+    assert plot.show_table_by_default
+
+    table = plot.datasets[0].dt
+    assert [(key, column.title) for _, key, column in table.get_headers_in_order()] == [
+        ("total", "Total sequences"),
+        ("non_rRNA", "Non-rRNA"),
+        ("rRNA", "rRNA"),
+        ("non_rRNA_pct", "% non-rRNA"),
+        ("rRNA_pct", "% rRNA"),
+    ]
+    section = next(iter(table.section_by_id.values()))
+    row = section.rows_by_sgroup[SampleGroup("WT_REP1")][0]
+    assert row.sample == "WT_REP1"
+    assert row.data.keys() == {"total", "non_rRNA", "rRNA", "non_rRNA_pct", "rRNA_pct"}
+    assert row.data[ColumnKey("total")].raw == 99225
+    assert row.data[ColumnKey("non_rRNA")].raw == 94264
+    assert row.data[ColumnKey("rRNA")].raw == 4961
+    assert row.data[ColumnKey("non_rRNA_pct")].raw == pytest.approx(100 * 94264 / 99225)
+    assert row.data[ColumnKey("rRNA_pct")].raw == pytest.approx(100 * 4961 / 99225)
 
 
 @pytest.mark.parametrize("module_id,entry_point", modules)
