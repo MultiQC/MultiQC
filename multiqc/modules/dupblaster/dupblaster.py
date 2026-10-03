@@ -14,6 +14,23 @@ Metrics = Dict[str, Optional[Number]]
 
 TEXT_COLUMNS = ("sample", "library", "dupblaster_version", "category", "sequencing_unit")
 
+# Duplicate metrics that add up over a sample's libraries.
+SUMMED_COLUMNS = (
+    "total_templates",
+    "duplicate_templates",
+    "mapped_pairs",
+    "unmapped_pairs",
+    "duplicate_pairs",
+    "raw_sequencing_duplicate_pairs",
+    "corrected_sequencing_duplicate_pairs",
+    "library_duplicate_pairs",
+    "estimated_library_size",
+    "mapped_orphans",
+    "duplicate_orphans",
+    "unmapped_orphans",
+    "unmated_templates",
+)
+
 # Occurrence-count bins (label, smallest count) for the duplication spectrum, as in FastQC's duplication levels.
 SPECTRUM_BINS: List[Tuple[str, int]] = [
     *((f"{k}x", k) for k in range(1, 10)),
@@ -74,7 +91,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     Each row is named by its `sample` column (dupblaster's `--sample`, or the read groups' `SM` values), or by the
     file name when that column is empty. A file holding several libraries gives each library its own row, named
-    `<sample> (<library>)`. To name rows by file instead, use:
+    `<sample> (<library>)`, and the duplicate metrics table nests those rows under a row for the sample. To name rows
+    by file instead, use:
 
     ```yaml
     use_filename_as_sample_name:
@@ -95,6 +113,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/fulcrumgenomics/dupblaster/blob/main/LICENSE",
         )
 
+        self.sample_of: Dict[str, str] = {}
         metrics = self.parse_duplicate_metrics()
         units = self.parse_sequencing_units()
         sampled = self.parse_duplication_sampled()
@@ -144,7 +163,9 @@ class MultiqcModule(BaseMultiqcModule):
         names: Dict[Tuple[str, str], str] = {}
         for sample, library in pairs:
             s_name = self.clean_s_name(sample, f) if sample else f["s_name"]
-            names[(sample, library)] = f"{s_name} ({library})" if len(pairs) > 1 else s_name
+            name = f"{s_name} ({library})" if len(pairs) > 1 else s_name
+            names[(sample, library)] = name
+            self.sample_of[name] = s_name
         return names
 
     def parse_duplicate_metrics(self) -> Dict[str, Metrics]:
@@ -395,6 +416,16 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
         }
+        rows_by_group: Dict[Union[str, SampleGroup], List[InputRow]] = {}
+        for s_name, d in metrics.items():
+            rows_by_group.setdefault(SampleGroup(self.sample_of[s_name]), []).append(
+                InputRow(sample=SampleName(s_name), data=d)
+            )
+        for sample, rows in rows_by_group.items():
+            if len(rows) > 1:
+                summary = sum_libraries([metrics[row.sample] for row in rows])
+                rows.insert(0, InputRow(sample=SampleName(sample), data=summary))
+
         self.add_section(
             name="Duplicate Metrics",
             anchor=f"{self.anchor}-metrics",
@@ -407,9 +438,13 @@ class MultiqcModule(BaseMultiqcModule):
               flowcell less densely; a low share with a high duplicate rate says the library is over-amplified.
             * _Library Size_ is the Lander-Waterman estimate of distinct molecules. Sequencing duplicates are left
               out of the observed total, as Picard does, because they are no evidence that the library is exhausted.
+
+            A sample with several libraries has a summary row; click it to show each library. Its counts are the sums
+            over its libraries and its rates are recomputed from those sums. Its library size is the sum of the
+            libraries' estimates, since each library is its own pool of molecules.
             """,
             plot=table.plot(
-                metrics,
+                rows_by_group,
                 headers,
                 {
                     "id": f"{self.anchor}_metrics_table",
@@ -608,6 +643,28 @@ def to_number(value: str) -> Optional[Number]:
         return int(value)
     except ValueError:
         return float(value)
+
+
+def sum_libraries(libraries: List[Metrics]) -> Metrics:
+    """A sample's duplicate metrics from its libraries: counts summed, rates recomputed as dupblaster defines them."""
+    d: Metrics = {}
+    for column in SUMMED_COLUMNS:
+        values = [library.get(column) for library in libraries]
+        d[column] = None if any(v is None for v in values) else sum(v for v in values if v is not None)
+    mapped_pairs = required(d, "mapped_pairs")
+    duplicate_pairs = required(d, "duplicate_pairs")
+    mapped_reads = required(d, "mapped_orphans") + 2 * mapped_pairs
+    duplicate_reads = required(d, "duplicate_orphans") + 2 * duplicate_pairs
+    sequencing = d["corrected_sequencing_duplicate_pairs"]
+    d["frac_duplicates"] = duplicate_reads / mapped_reads if mapped_reads > 0 else None
+    d["frac_duplicate_pairs"] = duplicate_pairs / mapped_pairs if mapped_pairs > 0 else None
+    d["frac_sequencing_duplicate_pairs"] = (
+        sequencing / mapped_pairs if sequencing is not None and mapped_pairs > 0 else None
+    )
+    d["frac_duplicate_pairs_sequencing"] = (
+        sequencing / duplicate_pairs if sequencing is not None and duplicate_pairs > 0 else None
+    )
+    return d
 
 
 def required(d: Metrics, column: str) -> Number:

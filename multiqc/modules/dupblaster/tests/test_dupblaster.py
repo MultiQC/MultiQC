@@ -112,12 +112,16 @@ def _categories(sample: str) -> Dict[str, float]:
     return {cat.name: cat.data[index] for cat in dataset.cats if cat.data[index] == cat.data[index]}
 
 
-def _unit_rows(sample: str) -> List[InputRow]:
-    for dataset in report.plot_by_id["dupblaster_sequencing_units_table"].datasets:
+def _table_rows(table_id: str, sample: str) -> List[InputRow]:
+    for dataset in report.plot_by_id[table_id].datasets:
         for section in dataset.dt.section_by_id.values():
             if SampleGroup(sample) in section.rows_by_sgroup:
                 return section.rows_by_sgroup[SampleGroup(sample)]
-    raise AssertionError(f"{sample!r} not in the sequencing units table")
+    raise AssertionError(f"{sample!r} not in {table_id}")
+
+
+def _unit_rows(sample: str) -> List[InputRow]:
+    return _table_rows("dupblaster_sequencing_units_table", sample)
 
 
 def test_each_library_of_a_file_gets_its_own_row(run_dupblaster):
@@ -132,6 +136,29 @@ def test_each_library_of_a_file_gets_its_own_row(run_dupblaster):
     assert not _general_stats_header("frac_duplicates").get("hidden")
     assert _general_stats_header("frac_sequencing_duplicate_pairs")["hidden"] is True
     assert [version for _, version in module.versions["dupblaster"]] == ["0.3.0"]
+
+
+def test_libraries_nest_under_a_sample_row_computed_from_them(run_dupblaster):
+    run_dupblaster(
+        {
+            "sample1.dupblaster.duplicate-metrics.tsv": TWO_LIBRARY_METRICS,
+            "sample2.dupblaster.duplicate-metrics.tsv": DETECTION_OFF_METRICS,
+        }
+    )
+
+    summary, *libraries = _table_rows("dupblaster_metrics_table", "sample1")
+    assert summary.sample == "sample1"
+    assert [row.sample for row in libraries] == ["sample1 (libA)", "sample1 (libB)"]
+    data = {key: cell.raw for key, cell in summary.data.items()}
+    assert data["total_templates"] == 59693 + 37640
+    assert data["frac_duplicates"] == pytest.approx(
+        (337 + 215 + 2 * (18556 + 11925)) / (1158 + 740 + 2 * (57735 + 36400))
+    )
+    assert data["frac_duplicate_pairs"] == pytest.approx((18556 + 11925) / (57735 + 36400))
+    assert data["frac_sequencing_duplicate_pairs"] == pytest.approx((3439 + 2110) / (57735 + 36400))
+    assert data["frac_duplicate_pairs_sequencing"] == pytest.approx((3439 + 2110) / (18556 + 11925))
+    assert data["estimated_library_size"] == 78415 + 47819
+    assert [row.sample for row in _table_rows("dupblaster_metrics_table", "sample2")] == ["sample2"]
 
 
 def test_categories_split_duplicates_and_add_up_to_total_templates(run_dupblaster):
