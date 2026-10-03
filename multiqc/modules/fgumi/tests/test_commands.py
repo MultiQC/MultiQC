@@ -1,6 +1,7 @@
 import pytest
 
 from .conftest import general_stats
+from .test_family_sizes import FGBIO_ERROR_RATE
 
 CLIP = (
     "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post\treads_clipped_five_prime"
@@ -24,11 +25,12 @@ def test_small_command_metrics(run_fgumi):
     )
     raw = module.saved_raw_data
     # Data files are flat {sample: {column: value}} tables, with fgumi's own column names.
-    assert {k: v for k, v in raw["multiqc_fgumi_clip"]["Clip1"].items() if k.startswith("reads_")} == {
-        "reads_clipped_five_prime": 5,
-        "reads_clipped_three_prime": 10,
-        "reads_clipped_overlapping": 12,
-        "reads_clipped_extending": 3,
+    clip = raw["multiqc_fgumi_clip"]["Clip1"]
+    assert {k: clip[f"All_reads_clipped_{k}"] for k in ("five_prime", "three_prime", "overlapping", "extending")} == {
+        "five_prime": 5,
+        "three_prime": 10,
+        "overlapping": 12,
+        "extending": 3,
     }
     assert general_stats("Filt1")["pass_rate"] == pytest.approx(90.0)
     filt = raw["multiqc_fgumi_filter"]["Filt1"]
@@ -101,3 +103,72 @@ def test_other_tools_total_reads_key_value_file_is_ignored_quietly(run_fgumi, ca
     with pytest.raises(ModuleNoSamplesFound):
         run_fgumi({"other.txt": other_tool})
     assert not [r for r in caplog.records if r.levelname == "WARNING" and "other.txt" in r.message]
+
+
+@pytest.mark.parametrize(
+    "layout, shared_files_module, expected",
+    [
+        pytest.param({"A.clip.txt": CLIP}, None, {"A": "fgbio"}, id="no-evidence-fgbio"),
+        pytest.param({"A.clip.txt": CLIP, "A.filter.txt": FILTER}, None, {"A": "fgumi"}, id="fgumi-evidence"),
+        pytest.param(
+            {"A.clip.txt": CLIP, "A.filter.txt": FILTER, "A.error_rate.txt": FGBIO_ERROR_RATE},
+            None,
+            {"A": "fgbio"},
+            id="mixed-evidence-fgbio",
+        ),
+        pytest.param(
+            {"fgbio/B.clip.txt": CLIP, "fgbio/B.error_rate.txt": FGBIO_ERROR_RATE, "fgumi/A.clip.txt": CLIP},
+            None,
+            {"A": "fgbio", "B": "fgbio"},
+            id="sibling-dirs-without-fgumi-evidence",
+        ),
+        pytest.param(
+            {
+                "fgbio/B.clip.txt": CLIP,
+                "fgbio/B.error_rate.txt": FGBIO_ERROR_RATE,
+                "fgumi/A.clip.txt": CLIP,
+                "fgumi/A.filter.txt": FILTER,
+            },
+            None,
+            {"A": "fgumi", "B": "fgbio"},
+            id="sibling-dirs-each-keep-their-own",
+        ),
+        pytest.param({"A.clip.txt": CLIP}, "fgumi", {"A": "fgumi"}, id="config-fgumi"),
+        pytest.param({"A.clip.txt": CLIP, "A.filter.txt": FILTER}, "fgbio", {"A": "fgbio"}, id="config-fgbio"),
+    ],
+)
+def test_one_module_reports_each_clipping_metrics_file(tmp_path, layout, shared_files_module, expected):
+    # fgumi clip and fgbio ClipBam metrics are identical; exactly one module may report each file.
+    from multiqc import config, report
+    from multiqc.base_module import ModuleNoSamplesFound
+    from multiqc.modules.fgbio import MultiqcModule as FgbioModule
+    from multiqc.modules.fgumi import MultiqcModule as FgumiModule
+
+    config.reset()
+    if shared_files_module is not None:
+        config.fgumi_config = {"shared_files_module": shared_files_module}
+    paths = []
+    for name, content in layout.items():
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content)
+        paths.append(path)
+    report.reset()
+    report.analysis_files = paths
+    report.search_files(["fgbio", "fgumi"])
+    try:
+        for module_class in [FgbioModule, FgumiModule]:
+            try:
+                module_class()
+            except ModuleNoSamplesFound:
+                pass
+        owners = {
+            str(path).rsplit("/", 1)[-1].split(".")[0]: module_name
+            for module_name, sections in report.data_sources.items()
+            for by_sample in sections.values()
+            for path in by_sample.values()
+            if str(path).endswith(".clip.txt")
+        }
+        assert owners == expected
+    finally:
+        config.reset()

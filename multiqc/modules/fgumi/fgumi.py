@@ -55,18 +55,18 @@ class MultiqcModule(BaseMultiqcModule):
       below)
     - CollectDuplexSeqMetrics: family sizes, duplex family sizes, duplex yield, UMI counts, duplex UMI counts
     - CorrectUmis: `--metrics`
-    - ClipBam: `--metrics`
+    - ClipBam: `--metrics` (see below)
     - ReviewConsensusVariants: the `<output>.txt` detail file
 
-    Of these, only the family-size histogram is also read by the fgbio module, and only one of the two modules
-    reports each file. The histogram's own directory decides, or the nearest parent directory if its own has no
-    evidence: fgumi when that directory holds files only fgumi writes (for example position group sizes, dedup,
+    Of these, the family-size histogram and the ClipBam metrics are also read by the fgbio module, and only one of
+    the two modules reports each file. The file's own directory decides, or the nearest parent directory if its own
+    has no evidence: fgumi when that directory holds files only fgumi writes (for example position group sizes, dedup,
     filter, copy-umi, retag or downsample metrics) and no files only fgbio writes (ErrorRateByReadPosition), and
-    fgbio otherwise. With no evidence anywhere, fgbio reports it. Choose the module for every file with:
+    fgbio otherwise. With no evidence anywhere, fgbio reports it. Choose the module for every such file with:
 
     ```yaml
     fgumi_config:
-      family_sizes_module: fgumi # or fgbio
+      shared_files_module: fgumi # or fgbio
     ```
 
     #### Duplex heatmaps

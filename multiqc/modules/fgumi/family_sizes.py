@@ -1,6 +1,6 @@
 """Family size histograms: `group --family-size-histogram`, `group --metrics` (`<prefix>.family_sizes.txt`)
 and `dedup --family-size-histogram`. The columns are identical to fgbio GroupReadsByUmi's histogram, so both
-modules find these files; `util.family_sizes_module` decides which one reports them."""
+modules find these files; `util.shared_file_module` decides which one reports them."""
 
 from typing import Dict, Set
 
@@ -8,19 +8,19 @@ from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
 from .schemas import FamilySizeMetric
-from .util import drop_none, family_sizes_evidence, family_sizes_module, found_by, iter_samples, pct
+from .util import drop_none, shared_file_evidence, shared_file_module, found_by, iter_samples, pct
 
 
 def parse_reports(module: BaseMultiqcModule) -> Set[str]:
     counts: Dict[str, Dict[int, float]] = {}
     percent: Dict[str, Dict[int, float]] = {}
     cumulative: Dict[str, Dict[int, float]] = {}
-    evidence = family_sizes_evidence()
+    evidence = shared_file_evidence()
     for s_name, rows in iter_samples(
         module,
         "fgumi/family_sizes",
         FamilySizeMetric,
-        skip=lambda f: found_by(f, "fgbio/groupreadsbyumi") and family_sizes_module(f, evidence) == "fgbio",
+        skip=lambda f: found_by(f, "fgbio/groupreadsbyumi") and shared_file_module(f, evidence) == "fgbio",
     ):
         counts[s_name] = {r.family_size: r.count for r in rows}
         percent[s_name] = drop_none({r.family_size: pct(r.fraction) for r in rows})

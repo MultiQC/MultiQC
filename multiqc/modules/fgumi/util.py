@@ -94,7 +94,7 @@ FGUMI_ONLY_PATTERNS = (
 )
 # Search patterns only fgbio can match.
 FGBIO_ONLY_PATTERNS = ("fgbio/errorratebyreadposition",)
-FAMILY_SIZE_MODULES = ("fgumi", "fgbio")
+SHARED_FILE_MODULES = ("fgumi", "fgbio")
 
 
 def _directory_and_ancestors(root: str) -> List[str]:
@@ -102,7 +102,7 @@ def _directory_and_ancestors(root: str) -> List[str]:
     return [str(path)] + [str(parent) for parent in path.parents]
 
 
-def family_sizes_evidence() -> Dict[str, Tuple[bool, bool]]:
+def shared_file_evidence() -> Dict[str, Tuple[bool, bool]]:
     """For every directory holding (at any depth) fgumi-only or fgbio-only files: whether it has each kind."""
     evidence: Dict[str, Tuple[bool, bool]] = {}
     for keys, is_fgumi in [(FGUMI_ONLY_PATTERNS, True), (FGBIO_ONLY_PATTERNS, False)]:
@@ -114,20 +114,20 @@ def family_sizes_evidence() -> Dict[str, Tuple[bool, bool]]:
     return evidence
 
 
-def family_sizes_module(f: Any, evidence: Dict[str, Tuple[bool, bool]]) -> str:
-    """The module ("fgumi" or "fgbio") that reports family-size histogram ``f`` when both modules find it.
+def shared_file_module(f: Any, evidence: Dict[str, Tuple[bool, bool]]) -> str:
+    """The module ("fgumi" or "fgbio") that reports ``f`` when both modules find it.
 
-    fgumi and fgbio GroupReadsByUmi write byte-identical histograms, so the choice comes from the files around it.
-    The nearest directory (the file's own, then each parent) holding fgumi-only or fgbio-only files decides: fgumi
-    if it has fgumi-only files and no fgbio-only files, fgbio otherwise. With no such directory it is fgbio, which
-    reported these files before the fgumi module existed. ``fgumi_config: {family_sizes_module: fgumi|fgbio}``
-    overrides this for every file. ``evidence`` comes from ``family_sizes_evidence()``.
+    Some fgumi files (the family-size histogram, the clipping metrics) are identical to their fgbio equivalents, so
+    the choice comes from the files around it. The nearest directory (the file's own, then each parent) holding
+    fgumi-only or fgbio-only files decides: fgumi if it has fgumi-only files and no fgbio-only files, fgbio
+    otherwise. With no such directory it is fgbio. ``fgumi_config: {shared_files_module: fgumi|fgbio}`` overrides
+    this for every file. ``evidence`` comes from ``shared_file_evidence()``.
     """
-    choice = (getattr(config, "fgumi_config", None) or {}).get("family_sizes_module")
-    if choice in FAMILY_SIZE_MODULES:
+    choice = (getattr(config, "fgumi_config", None) or {}).get("shared_files_module")
+    if choice in SHARED_FILE_MODULES:
         return choice
     if choice is not None:
-        log.warning(f"Ignoring fgumi_config.family_sizes_module {choice!r}: expected one of {FAMILY_SIZE_MODULES}")
+        log.warning(f"Ignoring fgumi_config.shared_files_module {choice!r}: expected one of {SHARED_FILE_MODULES}")
     for directory in _directory_and_ancestors(f["root"]):
         if directory in evidence:
             has_fgumi, has_fgbio = evidence[directory]
