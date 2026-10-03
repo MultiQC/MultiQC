@@ -118,6 +118,9 @@ class MultiqcModule(BaseMultiqcModule):
         if data["total"] > 0:
             data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
             data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
+        else:
+            data["rRNA_pct"] = 0.0
+            data["non_rRNA_pct"] = 0.0
 
         return data
 
