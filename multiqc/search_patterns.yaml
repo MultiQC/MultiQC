@@ -390,6 +390,18 @@ dragen/sc_atac_metrics:
   fn: "*.scATAC[._]metrics.csv"
 dragen_fastqc:
   fn: "*.fastqc_metrics.csv"
+dupblaster/duplicate_metrics:
+  contents: "sample\tlibrary\tdupblaster_version\t"
+  num_lines: 1
+dupblaster/sequencing_units:
+  contents: "sample\tlibrary\tsequencing_unit\ttemplates\ttiles\t"
+  num_lines: 1
+dupblaster/duplication_sampled:
+  contents: "sample\tlibrary\tcategory\ttotal\tunique\tduplicates\tfrac_duplicates\t"
+  num_lines: 1
+dupblaster/duplication_spectrum:
+  contents: "sample\tlibrary\tcategory\tn_observations\tn_molecules"
+  num_lines: 1
 eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
 fastp:
