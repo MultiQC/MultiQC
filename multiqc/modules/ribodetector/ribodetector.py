@@ -115,12 +115,12 @@ class MultiqcModule(BaseMultiqcModule):
             log.warning(f"Skipping {f['fn']}: missing expected RiboDetector log lines ({', '.join(missing)})")
             return None
 
-        data["rRNA_pct"] = 0.0
-        data["non_rRNA_pct"] = 0.0
-
         if data["total"] > 0:
             data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
             data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
+        else:
+            data["rRNA_pct"] = None
+            data["non_rRNA_pct"] = None
 
         return data
 
