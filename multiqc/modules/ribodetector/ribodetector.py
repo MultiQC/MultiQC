@@ -161,7 +161,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         pconfig = {
-            "id": "ribodetector_classification_bargraph",
+            "id": "ribodetector_classification",
             "title": "RiboDetector: Read Classification",
             "ylab": "Reads",
             "cpswitch_counts_label": "Number of Reads",
