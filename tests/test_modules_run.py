@@ -78,13 +78,13 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
 
 def test_ribodetector_summary_table(data_dir):
     """Check summary columns and values against the official WT_REP1 log."""
-    from multiqc.modules.ribodetector.ribodetector import MultiqcModule
     from multiqc.plots.violin import ViolinPlot
 
     config.strict = True
     report.analysis_files = [data_dir / "modules" / "ribodetector" / "WT_REP1.log"]
     report.search_files(["ribodetector"])
-    module = MultiqcModule()
+    module_cls: Callable[[], BaseMultiqcModule] = config.avail_modules["ribodetector"].load()
+    module = module_cls()
 
     assert "ribodetector_summary" in {section.id for section in module.sections}
     assert "ribodetector_classification" in report.plot_by_id
