@@ -392,6 +392,9 @@ dragen_fastqc:
   fn: "*.fastqc_metrics.csv"
 eigenstratdatabasetools:
   fn: "*_eigenstrat_coverage.json"
+fastdup:
+  contents_re: '(?i)^# (?:.*[/\\])?fastdup(?:\.exe)?(?:\s|$)'
+  num_lines: 10
 fastp:
   fn: "*.json"
   contents: '"before_filtering": {'
