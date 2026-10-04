@@ -1,0 +1,13 @@
+WARNING - 
+Problems encountered parsing command line:
+
+Command line parameter logs/clipOverlap/CZA569_clip.log (#7) ignored
+
+Overlap Statistics:
+Number of overlapping pairs: 1543210
+Average # Reference Bases Overlapped: 82.341
+Variance of Reference Bases overlapped: 983.25
+Number of times orientation causes additional clipping: 39875
+Number of times the forward strand was clipped: 987634
+Number of times the reverse strand was clipped: 555576
+Completed ClipOverlap Successfully.
