@@ -26,13 +26,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install python dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools wheel build
-          pip install .
+      - name: Install build tool
+        run: python -m pip install --upgrade build
 
       - name: Build the distribution
-        run: python setup.py sdist bdist_wheel
+        run: python -m build
 
       - name: Publish MultiQC to PyPI
         if: github.repository == 'MultiQC/MultiQC'

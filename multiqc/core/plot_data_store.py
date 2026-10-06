@@ -100,7 +100,7 @@ def flush_to_parquet() -> None:
                 merged_wide_tables = table_df
             elif table_df.height > 0:
                 # Merge by joining on sample and creation_date
-                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="outer")
+                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="full")
                 # Ensure all columns are present
                 all_cols = merged_wide_tables.columns
                 for col in table_df.columns:
