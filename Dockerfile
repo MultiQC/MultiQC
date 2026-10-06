@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 LABEL author="Phil Ewels & Vlad Savelyev" \
       description="MultiQC" \
@@ -36,7 +36,7 @@ RUN \
     # Install MultiQC
     pip install --verbose --no-cache-dir /usr/src/multiqc && \
     echo "Docker build log: Delete python cache directories" 1>&2 && \
-    find /usr/local/lib/python3.13 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
+    find /usr/local/lib/python3.14 \( -iname '*.c' -o -iname '*.pxd' -o -iname '*.pyd' -o -iname '__pycache__' \) -printf "\"%p\" " | \
     xargs rm -rf {} && \
     echo "Docker build log: Delete build artifacts" 1>&2 && \
     rm -rf /usr/src/multiqc/build /usr/src/multiqc/*.egg-info && \
