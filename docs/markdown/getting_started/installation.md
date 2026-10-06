@@ -268,6 +268,14 @@ MultiQC [is available on spack](https://packages.spack.io/package.html?name=py-m
 spack install py-multiqc
 ```
 
+### Nix
+
+MultiQC [is available in nixpkgs](https://search.nixos.org/packages?query=multiqc) as `multiqc`:
+
+```bash
+nix-shell -p multiqc
+```
+
 ### FreeBSD
 
 If you're using the [FreeBSD](https://www.freebsd.org/) operating system, you can install MultiQC via [FreeBSD ports](https://www.freebsd.org/ports/):
