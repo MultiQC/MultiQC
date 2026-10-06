@@ -106,7 +106,9 @@ hooks = [
     name = "Build assets with Vite",
     language = "script",
     entry = "scripts/build-assets.sh",
-    files = '^multiqc/templates/(default|disco)/src/.*\.(scss|js)$'
+    files = '^multiqc/templates/(default|disco)/src/.*\.(scss|js)$',
+    # Does this fix the a race condition?
+    require_serial = true
   },
   {
     id = "code-checks",
