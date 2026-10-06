@@ -100,12 +100,18 @@ def parse_file(f: str) -> Dict[str, Union[float, str]]:
         return parsed_data
 
     headers = lines[0].strip().split("\t")[1:5]
-    values = lines[1].strip().split("\t")[1:5]
+    values = lines[1].strip().split("\t")[1:]
+
+    if len(headers) > 1 and headers[0] == "gender" and len(values) > len(headers):
+        metric_count = len(headers) - 1
+        values = [" ".join(values[:-metric_count])] + values[-metric_count:]
+    else:
+        values = values[: len(headers)]
 
     for key, value in zip(headers, values):
         try:
             parsed_data[key] = float(value)
         except ValueError:
-            parsed_data[key] = value
+            parsed_data[key] = " ".join(value.split())
 
     return parsed_data
