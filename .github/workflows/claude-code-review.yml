@@ -73,7 +73,7 @@ jobs:
             the review yourself via `gh pr comment $PR_NUMBER --body-file -`
             as the skill instructs. Do not just display it.
 
-            The skill points at CLAUDE.md and the other repo skills for
+            The skill points at AGENTS.md and the other repo skills for
             project conventions. Load those references as needed for the
             change types in this PR.
 

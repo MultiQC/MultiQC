@@ -15,9 +15,7 @@ COPY README.md /usr/src/multiqc/
 COPY docs /usr/src/multiqc/docs
 COPY multiqc /usr/src/multiqc/multiqc
 COPY pyproject.toml /usr/src/multiqc/
-COPY MANIFEST.in /usr/src/multiqc/
 COPY scripts /usr/src/multiqc/scripts
-COPY setup.py /usr/src/multiqc/
 COPY tests /usr/src/multiqc/tests
 
 # - Install `ps` for Nextflow
