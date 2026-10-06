@@ -57,8 +57,7 @@ When writing modules, the following are mandatory:
   proprietary.
 - Call `self.write_data_file()` at the **very end** of the module, after
   all sections are added.
-- Register the module via the entry point in `pyproject.toml` (ignore
-  `setup.py`).
+- Register the module via the entry point in `pyproject.toml`.
 - Put module documentation in the module class docstring; do not add
   separate markdown files or module-level docstrings.
 - The module's `info` field must start with a capital letter.

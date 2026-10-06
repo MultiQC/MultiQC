@@ -321,12 +321,6 @@ cd MultiQC-main
 pip install .
 ```
 
-### Nix
-
-If you're using the [nix package manager](https://nixos.org/download.html#download-nixm) with [flakes](https://nixos.wiki/wiki/Flakes) enabled, you can
-run `nix develop` in the cloned MultiQC repository to enter a shell
-with required dependencies. To build MultiQC, run `nix build`.
-
 ## MultiQC container images
 
 ### Docker
