@@ -82,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
         err = False
 
         for line in f["f"]:
-            if "Reads file" in line:
+            if "Reads file" in line and s_name is None:  # paired-end logs list one line per mate; use the first
                 parts = re.split(r"[:=]", line)
                 s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = dict()
