@@ -3,7 +3,6 @@ import math
 import re
 from typing import Dict, Optional, Tuple
 
-from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
 from multiqc.types import SectionAlert
@@ -98,15 +97,11 @@ class MultiqcModule(BaseMultiqcModule):
 
     Sample names come from `--input` in the recorded command line, falling back
     to the metrics filename. To always use filenames, set
-    `use_filename_as_sample_name: [fastdup]`. Input paths with spaces that are
-    not quoted in the recorded command line also fall back to the filename.
+    `use_filename_as_sample_name: [fastdup]`.
 
-    FastDup reports one aggregate metrics row. The `LIBRARY` field is preserved
-    as reported; metrics are not split or merged by that label. The histogram
-    describes predicted unique-read yield at increased sequencing depth, rather
-    than observed duplicate frequencies. Nonfinite histogram values are exported
-    as missing values and excluded from plots. A curve is unavailable when the
-    library size cannot be estimated. Metrics files do not contain a version.
+    The histogram describes predicted unique-read yield at increased sequencing
+    depth, rather than observed duplicate frequencies. A curve is unavailable
+    when the library size cannot be estimated.
     """
 
     def __init__(self):
@@ -129,18 +124,16 @@ class MultiqcModule(BaseMultiqcModule):
                 raise ValueError(f"Invalid FastDup report {f['root']}/{f['fn']}: {error}") from error
 
             s_name = f["s_name"]
-            use_filename = config.use_filename_as_sample_name
-            if use_filename is not True and not (isinstance(use_filename, list) and "fastdup" in use_filename):
-                # Require the path to end at another option or the end of the line.
-                # This avoids taking just the first word of an unquoted path with spaces.
-                match = re.search(
-                    r""" --input(?:=|\s+)("[^"]+"|'[^']+'|\S+)(?=\s+-\S|\s*$)""",
-                    f["f"],
-                    flags=re.MULTILINE,
-                )
-                if match:
-                    input_name = re.split(r"[/\\]", match.group(1).strip("\"'"))[-1]
-                    s_name = self.clean_s_name(input_name, f)
+            # Require the path to end at another option or the end of the line.
+            # This avoids taking just the first word of an unquoted path with spaces.
+            match = re.search(
+                r""" --input(?:=|\s+)("[^"]+"|'[^']+'|\S+)(?=\s+-\S|\s*$)""",
+                f["f"],
+                flags=re.MULTILINE,
+            )
+            if match:
+                input_name = re.split(r"[/\\]", match.group(1).strip("\"'"))[-1]
+                s_name = self.clean_s_name(input_name, f)
 
             if s_name in self.metrics:
                 log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")

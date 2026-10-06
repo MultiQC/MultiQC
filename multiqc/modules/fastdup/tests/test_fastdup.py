@@ -81,6 +81,26 @@ def test_use_filename_override(tmp_path, setting):
     assert list(run_module(tmp_path).metrics) == ["stats"]
 
 
+@pytest.mark.parametrize(
+    "setting,expected",
+    [
+        (False, "in_test"),
+        (True, "stats"),
+        (["fastdup"], "stats"),
+        (["custom_fastdup"], "stats"),
+        (["other_module"], "in_test"),
+    ],
+)
+def test_use_filename_override_with_custom_anchor(tmp_path, monkeypatch, setting, expected):
+    monkeypatch.setattr(MultiqcModule, "mod_cust_config", {"anchor": "custom_fastdup"})
+    config.use_filename_as_sample_name = setting
+    module = run_module(tmp_path)
+    assert list(module.metrics) == [expected]
+    assert list(module.histograms) == [expected]
+    assert list(module.saved_raw_data["multiqc_fastdup_custom_fastdup"]) == [expected]
+    assert list(module.saved_raw_data["multiqc_fastdup_histogram_custom_fastdup"]) == [expected]
+
+
 def test_ignore_samples(tmp_path):
     config.sample_names_ignore = ["in_test"]
     with pytest.raises(ModuleNoSamplesFound):
