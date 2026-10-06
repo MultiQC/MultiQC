@@ -1080,7 +1080,7 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext=helptext,
                     alerts=alerts,
                 )
-                self.write_data_file(plot_data, f"base2fastq:{plot_name}")
+                self.write_data_file(plot_data, f"bases2fastq_{anchor}")
 
     def add_sample_plots(
         self, data: Dict[str, Any], group_lookup: Dict[str, str], project_lookup: Dict[str, str]
@@ -1107,4 +1107,4 @@ class MultiqcModule(BaseMultiqcModule):
                     helptext=helptext,
                     alerts=alerts,
                 )
-                self.write_data_file(plot_data, f"base2fastq:{plot_name}")
+                self.write_data_file(plot_data, f"bases2fastq_{anchor}")
