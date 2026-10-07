@@ -251,6 +251,14 @@ checkatlas/dimred:
   fn: "*.tsv"
   contents_re: '^Dimred_Sample\tobsm'
   num_lines: 1
+dotmatch/sample_qc:
+  fn: "*sample_qc.tsv"
+  contents: "sample_id\tfastq\ttotal_reads\tvalid_extracted_reads\tassigned_reads"
+  num_lines: 1
+dotmatch/crispr_qc:
+  fn: "*crispr_qc.summary.tsv"
+  contents: "sample_id\tqc_status\ttotal_count\tcoverage_fraction"
+  num_lines: 1
 cellranger/count_html:
   - fn: "*.html"
     contents: '"command":"Cell Ranger","subcommand":"count"'
