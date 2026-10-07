@@ -293,7 +293,7 @@ pconfig = {
     "id": "<random string>",     # HTML ID used for plot
     "categories": False,         # Set to True to use x values as categories instead of numbers.
     "colors": dict(),            # Provide dict with keys = sample names and values colours
-    "smooth_points": None,       # Supply a number to limit number of points / smooth data
+    "smooth_points": None,       # Max number of points per line, data is binned above this. 500 if unset, False or 0 to disable
     "smooth_points_sumcounts": True,  # Sum counts in bins, or average? Can supply list for multiple datasets
     "logswitch": False,          # Show the 'Log10' switch?
     "logswitch_active": False,   # Initial display with 'Log10' active?
