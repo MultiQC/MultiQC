@@ -18,14 +18,16 @@ jobs:
   comment:
     # Keep the /review match in sync with claude-code-review-trigger.yml.
     # Commands only count at line start; fromJSON is the only way to write a newline in an expression.
+    # Forks lack the bot token secret
     if: |
-      github.event_name == 'schedule' ||
-      (github.event_name == 'workflow_run' &&
-       github.event.workflow_run.path == '.github/workflows/module-report-build.yml' &&
-       contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion)) ||
-      (github.event.issue.pull_request &&
-       (contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/report', fromJSON('"\n"'))) ||
-        contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"')))))
+      github.repository == 'MultiQC/MultiQC' &&
+      (github.event_name == 'schedule' ||
+       (github.event_name == 'workflow_run' &&
+        github.event.workflow_run.path == '.github/workflows/module-report-build.yml' &&
+        contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion)) ||
+       (github.event.issue.pull_request &&
+        (contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/report', fromJSON('"\n"'))) ||
+         contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"'))))))
     runs-on: ubuntu-latest
     permissions:
       actions: read
