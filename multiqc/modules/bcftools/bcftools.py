@@ -26,6 +26,22 @@ class MultiqcModule(BaseMultiqcModule):
 
     MultiQC will sum up all complementary changes and show only `A>*` and `C>*` substitutions
     in the resulting plot.
+
+    #### Aggregating Hom/Het counts in General Stats
+
+    When `bcftools stats` is run with `-s` or `-S`, the PSC section contains homozygous
+    and heterozygous counts for each sample in the input file. MultiQC currently represents
+    each bcftools set as one row in General Stats, so these per-sample values are aggregated
+    for the `Hom` and `Het` columns. The default is the rounded mean; this can be changed to
+    the rounded median or sum:
+
+    ```yaml
+    bcftools:
+      hom_het_aggregation: mean # or: median, sum
+    ```
+
+    `Hom` counts non-reference homozygous genotypes only, as hom-ref genotypes match the
+    reference and are not variants.
     """
 
     def __init__(self):

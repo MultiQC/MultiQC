@@ -76,6 +76,57 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
     assert "bcftools-stats-sequencing-depth" in report.plot_by_id
 
 
+def test_bcftools_stats_multi_sample_hom_het_aggregation(tmp_path, caplog):
+    """
+    For a multi-sample VCF (one 'set' with several PSC rows), the General Stats hom/het
+    values must aggregate across samples rather than keeping only the last PSC row.
+    """
+    # PSC columns: id sample nRefHom nNonRefHom nHets nTs nTv nIndels depth nSingletons ...
+    # nNonRefHom (Hom): 66, 41, 48 ; nHets (Het): 29, 16, 3 ; nRefHom (10/12/15) must be ignored.
+    content = """# This file was produced by bcftools stats (1.19+htslib-1.19.1) and can be plotted using plot-vcfstats.
+ID\t0\tmulti.vcf.gz
+SN\t0\tnumber of records:\t100
+SN\t0\tnumber of SNPs:\t90
+ST\t0\tA>C\t2
+PSC\t0\tS1\t10\t66\t29\t40\t26\t5\t30.0\t3\t0\t0\t0
+PSC\t0\tS2\t12\t41\t16\t25\t16\t4\t28.0\t2\t0\t0\t0
+PSC\t0\tS3\t15\t48\t3\t20\t10\t2\t25.0\t1\t0\t0\t0
+"""
+
+    from multiqc.modules.bcftools.bcftools import MultiqcModule
+    from multiqc.types import ColumnKey
+
+    def hom_het(method):
+        report.reset()
+        config.reset()
+        config.bcftools = {"hom_het_aggregation": method} if method else {}
+        stats_file = tmp_path / f"multi_{method or 'default'}.stats.txt"
+        stats_file.write_text(content)
+        report.analysis_files = [stats_file]
+        report.search_files(["bcftools"])
+        MultiqcModule()
+        for section in report.general_stats_data.values():
+            for rows in section.values():
+                data = rows[0].data
+                if ColumnKey("variations_hom") in data:
+                    return data[ColumnKey("variations_hom")], data[ColumnKey("variations_het")]
+        raise AssertionError("hom/het values not found in General Stats")
+
+    # Default is mean across samples, not the last PSC row (which was 48, 3)
+    hom, het = hom_het(None)
+    assert hom == 52
+    assert het == 16
+    assert (hom, het) != (48, 3)
+
+    assert hom_het("mean") == (52, 16)
+    assert hom_het("median") == (48, 16)
+    assert hom_het("sum") == (155, 48)
+
+    with caplog.at_level("WARNING", logger="multiqc.modules.bcftools.stats"):
+        assert hom_het("invalid") == (52, 16)
+    assert "Unrecognised bcftools.hom_het_aggregation value 'invalid'" in caplog.text
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """
