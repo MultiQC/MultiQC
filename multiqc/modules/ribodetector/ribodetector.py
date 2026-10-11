@@ -4,7 +4,7 @@ from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
@@ -58,12 +58,20 @@ class MultiqcModule(BaseMultiqcModule):
         # Add to General Stats table
         self.ribodetector_general_stats()
 
-        # Add rRNA detection plot section
+        # Add rRNA detection bargraph section
         self.add_section(
             name="rRNA Detection",
             anchor="ribodetector_rrna",
             description="Classification of reads as rRNA or non-rRNA by RiboDetector.",
             plot=self.ribodetector_bargraph(),
+        )
+
+        # Add rRNA detection table section
+        self.add_section(
+            name="rRNA Detection: Summary Statistics",
+            anchor="ribodetector_summary",
+            description="Classification of reads as rRNA or non-rRNA by RiboDetector.",
+            plot=self.ribodetector_summary_table(),
         )
 
         # Write parsed data to file
@@ -110,6 +118,9 @@ class MultiqcModule(BaseMultiqcModule):
         if data["total"] > 0:
             data["rRNA_pct"] = (data["rRNA"] / data["total"]) * 100
             data["non_rRNA_pct"] = (data["non_rRNA"] / data["total"]) * 100
+        else:
+            data["rRNA_pct"] = 0.0
+            data["non_rRNA_pct"] = 0.0
 
         return data
 
@@ -117,7 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Add columns to the General Statistics table."""
         headers = {
             "rRNA_pct": {
-                "title": "rRNA",
+                "title": "% rRNA",
                 "description": "Percentage of reads classified as rRNA",
                 "max": 100,
                 "min": 0,
@@ -125,7 +136,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "OrRd",
             },
             "non_rRNA": {
-                "title": f"{config.read_count_prefix} Non-rRNA",
+                "title": f"Non-rRNA ({config.read_count_prefix})",
                 "description": f"Reads classified as non-rRNA ({config.read_count_desc})",
                 "min": 0,
                 "scale": "Greens",
@@ -134,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
             "rRNA": {
-                "title": f"{config.read_count_prefix} rRNA",
+                "title": f"rRNA ({config.read_count_prefix})",
                 "description": f"Reads classified as rRNA ({config.read_count_desc})",
                 "min": 0,
                 "scale": "Reds",
@@ -160,3 +171,55 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         return bargraph.plot(self.ribodetector, keys, pconfig)
+
+    def ribodetector_summary_table(self):
+        """Create a table of RiboDetector summary statistics."""
+        headers = {
+            "total": {
+                "title": "Total sequences",
+                "description": "Total number of sequences processed",
+                "placement": 100,
+            },
+            "non_rRNA": {
+                "title": "Non-rRNA",
+                "description": "Number of sequences classified as non-rRNA",
+                "placement": 200,
+            },
+            "rRNA": {
+                "title": "rRNA",
+                "description": "Number of sequences classified as rRNA",
+                "placement": 300,
+            },
+            "non_rRNA_pct": {
+                "title": "% non-rRNA",
+                "description": "Percentage of processed sequences classified as non-rRNA",
+                "suffix": "%",
+                "max": 100,
+                "placement": 400,
+            },
+            "rRNA_pct": {
+                "title": "% rRNA",
+                "description": "Percentage of processed sequences classified as rRNA",
+                "suffix": "%",
+                "max": 100,
+                "placement": 500,
+            },
+        }
+
+        headers["total"]["scale"] = "Blues"
+        headers["non_rRNA"]["scale"] = "Greens"
+        headers["rRNA"]["scale"] = "Reds"
+        headers["non_rRNA_pct"]["scale"] = "Greens"
+        headers["rRNA_pct"]["scale"] = "Reds"
+
+        pconfig = {
+            "id": "ribodetector_classification_table",
+            "title": "RiboDetector: Read Classification",
+            "namespace": "RiboDetector",
+            "col1_header": "Sample",
+            "min": 0,
+            "only_defined_headers": True,
+            "no_violin": True,
+        }
+
+        return table.plot(self.ribodetector, headers=headers, pconfig=pconfig)
