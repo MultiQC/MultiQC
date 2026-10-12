@@ -267,6 +267,8 @@ def scipy_pdist(X: np.ndarray) -> np.ndarray:
     Returns:
         Array of shape ((m * (m-1)) // 2,) containing condensed distance matrix
     """
+    # Contiguous rows make the summation order, and so tie-breaking, independent of the input memory layout
+    X = np.ascontiguousarray(X)
     m, n = X.shape
     # Initialize output array of correct size for condensed distance matrix
     out = np.zeros((m * (m - 1)) // 2)
@@ -274,9 +276,8 @@ def scipy_pdist(X: np.ndarray) -> np.ndarray:
 
     # Calculate pairwise distances
     for i in range(m - 1):
-        for j in range(i + 1, m):
-            out[k] = np.sqrt(np.sum((X[i] - X[j]) ** 2))
-            k += 1
+        out[k : k + m - i - 1] = np.sqrt(np.sum((X[i] - X[i + 1 :]) ** 2, axis=1))
+        k += m - i - 1
 
     return out
 
@@ -285,6 +286,11 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
     """Perform hierarchical clustering using the specified linkage method.
 
     Reimplements scipy.hierarchy.linkage to avoid heavy scipy dependency.
+
+    Each step merges the closest pair of clusters, taking the smallest cluster ids on ties. A merged
+    cluster reuses the matrix slot of its smaller id, and every cluster caches its closest partner
+    among clusters with a larger id. When that partner is merged away, the cached distance stays as
+    a lower bound and the row is rescanned only if it comes up as the closest.
 
     Args:
         distances: Condensed distance matrix from pdist
@@ -297,69 +303,75 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
     if method not in ["single", "complete", "average", "weighted"]:
         raise ValueError(f"Unsupported linkage method: {method}")
 
-    # Convert condensed distance matrix to full matrix for easier manipulation
     n = int((1 + np.sqrt(1 + 8 * len(distances))) / 2)
-    dist_matrix = np.zeros((n, n))
-    idx = np.triu_indices(n, k=1)
-    dist_matrix[idx] = distances
-    dist_matrix = dist_matrix + dist_matrix.T  # type: ignore
+    if len(distances) != n * (n - 1) // 2:
+        raise ValueError(f"Expected a condensed distance matrix, got {len(distances)} distances")
+    dist_matrix = np.full((n, n), np.inf)
+    start = 0
+    for slot in range(n - 1):
+        stop = start + n - slot - 1
+        dist_matrix[slot, slot + 1 :] = distances[start:stop]
+        dist_matrix[slot + 1 :, slot] = distances[start:stop]
+        start = stop
 
-    # Initialize arrays for clustering
-    n_clusters = n
-    active_nodes = list(range(n_clusters))
-    cluster_sizes = np.ones(n_clusters, dtype=int)
-    linkage_matrix = np.zeros((n_clusters - 1, 4))
+    slot_ids = np.arange(n)
+    slot_sizes = np.ones(n, dtype=int)
+    # Active slots, ascending by cluster id
+    order = np.arange(n)
+    nearest = np.full(n, -1)
+    nearest_dist = np.full(n, np.inf)
+    stale = np.zeros(n, dtype=bool)
+    for slot in range(n - 1):
+        partner = slot + 1 + int(np.argmin(dist_matrix[slot, slot + 1 :]))
+        nearest[slot] = partner
+        nearest_dist[slot] = dist_matrix[slot, partner]
 
-    for i in range(n_clusters - 1):
-        # Find minimum distance between clusters
-        valid_distances = dist_matrix[np.ix_(active_nodes, active_nodes)]
-        np.fill_diagonal(valid_distances, np.inf)
-        min_idx = np.unravel_index(np.argmin(valid_distances), valid_distances.shape)
-        cluster1, cluster2 = active_nodes[min_idx[0]], active_nodes[min_idx[1]]
+    linkage_matrix = np.zeros((n - 1, 4))
+    for i in range(n - 1):
+        # argmin returns the first NaN or the first minimum, so ties go to the smallest cluster id
+        pos = int(np.argmin(nearest_dist[order]))
+        while stale[order[pos]]:
+            slot = order[pos]
+            row = dist_matrix[slot, order[pos + 1 :]]
+            best = int(np.argmin(row))
+            nearest[slot] = order[pos + 1 + best]
+            nearest_dist[slot] = row[best]
+            stale[slot] = False
+            pos = int(np.argmin(nearest_dist[order]))
+        slot1 = order[pos]
+        if nearest_dist[slot1] == np.inf:
+            raise ValueError("Cannot cluster observations at infinite distance")
+        slot2 = nearest[slot1]
+        size1, size2 = slot_sizes[slot1], slot_sizes[slot2]
+        linkage_matrix[i] = [slot_ids[slot1], slot_ids[slot2], dist_matrix[slot1, slot2], size1 + size2]
 
-        # Record merge in linkage matrix
-        linkage_matrix[i] = [
-            min(cluster1, cluster2),
-            max(cluster1, cluster2),
-            dist_matrix[cluster1, cluster2],
-            cluster_sizes[cluster1] + cluster_sizes[cluster2],
-        ]
+        rest = order[(order != slot1) & (order != slot2)]
+        dist1 = dist_matrix[slot1, rest]
+        dist2 = dist_matrix[slot2, rest]
+        # Unlike np.minimum and np.maximum, np.where keeps dist1 when dist2 is NaN
+        if method == "single":
+            new_distances = np.where(dist2 < dist1, dist2, dist1)
+        elif method == "complete":
+            new_distances = np.where(dist2 > dist1, dist2, dist1)
+        elif method == "average":
+            new_distances = (dist1 * size1 + dist2 * size2) / (size1 + size2)
+        else:  # weighted
+            new_distances = (dist1 + dist2) / 2
 
-        # Create new cluster
-        new_cluster_idx = n_clusters + i
-        cluster_sizes = np.append(cluster_sizes, cluster_sizes[cluster1] + cluster_sizes[cluster2])  # type: ignore
+        dist_matrix[slot1, rest] = new_distances
+        dist_matrix[rest, slot1] = new_distances
+        slot_ids[slot1] = n + i
+        slot_sizes[slot1] = size1 + size2
+        order = np.append(rest, slot1)
 
-        # Calculate distances to new cluster based on chosen method
-        remaining_clusters = [x for x in active_nodes if x not in (cluster1, cluster2)]
-        new_distances = np.zeros(len(remaining_clusters))
-
-        for j, cluster in enumerate(remaining_clusters):
-            dist1 = dist_matrix[cluster1, cluster]
-            dist2 = dist_matrix[cluster2, cluster]
-
-            if method == "single":
-                new_dist = min(dist1, dist2)
-            elif method == "complete":
-                new_dist = max(dist1, dist2)
-            elif method == "average":
-                new_dist = (dist1 * cluster_sizes[cluster1] + dist2 * cluster_sizes[cluster2]) / (
-                    cluster_sizes[cluster1] + cluster_sizes[cluster2]
-                )
-            else:  # weighted
-                new_dist = (dist1 + dist2) / 2
-
-            new_distances[j] = new_dist
-
-        # Update distance matrix
-        dist_matrix = np.vstack((dist_matrix, np.zeros(dist_matrix.shape[1])))  # type: ignore
-        dist_matrix = np.hstack((dist_matrix, np.zeros((dist_matrix.shape[0], 1))))  # type: ignore
-        dist_matrix[new_cluster_idx, remaining_clusters] = new_distances  # type: ignore
-        dist_matrix[remaining_clusters, new_cluster_idx] = new_distances  # type: ignore
-
-        # Update active nodes
-        active_nodes.remove(cluster1)
-        active_nodes.remove(cluster2)
-        active_nodes.append(new_cluster_idx)
+        current = nearest_dist[rest]
+        closer = (new_distances < current) | (np.isnan(new_distances) & ~np.isnan(current))
+        stale[rest[(nearest[rest] == slot1) | (nearest[rest] == slot2)]] = True
+        stale[rest[closer]] = False
+        nearest[rest[closer]] = slot1
+        nearest_dist[rest[closer]] = new_distances[closer]
+        nearest[slot1] = -1
+        nearest_dist[slot1] = np.inf
 
     return linkage_matrix
 
