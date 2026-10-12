@@ -295,6 +295,51 @@ def test_heatmap_clustering_cols_only():
             assert ds["rows_clustered"][ci][cj] == data[ci][orig_col_idx]
 
 
+@pytest.mark.parametrize(
+    "method, expected_order",
+    [
+        ("single", [7, 4, 1, 6, 0, 2, 3, 5]),
+        ("complete", [6, 0, 2, 3, 5, 7, 1, 4]),
+        ("average", [7, 6, 0, 2, 3, 5, 1, 4]),
+        ("weighted", [1, 6, 0, 2, 3, 5, 4, 7]),
+    ],
+)
+def test_heatmap_clustering_tie_order(method, expected_order):
+    """
+    Discrete values such as pass/warn/fail statuses give many exactly tied distances, so the
+    clustered row order depends on how ties are broken: the earliest rows merge first.
+    """
+    data = [
+        [0.25, 0.25, 0.25, 0.25],
+        [1.0, 0.25, 0.25, 0.5],
+        [0.25, 0.25, 0.25, 0.25],
+        [0.25, 0.25, 0.25, 0.25],
+        [1.0, 0.25, 1.0, 0.5],
+        [0.25, 0.25, 0.25, 0.25],
+        [0.5, 0.25, 0.5, 0.25],
+        [1.0, 1.0, 1.0, 0.25],
+    ]
+    ycats = [f"S{i}" for i in range(len(data))]
+
+    plot = _verify_rendered(
+        heatmap.plot(
+            data=data,
+            xcats=["X1", "X2", "X3", "X4"],
+            ycats=ycats,
+            pconfig=heatmap.HeatmapConfig(
+                id=f"heatmap_cluster_ties_{method}",
+                title="Heatmap Cluster Ties",
+                cluster_rows=True,
+                cluster_cols=False,
+                cluster_method=method,
+            ),
+        )
+    )
+
+    ds = report.plot_data[plot.anchor]["datasets"][0]
+    assert ds["ycats_clustered"] == [ycats[i] for i in expected_order]
+
+
 def test_scatter():
     _verify_rendered(
         scatter.plot(
