@@ -51,10 +51,10 @@ aiPrompts = JSON.parse(atob("{{ report.ai_prompts_base64 }}"));
 aiConfigCustomContextWindow = "{{ config.ai_custom_context_window }}";
 
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
-aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
+aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64) || "null");
 
 aiAnonymizeSamples = "{{ config.ai_anonymize_samples }}";
-aiPseudonymMap = JSON.parse(atob("{{ report.ai_pseudonym_map_base64 }}"));
+aiPseudonymMap = JSON.parse(atob("{{ report.ai_pseudonym_map_base64 }}") || "null");
 
 configTitle = "{{ config.title }}";
 configCreationDate = "{{ report.creation_date.strftime('%d %b %Y, %H:%M %Z') }}";
