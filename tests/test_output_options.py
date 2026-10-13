@@ -1,8 +1,11 @@
 import os
+import re
 
 import pytest
 
+import multiqc
 from multiqc import report, BaseMultiqcModule, write_report
+from multiqc.core.update_config import ClConfig
 
 
 @pytest.fixture()
@@ -70,3 +73,27 @@ def test_zip_data_dir_with_rerun(stub_modules, tmp_path):
     # Check again
     assert (tmp_path / "multiqc_data.zip").exists()
     assert not (tmp_path / "multiqc_data").exists()
+
+
+@pytest.mark.parametrize(
+    "no_ai,ai_summary,expect_ai_data",
+    [(False, False, True), (True, False, False), (True, True, True)],
+)
+def test_no_ai_skips_ai_report_metadata(data_dir, tmp_path, monkeypatch, no_ai, ai_summary, expect_ai_data):
+    """
+    Verify that the AI report metadata and pseudonym map are left out of the report when AI is disabled
+    """
+    monkeypatch.setenv("MQC_STUB_AI_RESPONSE", "1")
+    monkeypatch.setenv("SEQERA_ACCESS_TOKEN", "test")
+    multiqc.run(
+        data_dir / "modules/fastp/SAMPLE.json",
+        cfg=ClConfig(output_dir=tmp_path, no_ai=no_ai, ai_summary=ai_summary, development=True),
+    )
+
+    html = (tmp_path / "multiqc_report.html").read_text()
+    metadata = re.search(r'aiReportMetadataBase64 = "([^"]*)";', html)
+    pseudonym_map = re.search(r'aiPseudonymMap = JSON\.parse\(atob\("([^"]*)"\)', html)
+    assert metadata and pseudonym_map
+    assert bool(metadata.group(1)) == expect_ai_data
+    assert bool(pseudonym_map.group(1)) == expect_ai_data
+    assert (tmp_path / "multiqc_data" / "llms-full.txt").exists() == expect_ai_data

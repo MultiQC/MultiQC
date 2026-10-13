@@ -341,7 +341,7 @@ You can also use `--no-ai` when generating reports, which removes this functiona
 
 ## Using `llms-full.txt`
 
-MultiQC always saves the full prompt and response to `multiqc_data/llms-full.txt` file,
+Unless run with `--no-ai`, MultiQC saves the full prompt and response to `multiqc_data/llms-full.txt` file,
 regardless of whether the summary was generated during report generation or in the browser.
 
 This file can be used to debug or further analyse the AI summary generation process.
