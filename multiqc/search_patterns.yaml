@@ -846,6 +846,10 @@ picard/gcbias:
 picard/hsmetrics:
   - contents: "HsMetrics"
   - contents: "--algo HsMetricAlgo"
+picard/hsmetrics_target_coverage:
+  fn: "*per_target_coverage*.txt"
+  contents: "normalized_coverage"
+  num_lines: 2
 picard/insertsize:
   - contents: "picard.analysis.InsertSizeMetrics"
   - contents: "--algo InsertSizeMetricAlgo"
