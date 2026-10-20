@@ -446,8 +446,6 @@ def is_searching_in_source_dir(path: Path) -> bool:
         "LICENSE",
         "CHANGELOG.md",
         "Dockerfile",
-        "MANIFEST.in",
-        ".gitmodules",
         "README.md",
         "pyproject.toml",
         ".gitignore",
