@@ -67,10 +67,15 @@ jobs:
         if: steps.modules.outputs.modules != ''
         env:
           MODULES: ${{ steps.modules.outputs.modules }}
+        # The console log, prefixed with the command, is posted in the preview comment
         run: |
+          set -o pipefail
           ARGS=()
           for m in $MODULES; do ARGS+=(-m "$m"); done
-          multiqc "${ARGS[@]}" test-data/data/modules -n "multiqc_report_pr${PR}.html" -o report
+          CMD=(multiqc "${ARGS[@]}" test-data/data/modules -n "multiqc_report_pr${PR}.html" -o report --no-ansi)
+          LOG="multiqc_console_pr${PR}.log"
+          echo "\$ ${CMD[*]}" > "$LOG"
+          "${CMD[@]}" 2>&1 | tee -a "$LOG"
 
       - name: Take screenshot
         id: screenshot
@@ -89,6 +94,15 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           path: report/multiqc_report_pr${{ env.PR }}.html
+          archive: false
+          retention-days: 30
+
+      # Also on failure, so the comment can show why MultiQC failed
+      - name: Upload console log
+        if: always() && hashFiles(format('multiqc_console_pr{0}.log', env.PR)) != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: multiqc_console_pr${{ env.PR }}.log
           archive: false
           retention-days: 30
 
