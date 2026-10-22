@@ -44,6 +44,10 @@ REFURSAL_STUB_CONTENT = """\
 AI summary could not be generated as the request was refused by the model
 """
 
+MODEL_END_OF_LIFE_STUB_CONTENT = """\
+AI model is deprecated. Please upgrade for an AI summary.
+"""
+
 
 def is_reasoning_model(model_name: str) -> bool:
     """Check if a model is a reasoning model based on its name."""
@@ -501,9 +505,18 @@ class AWSBedrockClient(Client):
         else:
             body["thinking"] = {"type": "disabled"}
 
-        response = self.client.invoke_model(
-            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
-        )
+        from botocore.exceptions import ClientError  # type: ignore
+
+        try:
+            response = self.client.invoke_model(
+                body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
+            )
+        except ClientError as e:
+            # Retired models fail every request, so return a stub summary instead of failing the whole report
+            if e.response.get("Error", {}).get("Code") == "ResourceNotFoundException" and "end of its life" in str(e):
+                logger.warning(f"AI model {self.model} has reached end of life: {e}")
+                return AWSBedrockClient.ApiResponse(content=MODEL_END_OF_LIFE_STUB_CONTENT, model=self.model)
+            raise
 
         response_body = json.loads(response["body"].read())
         if response_body["stop_reason"] == "refusal":
