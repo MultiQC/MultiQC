@@ -667,6 +667,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
     add_pct_tab: bool
     l_active: bool
     p_active: bool
+    active_dataset_idx: int
     pct_axis_update: Dict[str, Any]
     axis_controlled_by_switches: List[str] = []
     square: bool = False
@@ -836,6 +837,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 layout[axis].type = "log"
 
         datasets = []
+        active_dataset_idx = 0
         for idx, n_series in enumerate(n_series_per_dataset):
             dataset = BaseDataset(
                 plot_id=id,
@@ -868,6 +870,9 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             if "title" not in dconfig:
                 dconfig["title"] = pconfig.title
 
+            if dconfig.get("active"):
+                active_dataset_idx = idx
+
             subtitles = []
             if len(n_series_per_dataset) > 1:
                 subtitles += [dataset.label]
@@ -898,6 +903,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             layout=layout,
             add_log_tab=add_log_tab,
             add_pct_tab=add_pct_tab,
+            active_dataset_idx=active_dataset_idx,
             l_active=l_active,
             p_active=p_active,
             pct_axis_update=pct_axis_update,
@@ -1309,7 +1315,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
             figures_to_export.append(
                 (
                     self.get_figure(ds_idx, flat=True),
-                    ds_idx == 0 and not self.p_active and not self.l_active,
+                    ds_idx == self.active_dataset_idx and not self.p_active and not self.l_active,
                     dataset.uid if not self.add_log_tab and not self.add_pct_tab else f"{dataset.uid}-cnt",
                     embed_in_html,
                     plots_dir_name,
@@ -1319,7 +1325,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 figures_to_export.append(
                     (
                         self.get_figure(ds_idx, is_pct=True, flat=True),
-                        ds_idx == 0 and self.p_active,
+                        ds_idx == self.active_dataset_idx and self.p_active,
                         f"{dataset.uid}-pct",
                         embed_in_html,
                         plots_dir_name,
@@ -1329,7 +1335,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 figures_to_export.append(
                     (
                         self.get_figure(ds_idx, is_log=True, flat=True),
-                        ds_idx == 0 and self.l_active,
+                        ds_idx == self.active_dataset_idx and self.l_active,
                         f"{dataset.uid}-log",
                         embed_in_html,
                         plots_dir_name,
@@ -1339,7 +1345,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                 figures_to_export.append(
                     (
                         self.get_figure(ds_idx, is_pct=True, is_log=True, flat=True),
-                        ds_idx == 0 and self.p_active and self.l_active,
+                        ds_idx == self.active_dataset_idx and self.p_active and self.l_active,
                         f"{dataset.uid}-pct-log",
                         embed_in_html,
                         plots_dir_name,
@@ -1419,7 +1425,7 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
                     cls="mr-auto",
                     label=ds.label,
                     data_attrs=data_attrs,
-                    pressed=ds_idx == 0,
+                    pressed=ds_idx == self.active_dataset_idx,
                 )
             switch_buttons += "</div>\n\n"
 

@@ -26,7 +26,7 @@ class Plot {
     // To make sure we only render plot once
     this.rendered = false;
     // State of toggles
-    this.activeDatasetIdx = 0;
+    this.activeDatasetIdx = dump["active_dataset_idx"] ?? 0;
     this.lActive = dump["l_active"];
     this.pActive = dump["p_active"];
     this.deferRender = dump["defer_render"];
