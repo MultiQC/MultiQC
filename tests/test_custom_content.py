@@ -994,3 +994,31 @@ def test_ai_custom_prompt(tmp_path):
         "short": "Use me short!",
         "full": "Use me full!",
     }
+
+
+def test_linegraph_datasets_merged_across_files(tmp_path):
+    """Multi-dataset data from separate files that share an id should be merged per dataset"""
+    os.chdir(tmp_path)
+
+    plot_id = "my_plot"
+    for s_name in ["sample1", "sample2"]:
+        file = tmp_path / f"{s_name}_mqc.yaml"
+        file.write_text(
+            f"""\
+id: {plot_id}
+plot_type: linegraph
+data:
+  - {s_name}: {{100: 1, 200: 2}}
+  - {s_name}: {{100: 3, 200: 4}}
+"""
+        )
+
+    report.analysis_files = [tmp_path]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    plot = report.plot_by_id[Anchor(f"{plot_id}-section-plot")]
+    assert isinstance(plot, LinePlot)
+    assert len(plot.datasets) == 2
+    for dataset in plot.datasets:
+        assert sorted(line.name for line in dataset.lines) == ["sample1", "sample2"]

@@ -212,6 +212,19 @@ def custom_module_classes() -> List[BaseMultiqcModule]:
                     _ccdict = ccdict_by_id[ModuleId(_c_id)]
                     if isinstance(parsed_item, dict) and isinstance(_ccdict.data, dict):
                         _ccdict.data.update(parsed_item)
+                    elif (
+                        isinstance(parsed_item, list)
+                        and isinstance(_ccdict.data, list)
+                        and all(isinstance(ds, dict) for ds in parsed_item + _ccdict.data)
+                    ):
+                        # Multi-dataset data is a list of {sample: values} dicts, one per dataset.
+                        # Merge it per dataset so that files sharing an id each add their samples.
+                        # Other lists (e.g. heatmap rows) are still replaced.
+                        for i, dataset in enumerate(parsed_item):
+                            if i < len(_ccdict.data):
+                                _ccdict.data[i].update(dataset)
+                            else:
+                                _ccdict.data.append(dataset)
                     else:
                         _ccdict.data = parsed_item
                     assert isinstance(_ccdict.config, dict)
