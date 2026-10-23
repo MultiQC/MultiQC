@@ -55,7 +55,7 @@ jobs:
       - name: Run Claude Code Review
         id: claude-review
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@9c5ddab2e6d17b83ea679153b31f1d5f023cf636 # v1.0.217
+        uses: anthropics/claude-code-action@cab360f6565aa35a51d6ce9e43f1f4287c0a32ea # v1.0.241
         env:
           PR_NUMBER: ${{ steps.pr-info.outputs.pr_number }}
         with:
@@ -73,7 +73,7 @@ jobs:
             the review yourself via `gh pr comment $PR_NUMBER --body-file -`
             as the skill instructs. Do not just display it.
 
-            The skill points at CLAUDE.md and the other repo skills for
+            The skill points at AGENTS.md and the other repo skills for
             project conventions. Load those references as needed for the
             change types in this PR.
 

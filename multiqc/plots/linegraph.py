@@ -190,6 +190,10 @@ class Dataset(BaseDataset, Generic[KeyT, ValT]):
                 mode = "lines+markers"
             else:
                 mode = "lines"
+                # Single-point series are invisible in "lines" mode, so give them a marker
+                for series in lines:
+                    if len(series.pairs) == 1 and series.marker is None:
+                        series.marker = Marker(symbol="circle")
 
         dataset.trace_params.update(
             mode=mode,

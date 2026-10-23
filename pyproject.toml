@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=62.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -155,6 +155,7 @@ fastqe = "multiqc.modules.fastqe:MultiqcModule"
 fastqc = "multiqc.modules.fastqc:MultiqcModule"
 featurecounts = "multiqc.modules.featurecounts:MultiqcModule"
 fgbio = "multiqc.modules.fgbio:MultiqcModule"
+fgumi = "multiqc.modules.fgumi:MultiqcModule"
 filtlong = "multiqc.modules.filtlong:MultiqcModule"
 flash = "multiqc.modules.flash:MultiqcModule"
 flexbar = "multiqc.modules.flexbar:MultiqcModule"
@@ -201,6 +202,7 @@ metaphlan = "multiqc.modules.metaphlan:MultiqcModule"
 methurator = "multiqc.modules.methurator:MultiqcModule"
 methylqa = "multiqc.modules.methylqa:MultiqcModule"
 mgikit = "multiqc.modules.mgikit:MultiqcModule"
+mgnifam = "multiqc.modules.mgnifam:MultiqcModule"
 minionqc = "multiqc.modules.minionqc:MultiqcModule"
 mirtop = "multiqc.modules.mirtop:MultiqcModule"
 mirtrace = "multiqc.modules.mirtrace:MultiqcModule"
@@ -313,7 +315,7 @@ disco = "multiqc.templates.disco"
 
 [tool.setuptools]
 packages = ["multiqc"]
-package-data = { multiqc = ["py.typed"] }
+package-data = { multiqc = ["**/*"] }
 
 [tool.ruff]
 line-length = 120
