@@ -2126,10 +2126,11 @@ def is_running_under_rosetta() -> bool:
     if platform.machine() != "x86_64":
         return False
 
-    # Check for Rosetta processes
+    # Check for Rosetta processes. Match on bytes: command lines of other processes can contain
+    # characters that the locale encoding cannot decode (e.g. UTF-8 under an ASCII locale)
     try:
-        output = subprocess.check_output(["ps", "aux"], universal_newlines=True)
-        if "/run/rosetta/rosetta" in output:
+        output = subprocess.check_output(["ps", "aux"])
+        if b"/run/rosetta/rosetta" in output:
             logger.warning(ROSETTA_WARNING)
             return True
     except subprocess.CalledProcessError:
