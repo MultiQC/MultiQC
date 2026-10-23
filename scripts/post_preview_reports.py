@@ -31,6 +31,7 @@ MARKER = "MultiQC preview report"
 SHA_RE = re.compile(r"<!-- preview-sha: ([0-9a-f]+) -->")
 # Keep in sync with module-report-build.yml
 MODULE_RE = re.compile(r"^multiqc/modules/([A-Za-z0-9_]+)/")
+CONSOLE_MAX = 50000
 
 HOW = """
 
@@ -92,6 +93,32 @@ def get_targets() -> Tuple[List[PullRequest], str, Optional[WorkflowRun]]:
     return [pr], "first", build
 
 
+def download(artifact, path: Path) -> bool:
+    # archive: false artifacts download as the raw file
+    resp = requests.get(
+        artifact.archive_download_url,
+        headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}"},
+        timeout=60,
+    )
+    if resp.ok:
+        path.write_bytes(resp.content)
+    return resp.ok
+
+
+def console_details(artifact) -> str:
+    """Collapsible block with the MultiQC command and console output, or "" if unavailable."""
+    log = Path(artifact.name)
+    if not download(artifact, log):
+        return ""
+    text = log.read_text(errors="replace").rstrip()
+    # GitHub comments are capped at 65536 characters; keep the end, where errors are
+    if len(text) > CONSOLE_MAX:
+        text = "[... truncated ...]\n" + text[-CONSOLE_MAX:]
+    # Fence longer than any backtick run in the log, so it can't close the block early
+    fence = "`" * max(3, max((len(r) for r in re.findall(r"`+", text)), default=0) + 1)
+    return f"\n\n<details><summary>Console output</summary>\n\n{fence}console\n{text}\n{fence}\n\n</details>"
+
+
 def find_build(sha: str) -> Optional[WorkflowRun]:
     runs = repo.get_workflow("module-report-build.yml").get_runs(head_sha=sha, status="completed")
     return next((r for r in runs if r.conclusion in ("success", "failure")), None)
@@ -131,14 +158,9 @@ def process(pr: PullRequest, rule: str, build: Optional[WorkflowRun]) -> None:
     shot_artifact = artifacts.get(shot.name)
     shot.unlink(missing_ok=True)
     if shot_artifact:
-        # archive: false artifacts download as the raw file
-        resp = requests.get(
-            shot_artifact.archive_download_url,
-            headers={"Authorization": f"Bearer {os.environ['GH_TOKEN']}"},
-            timeout=60,
-        )
-        if resp.ok:
-            shot.write_bytes(resp.content)
+        download(shot_artifact, shot)
+    log_artifact = artifacts.get(f"multiqc_console_pr{pr.number}.log")
+    console = console_details(log_artifact) if log_artifact else ""
 
     for c in mine:
         try:
@@ -149,20 +171,20 @@ def process(pr: PullRequest, rule: str, build: Optional[WorkflowRun]) -> None:
     mods = ", ".join(f"`{m}`" for m in modules)
     run_link = f" See [run]({build.html_url}).<!-- preview-sha: {sha} -->"
     if build.conclusion != "success":
-        post(pr, f"❌ {MARKER} failed.{run_link}")
+        post(pr, f"❌ {MARKER} failed.{run_link}{console}")
     elif not report:
-        post(pr, f"⚠️ No {MARKER} generated for {mods}.{run_link}")
+        post(pr, f"⚠️ No {MARKER} generated for {mods}.{run_link}{console}")
     else:
         ok = f"✅ **[{MARKER}]({build.html_url}/artifacts/{report.id})** generated for {mods}"
         details = f"\n\n<details><summary>Screenshot</summary>\n\n![MultiQC report screenshot](./{shot})\n\n</details>"
         if not (shot_artifact and shot.exists()):
-            post(pr, f"{ok} (⚠️ screenshot failed).{run_link}")
+            post(pr, f"{ok} (⚠️ screenshot failed).{run_link}{console}")
         else:
             try:
-                post(pr, f"{ok}.{run_link}{details}", attach=shot)
+                post(pr, f"{ok}.{run_link}{details}{console}", attach=shot)
             except subprocess.CalledProcessError:
                 shot_url = f"{build.html_url}/artifacts/{shot_artifact.id}"
-                post(pr, f"{ok} (⚠️ screenshot upload failed, [view it here]({shot_url})).{run_link}")
+                post(pr, f"{ok} (⚠️ screenshot upload failed, [view it here]({shot_url})).{run_link}{console}")
     react("rocket")
 
 

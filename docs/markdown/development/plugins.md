@@ -122,7 +122,7 @@ For example, you could tie into the `after_modules` hook to insert data
 processed by MultiQC modules into a database automatically.
 
 Here, the entry point names are the hook titles, described as commented out
-lines in the core MultiQC `setup.py`: `execution_start`, `config_loaded`,
+lines in the core MultiQC `pyproject.toml`: `execution_start`, `config_loaded`,
 `before_modules`, `after_modules` and `execution_finish`.
 
 These should point to a function in your code which will be executed when
