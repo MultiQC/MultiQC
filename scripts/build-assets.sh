@@ -12,10 +12,11 @@ if [ $# -gt 0 ]; then
     # Install from the lockfile if needed. Use `npm ci`, not `npm install`:
     # `npm install` rewrites package-lock.json (differently per platform / npm
     # version), which dirties the tree and fails the hook in CI. `npm ci`
-    # installs exactly what the lockfile pins and never modifies it.
+    # installs exactly what the lockfile pins and never modifies it. Keep
+    # optional packages enabled for platform-specific native build dependencies.
     if [ ! -d "node_modules" ]; then
         echo "Installing npm dependencies..."
-        npm ci
+        npm ci --include=optional
     fi
 
     # Build with Vite
@@ -26,7 +27,7 @@ if [ $# -gt 0 ]; then
     if [ -d "../disco" ]; then
         cd ../disco
         if [ ! -d "node_modules" ]; then
-            npm ci
+            npm ci --include=optional
         fi
         npm run build
         cd ../default
