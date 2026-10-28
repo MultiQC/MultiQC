@@ -462,6 +462,24 @@ class AnthropicClient(Client):
         )
 
 
+# Newer models reject thinking {"type": "disabled"}. Map them to their lowest thinking
+# setting, or to None where thinking can't be turned off and the field must be omitted.
+_BEDROCK_THINKING_OFF_OVERRIDES: Dict[str, Optional[Dict[str, str]]] = {
+    "claude-sonnet-5-5": {"type": "between_tools"},
+    "claude-opus-5-5": None,
+    "claude-fable-5": None,
+    "claude-mythos-5": None,
+}
+
+
+def _bedrock_thinking_off(model: str) -> Optional[Dict[str, str]]:
+    """Return the thinking field that turns thinking off, or as low as it goes, for a Bedrock model ID."""
+    for model_name, thinking in _BEDROCK_THINKING_OFF_OVERRIDES.items():
+        if model_name in model:
+            return thinking
+    return {"type": "disabled"}
+
+
 class AWSBedrockClient(Client):
     def __init__(self):
         super().__init__()
@@ -499,7 +517,9 @@ class AWSBedrockClient(Client):
 
             body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
         else:
-            body["thinking"] = {"type": "disabled"}
+            thinking_off = _bedrock_thinking_off(self.model)
+            if thinking_off is not None:
+                body["thinking"] = thinking_off
 
         response = self.client.invoke_model(
             body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
