@@ -15,7 +15,12 @@ window.continueInSeqeraChatHandler = function (event) {
   window.open(url, "_blank");
 };
 
-function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table", enforceTokenLimit = true) {
+function formatReportForAi(
+  systemTokens,
+  onlyGeneralStats = false,
+  generalStatsView = "table",
+  enforceTokenLimit = true,
+) {
   let userPrompt = "";
   let currentTokens = systemTokens ?? 0;
   const providerId = $("#ai-provider").val();
