@@ -660,3 +660,8 @@ or :sample[A1001]{.text-yellow}. But never put multiple sample names inside one 
 Please do not add any extra headers to the response.
 
 Make sure to use a multiple of 4 spaces to indent nested lists.`;
+
+systemPromptReportShort = aiPrompts.short || systemPromptReportShort;
+systemPromptReportFull = aiPrompts.full || systemPromptReportFull;
+systemPromptPlot = aiPrompts.section || systemPromptPlot;
+aiSummaryFull = Boolean(aiPrompts.full_summary);

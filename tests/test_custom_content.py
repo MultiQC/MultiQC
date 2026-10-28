@@ -9,6 +9,7 @@ import pytest
 import multiqc
 from multiqc import config, report
 from multiqc.base_module import ModuleNoSamplesFound
+from multiqc.core.ai import PROMPT_FULL, PROMPT_SECTION, PROMPT_SHORT
 from multiqc.core.file_search import file_search
 from multiqc.core.special_case_modules.custom_content import custom_module_classes
 from multiqc.core.update_config import ClConfig, update_config
@@ -943,7 +944,22 @@ sample1,10
     assert section1.description == "<p>This is the description for section 1</p>"
 
 
-def test_ai_custom_prompt(tmp_path):
+@pytest.mark.parametrize(
+    ("prompt_overrides", "expected_full_summary"),
+    [
+        (
+            {
+                "ai_prompt_short": "Use me short!",
+                "ai_prompt_full": "Use me full!",
+                "ai_prompt_section": "Use me for sections!",
+            },
+            False,
+        ),
+        ({}, False),
+        ({"ai_summary_full": True}, True),
+    ],
+)
+def test_ai_custom_prompt(tmp_path, monkeypatch, prompt_overrides, expected_full_summary):
     """Test custom prompt makes it to the AI summary output"""
     os.chdir(tmp_path)
 
@@ -965,6 +981,10 @@ def test_ai_custom_prompt(tmp_path):
     }
     file.write_text(json.dumps(data))
 
+    if expected_full_summary:
+        monkeypatch.setenv("SEQERA_ACCESS_TOKEN", "test-token")
+        monkeypatch.setenv("MQC_STUB_AI_RESPONSE", "1")
+
     os.chdir(tmp_path)
     multiqc.run(
         file,
@@ -972,17 +992,22 @@ def test_ai_custom_prompt(tmp_path):
             run_modules=["custom_content"],
             ai_summary=False,
             development=True,
-            ai_prompt_short="Use me short!",
-            ai_prompt_full="Use me full!",
+            **prompt_overrides,
         ),
     )
 
     summary_path = tmp_path / "multiqc_data" / "llms-full.txt"
     assert summary_path.exists()
     print(summary_path)
-    # assert that file contains the custom prompt
+    expected_prompts = {
+        "short": prompt_overrides.get("ai_prompt_short", PROMPT_SHORT),
+        "full": prompt_overrides.get("ai_prompt_full", PROMPT_FULL),
+        "section": prompt_overrides.get("ai_prompt_section", PROMPT_SECTION),
+        "full_summary": expected_full_summary,
+    }
+    expected_file_prompt = expected_prompts["full"] if expected_full_summary else expected_prompts["short"]
     with summary_path.open() as f:
-        assert "Use me short!" in f.read()
+        assert expected_file_prompt in f.read()
     html_path = tmp_path / "multiqc_report.html"
     assert html_path.exists()
     print(html_path)
@@ -990,7 +1015,4 @@ def test_ai_custom_prompt(tmp_path):
         html = f.read()
     match = re.search(r'aiPrompts = JSON\.parse\(atob\("([^"]+)"\)\);', html)
     assert match is not None
-    assert json.loads(base64.b64decode(match.group(1))) == {
-        "short": "Use me short!",
-        "full": "Use me full!",
-    }
+    assert json.loads(base64.b64decode(match.group(1))) == expected_prompts

@@ -930,21 +930,26 @@ class MultiQCConfig(BaseModel):
                 "Generate a short AI-written summary at the top of the report.",
             )
             ai_summary_full: Optional[bool] = cfg(
-                "Also generate a longer per-section AI summary. Requires ai_summary to be on.",
+                "Also generate a longer detailed AI summary for the whole report. Requires ai_summary to be on.",
             )
             no_ai: Optional[bool] = cfg(
                 "Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.",
             )
         with group("Prompts"):
             ai_prompt_short: Optional[str] = cfg(
-                "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+                "Replace the default prompt for the short whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.",
                 multiline=True,
                 examples=["Write the summary in one short paragraph aimed at a lab head, no jargon."],
             )
             ai_prompt_full: Optional[str] = cfg(
-                "Custom prompt prepended to the full-section AI summary request.",
+                "Replace the default prompt for the detailed whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.",
                 multiline=True,
                 examples=["Use bullet points and call out any sample that looks like an outlier."],
+            )
+            ai_prompt_section: Optional[str] = cfg(
+                "Replace the default prompt for browser-generated section and general-statistics summaries. Include the sample and severity highlighting instructions if you want highlighted output.",
+                multiline=True,
+                examples=["Summarize the section in 1-2 sentences, focusing on metrics outside expected ranges."],
             )
         with group("Privacy"):
             ai_anonymize_samples: Optional[bool] = cfg(
