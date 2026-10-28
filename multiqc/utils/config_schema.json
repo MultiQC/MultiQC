@@ -3319,7 +3319,7 @@
         }
       ],
       "default": null,
-      "description": "Also generate a longer per-section AI summary. Requires ai_summary to be on.",
+      "description": "Also generate a longer detailed AI summary for the whole report. Requires ai_summary to be on.",
       "group": "On/off",
       "section": "AI Summary",
       "title": "Ai Summary Full"
@@ -3349,7 +3349,7 @@
         }
       ],
       "default": null,
-      "description": "Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.",
+      "description": "Replace the default prompt for the short whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.",
       "examples": ["Write the summary in one short paragraph aimed at a lab head, no jargon."],
       "group": "Prompts",
       "multiline": true,
@@ -3366,12 +3366,29 @@
         }
       ],
       "default": null,
-      "description": "Custom prompt prepended to the full-section AI summary request.",
+      "description": "Replace the default prompt for the detailed whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.",
       "examples": ["Use bullet points and call out any sample that looks like an outlier."],
       "group": "Prompts",
       "multiline": true,
       "section": "AI Summary",
       "title": "Ai Prompt Full"
+    },
+    "ai_prompt_section": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Replace the default prompt for browser-generated section and general-statistics summaries. Include the sample and severity highlighting instructions if you want highlighted output.",
+      "examples": ["Summarize the section in 1-2 sentences, focusing on metrics outside expected ranges."],
+      "group": "Prompts",
+      "multiline": true,
+      "section": "AI Summary",
+      "title": "Ai Prompt Section"
     },
     "ai_anonymize_samples": {
       "anyOf": [

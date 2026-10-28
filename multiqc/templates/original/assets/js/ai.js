@@ -15,14 +15,14 @@ window.continueInSeqeraChatHandler = function (event) {
   window.open(url, "_blank");
 };
 
-function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
+function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table", enforceTokenLimit = true) {
   let userPrompt = "";
   let currentTokens = systemTokens ?? 0;
   const providerId = $("#ai-provider").val();
   const provider = AI_PROVIDERS[providerId];
   const model = $("#ai-model").val();
 
-  const maxTokens = getMaxTokens(model);
+  const maxTokens = enforceTokenLimit ? getMaxTokens(model) : Infinity;
 
   // Tools section is highest priority - always include
   userPrompt += "\n----------------------\n\n";
@@ -533,21 +533,20 @@ $(function () {
     let content;
     let systemPrompt;
     if (wholeReport) {
-      systemPrompt = "You are given data of a MultiQC report";
-      content = formatReportForAi();
+      systemPrompt = aiSummaryFull ? systemPromptReportFull : systemPromptReportShort;
+      content = formatReportForAi(0, false, "table", false);
     } else if (sectionAnchor === "general_stats_table") {
-      systemPrompt = "You are given the general statistics report table";
-      content = formatReportForAi(0, true, plotView);
+      systemPrompt = systemPromptPlot;
+      content = formatReportForAi(0, true, plotView, false);
     } else if (table) {
-      systemPrompt = "You are given a single MultiQC report table";
+      systemPrompt = systemPromptPlot;
       content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     } else {
-      systemPrompt = "You are given data of a single MultiQC report section with a plot";
+      systemPrompt = systemPromptPlot;
       content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     }
 
-    systemPrompt += ". Your task is to analyse the data and give a concise summary.";
-    const text = multiqcDescription + "\n" + systemPrompt + "\n\n" + content;
+    const text = systemPrompt + "\n\n----------------------\n\n" + content;
 
     navigator.clipboard.writeText(text);
     const originalButtonText = button.find(".button-text").text();
