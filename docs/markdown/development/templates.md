@@ -24,20 +24,17 @@ acts as a plugin. For more information about this, see the
 ## Creating a template skeleton
 
 For a new template to be recognised by MultiQC, it must be a python submodule
-directory with a `__init__.py` file. This must be referenced in the `setup.py`
-installation script as an
-[entry point](http://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins).
+directory with a `__init__.py` file. This must be registered in `pyproject.toml`
+as an
+[entry point](https://setuptools.pypa.io/en/latest/userguide/entry_point.html).
 
 You can see the bundled templates defined in this way:
 
-```python
-entry_points = {
-    'multiqc.templates.v1': [
-        'default = multiqc.templates.default',
-        'simple = multiqc.templates.simple',
-        'geo = multiqc.templates.geo',
-    ]
-}
+```toml
+[project.entry-points."multiqc.templates.v1"]
+default = "multiqc.templates.default"
+simple = "multiqc.templates.simple"
+geo = "multiqc.templates.geo"
 ```
 
 Note that these entry points can point to any Python modules, so if you're

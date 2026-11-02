@@ -54,12 +54,12 @@ hooks = [
 
 [[repos]]
 repo = "https://github.com/rbubley/mirrors-prettier"
-rev = "0ee178619d696787ca73d210cc191d720868c631"  # frozen: v3.9.6
+rev = "ef4a397f916211b4a39ccf9d3d9cbb6562157251"  # frozen: v3.9.9
 hooks = [
   {
     id = "prettier",
     additional_dependencies = [
-      "prettier@3.9.6",
+      "prettier@3.9.9",
       "prettier-plugin-jinja-template@2.2.0"
     ]
   }

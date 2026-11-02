@@ -1,4 +1,4 @@
-# CLAUDE.md - MultiQC Default Template
+# AGENTS.md - MultiQC Default Template
 
 This file provides guidance for working with the MultiQC default template frontend assets.
 

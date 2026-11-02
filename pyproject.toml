@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=62.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -316,7 +316,7 @@ disco = "multiqc.templates.disco"
 
 [tool.setuptools]
 packages = ["multiqc"]
-package-data = { multiqc = ["py.typed"] }
+package-data = { multiqc = ["**/*"] }
 
 [tool.ruff]
 line-length = 120

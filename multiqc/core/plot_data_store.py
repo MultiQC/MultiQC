@@ -85,28 +85,16 @@ def flush_to_parquet() -> None:
     # Process wide tables - merge all buffered wide tables by sample
     merged_wide_tables: Optional[pl.DataFrame] = None
     if _pending_wide_tables:
-        # Get existing table rows
-        existing_table_rows = existing_df.filter(pl.col("type") == "table_row") if not existing_df.is_empty() else None
+        tables = list(_pending_wide_tables)
+        if not existing_df.is_empty():
+            tables.insert(0, existing_df.filter(pl.col("type") == "table_row"))
 
-        # Start with existing table rows or first pending table
-        if existing_table_rows is not None and not existing_table_rows.is_empty():
-            merged_wide_tables = existing_table_rows
-        else:
-            merged_wide_tables = None
-
-        # Merge all pending wide tables
-        for table_df in _pending_wide_tables:
-            if merged_wide_tables is None:
-                merged_wide_tables = table_df
-            elif table_df.height > 0:
-                # Merge by joining on sample and creation_date
-                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="outer")
-                # Ensure all columns are present
-                all_cols = merged_wide_tables.columns
-                for col in table_df.columns:
-                    if col not in all_cols:
-                        all_cols.append(col)
-                merged_wide_tables = merged_wide_tables.select([c for c in all_cols if c in merged_wide_tables.columns])
+        # A join would leave non-key columns (e.g. "type") null for samples missing from the left table
+        merged_wide_tables = (
+            pl.concat(tables, how="diagonal_relaxed")
+            .group_by(["sample", "creation_date"], maintain_order=True)
+            .agg(pl.all().drop_nulls().first())
+        )
 
     # Build list of dataframes to concatenate
     all_dfs: List[pl.DataFrame] = []
