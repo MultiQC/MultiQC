@@ -190,4 +190,3 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=table.plot(self.mlst_data, headers=headers, pconfig=table_config),
         )
-        
