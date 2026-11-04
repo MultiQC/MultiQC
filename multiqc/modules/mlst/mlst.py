@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import csv
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -79,6 +77,8 @@ class MultiqcModule(BaseMultiqcModule):
             else:
                 sample_name = self.clean_s_name(raw_filename, f)
 
+            self.add_data_source(f, s_name=sample_name)
+
             scheme = row.get("SCHEME", "").strip()
             st = row.get("ST", "").strip()
             status = row.get("STATUS", "").strip()
@@ -86,7 +86,7 @@ class MultiqcModule(BaseMultiqcModule):
             alleles = row.get("ALLELES", "").strip()
 
             try:
-                score: float | None = float(raw_score)
+                score: Optional[float] = float(raw_score)
             except (ValueError, TypeError):
                 score = None
 
