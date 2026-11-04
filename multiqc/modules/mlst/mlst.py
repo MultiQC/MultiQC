@@ -11,7 +11,19 @@ log = logging.getLogger(__name__)
 
 
 class MultiqcModule(BaseMultiqcModule):
-    """mlst scans contig files against PubMLST typing schemes to determine sequence types."""
+    """mlst scans contig files against PubMLST typing schemes to determine sequence types.
+
+    To generate files compatible with MultiQC, run `mlst` with the `--full` option:
+
+    ```bash
+    mlst --full contigs.fasta > mlst_report.tsv
+    # Or CSV format:
+    mlst --full --csv contigs.fasta > mlst_report.csv
+    ```
+
+    The default output without `--full` omits the header row and status/score metrics
+    required for MultiQC parsing.
+    """
 
     def __init__(self) -> None:
         super().__init__(
@@ -19,8 +31,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mlst",
             href="https://github.com/tseemann/mlst",
             info="Scans contig files against PubMLST typing schemes.",
-            doi="10.5281/zenodo.1051528",
-            license="GPL-2.0-or-later",
+            doi="",
+            license="GPL-2.0",
             license_url="https://github.com/tseemann/mlst/blob/master/LICENSE",
         )
 
@@ -170,7 +182,12 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mlst-typings",
             description=(
                 "Scanned contig files evaluated against PubMLST schemes. "
-                "Confidence scores and status metrics reflect completeness and exactness of allele matches."
+                "Requires <code>mlst</code> to be run with the <code>--full</code> option."
             ),
+            helptext="""
+            The `mlst` module parses outputs created with the `--full` option (`FILE`, `SCHEME`, `ST`, `STATUS`, `SCORE`, `ALLELES`).
+            Standard `mlst` output without `--full` lacks the header row and completeness metrics required for MultiQC parsing.
+            """,
             plot=table.plot(self.mlst_data, headers=headers, pconfig=table_config),
         )
+        

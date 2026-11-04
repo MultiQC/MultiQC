@@ -26,3 +26,4 @@ def test_mlst_module(tmp_path: Path) -> None:
     assert parsed["st"] == "46"
     assert parsed["status"] == "PERFECT"
     assert parsed["score"] == 100.0
+    
