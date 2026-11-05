@@ -1289,9 +1289,7 @@ class MultiqcModule(BaseMultiqcModule):
             for seq, _ in top_seqs
         }
 
-        table_data = dict(
-            sorted(table_data.items(), key=lambda x: (-x[1][by], -x[1][by_secondary], x[1]["sequence"]))
-        )
+        table_data = dict(sorted(table_data.items(), key=lambda x: (-x[1][by], -x[1][by_secondary], x[1]["sequence"])))
 
         ranked_by = (
             "the number of samples they occur in" if by == "samples" else "the number of occurrences across all samples"
