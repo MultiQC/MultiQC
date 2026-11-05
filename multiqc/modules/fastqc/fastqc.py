@@ -1290,7 +1290,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         table_data = dict(
-            sorted(table_data.items(), key=lambda x: (-x[1][by], -x[1][by_secondary], x[1]["sequence"]))
+            sorted(table_data.items(), key=lambda x: (x[1][by], x[1][by_secondary], x[1]["sequence"]), reverse=True)
         )
 
         ranked_by = (
@@ -1341,7 +1341,11 @@ class MultiqcModule(BaseMultiqcModule):
                     "col1_header": "Overrepresented sequence",
                     "sort_rows": False,
                     "rows_are_samples": False,
-                    "defaultsort": [{"column": by}, {"column": by_secondary}, {"column": "Overrepresented sequence"}],
+                    "defaultsort": [
+                        {"column": by, "direction": "desc"},
+                        {"column": by_secondary, "direction": "desc"},
+                        {"column": "Overrepresented sequence", "direction": "asc"},
+                    ],
                 },
             ),
         )
