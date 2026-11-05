@@ -1290,7 +1290,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         table_data = dict(
-            sorted(table_data.items(), key=lambda x: (x[1][by], x[1][by_secondary], x[1]["sequence"]), reverse=True)
+            sorted(table_data.items(), key=lambda x: (-x[1][by], -x[1][by_secondary], x[1]["sequence"]))
         )
 
         ranked_by = (
