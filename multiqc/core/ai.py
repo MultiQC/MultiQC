@@ -37,6 +37,13 @@ REASONING_MODELS = {
     "claude-haiku-4-0",
     "claude-opus-4-5",
     "claude-opus-4-0",
+    # Anthropic Claude 5 series
+    "claude-sonnet-5-5",
+    "claude-sonnet-5-0",
+    "claude-haiku-5-5",
+    "claude-haiku-5-0",
+    "claude-opus-5-5",
+    "claude-opus-5-0",
 }
 
 
@@ -315,8 +322,11 @@ class OpenAiClient(Client):
                 self.model.startswith("claude-opus-4")
                 or self.model.startswith("claude-sonnet-4")
                 or self.model.startswith("claude-haiku-4")
+                or self.model.startswith("claude-opus-5")
+                or self.model.startswith("claude-sonnet-5")
+                or self.model.startswith("claude-haiku-5")
             ):
-                return 200000  # Claude 4 series have 200k context
+                return 200000  # Claude 4 and 5 series have 200k context
             else:
                 return 200000  # Other reasoning models (o3, o4-mini) have 200k context
 
@@ -364,11 +374,11 @@ class OpenAiClient(Client):
         )
 
         # For OpenAI reasoning models, use max_completion_tokens and reasoning effort
-        # Note: Claude 4 series are also reasoning models but may use different parameters
+        # Note: Claude series are also reasoning models but may use different parameters
         if is_reasoning and not (
-            self.model.startswith("claude-opus-4")
-            or self.model.startswith("claude-sonnet-4")
-            or self.model.startswith("claude-haiku-4")
+            self.model.startswith("claude-opus-")
+            or self.model.startswith("claude-sonnet-")
+            or self.model.startswith("claude-haiku-")
         ):
             # Use config or reasonable default for max_completion_tokens
             max_completion_tokens = config.ai_max_completion_tokens or 4000
@@ -387,20 +397,20 @@ class OpenAiClient(Client):
                 f"OpenAI reasoning model parameters: max_completion_tokens={max_completion_tokens}, reasoning_effort={reasoning_effort}"
             )
         elif is_reasoning and (
-            self.model.startswith("claude-opus-4")
-            or self.model.startswith("claude-sonnet-4")
-            or self.model.startswith("claude-haiku-4")
+            self.model.startswith("claude-opus-")
+            or self.model.startswith("claude-sonnet-")
+            or self.model.startswith("claude-haiku-")
         ):
-            # Claude 4 reasoning models - use extended thinking if enabled
+            # Claude reasoning models - use extended thinking if enabled
             if config.ai_extended_thinking:
                 thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
                 if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
                     thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
 
                 body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens}
-                logger.debug(f"Claude 4 model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
+                logger.debug(f"Claude model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
             else:
-                logger.debug("Claude 4 model without extended thinking (ai_extended_thinking=False)")
+                logger.debug("Claude model without extended thinking (ai_extended_thinking=False)")
 
         if config.ai_auth_type == "api-key":
             headers = {
@@ -427,7 +437,7 @@ class AnthropicClient(Client):
     def __init__(self, api_key: str):
         super().__init__(api_key)
         self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-5"
+            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-5-5"
         )
         self.name = "anthropic"
         self.title = "Anthropic"
@@ -440,6 +450,25 @@ class AnthropicClient(Client):
         model: str
 
     def _query(self, prompt: str) -> ApiResponse:
+        body: Dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": 4096,
+            "messages": [
+                {"role": "user", "content": prompt},
+            ],
+        }
+        # Only send temperature to models that support it. Claude 5 models and reasoning models
+        # (Opus 4.7+, Sonnet 5+, etc.) deprecate temperature and return HTTP 400 if it is provided.
+        if not is_reasoning_model(self.model) and not (
+            self.model.startswith("claude-sonnet-5")
+            or self.model.startswith("claude-haiku-5")
+            or self.model.startswith("claude-opus-5")
+            or self.model.startswith("claude-opus-4-7")
+            or self.model.startswith("claude-opus-4-8")
+            or self.model.startswith("claude-opus-4-9")
+        ):
+            body["temperature"] = 0.0
+
         response = self._request_with_error_handling_and_retries(
             "https://api.anthropic.com/v1/messages",
             headers={
@@ -447,14 +476,7 @@ class AnthropicClient(Client):
                 "x-api-key": self.api_key,
                 "anthropic-version": "2023-06-01",
             },
-            body={
-                "model": self.model,
-                "max_tokens": 4096,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.0,
-            },
+            body=body,
         )
         return AnthropicClient.ApiResponse(
             content=response["content"][0]["text"],
