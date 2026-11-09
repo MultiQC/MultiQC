@@ -55,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
                 affected_samples=self.samples_w_no_elements,
             ),
             helptext="""
-                This plot shows the counts of each functional category of element (AMR, STRESS, and VIRULENCE) found by AMRFinder for each sample. 
-                If AMRFinder was not run with the '--plus' option, then there will typically only be AMR elements. 
+                This plot shows the counts of each functional category of element (AMR, STRESS, and VIRULENCE) found by AMRFinder for each sample.
+                If AMRFinder was not run with the '--plus' option, then there will typically only be AMR elements.
                 The user can switch to show element subtypes as well, which breaks down the functional category further if a more specific category is available. """,
         )
 
@@ -72,10 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
                 affected_samples=self.samples_w_no_elements,
             ),
             helptext="""
-                This plot shows the percentage of the reference covered by a blast hit for each element found by AMRFinder across each sample. 
-                Samples where there was no blast alignment detected for the element will have NA in the sorted plot or 0% coverage when the plot is switched to clustered. 
-                The highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a run with combined protein and nucleotide data. 
-                "Users of AMRFinderPlus or its supporting data files are cautioned that presence of a gene encoding an antimicrobial resistance (AMR) protein or resistance causing mutation does not necessarily indicate that the isolate carrying the gene is resistant to the corresponding antibiotic. 
+                This plot shows the percentage of the reference covered by a blast hit for each element found by AMRFinder across each sample.
+                Samples where there was no blast alignment detected for the element will have NA in the sorted plot or 0% coverage when the plot is switched to clustered.
+                The highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a run with combined protein and nucleotide data.
+                "Users of AMRFinderPlus or its supporting data files are cautioned that presence of a gene encoding an antimicrobial resistance (AMR) protein or resistance causing mutation does not necessarily indicate that the isolate carrying the gene is resistant to the corresponding antibiotic.
                 AMRFinderPlus does not predict phenotypic resistance." Additional information from NCBI on interpreting results can be found [here](https://github.com/ncbi/amr/wiki/Interpreting-results).""",
         )
 
@@ -103,16 +103,9 @@ class MultiqcModule(BaseMultiqcModule):
 
                 self.plot_data.append(row)
                 row_count += 1
-                coverage_sum += (
-                    float(row["% Coverage of reference"])
-                    if row["% Coverage of reference"] != "NA"
-                    else 0.0
-                )
-                identity_sum += (
-                    float(row["% Identity to reference"])
-                    if row["% Identity to reference"] != "NA"
-                    else 0.0
-                )
+                coverage_sum += float(row["% Coverage of reference"]) if row["% Coverage of reference"] != "NA" else 0.0
+                identity_sum += float(row["% Identity to reference"]) if row["% Identity to reference"] != "NA" else 0.0
+                
             # adding a row to general stats data for this sample that has the count of elements, average coverage, and average identity
             self.general_stats_data[sample_name] = {
                 "elements": row_count,
@@ -187,9 +180,7 @@ class MultiqcModule(BaseMultiqcModule):
             "tt_decimals": 0,
         }
 
-        return bargraph.plot(
-            [element_type_counts, element_subtype_counts], pconfig=pconfig
-        )
+        return bargraph.plot([element_type_counts, element_subtype_counts], pconfig=pconfig)
 
     def amrfinder_heatmap(self):
         # Sort plot data by % coverage for each row. This should mean that the highest coverage is selected if the same element shows up multiple times for one sample, as in the case of a combined protein and nucleotide run.
