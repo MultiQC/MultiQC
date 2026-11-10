@@ -1,10 +1,13 @@
-"""Inline-fixture unit tests for the unmux module.
+"""Tests for the unmux module.
 
-The fixtures are unmux 0.4.0 output for synthetic pools: one split into samples with two sub-samples each and a
-`--remove` rule, one split into samples with no sub-samples, and one run with no samples at all, which passes
-every read through and writes an empty per-sample file.
+Most tests run on `data/modules/unmux` in MultiQC/test-data: unmux 0.4.0 metrics from simulated reads for four
+pools. Pool run1 has samples with sub-samples and removed reads. Pool run2.fq takes unmux's default names with
+no sample sheet, and MultiQC trims it to run2. Pool run3 passes every read through and writes an empty
+per-sample file, and run4 has ten samples of uneven depth. Edge cases use small inline files.
 """
 
+import shutil
+from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
@@ -14,6 +17,7 @@ from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.modules.unmux import MultiqcModule
 from multiqc.plots.table_object import Cell, InputRow
 from multiqc.types import Anchor, ColumnKey, SampleGroup
+from multiqc.utils import testing
 
 PER_SAMPLE_HEADER = "pool\tsample\tsub_sample\treads\tfrac_of_pool\tfrac_bases_unextracted\n"
 SUMMARY_HEADER = (
@@ -21,33 +25,21 @@ SUMMARY_HEADER = (
     "\tfrac_bases_unextracted\tmean_read_len_by_input\n"
 )
 
-POOL_A_PER_SAMPLE = (
-    PER_SAMPLE_HEADER + "poolA\ttumor\tlib1\t994\t0.198800\t0.189189\n"
-    "poolA\ttumor\tlib2\t1032\t0.206400\t0.189189\n"
-    "poolA\tnormal\tlib1\t609\t0.121800\t0.189189\n"
-    "poolA\tnormal\tlib2\t624\t0.124800\t0.189189\n"
-    "poolA\tblank\tlib1\t194\t0.038800\t0.189189\n"
-    "poolA\tblank\tlib2\t199\t0.039800\t0.189189\n"
-)
-POOL_A_SUMMARY = SUMMARY_HEADER + "poolA\t5000\t3652\t0\t848\t500\t0.730400\t0.189189\t74\n"
 
-POOL_B_PER_SAMPLE = (
-    PER_SAMPLE_HEADER + "poolB\tS1\t\t892\t0.297333\t0.117647\n"
-    "poolB\tS2\t\t1807\t0.602333\t0.117647\n"
-    "poolB\tS3\t\t7\t0.002333\t0.117647\n"
-    "poolB\tCTL\t\t0\t0.000000\t0.000000\n"
-)
-POOL_B_SUMMARY = SUMMARY_HEADER + "poolB\t3000\t2706\t0\t294\t0\t0.902000\t0.117647\t68\n"
-
-POOL_C_SUMMARY = SUMMARY_HEADER + "poolC\t2000\t0\t1696\t0\t304\t0.000000\t0.117647\t68\n"
+@pytest.fixture
+def test_data_dir() -> Path:
+    return testing.data_dir() / "modules" / "unmux"
 
 
 @pytest.fixture
 def run_unmux(tmp_path):
-    """Factory: write each `filename: content` pair to a temp dir and run the unmux module on it."""
+    """Factory: copy the given test-data files and write the given inline files to a temp dir, then run unmux."""
     config.reset()
 
-    def _run(files: Dict[str, str]) -> MultiqcModule:
+    def _run(files: Dict[str, str], copy_from: Any = None) -> MultiqcModule:
+        if copy_from is not None:
+            for path in Path(copy_from).glob("*.tsv"):
+                shutil.copy(path, tmp_path / path.name)
         for filename, content in files.items():
             (tmp_path / filename).write_text(content)
         report.reset()
@@ -57,20 +49,13 @@ def run_unmux(tmp_path):
         return MultiqcModule()
 
     yield _run
+    report.reset()
     config.reset()
 
 
-def all_pools(run_unmux) -> MultiqcModule:
-    return run_unmux(
-        {
-            "poolA.unmux.per_sample.tsv": POOL_A_PER_SAMPLE,
-            "poolA.unmux.summary.tsv": POOL_A_SUMMARY,
-            "poolB.unmux.per_sample.tsv": POOL_B_PER_SAMPLE,
-            "poolB.unmux.summary.tsv": POOL_B_SUMMARY,
-            "poolC.unmux.per_sample.tsv": "",
-            "poolC.unmux.summary.tsv": POOL_C_SUMMARY,
-        }
-    )
+@pytest.fixture
+def all_pools(run_unmux, test_data_dir):
+    return lambda: run_unmux({}, copy_from=test_data_dir)
 
 
 def general_stats_rows() -> Dict[SampleGroup, List[InputRow]]:
@@ -111,110 +96,122 @@ def test_no_files_raises(run_unmux):
         run_unmux({"other.tsv": "a\tb\n1\t2\n"})
 
 
-def test_files_are_found_by_header_not_name(run_unmux):
-    module = run_unmux({"anything.txt": POOL_A_SUMMARY, "else.tsv": POOL_A_PER_SAMPLE})
+def test_every_pool_and_sample_is_found(all_pools):
+    module = all_pools()
 
-    assert set(saved(module, "multiqc_unmux_summary")) == {"poolA"}
-    assert len(saved(module, "multiqc_unmux_per_sample")) == 6
+    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4"}
+    assert len(saved(module, "multiqc_unmux_per_sample")) == 17
 
 
-def test_samples_are_named_with_their_sub_sample(run_unmux):
-    module = all_pools(run_unmux)
+def test_files_are_found_by_header_not_name(run_unmux, test_data_dir):
+    module = run_unmux(
+        {
+            "anything.txt": (test_data_dir / "run1.unmux.summary.tsv").read_text(),
+            "else.tsv": (test_data_dir / "run1.unmux.per_sample.tsv").read_text(),
+        }
+    )
+
+    assert set(saved(module, "multiqc_unmux_summary")) == {"run1"}
+    assert len(saved(module, "multiqc_unmux_per_sample")) == 4
+
+
+def test_samples_are_named_with_their_sub_sample(all_pools):
+    module = all_pools()
 
     names = set(saved(module, "multiqc_unmux_per_sample"))
-    assert {"tumor (lib1)", "tumor (lib2)", "blank (lib2)", "S1", "CTL"} <= names
-    assert saved(module, "multiqc_unmux_per_sample")["tumor (lib1)"]["pool"] == "poolA"
+    assert {"tumor (lib01)", "normal (lib02)", "TAGGCTTC", "sampleA", "sampleJ"} <= names
+    assert saved(module, "multiqc_unmux_per_sample")["tumor (lib01)"]["pool"] == "run1"
 
 
-def test_outcomes_add_up_to_the_pool(run_unmux):
-    all_pools(run_unmux)
+def test_outcomes_add_up_to_the_pool(all_pools):
+    all_pools()
 
-    assert bar_values("unmux_outcomes", 0, "poolA") == {
-        "Assigned": 3652,
+    assert bar_values("unmux_outcomes", 0, "run1") == {
+        "Assigned": 2848,
         "Passed through": 0,
-        "Removed": 500,
-        "Unassigned": 848,
+        "Removed": 471,
+        "Unassigned": 681,
     }
-    assert bar_values("unmux_outcomes", 0, "poolC")["Passed through"] == 1696
+    assert bar_values("unmux_outcomes", 0, "run3")["Passed through"] == 1196
 
 
-def test_reads_per_sample_heads_each_pool_with_its_leftovers(run_unmux):
-    all_pools(run_unmux)
+def test_reads_per_sample_heads_each_pool_with_its_leftovers(all_pools):
+    all_pools()
 
     # Horizontal bar plots keep their samples bottom to top.
     plot: Any = report.plot_by_id[Anchor("unmux_reads_per_sample")]
     samples = list(reversed(plot.datasets[0].samples))
-    assert samples[:4] == ["poolA: unassigned", "poolA: removed", "tumor (lib1)", "tumor (lib2)"]
-    assert samples[8] == "poolB: unassigned"
-    assert "poolB: removed" not in samples
-    assert not any(s.startswith("poolC") for s in samples)
-    assert bar_values("unmux_reads_per_sample", 1, "tumor (lib1)")["Assigned"] == pytest.approx(19.88)
-    assert bar_values("unmux_reads_per_sample", 1, "poolA: removed")["Removed"] == pytest.approx(10.0)
+    assert samples[:4] == ["run1: unassigned", "run1: removed", "tumor (lib01)", "tumor (lib02)"]
+    assert samples[6] == "run2: unassigned"
+    assert "run2: removed" not in samples
+    assert not any(s.startswith("run3") for s in samples)
+    assert bar_values("unmux_reads_per_sample", 1, "tumor (lib01)")["Assigned"] == pytest.approx(19.5)
+    assert bar_values("unmux_reads_per_sample", 1, "sampleJ")["Assigned"] == pytest.approx(0.0167)
+    assert bar_values("unmux_reads_per_sample", 1, "run1: removed")["Removed"] == pytest.approx(11.775)
 
 
-def test_metrics_table_nests_samples_under_their_pool(run_unmux):
-    all_pools(run_unmux)
+def test_metrics_table_nests_samples_under_their_pool(all_pools):
+    all_pools()
 
-    rows = table_rows("poolA")
-    assert [str(row.sample) for row in rows][:3] == ["poolA", "tumor (lib1)", "tumor (lib2)"]
+    rows = table_rows("run1")
+    assert [str(row.sample) for row in rows][:3] == ["run1", "tumor (lib01)", "tumor (lib02)"]
     pool = rows[0]
-    assert raw(pool, "total_reads") == 5000
-    assert raw(pool, "reads") == 3652
-    assert raw(pool, "frac_unassigned") == pytest.approx(0.1696)
-    assert raw(pool, "frac_removed") == pytest.approx(0.1)
+    assert raw(pool, "total_reads") == 4000
+    assert raw(pool, "reads") == 2848
+    assert raw(pool, "frac_unassigned") == pytest.approx(0.17025)
+    assert raw(pool, "frac_removed") == pytest.approx(0.11775)
 
-    pass_through = table_rows("poolC")
+    pass_through = table_rows("run3")
     assert len(pass_through) == 1
-    assert raw(pass_through[0], "reads") == 1696
-    assert raw(pass_through[0], "frac_of_pool") == pytest.approx(0.848)
+    assert raw(pass_through[0], "reads") == 1196
+    assert raw(pass_through[0], "frac_of_pool") == pytest.approx(0.797333)
 
 
-def test_general_stats_groups_samples_under_their_pool(run_unmux):
-    all_pools(run_unmux)
+def test_general_stats_groups_samples_under_their_pool(all_pools):
+    all_pools()
 
     rows = general_stats_rows()
-    pool_a = rows[SampleGroup("poolA")]
-    assert str(pool_a[0].sample) == "poolA"
-    assert pool_a[0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.7304)
-    assert pool_a[0].data[ColumnKey("reads")] == 3652
-    assert {str(row.sample) for row in pool_a[1:]} == {
-        "tumor (lib1)",
-        "tumor (lib2)",
-        "normal (lib1)",
-        "normal (lib2)",
-        "blank (lib1)",
-        "blank (lib2)",
+    run4 = rows[SampleGroup("run4")]
+    assert str(run4[0].sample) == "run4"
+    assert run4[0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.938333, abs=1e-5)
+    assert run4[0].data[ColumnKey("reads")] == 5630
+    assert len(run4) == 11
+    assert {str(row.sample) for row in rows[SampleGroup("run1")][1:]} == {
+        "tumor (lib01)",
+        "tumor (lib02)",
+        "normal (lib01)",
+        "normal (lib02)",
     }
-    assert rows[SampleGroup("poolC")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.848)
+    assert rows[SampleGroup("run3")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.797333, abs=1e-5)
 
 
-def test_general_stats_grouping_can_be_turned_off(run_unmux):
+def test_general_stats_grouping_can_be_turned_off(all_pools):
     setattr(config, "unmux_config", {"general_stats_group_by_pool": False})
-    all_pools(run_unmux)
+    all_pools()
 
     rows = general_stats_rows()
-    assert SampleGroup("poolA") not in rows
-    assert rows[SampleGroup("tumor (lib1)")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.1988)
+    assert SampleGroup("run1") not in rows
+    assert rows[SampleGroup("tumor (lib01)")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.195)
 
 
-def test_general_stats_hides_reads_by_default(run_unmux):
-    all_pools(run_unmux)
+def test_general_stats_hides_reads_by_default(all_pools):
+    all_pools()
 
     headers = {k: v for h in report.general_stats_headers.values() for k, v in h.items()}
     assert not headers[ColumnKey("frac_of_pool")].get("hidden")
     assert headers[ColumnKey("reads")]["hidden"] is True
 
 
-def test_concatenated_files_hold_several_pools(run_unmux):
+def test_concatenated_files_hold_several_pools(run_unmux, test_data_dir):
     module = run_unmux(
         {
-            "all.summary.tsv": POOL_A_SUMMARY + POOL_B_SUMMARY + POOL_C_SUMMARY,
-            "all.per_sample.tsv": POOL_A_PER_SAMPLE + POOL_B_PER_SAMPLE,
+            "all.summary.tsv": "".join(p.read_text() for p in sorted(test_data_dir.glob("*.summary.tsv"))),
+            "all.per_sample.tsv": "".join(p.read_text() for p in sorted(test_data_dir.glob("*.per_sample.tsv"))),
         }
     )
 
-    assert set(saved(module, "multiqc_unmux_summary")) == {"poolA", "poolB", "poolC"}
-    assert len(saved(module, "multiqc_unmux_per_sample")) == 10
+    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4"}
+    assert len(saved(module, "multiqc_unmux_per_sample")) == 17
 
 
 def test_a_name_shared_by_two_pools_gets_the_pool_in_front(run_unmux):
@@ -228,14 +225,14 @@ def test_a_name_shared_by_two_pools_gets_the_pool_in_front(run_unmux):
     assert set(saved(module, "multiqc_unmux_per_sample")) == {"run1: S1", "S2", "run2: S1", "run2: run1"}
 
 
-def test_per_sample_without_a_summary_still_reports(run_unmux):
-    module = run_unmux({"poolB.unmux.per_sample.tsv": POOL_B_PER_SAMPLE})
+def test_per_sample_without_a_summary_still_reports(run_unmux, test_data_dir):
+    module = run_unmux({"run4.tsv": (test_data_dir / "run4.unmux.per_sample.tsv").read_text()})
 
     assert "multiqc_unmux_summary" not in (module.saved_raw_data or {})
     assert "unmux_outcomes" not in report.plot_by_id
-    pool = table_rows("poolB")[0]
-    assert raw(pool, "reads") == 2706
-    assert raw(pool, "frac_of_pool") == pytest.approx(0.901999)
+    pool = table_rows("run4")[0]
+    assert raw(pool, "reads") == 5630
+    assert raw(pool, "frac_of_pool") == pytest.approx(0.938333, abs=1e-5)
 
 
 def test_extra_columns_are_kept(run_unmux):
@@ -252,15 +249,22 @@ def test_extra_columns_are_kept(run_unmux):
     assert raw(sample, "barcode") == "ACGT"
 
 
-def test_ignored_pools_and_samples_are_dropped(run_unmux):
-    config.sample_names_ignore = ["poolC", "blank*"]
-    module = all_pools(run_unmux)
+def test_ignored_pools_and_samples_are_dropped(all_pools):
+    config.sample_names_ignore = ["run3", "sampleI", "sampleJ"]
+    module = all_pools()
 
-    assert "poolC" not in saved(module, "multiqc_unmux_summary")
-    assert not any(s.startswith("blank") for s in saved(module, "multiqc_unmux_per_sample"))
+    assert "run3" not in saved(module, "multiqc_unmux_summary")
+    assert not {"sampleI", "sampleJ"} & set(saved(module, "multiqc_unmux_per_sample"))
 
 
-def test_malformed_rows_are_skipped(run_unmux):
-    module = run_unmux({"a.tsv": POOL_A_SUMMARY + "poolZ\t1\t2\n" + "poolY\t\t0\t0\t0\t0\t0\t0\t\n"})
-
-    assert set(saved(module, "multiqc_unmux_summary")) == {"poolA"}
+@pytest.mark.parametrize(
+    "content",
+    [
+        SUMMARY_HEADER + "poolZ\t1\t2\n",
+        SUMMARY_HEADER + "poolZ\t\t0\t0\t0\t0\t0\t0\t\n",
+        PER_SAMPLE_HEADER + "poolZ\tS1\t\tmany\t0.5\t0\n",
+    ],
+)
+def test_malformed_files_fail_loudly(run_unmux, content):
+    with pytest.raises(ValueError, match="unmux: bad.tsv"):
+        run_unmux({"bad.tsv": content})
