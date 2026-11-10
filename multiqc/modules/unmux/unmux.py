@@ -76,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
             name="unmux",
             anchor="unmux",
             href="https://github.com/clintval/unmux",
-            info="Flexible record parsing and demultiplexing to FASTX/SAM/BAM/CRAM, splitcode-style.",
+            info="Flexible record parsing and demultiplexing to FASTX/SAM/BAM/CRAM.",
             license="MIT License",
             license_url="https://github.com/clintval/unmux/blob/main/LICENSE",
         )
