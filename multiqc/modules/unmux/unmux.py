@@ -1,6 +1,6 @@
 import logging
 from collections import Counter
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Sequence, Union, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -77,6 +77,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="unmux",
             href="https://github.com/clintval/unmux",
             info="Flexible record parsing and demultiplexing to FASTX/SAM/BAM/CRAM.",
+            # doi="", No DOI available
             license="MIT License",
             license_url="https://github.com/clintval/unmux/blob/main/LICENSE",
         )
@@ -121,14 +122,14 @@ class MultiqcModule(BaseMultiqcModule):
                 if pool in data:
                     log.debug(f"Duplicate pool found in {f['fn']}! Overwriting: {pool}")
                 d = {col: to_value(col, val) for col, val in row.items() if col != "pool"}
-                if any(not isinstance(d.get(col), int) for col in SUMMARY_COUNTS):
-                    log.warning(f"Skipping pool '{pool}' in {f['fn']}: a read count column is missing or empty")
-                    continue
+                require_counts(f, d, SUMMARY_COUNTS)
                 total = number(d["total_reads"])
                 for col in ("reads_pass_through", "reads_unassigned", "reads_removed"):
                     d[col.replace("reads_", "frac_")] = number(d[col]) / total if total > 0 else None
                 data[pool] = d
                 self.add_data_source(f, pool, section="summary")
+                # unmux does not write its version into the metrics files.
+                self.add_software_version(None, pool)
         return self.ignore_samples(data)
 
     def parse_per_sample(self) -> Dict[str, List[Metrics]]:
@@ -146,11 +147,10 @@ class MultiqcModule(BaseMultiqcModule):
                     seen[pool] = f["fn"]
                 d = {col: to_value(col, val) for col, val in row.items()}
                 d["pool"] = pool
-                if not isinstance(d.get("reads"), int):
-                    log.warning(f"Skipping sample '{row.get('sample')}' of pool '{pool}' in {f['fn']}: no reads")
-                    continue
+                require_counts(f, d, ("reads",))
                 data.setdefault(pool, []).append(d)
                 self.add_data_source(f, pool, section="per_sample")
+                self.add_software_version(None, pool)
         return data
 
     def add_general_stats(self, summaries: Dict[str, Metrics], samples: Dict[str, Dict[str, Metrics]]) -> None:
@@ -169,7 +169,7 @@ class MultiqcModule(BaseMultiqcModule):
         if not data:
             return
 
-        headers = {
+        headers: Dict[str, Dict[str, Any]] = {
             "frac_of_pool": {
                 "title": "% of Pool",
                 "description": "Share of the pool's reads written to this sample. A collapsed pool row adds up "
@@ -191,10 +191,13 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
         }
+        general_stats_headers = self.get_general_stats_headers(all_headers=cast(Dict[str, ColumnDict], headers))
+        if not general_stats_headers:
+            return
         group_by_pool = (getattr(config, "unmux_config", None) or {}).get("general_stats_group_by_pool", True)
         self.general_stats_addcols(
             {s_name: {k: v for k, v in d.items() if v is not None} for s_name, d in data.items()},
-            headers,
+            general_stats_headers,
             group_samples_config=SampleGroupingConfig(
                 explicit_groups=groups if group_by_pool else None,
                 cols_to_sum=[ColumnKey("reads"), ColumnKey("frac_of_pool")],
@@ -461,8 +464,7 @@ def read_rows(f: LoadedFileDict[str]) -> List[Dict[str, str]]:
         if not line.strip() or fields == header:
             continue
         if len(fields) != len(header):
-            log.warning(f"Skipping {f['fn']} line {line_num}: {len(fields)} fields, expected {len(header)}")
-            continue
+            raise ValueError(f"unmux: {f['fn']} line {line_num} has {len(fields)} fields, expected {len(header)}")
         rows.append(dict(zip(header, fields)))
     return rows
 
@@ -483,5 +485,14 @@ def to_value(column: str, value: str) -> Value:
         return value
 
 
+def require_counts(f: LoadedFileDict[str], d: Metrics, columns: Sequence[str]) -> None:
+    """Fail on a read count unmux always writes but that is missing or not a whole number."""
+    for column in columns:
+        if not isinstance(d.get(column), int):
+            raise ValueError(f"unmux: {f['fn']} has no whole number in the required column '{column}'")
+
+
 def number(value: Value) -> float:
-    return value if isinstance(value, (int, float)) else 0
+    if isinstance(value, (int, float)):
+        return value
+    raise ValueError(f"unmux: expected a number, found {value!r}")
