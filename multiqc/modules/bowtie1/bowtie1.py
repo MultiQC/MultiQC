@@ -115,6 +115,12 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(self.bowtie_data, headers)
 
     def bowtie_alignment_plot(self):
+        plot_data = {s_name: data.copy() for s_name, data in self.bowtie_data.items()}
+        for data in plot_data.values():
+            if "multimapped" in data:
+                # Newer Bowtie logs include suppressed reads in the aligned count.
+                data["reads_aligned"] = data["reads_processed"] - data["not_aligned"] - data["multimapped"]
+
         # Specify the order of the different possible categories
         keys = {
             "reads_aligned": {"color": "#8bbc21", "name": "Aligned"},
@@ -138,5 +144,5 @@ class MultiqcModule(BaseMultiqcModule):
             * **Multimapped**: Read has multiple occurence.
             * **Not aligned**: Read has no occurence.
             """,
-            plot=bargraph.plot(self.bowtie_data, keys, config),
+            plot=bargraph.plot(plot_data, keys, config),
         )

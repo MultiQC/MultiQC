@@ -76,6 +76,39 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
     assert "bcftools-stats-sequencing-depth" in report.plot_by_id
 
 
+@pytest.mark.parametrize(
+    "reported,aligned,suppressed",
+    [(False, 80, 20), (True, 60, 20), (False, 80, 0), (True, 80, 0), (False, 80, 80), (True, 0, 80)],
+)
+@pytest.mark.parametrize("overall_time", [False, True])
+def test_bowtie1_suppressed_alignments(tmp_path, reported, aligned, suppressed, overall_time):
+    """Suppressed reads must not also be counted as aligned in the bar plot."""
+    log_file = tmp_path / "sample.bowtie.log"
+    log_file.write_text(
+        "# reads processed: 100\n"
+        f"# reads with at least one{' reported' if reported else ''} alignment: {aligned} ({aligned:.2f}%)\n"
+        "# reads that failed to align: 20 (20.00%)\n"
+        + (f"# reads with alignments suppressed due to -m: {suppressed} ({suppressed:.2f}%)\n" if suppressed else "")
+        + ("Overall time: 00:00:01\n" if overall_time else "")
+    )
+    config.strict = True
+    report.analysis_files = [log_file]
+    report.search_files(["bowtie1"])
+
+    from multiqc.modules.bowtie1 import MultiqcModule
+
+    module = MultiqcModule()
+    plot = next(iter(report.plot_by_id.values()))
+    categories = {category.name: category.data[0] for category in plot.datasets[0].cats}
+
+    assert categories.get("Aligned", 0) == 80 - suppressed
+    assert categories["Not aligned"] == 20
+    assert categories.get("Multimapped", 0) == suppressed
+    assert sum(categories.values()) == 100
+    assert {category.name: category.data_pct[0] for category in plot.datasets[0].cats} == categories
+    assert next(iter(module.bowtie_data.values()))["reads_aligned"] == aligned
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """
