@@ -7,6 +7,7 @@ import pytest
 from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import ClConfig, update_config
+from multiqc.plots.bargraph import BarPlot
 from multiqc.types import SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
@@ -95,10 +96,9 @@ def test_bowtie1_suppressed_alignments(tmp_path, reported, aligned, suppressed, 
     report.analysis_files = [log_file]
     report.search_files(["bowtie1"])
 
-    from multiqc.modules.bowtie1 import MultiqcModule
-
-    module = MultiqcModule()
+    module = config.avail_modules["bowtie1"].load()()
     plot = next(iter(report.plot_by_id.values()))
+    assert isinstance(plot, BarPlot)
     categories = {category.name: category.data[0] for category in plot.datasets[0].cats}
 
     assert categories.get("Aligned", 0) == 80 - suppressed
