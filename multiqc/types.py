@@ -3,8 +3,9 @@ import io
 from enum import Enum
 from typing import ClassVar, Generic, NewType, Optional, TypeVar, Union
 
-# Do not export typing.TypedDict: it doesn't support generics and will break Python 3.9
 from pydantic import BaseModel, Field, field_validator
+
+# typing.TypedDict only supports Generic from Python 3.11
 from typing_extensions import TypedDict
 
 Anchor = NewType("Anchor", str)

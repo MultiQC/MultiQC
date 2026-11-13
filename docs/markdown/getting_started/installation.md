@@ -281,7 +281,7 @@ nix-shell -p multiqc
 If you're using the [FreeBSD](https://www.freebsd.org/) operating system, you can install MultiQC via [FreeBSD ports](https://www.freebsd.org/ports/):
 
 ```bash
-pkg install py39-multiqc
+pkg install py312-multiqc
 ```
 
 This will install a prebuilt binary using only highly-portable

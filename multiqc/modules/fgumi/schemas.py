@@ -2,19 +2,15 @@
 
 ``FgumiMetric`` mirrors the API of fgmetric (https://github.com/fg-labs/fgmetric): one pydantic model per
 row of a delimited metric file. fgmetric is not a dependency because it requires Python >= 3.12 and
-pydantic >= 2.11, while MultiQC supports Python >= 3.9 and pydantic >= 2.7. Keeping the same shape makes a
+pydantic >= 2.11, while MultiQC supports Python >= 3.10 and pydantic >= 2.7. Keeping the same shape makes a
 later switch mechanical.
 
 Column names and order follow fgumi's published contract, ``crates/fgumi-metrics/metric_columns.json``.
 """
 
+import types
 from collections.abc import Iterable, Iterator
-from typing import (
-    TypeVar,
-    Union,
-    get_args,
-    get_origin,
-)
+from typing import TypeVar, Union, get_args, get_origin
 
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
@@ -26,7 +22,8 @@ class MetricFormatError(ValueError):
 
 
 def _allows_none(annotation: object) -> bool:
-    return get_origin(annotation) is Union and type(None) in get_args(annotation)
+    # `X | None` has origin types.UnionType, not typing.Union, before Python 3.14
+    return get_origin(annotation) in (Union, types.UnionType) and type(None) in get_args(annotation)
 
 
 class FgumiMetric(BaseModel):

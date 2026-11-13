@@ -160,10 +160,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
 
     out = caplog.text
     assert "• 'y__lab': unrecognized field" in out
-    assert (
-        "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
-        or "• 'ymax': expected type 'Union[float, int, NoneType]', got 'list' [1, 2]" in out  # Python < 3.10
-    )
+    assert "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
 
     if not strict:
         # Still should produce output unless strict mode:

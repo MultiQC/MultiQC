@@ -165,10 +165,8 @@ def _maybe_relative_path(path: Path) -> Path:
     """
     If the path is relative to CWD, return the relative path; otherwise, return the full path
     """
-    try:
-        return path.relative_to(os.getcwd())
-    except ValueError:  # could call path.is_relative_to() here, but it's new in Py 3.9
-        return path
+    cwd = os.getcwd()
+    return path.relative_to(cwd) if path.is_relative_to(cwd) else path
 
 
 def _set_output_names() -> OutputNames:

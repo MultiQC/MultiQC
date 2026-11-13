@@ -11,7 +11,7 @@ Do NOT create a `Pipfile` — this project uses `pyproject.toml`.
 
 ## Style and conventions
 
-- Python 3.9+. Use f-strings and other modern Python 3 syntax. Do not use
+- Python 3.10+. Use f-strings and other modern Python 3 syntax. Do not use
   `__future__` imports or `OrderedDict`.
 - Double quotes for strings.
 - No shebang lines on Python files unless under `scripts/`.
