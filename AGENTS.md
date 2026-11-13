@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-Guidance for Claude Code (claude.ai/code) when working in this repository.
+Guidance for AI coding agents working in this repository.
 
 ## IMPORTANT
 
@@ -57,8 +57,7 @@ When writing modules, the following are mandatory:
   proprietary.
 - Call `self.write_data_file()` at the **very end** of the module, after
   all sections are added.
-- Register the module via the entry point in `pyproject.toml` (ignore
-  `setup.py`).
+- Register the module via the entry point in `pyproject.toml`.
 - Put module documentation in the module class docstring; do not add
   separate markdown files or module-level docstrings.
 - The module's `info` field must start with a capital letter.
@@ -105,6 +104,40 @@ gathered, original, geo, disco).
 **AI features** (optional): `multiqc/core/ai.py`. Multi-provider
 (OpenAI, Anthropic, AWS Bedrock), config via `ai_*` options. Supports
 sample name anonymisation.
+
+**Frontend**: JavaScript, jQuery and Bootstrap 3. Plotly figures are
+dumped to JSON, compressed, embedded in the portable HTML report and
+rendered with Plotly-JS. All assets are embedded, so npm can't be used
+and new JS libraries should be avoided to keep reports small. Only
+`multiqc/templates/default` matters here: its `assets/` holds the JS
+(plot loading, toolbox for highlighting/hiding/renaming samples) and
+`default_multiqc.css` holds all CSS.
+
+Other notable paths:
+
+- `multiqc/modules/` also contains three special-case modules:
+  `software_versions`, `profile_runtime`, and `custom_content` (user
+  sections and plots from configs or TSV/CSV files).
+- `multiqc/interactive.py` — helpers for building reports interactively,
+  e.g. in Jupyter.
+- `multiqc/validation.py` — Pydantic validation of plot configs and
+  custom content.
+- `docs/markdown/modules` and `docs/markdown/modules.mdx` are generated
+  from module class docstrings by `scripts/make_module_docs.py`; don't
+  edit them by hand.
+
+## Adding a config option
+
+1. Add a typed global in `multiqc/config.py` and its default in
+   `multiqc/config_defaults.yaml`; add it to `MultiQCConfig` in
+   `multiqc/utils/config_schema.py`.
+2. If it needs a CLI flag: add a `@click.option` in `multiqc/multiqc.py`,
+   put it in a group in `rich_click.OPTION_GROUPS`, add a field to
+   `ClConfig` in `multiqc/core/update_config.py`, and copy it onto
+   `config` in `update_config()` there.
+3. If the browser needs it, expose it as a JS variable in
+   `multiqc/templates/default/head.html` (Jinja has `config` and
+   `report` in scope).
 
 ## Key files
 

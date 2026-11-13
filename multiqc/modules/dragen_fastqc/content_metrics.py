@@ -162,7 +162,7 @@ class DragenContentMetrics(BaseMultiqcModule):
         """.format(
             # Generate unique plot ID, needed in mqc_export_selectplots
             id=report.save_htmlid("dragen_fastqc_per_base_sequence_content_plot"),
-            d=json.dumps([self.anchor.replace("-", "_"), data]),
+            d=json.dumps([self.anchor, data]),
             hand_icon=get_material_icon("mdi:hand-pointing-up", 16),
         )
 

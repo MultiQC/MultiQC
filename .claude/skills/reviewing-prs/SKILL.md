@@ -40,6 +40,11 @@ contains "MUST post" / "post the comment", you're in CI mode.
 5. **Write up** using the Output template.
 6. **Deliver** based on mode: CI → post via `gh pr comment` (see Posting
    below for the correct invocation). Interactive → print to chat and wait.
+7. **Preview report** (interactive mode only, PRs touching
+   `multiqc/modules/`): run `gh pr comment <n> --body /report`
+   and tell the user a comment with the report will follow on the PR (or a
+   😕 reaction if the existing report already covers the latest commit). CI
+   doesn't need this, as the `/review` comment already triggers it.
 
 ## Severity scheme
 
@@ -59,7 +64,7 @@ Always cite the file and line: `multiqc/modules/foo/foo.py:123`.
 The rules to check the diff against live in the existing skill files — do not
 duplicate them here. Load whichever apply to the change type:
 
-- **All MultiQC code** → [../../../CLAUDE.md](../../../CLAUDE.md) (style, em-dash
+- **All MultiQC code** → [../../../AGENTS.md](../../../AGENTS.md) (style, em-dash
   ban, crash-loudly, helper-vs-inline, mandatory module rules).
 - **New module / module change** → [../implementing-new-modules/SKILL.md](../implementing-new-modules/SKILL.md)
   "Common Pitfalls" section is the primary review checklist. Also load
