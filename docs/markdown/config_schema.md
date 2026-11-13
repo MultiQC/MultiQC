@@ -335,6 +335,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - bcftools
 - featurecounts
 - fgbio
+- fgumi
 - dragen
 - dragen_fastqc
 - dedup
@@ -454,6 +455,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - telseq
 - ataqv
 - mgikit
+- mgnifam
 - mosaicatcher
 ```
 
@@ -1688,6 +1690,63 @@ fgbio/errorratebyreadposition:
   contents: "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\t\
     a_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate"
   num_lines: 3
+fgumi/clip:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
+  num_lines: 2
+fgumi/consensus_stats:
+  contents: "key\tvalue\tdescription"
+  num_lines: 2
+  shared: true
+fgumi/copy_umi:
+  contents: "total_records\trx_written\trx_overwritten"
+  num_lines: 2
+fgumi/correct:
+  contents: "umi\ttotal_matches\tperfect_matches"
+  num_lines: 2
+fgumi/dedup:
+  contents: "sample\tlibrary\tfiltered_templates"
+  num_lines: 2
+fgumi/dedup_ladder:
+  contents: "library\ttemplates_seen\tduplicate_fraction"
+  num_lines: 2
+fgumi/downsample_histogram:
+  contents_re: "^family_size\tcount$"
+  num_lines: 2
+  shared: true
+fgumi/duplex_family_sizes:
+  contents: "ab_size\tba_size\tcount\tfraction"
+  num_lines: 2
+fgumi/family_sizes:
+  contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
+  num_lines: 2
+  shared: true
+fgumi/filter_stats:
+  - contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
+    num_lines: 2
+  - contents_re: "^total_reads\t\\d+$"
+    num_lines: 2
+    shared: true
+fgumi/grouping_metrics:
+  contents: "accepted_sam_records\tdiscarded_non_pf"
+  num_lines: 2
+fgumi/position_group_sizes:
+  contents: "position_group_size\tcount\tfraction"
+  num_lines: 2
+fgumi/retag:
+  contents: "operation\tkind\trecords_applied"
+  num_lines: 2
+fgumi/review:
+  contents: "chrom\tpos\tref\tgenotype\tfilters"
+  num_lines: 2
+fgumi/strand_family_sizes:
+  contents: "family_size\tcs_count\tcs_fraction"
+  num_lines: 2
+fgumi/umi_counts:
+  contents: "umi\traw_observations\traw_observations_with_errors"
+  num_lines: 2
+fgumi/yield:
+  contents: "fraction\tread_pairs\tcs_families\tss_families"
+  num_lines: 2
 filtlong:
   contents: Scoring long reads
   contents_re: .*Filtering long reads.*
@@ -1914,6 +1973,10 @@ mgikit/mgi_sample_reads:
   fn: "*.mgikit.info"
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
+mgnifam:
+  fn: "*_stats.json"
+  contents: '"tool": "mgnifam"'
+  num_lines: 3
 minionqc:
   fn: summary.yaml
   contents: total.gigabases
@@ -2323,7 +2386,7 @@ samtools/coverage:
   num_lines: 10
 samtools/markdup_txt:
   contents:
-    - "^COMMAND:"
+    - "COMMAND:"
     - samtools markdup
   num_lines: 2
 samtools/markdup_json:
@@ -3181,7 +3244,7 @@ Generate a short AI-written summary at the top of the report.
 
 **Type**: <code>bool</code> (default: `false`)
 
-Also generate a longer per-section AI summary. Requires ai_summary to be on.
+Also generate a longer detailed AI summary for the whole report. Requires ai_summary to be on.
 
 #### `no_ai`
 
@@ -3195,7 +3258,7 @@ Disable AI summaries entirely. Overrides ai_summary and ai_summary_full.
 
 **Type**: <code>str</code>
 
-Custom prompt prepended to the short AI summary request. Use to steer tone, length, or focus.
+Replace the default prompt for the short whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.
 
 **Example**:
 
@@ -3208,12 +3271,25 @@ ai_prompt_short: Write the summary in one short paragraph aimed at a lab head, n
 
 **Type**: <code>str</code>
 
-Custom prompt prepended to the full-section AI summary request.
+Replace the default prompt for the detailed whole-report AI summary. Include the sample and severity highlighting instructions if you want highlighted output.
 
 **Example**:
 
 ```yaml
 ai_prompt_full: Use bullet points and call out any sample that looks like an outlier.
+```
+
+#### `ai_prompt_section`
+
+**Type**: <code>str</code>
+
+Replace the default prompt for browser-generated section and general-statistics summaries. Include the sample and severity highlighting instructions if you want highlighted output.
+
+**Example**:
+
+```yaml
+ai_prompt_section: Summarize the section in 1-2 sentences, focusing on metrics outside
+  expected ranges.
 ```
 
 ### Privacy

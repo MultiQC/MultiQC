@@ -128,6 +128,7 @@ ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
 ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
+ai_prompt_section: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
 ai_reasoning_effort: Optional[Literal["low", "medium", "high"]]

@@ -65,6 +65,16 @@ all tools. That table is followed by more detailed sections from specific tools,
 as well as plots of different types (bar plot, line plot, scatter plot, heatmap, etc.)
 """
 
+_PROMPT_FORMATTING_INSTRUCTIONS = """
+Use markdown to format your response for readability. Use directives with pre-defined classes
+.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}.
+Highlight any mentioned sample names or sample name prefixes or suffixes with a sample directive,
+and use the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
+or :sample[A1001]{.text-yellow}. Do not put multiple sample names inside one directive.
+
+Use only multiples of 4 spaces to indent nested lists.
+"""
+
 _PROMPT_BASE = (
     _MULTIQC_DESCRIPTION
     + """
@@ -73,15 +83,18 @@ give 1-2 bullet points of a very short and concise overall summary for the resul
 Don't waste words: mention only the important QC issues. If there are no issues, just say so.
 Just print one or two bullet points, nothing else.
 Please do not add any extra headers to the response.
-
-Use markdown to format your reponse for readability. Use directives with pre-defined classes
-.text-green, .text-red, and .text-yellow to highlight severity, e.g. :span[39.2%]{.text-red}.
-Highlight any mentioned sample names or sample named prefixes or suffixes with a sample directive,
-and make sure to use the same color classes for severity, e.g. :sample[A1001.2003]{.text-yellow}
-or :sample[A1001]{.text-yellow}. Do not put multiple sample names inside one directive.
-
-You must use only multiples of 4 spaces to indent nested lists.
 """
+    + _PROMPT_FORMATTING_INSTRUCTIONS
+)
+
+PROMPT_SECTION = (
+    _MULTIQC_DESCRIPTION
+    + """
+You are given a single MultiQC report section, plot, or table. Analyse the supplied data
+and give a very short, concise summary in 1-2 sentences. Mention only important QC issues.
+If there are no issues, say so. Do not add a header or introductory text.
+"""
+    + _PROMPT_FORMATTING_INSTRUCTIONS
 )
 
 _SHORT_EXAMPLE = """
@@ -1049,6 +1062,8 @@ def add_ai_summary_to_report():
             {
                 "short": config.ai_prompt_short or PROMPT_SHORT,
                 "full": config.ai_prompt_full or PROMPT_FULL,
+                "section": config.ai_prompt_section or PROMPT_SECTION,
+                "full_summary": config.ai_summary_full,
             }
         ).encode()
     ).decode()

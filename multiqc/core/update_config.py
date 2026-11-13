@@ -73,6 +73,7 @@ class ClConfig(BaseModel):
     ai_custom_context_window: Optional[int] = None
     ai_prompt_short: Optional[str] = None
     ai_prompt_full: Optional[str] = None
+    ai_prompt_section: Optional[str] = None
     no_ai: Optional[bool] = None
     unknown_options: Optional[Dict] = None
     check_config: Optional[bool] = None
@@ -237,6 +238,8 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
         config.ai_prompt_short = cfg.ai_prompt_short
     if cfg.ai_prompt_full is not None:
         config.ai_prompt_full = cfg.ai_prompt_full
+    if cfg.ai_prompt_section is not None:
+        config.ai_prompt_section = cfg.ai_prompt_section
     if cfg.no_ai is not None:
         config.no_ai = cfg.no_ai
 
