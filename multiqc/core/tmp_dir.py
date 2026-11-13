@@ -1,11 +1,10 @@
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_tmp_dir: Optional[Path] = None
+_tmp_dir: Path | None = None
 
 
 def get_tmp_dir() -> Path:

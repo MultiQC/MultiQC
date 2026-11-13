@@ -1,7 +1,6 @@
-from collections import defaultdict
 import logging
+from collections import defaultdict
 from html import escape
-from typing import Optional, Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -48,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse ROC data
-        roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
+        roc_plot_data: dict[str, dict[str, dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             header = f["f"].readline()
             sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
@@ -81,9 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         num_roc_samples = 0
-        for chrom in roc_plot_data:
-            roc_plot_data[chrom] = self.ignore_samples(roc_plot_data[chrom])
-            num_roc_samples = max(len(roc_plot_data[chrom]), num_roc_samples)
+        for chrom, roc in roc_plot_data.items():
+            kept = self.ignore_samples(roc)
+            roc_plot_data[chrom] = kept
+            num_roc_samples = max(len(kept), num_roc_samples)
 
         # Write data to file
         self.write_data_file(roc_plot_data, "goleft_roc")
@@ -119,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bin_plot(bin_plot_data, bin_plot_data_empty_samples)
 
     @staticmethod
-    def _short_chrom(chrom: str) -> Optional[str]:
+    def _short_chrom(chrom: str) -> str | None:
         """Plot standard chromosomes + X, sorted numerically.
 
         Allows specification from a list of chromosomes via config
@@ -150,8 +150,9 @@ class MultiqcModule(BaseMultiqcModule):
         def to_padded_str(x):
             short_chrom = self._short_chrom(x)
             try:
-                return "%06d" % short_chrom
-            except TypeError:
+                return f"{short_chrom:06d}"
+            except (TypeError, ValueError):
+                # Not an integer-like chromosome name, sort it by its own string
                 return x
 
         chroms = sorted(roc_plot_data.keys(), key=to_padded_str)
@@ -170,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 1.0,
             "xmin": 0,
             "xmax": 1.5,
-            "data_labels": [{"name": self._short_chrom(c) if self._short_chrom(c) else c} for c in chroms],
+            "data_labels": [{"name": self._short_chrom(c) or c} for c in chroms],
         }
         self.add_section(
             name="Scaled coverage ROC plot",

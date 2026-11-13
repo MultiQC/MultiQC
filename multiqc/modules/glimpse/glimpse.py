@@ -2,8 +2,8 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from .err_spl import parse_glimpse_err_spl
 from .err_grp import parse_glimpse_err_grp
+from .err_spl import parse_glimpse_err_spl
 
 log = logging.getLogger(__name__)
 

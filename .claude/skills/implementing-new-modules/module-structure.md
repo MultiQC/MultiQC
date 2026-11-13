@@ -83,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("toolname"):
             parsed = self._parse_log(f)
             for s_name, data in parsed.items():
-                s_name = self.clean_s_name(s_name, f) # If needed
+                s_name = self.clean_s_name(s_name, f)  # If needed
                 if s_name in self.toolname_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name=s_name)

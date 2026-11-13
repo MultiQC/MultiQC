@@ -2,7 +2,6 @@
 http://rseqc.sourceforge.net/#read-duplication-py"""
 
 import logging
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC read_duplication reports and parse their data"""
 
-    read_dups: Dict = dict()
+    read_dups: dict = {}
 
     # Go through files and parse data
     for f in module.find_log_files("rseqc/read_duplication_pos"):
@@ -21,7 +20,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             if f["s_name"] in read_dups:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="read_duplication")
-            read_dups[f["s_name"]] = dict()
+            read_dups[f["s_name"]] = {}
             for line in f["f"].splitlines():
                 s = line.split()
                 try:

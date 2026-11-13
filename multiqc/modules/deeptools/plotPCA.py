@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class plotPCAMixin:
     def parse_plotPCA(self):
         """Find plotPCA output"""
-        self.deeptools_plotPCAData = dict()
+        self.deeptools_plotPCAData = {}
         for f in self.find_log_files("deeptools/plotPCAData", filehandles=False):
             parsed_data = self.parsePlotPCAData(f)
             for k, v in parsed_data.items():
@@ -38,7 +38,7 @@ class plotPCAMixin:
                 "ylab": "PC2",
                 "tt_label": "PC1 {point.x:.2f}: PC2 {point.y:.2f}",
             }
-            data = dict()
+            data = {}
             for s_name in self.deeptools_plotPCAData:
                 try:
                     data[s_name] = {
@@ -61,7 +61,7 @@ class plotPCAMixin:
         return len(self.deeptools_plotPCAData)
 
     def parsePlotPCAData(self, f):
-        d = dict()
+        d = {}
         samples = []
         for line in f["f"].splitlines():
             cols = line.strip().split("\t")
@@ -74,9 +74,7 @@ class plotPCAMixin:
                     d[s_name] = {}
                     samples.append(s_name)
             else:
-                idx = 0
                 compo = cols[0]
-                for c in cols[1 : (len(cols) - 1)]:
+                for idx, c in enumerate(cols[1 : (len(cols) - 1)]):
                     d[samples[idx]][self._int(compo)] = float(c)
-                    idx += 1
         return d

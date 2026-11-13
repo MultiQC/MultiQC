@@ -27,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # parse list of log files
-        self.sickle_data = dict()
+        self.sickle_data = {}
         for f in self.find_log_files("sickle"):
             parsed_data = self.parse_logs(f["f"])
             if len(parsed_data):

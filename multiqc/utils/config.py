@@ -1,7 +1,7 @@
 import warnings
 
 # noinspection PyUnresolvedReferences
-from multiqc.config import *  # noqa: F403
+from multiqc.config import *
 
 # Issue a deprecation warning
 warnings.warn(

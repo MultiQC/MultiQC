@@ -129,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         for slog in samplelogs:
             try:
-                sample = dict()
+                sample = {}
                 ## Sample name ##
                 s_name = self.clean_pe_name(slog, logf)
                 if s_name is None:
@@ -202,8 +202,8 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def parse_hist_files(histf):
         """parse histogram files"""
-        nameddata = dict()
-        data = dict()
+        nameddata = {}
+        data = {}
         try:
             for line in histf["f"].splitlines():
                 s = line.split()

@@ -2,7 +2,6 @@
 http://rseqc.sourceforge.net/#inner-distance-py"""
 
 import logging
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -13,8 +12,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC inner_distance frequency reports and parse their data"""
 
-    inner_distance: Dict = dict()
-    inner_distance_pct: Dict = dict()
+    inner_distance: dict = {}
+    inner_distance_pct: dict = {}
 
     # Go through files and parse data
     for f in module.find_log_files("rseqc/inner_distance"):
@@ -22,7 +21,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
         module.add_data_source(f, section="inner_distance")
         # saving to temporary variable for SE checking later
-        parsed_data = dict()
+        parsed_data = {}
         for line in f["f"].splitlines():
             s = line.split()
             try:
@@ -51,7 +50,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Make a normalised percentage version of the data
     for s_name in inner_distance:
-        inner_distance_pct[s_name] = dict()
+        inner_distance_pct[s_name] = {}
         total = sum(inner_distance[s_name].values())
         if total == 0:
             continue

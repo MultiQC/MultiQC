@@ -1,11 +1,12 @@
 import math
 from html import escape
-from typing import Any, Dict, List, cast
+from typing import Any, cast
+
+from natsort import natsorted
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict, SectionT
 from multiqc.utils import mqc_colour
-from natsort import natsorted
 
 
 def _format_indexing(value: str) -> str:
@@ -22,8 +23,8 @@ def plot_run_stats(run_data, color_dict):
     Plot a bar graph for polony numbers, Q30/Q40, index assignment rate and yields for each run
     """
     run_names = natsorted(run_data.keys())
-    num_polonies = dict()
-    yields = dict()
+    num_polonies = {}
+    yields = {}
     for run in run_names:
         # Index Assignment Polonies and Yields ###
         percent_assigned = run_data[run].get("PercentAssignedReads", 100.0)
@@ -117,13 +118,13 @@ def tabulate_project_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    plot_content = dict()
+    plot_content = {}
     is_percent_q50_present = False
     reads_present = []
     for s_name in natsorted(run_data.keys()):
         project = run_data[s_name]["Project"]
         run_project_name = f"{s_name} | {project}"
-        run_stats = dict()
+        run_stats = {}
         run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
         run_stats.update({"yield_run": run_data[s_name]["AssignedYield"]})
         run_stats.update({"mean_base_quality_run": run_data[s_name]["QualityScoreMean"]})
@@ -223,7 +224,7 @@ def tabulate_project_stats(run_data, color_dict):
         first_key = run_keys[0]
         project_header = f"{run_data[first_key]['Project']} | "
     plot_name = f"{project_header}Sequencing QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "project_run_qc_metrics_table"
     description = "QC metrics per run, per project"
     helptext = """
@@ -244,11 +245,11 @@ def tabulate_run_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    plot_content = dict()
+    plot_content = {}
     is_percent_q50_present = False
     reads_present = []
     for s_name in natsorted(run_data.keys()):
-        run_stats = dict()
+        run_stats = {}
         run_stats.update({"num_polonies_run": int(run_data[s_name]["NumPolonies"])})
         run_stats.update({"percent_assigned_run": run_data[s_name].get("PercentAssignedReads", 100.0)})
         run_stats.update({"percent_unexpected_index_pairs": run_data[s_name].get("PercentUnexpectedIndexPairs", 0.0)})
@@ -350,7 +351,7 @@ def tabulate_run_stats(run_data, color_dict):
     }
 
     plot_name = "Sequencing Run QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "run_qc_metrics_table"
     description = "QC metrics per run"
     helptext = """
@@ -372,9 +373,9 @@ def tabulate_manifest_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    plot_content = dict()
+    plot_content = {}
     for s_name in natsorted(run_data.keys()):
-        run_stats = dict()
+        run_stats = {}
         run_stats.update({"indexing": run_data[s_name]["Indexing"]})
         run_stats.update({"adapter_trim_type": run_data[s_name]["AdapterTrimType"]})
         run_stats.update({"min_read_length_r1": run_data[s_name]["R1AdapterMinimumTrimmedLength"]})
@@ -421,7 +422,7 @@ def tabulate_manifest_stats(run_data, color_dict):
     }
 
     plot_name = "Run Manifest Table"
-    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "run_manifest_metrics_table"
     description = "Run parameters used."
     helptext = """
@@ -438,7 +439,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     """
     Tabulate general information and statistics of each run
     """
-    plot_content = dict()
+    plot_content = {}
     run_names = natsorted(run_data.keys())
     index = 1
     project_present = False
@@ -447,7 +448,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
         sorted_run_sample_data = natsorted(run_sample_data.items(), key=lambda x: x[1]["SampleID"])
         for sample_data in sorted_run_sample_data:
             sample_data = sample_data[1]
-            sample_index_stats = dict()
+            sample_index_stats = {}
             sample_index_stats.update({"run_name": run})
             if "Project" in sample_data:
                 sample_index_stats.update({"project": sample_data["Project"]})
@@ -460,7 +461,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
             plot_content.update({index: sample_index_stats})
             index += 1
 
-    headers: Dict[str, Any] = {}
+    headers: dict[str, Any] = {}
     headers["run_name"] = {
         "title": "Run Name",
         "description": "Run Name.",
@@ -503,7 +504,7 @@ def tabulate_index_assignment_stats(run_data, color_dict):
     }
 
     plot_name = "Index Assignment Metrics"
-    plot_html = table.plot(cast(SectionT, plot_content), cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(cast(SectionT, plot_content), cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "index_assignment_metrics"
     description = "Index assignment metrics."
     helptext = """
@@ -529,7 +530,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
         - Polonies
         - % Polonies
     """
-    headers: Dict[str, Any] = {}
+    headers: dict[str, Any] = {}
     headers["Run Name"] = {
         "title": "Run Name",
         "description": "Run Name (Run ID + Analysis ID).",
@@ -567,7 +568,7 @@ def tabulate_unassigned_index_stats(run_data, color_dict):
     }
 
     plot_name = "Unassigned Indices Metrics"
-    plot_html = table.plot(cast(SectionT, run_data), cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(cast(SectionT, run_data), cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "index_unassignment_metrics"
     description = "Index unassignment metrics."
     helptext = """
@@ -595,11 +596,11 @@ def _run_has_reads(run_entry: dict) -> bool:
 
 def plot_base_quality_hist(run_data, color_dict):
     # Prepare plot data for per base BQ histogram (skip runs without Reads)
-    bq_hist_dict: Dict[str, Dict[int, float]] = {}
+    bq_hist_dict: dict[str, dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
         if not _run_has_reads(run_data[s_name]):
             continue
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(run_data[s_name]["Reads"]) > 1
         R1_base_quality_counts = run_data[s_name]["Reads"][0]["QualityScoreHistogram"]
         R2_base_quality_counts = [0] * len(R1_base_quality_counts)
         if paired_end:
@@ -607,15 +608,15 @@ def plot_base_quality_hist(run_data, color_dict):
         R1R2_base_quality_counts = [r1 + r2 for r1, r2 in zip(R1_base_quality_counts, R2_base_quality_counts)]
         total_bases = sum(R1R2_base_quality_counts)
         bq_hist_dict.update({s_name: {}})
-        for quality in range(0, len(R1R2_base_quality_counts)):
+        for quality in range(len(R1R2_base_quality_counts)):
             bq_hist_dict[s_name].update({quality: R1R2_base_quality_counts[quality] / total_bases * 100})
 
     # Prepare plot data for per read average BQ histogram
-    per_read_quality_hist_dict: Dict[str, Dict[int, float]] = {}
+    per_read_quality_hist_dict: dict[str, dict[int, float]] = {}
     for s_name in natsorted(run_data.keys()):
         if not _run_has_reads(run_data[s_name]):
             continue
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(run_data[s_name]["Reads"]) > 1
         R1_quality_counts = run_data[s_name]["Reads"][0]["PerReadMeanQualityScoreHistogram"]
         R2_quality_counts = [0] * len(R1_quality_counts)
         if paired_end:
@@ -624,7 +625,7 @@ def plot_base_quality_hist(run_data, color_dict):
         total_reads = run_data[s_name]["NumPolonies"] * multiplier
         R1R2_quality_counts = [r1 + r2 for r1, r2 in zip(R1_quality_counts, R2_quality_counts)]
         per_read_quality_hist_dict.update({s_name: {}})
-        for meanQuality in range(0, len(R1R2_quality_counts)):
+        for meanQuality in range(len(R1R2_quality_counts)):
             per_read_quality_hist_dict[s_name].update(
                 {meanQuality: R1R2_quality_counts[meanQuality] / total_reads * 100}
             )
@@ -678,7 +679,7 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for median BQ of each cycle (skip runs without Reads/Cycles)
     runs_with_reads = [s for s in run_data if _run_has_reads(run_data[s]) and run_data[s]["Reads"][0].get("Cycles")]
     if not runs_with_reads:
-        plot_content: List[Any] = []
+        plot_content: list[Any] = []
         plot_html = linegraph.plot(
             plot_content,
             pconfig={"id": "bases2fastq_run_bq_by_cycle", "title": "bases2fastq: Run Base Quality by Cycle"},
@@ -700,10 +701,10 @@ def plot_base_quality_by_cycle(run_data, color_dict):
             R1CycleNum = len(read0["Cycles"])
             r1r2_split = max(r1r2_split, R1CycleNum)
 
-    median_dict: Dict[str, Dict[int, float]] = {}
+    median_dict: dict[str, dict[int, float]] = {}
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
-        cycle_dict: Dict[int, float] = {}
+        paired_end = len(run_data[s_name]["Reads"]) > 1
+        cycle_dict: dict[int, float] = {}
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
@@ -715,9 +716,9 @@ def plot_base_quality_by_cycle(run_data, color_dict):
         median_dict.update({s_name: cycle_dict})
 
     # Prepare plot data for mean BQ of each cycle
-    mean_dict: Dict[str, Dict[int, float]] = {}
+    mean_dict: dict[str, dict[int, float]] = {}
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(run_data[s_name]["Reads"]) > 1
         # Update each sample cycle info
         cycle_dict = {}
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
@@ -732,9 +733,9 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for %Q30 of each cycle
     Q30_dict = {}
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(run_data[s_name]["Reads"]) > 1
         # Update each sample cycle info
-        cycle_dict = dict()
+        cycle_dict = {}
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ30"]})
@@ -747,8 +748,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for %Q40 of each cycle
     Q40_dict = {}
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
-        cycle_dict = dict()
+        paired_end = len(run_data[s_name]["Reads"]) > 1
+        cycle_dict = {}
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             cycle_dict.update({cycle_no: cycle["PercentQ40"]})
@@ -762,8 +763,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     Q50_dict = {}
     percent_q50_values = set()
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
-        cycle_dict = dict()
+        paired_end = len(run_data[s_name]["Reads"]) > 1
+        cycle_dict = {}
         for cycle in run_data[s_name]["Reads"][0]["Cycles"]:
             cycle_no = int(cycle["Cycle"])
             if "PercentQ50" not in cycle:
@@ -786,8 +787,8 @@ def plot_base_quality_by_cycle(run_data, color_dict):
     # Prepare plot data for % base calls below PF threshold
     below_pf_dict = {}
     for s_name in natsorted(runs_with_reads):
-        paired_end = True if len(run_data[s_name]["Reads"]) > 1 else False
-        cycle_dict = dict()
+        paired_end = len(run_data[s_name]["Reads"]) > 1
+        cycle_dict = {}
         R1CycleNum = len(run_data[s_name]["Reads"][0]["Cycles"])
         if (
             not run_data[s_name]["Reads"][0]["Cycles"]

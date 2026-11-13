@@ -257,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
         # Statistics about matching reads
-        mgi_sample_reads_data = dict()
+        mgi_sample_reads_data = {}
         mgi_lane_read_data = {}
         mgi_lane_sample_read_data = {}
         file_cnt = 0
@@ -286,16 +286,16 @@ class MultiqcModule(BaseMultiqcModule):
 
                 if not show_all_samples and vals[0] in [undetermined_label, ambiguous_label]:
                     continue
-                if vals[0] in mgi_lane_sample_read_data[curr_label].keys():
-                    log.warning("Same sample ({}) appears twice in the same log file!".format(vals[0]))
+                if vals[0] in mgi_lane_sample_read_data[curr_label]:
+                    log.warning(f"Same sample ({vals[0]}) appears twice in the same log file!")
 
                 mgi_lane_sample_read_data[curr_label][vals[0]] = {}
 
-                if vals[0] not in mgi_sample_reads_data.keys():
+                if vals[0] not in mgi_sample_reads_data:
                     mgi_sample_reads_data[vals[0]] = {}
 
                 for i in range(1, len(header)):
-                    if header[i] not in mgi_sample_reads_data[vals[0]].keys():
+                    if header[i] not in mgi_sample_reads_data[vals[0]]:
                         mgi_sample_reads_data[vals[0]][header[i]] = 0
 
                     mgi_lane_sample_read_data[curr_label][vals[0]][header[i]] = 0
@@ -363,9 +363,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
             if not brief_report:
-                cntr = 0
-                for lane in sorted(mgi_lane_read_data.keys()):
-                    cntr += 1
+                for cntr, lane in enumerate(sorted(mgi_lane_read_data.keys()), start=1):
                     pconfig = {
                         "id": "mgi_sample_read_plot" + str(cntr),
                         "title": module_name + ": Clusters by sample for lane (" + lane + ")",
@@ -409,11 +407,11 @@ class MultiqcModule(BaseMultiqcModule):
                 vals = [x.strip() for x in line.split()]
                 if len(vals) < 2:
                     continue
-                if vals[0] not in mgi_undetermined_barcode_data.keys():
+                if vals[0] not in mgi_undetermined_barcode_data:
                     mgi_undetermined_barcode_data[vals[0]] = {}
                 mgi_undetermined_barcode_data[vals[0]][curr_label] = int(vals[1])
 
-                if vals[0] not in mgi_undetermined_barcode_cnt.keys():
+                if vals[0] not in mgi_undetermined_barcode_cnt:
                     mgi_undetermined_barcode_cnt[vals[0]] = int(vals[1])
                 else:
                     mgi_undetermined_barcode_cnt[vals[0]] += int(vals[1])
@@ -433,11 +431,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             sorted_dic = {
                 k[0]: mgi_undetermined_barcode_data[k[0]]
-                for k in list(
-                    sorted(
-                        mgi_undetermined_barcode_cnt.items(),
-                        key=lambda item: -int(item[1]),
-                    )
+                for k in sorted(
+                    mgi_undetermined_barcode_cnt.items(),
+                    key=lambda item: -int(item[1]),
                 )[:visualisation_threshold]
             }
             lane_barcode_plt = bargraph.plot(sorted_dic, cat_lane, pconfig=pconfig)
@@ -472,15 +468,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         if file_cnt > 0:
             log.info(f"{file_cnt} ambiguous barcode log files (*.mgikit.ambiguous_barcode) were loaded")
-            sorted_dic = {
-                k: v
-                for k, v in list(
-                    sorted(
-                        mgi_ambiguous_barcode_data.items(),
-                        key=lambda item: -int(item[1]["Frequency"]),
-                    )
+            sorted_dic = dict(
+                sorted(
+                    mgi_ambiguous_barcode_data.items(),
+                    key=lambda item: -int(item[1]["Frequency"]),
                 )[:visualisation_threshold]
-            }
+            )
 
             # Add a report section with the line plot
             columns_headers = {}

@@ -1,5 +1,3 @@
-from typing import Dict
-
 from multiqc import config
 
 from .plot_aqhist import plot_aqhist
@@ -15,7 +13,6 @@ from .plot_mhist import plot_mhist
 from .plot_qahist import plot_qahist
 from .plot_qchist import plot_qchist
 from .plot_qhist import plot_qhist
-
 
 section_order = [
     "stats",
@@ -40,7 +37,7 @@ section_order = [
     "statsfile",
     "bbsplit",
 ]
-file_types: Dict = {
+file_types: dict = {
     "stats": {
         "title": "BBDuk filtering statistics",
         "descr": "Proportion of reads that matched adapters/contaminants.",

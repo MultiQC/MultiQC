@@ -2,7 +2,7 @@ import pytest
 
 from multiqc import report
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.modules.picard.picard import MultiqcModule, TOOLS
+from multiqc.modules.picard.picard import TOOLS, MultiqcModule
 from multiqc.utils import testing
 
 

@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.sortmerna = dict()
+        self.sortmerna = {}
         for f in self.find_log_files("sortmerna", filehandles=True):
             self.parse_sortmerna(f)
             self.add_data_source(f)
@@ -85,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "Reads file" in line:
                 parts = re.split(r"[:=]", line)
                 s_name = self.clean_s_name(parts[-1], f)
-                self.sortmerna[s_name] = dict()
+                self.sortmerna[s_name] = {}
             if "Results:" in line and not post_results_start:  # old versions
                 post_results_start = True
             if "Total reads = " in line and not post_results_start:  # v4.2.0 onwards

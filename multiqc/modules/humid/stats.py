@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     # To store the summary data
-    self.stats = dict()
+    self.stats = {}
 
     # Parse the output files
     parse_stat_files(self)
@@ -47,7 +47,7 @@ def parse_stat_files(self):
             d["duplicates"] = d["total"] - d["clusters"] - d["filtered"]
 
             # Make sure we only return data that makes sense
-            if not sum(d[field] for field in ["duplicates", "clusters", "filtered"]) == d["total"]:
+            if sum(d[field] for field in ["duplicates", "clusters", "filtered"]) != d["total"]:
                 log.warning(f"HUMID stats looked wrong, skipping: {s_name}")
                 continue
         except KeyError as e:
@@ -69,7 +69,7 @@ def add_general_stats(self):
         This corresponds to the number of clusters in HUMID
         """
         data = {k: {"uniq": v["clusters"]} for k, v in self.stats.items()}
-        headers = dict()
+        headers = {}
         headers["uniq"] = {
             "title": f"{config.read_count_prefix} Unique Reads",
             "description": f"Reads remaining after deduplication ({config.read_count_desc})",
@@ -84,7 +84,7 @@ def add_general_stats(self):
         Add the percentage of reads remaining after deduplication
         """
         data = {k: {"perc": (v["clusters"] / v["total"]) * 100} for k, v in self.stats.items()}
-        headers = dict()
+        headers = {}
         headers["perc"] = {
             "title": "% Pass Dedup",
             "description": "% processed reads that passed deduplication",
@@ -101,7 +101,7 @@ def add_general_stats(self):
 
 def add_stats_section(self):
     # The values we want to plot (add to the total number of reads)
-    cats = dict()
+    cats = {}
     cats["clusters"] = {"name": "Unique reads"}
     cats["duplicates"] = {"name": "Duplicate reads"}
     cats["filtered"] = {"name": "Filtered reads"}

@@ -2,8 +2,6 @@
 and `dedup --family-size-histogram`. The columns are identical to fgbio GroupReadsByUmi's histogram, so both
 modules find these files; `util.family_sizes_module` decides which one reports them."""
 
-from typing import Dict, Set
-
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
@@ -11,10 +9,10 @@ from .schemas import FamilySizeMetric
 from .util import drop_none, family_sizes_evidence, family_sizes_module, found_by, iter_samples, pct
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    counts: Dict[str, Dict[int, float]] = {}
-    percent: Dict[str, Dict[int, float]] = {}
-    cumulative: Dict[str, Dict[int, float]] = {}
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
+    counts: dict[str, dict[int, float]] = {}
+    percent: dict[str, dict[int, float]] = {}
+    cumulative: dict[str, dict[int, float]] = {}
     evidence = family_sizes_evidence()
     for s_name, rows in iter_samples(
         module,

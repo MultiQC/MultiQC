@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 class DragenRnaQuantMetrics(BaseMultiqcModule):
     def add_rna_metrics(self):
-        data_by_sample = dict()
+        data_by_sample = {}
         has_old_style = False
         has_new_style = False
 
@@ -133,10 +133,9 @@ def parse_metrics_file(f):
     for line in f["f"].splitlines():
         tokens = line.split(",")
         if len(tokens) == 4:
-            analysis, _, metric, stat = tokens
-            percentage = None
+            _analysis, _, metric, stat = tokens
         elif len(tokens) == 5:
-            analysis, _, metric, stat, percentage = tokens
+            _analysis, _, metric, stat, _percentage = tokens
         else:
             raise ValueError(f"Unexpected number of tokens in line {line}")
 

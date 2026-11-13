@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.phantompeakqualtools_data = dict()
+        self.phantompeakqualtools_data = {}
         for f in self.find_log_files("phantompeakqualtools/out", filehandles=False):
             self.parse_phantompeakqualtools(f)
 

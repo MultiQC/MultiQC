@@ -12,7 +12,7 @@ class TsTvByQualMixin:
     def parse_tstv_by_qual(self):
         """Create the HTML for the TsTv by quality linegraph plot."""
 
-        self.vcftools_tstv_by_qual = dict()
+        self.vcftools_tstv_by_qual = {}
         for f in self.find_log_files("vcftools/tstv_by_qual", filehandles=True):
             d = {}
             for line in f["f"].readlines()[1:]:  # don't add the header line (first row)

@@ -1,5 +1,4 @@
 import logging
-from typing import Dict, List, Tuple, Optional
 
 from multiqc import config
 
@@ -7,10 +6,10 @@ log = logging.getLogger(__name__)
 
 
 def table_data_and_headers(
-    rows_list: List[Tuple[str, str]],
-    help: List[Tuple[str, List[str]]],
-    namespace: Optional[str] = None,
-) -> Tuple[Dict, Dict]:
+    rows_list: list[tuple[str, str]],
+    help: list[tuple[str, list[str]]],
+    namespace: str | None = None,
+) -> tuple[dict, dict]:
     """Update the data dict and headers dict
 
     Args:
@@ -23,8 +22,8 @@ def table_data_and_headers(
     Returns:
         Tuple of (table dict, headers dict) with optionally prefixed keys
     """
-    table = dict()
-    headers = dict()
+    table = {}
+    headers = {}
 
     help_dict = {lst[0]: lst[1][0].strip(".") for lst in help}
     for col_name, col_data in rows_list:
@@ -37,7 +36,7 @@ def table_data_and_headers(
         try:
             col_data = float(col_data)
         except ValueError:
-            col_data = col_data
+            pass  # leave col_data as the original string
 
         # Apply namespace prefix to key if provided
         key = f"{namespace}_{col_name}" if namespace else col_name
@@ -109,7 +108,7 @@ def subset_header(data, cols, namespace=None):
     from cols in the data dict, which may have namespace prefixes applied.
     """
 
-    headers = dict()
+    headers = {}
     for key, val in cols.items():
         # Key lookup: try exact match first, then check if it exists in data
         if key in data:
@@ -128,7 +127,7 @@ def subset_header(data, cols, namespace=None):
 def extract_plot_data(data):
     """Extracts plot data"""
 
-    plot_data = dict()
+    plot_data = {}
     axes_data = data["data"][0]
     plot_data = dict(zip(axes_data["x"], axes_data["y"]))
     return plot_data

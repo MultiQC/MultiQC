@@ -1,5 +1,3 @@
-import pytest
-
 from multiqc.modules.mosdepth.mosdepth import genstats_cov_thresholds
 
 

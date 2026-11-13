@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -41,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.trimmomatic: Dict = dict()
+        self.trimmomatic: dict = {}
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
             self.add_data_source(f)

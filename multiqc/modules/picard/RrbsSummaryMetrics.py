@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard RrbsSummaryMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc.modules.picard import util
 from multiqc.plots import bargraph
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard RrbsSummaryMetrics reports and parse their data"""
 
-    data_by_sample: Dict = dict()
+    data_by_sample: dict = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/rrbs_metrics", filehandles=True):
@@ -36,7 +35,7 @@ def parse_reports(module):
                 if s_name in data_by_sample:
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
                 module.add_data_source(f, s_name, section="RnaSeqMetrics")
-                data_by_sample[s_name] = dict()
+                data_by_sample[s_name] = {}
 
                 keys = f["f"].readline().strip("\n").split("\t")
                 vals = f["f"].readline().strip("\n").split("\t")
@@ -96,21 +95,21 @@ def parse_reports(module):
     module.general_stats_addcols(data_by_sample, headers, namespace="RrbsSummaryMetrics")
 
     # Make the bar plot of converted bases
-    pdata_cpg: Dict = dict()
-    pdata_noncpg: Dict = dict()
-    for s_name in data_by_sample.keys():
-        pdata_cpg[s_name] = dict()
+    pdata_cpg: dict = {}
+    pdata_noncpg: dict = {}
+    for s_name in data_by_sample:
+        pdata_cpg[s_name] = {}
         pdata_cpg[s_name]["converted"] = data_by_sample[s_name]["CPG_BASES_CONVERTED"]
         pdata_cpg[s_name]["not_converted"] = (
             data_by_sample[s_name]["CPG_BASES_SEEN"] - data_by_sample[s_name]["CPG_BASES_CONVERTED"]
         )
-        pdata_noncpg[s_name] = dict()
+        pdata_noncpg[s_name] = {}
         pdata_noncpg[s_name]["converted"] = data_by_sample[s_name]["NON_CPG_BASES"]
         pdata_noncpg[s_name]["not_converted"] = (
             data_by_sample[s_name]["NON_CPG_BASES"] - data_by_sample[s_name]["NON_CPG_CONVERTED_BASES"]
         )
 
-    keys = dict()
+    keys = {}
     keys["not_converted"] = {"name": "Unconverted Bases (Methylated)"}
     keys["converted"] = {"name": "Converted Bases (Unmethylated)"}
 
@@ -130,9 +129,9 @@ def parse_reports(module):
     )
 
     # Make the bar plot of processed reads
-    pdata: Dict = dict()
+    pdata: dict = {}
     for s_name in data_by_sample:
-        pdata[s_name] = dict()
+        pdata[s_name] = {}
         pdata[s_name]["with_no_cpg"] = data_by_sample[s_name]["READS_WITH_NO_CPG"]
         pdata[s_name]["ignored_short"] = data_by_sample[s_name]["READS_IGNORED_SHORT"]
         pdata[s_name]["ignored_mismatches"] = data_by_sample[s_name]["READS_IGNORED_MISMATCHES"]

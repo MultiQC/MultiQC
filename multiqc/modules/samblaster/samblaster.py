@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/GregoryFaust/samblaster/blob/master/LICENSE.txt",
         )
 
-        self.samblaster_data = dict()
+        self.samblaster_data = {}
         for f in self.find_log_files("samblaster", filehandles=True):
             self.parse_samblaster(f)
 
@@ -97,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
             match = re.search(input_file_regex, line)
             if match:
                 basefn = os.path.basename(match.group(1))
-                fname, ext = os.path.splitext(basefn)
+                fname, _ext = os.path.splitext(basefn)
                 # if it's stdin, then try bwa RG-tag instead
                 if fname != "stdin":
                     s_name = self.clean_s_name(fname, f)

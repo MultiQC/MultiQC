@@ -22,7 +22,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Tophat reports
-        self.tophat_data = dict()
+        self.tophat_data = {}
         for f in self.find_log_files("tophat"):
             parsed_data = self.parse_tophat_log(f["f"])
             if parsed_data is not None:

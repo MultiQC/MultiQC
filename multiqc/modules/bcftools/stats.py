@@ -2,7 +2,6 @@
 
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, table
@@ -30,19 +29,19 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     else:
         types = ["A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G"]
 
-    bcftools_stats: Dict = dict()
-    bcftools_stats_indels: Dict = dict()
-    bcftools_stats_vqc_snp: Dict = dict()
-    bcftools_stats_sample_variants: Dict = dict()
-    bcftools_stats_sample_tstv: Dict = dict()
-    bcftools_stats_sample_singletons: Dict = dict()
-    bcftools_stats_sample_depth: Dict = dict()
-    bcftools_stats_vqc_transi: Dict = dict()
-    bcftools_stats_vqc_transv: Dict = dict()
-    bcftools_stats_vqc_indels: Dict = dict()
-    bcftools_stats_depth_data: Dict = dict()
+    bcftools_stats: dict = {}
+    bcftools_stats_indels: dict = {}
+    bcftools_stats_vqc_snp: dict = {}
+    bcftools_stats_sample_variants: dict = {}
+    bcftools_stats_sample_tstv: dict = {}
+    bcftools_stats_sample_singletons: dict = {}
+    bcftools_stats_sample_depth: dict = {}
+    bcftools_stats_vqc_transi: dict = {}
+    bcftools_stats_vqc_transv: dict = {}
+    bcftools_stats_vqc_indels: dict = {}
+    bcftools_stats_depth_data: dict = {}
     for f in module.find_log_files("bcftools/stats"):
-        s_names = list()
+        s_names = []
         for line in f["f"].splitlines():
             # Get version number from file contents
             if line.startswith("# This file was produced by bcftools stats"):
@@ -73,16 +72,16 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 if s_name in bcftools_stats:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 module.add_data_source(f, s_name, section="stats")
-                bcftools_stats[s_name] = dict()
-                bcftools_stats_indels[s_name] = dict()
-                bcftools_stats_sample_variants[s_name] = dict()
-                bcftools_stats_sample_tstv[s_name] = dict()
-                bcftools_stats_sample_singletons[s_name] = dict()
-                bcftools_stats_sample_depth[s_name] = dict()
-                bcftools_stats_vqc_snp[s_name] = dict()
-                bcftools_stats_vqc_transi[s_name] = dict()
-                bcftools_stats_vqc_transv[s_name] = dict()
-                bcftools_stats_vqc_indels[s_name] = dict()
+                bcftools_stats[s_name] = {}
+                bcftools_stats_indels[s_name] = {}
+                bcftools_stats_sample_variants[s_name] = {}
+                bcftools_stats_sample_tstv[s_name] = {}
+                bcftools_stats_sample_singletons[s_name] = {}
+                bcftools_stats_sample_depth[s_name] = {}
+                bcftools_stats_vqc_snp[s_name] = {}
+                bcftools_stats_vqc_transi[s_name] = {}
+                bcftools_stats_vqc_transv[s_name] = {}
+                bcftools_stats_vqc_indels[s_name] = {}
                 bcftools_stats_depth_data[s_name] = {}
                 bcftools_stats_indels[s_name][0] = None  # Avoid joining line across missing 0
 
@@ -139,7 +138,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_variants[s_name][sample] = dict()
+                bcftools_stats_sample_variants[s_name][sample] = {}
                 bcftools_stats_sample_variants[s_name][sample]["nSNPs"] = (
                     int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
                 )
@@ -159,7 +158,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_tstv[s_name][sample] = dict()
+                bcftools_stats_sample_tstv[s_name][sample] = {}
                 if int(s[7].strip()) != 0:
                     bcftools_stats_sample_tstv[s_name][sample]["tstv"] = float(int(s[6].strip()) / int(s[7].strip()))
                 else:
@@ -169,7 +168,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_singletons[s_name][sample] = dict()
+                bcftools_stats_sample_singletons[s_name][sample] = {}
                 bcftools_stats_sample_singletons[s_name][sample]["singletons"] = int(s[10].strip())
                 # Calculate total variants (SNPs + indels) - singletons
                 # s[3]=nRefHom, s[4]=nNonRefHom, s[5]=nHets (SNPs only), s[8]=nIndels
@@ -180,7 +179,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_depth[s_name][sample] = dict()
+                bcftools_stats_sample_depth[s_name][sample] = {}
                 bcftools_stats_sample_depth[s_name][sample]["depth"] = float(s[9].strip())
 
             # Depth plots
@@ -322,7 +321,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     if len(bcftools_stats_depth_data) > 0:
         # Get shared list of bins and order them numerically
         all_bins = []
-        for sname, val_by_bin in bcftools_stats_depth_data.items():
+        for val_by_bin in bcftools_stats_depth_data.values():
             all_bins.extend(list(val_by_bin.keys()))
         all_bins = sorted(all_bins, key=lambda x: int(re.sub(r"\D", "", x)))
         # Order bins in samples and fill missing bins:

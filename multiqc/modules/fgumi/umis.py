@@ -4,7 +4,8 @@ one pydantic object per UMI."""
 
 import itertools
 from collections import Counter
-from typing import Any, Dict, Iterable, Set
+from collections.abc import Iterable
+from typing import Any
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
@@ -13,7 +14,7 @@ from .schemas import DuplexUmiMetric, MetricFormatError, UmiCorrectionMetric, Um
 from .util import drop_none, register, skip_unreadable, stream_dicts
 
 
-def summarize_observations(counts: Iterable[int]) -> Dict[str, Any]:
+def summarize_observations(counts: Iterable[int]) -> dict[str, Any]:
     """Number of UMIs, median raw observations, % seen once, and UMIs per log2 bin of raw observations.
 
     Tallies the distinct observation counts rather than keeping one value per UMI, so memory stays small for a
@@ -48,12 +49,12 @@ def _median(tally: Counter, n: int) -> float:
     return float(nth(n // 2)) if n % 2 else (nth(n // 2 - 1) + nth(n // 2)) / 2.0
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     return _umi_counts(module) | _correct(module)
 
 
-def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
-    summaries: Dict[str, Dict[str, Dict[str, Any]]] = {"umi_counts": {}, "duplex_umi_counts": {}}
+def _umi_counts(module: BaseMultiqcModule) -> set[str]:
+    summaries: dict[str, dict[str, dict[str, Any]]] = {"umi_counts": {}, "duplex_umi_counts": {}}
     for f in module.find_log_files("fgumi/umi_counts", filehandles=True):
         handle: Any = f["f"]  # a text handle: found with filehandles=True
         if handle is None:
@@ -69,7 +70,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             continue
         summaries[kind][register(module, f, section=kind)] = summary
 
-    parsed: Set[str] = set()
+    parsed: set[str] = set()
     for kind, title in [("umi_counts", "UMI counts"), ("duplex_umi_counts", "Duplex UMI counts")]:
         data = module.ignore_samples(summaries[kind])
         if not data:
@@ -93,7 +94,7 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
             ),
         )
         table = {s: drop_none({k: v for k, v in data[s].items() if k != "bins"}) for s in data}
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "n": {
                 "title": "UMIs" if kind == "umi_counts" else "Duplex UMIs",
                 "scale": "Purples",
@@ -123,8 +124,8 @@ def _umi_counts(module: BaseMultiqcModule) -> Set[str]:
     return parsed
 
 
-def _correct(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, int]] = {}
+def _correct(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int]] = {}
     for f in module.find_log_files("fgumi/correct", filehandles=True):
         if f["f"] is None:
             continue

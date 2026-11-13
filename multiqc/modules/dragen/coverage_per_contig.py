@@ -1,7 +1,6 @@
 import logging
 import re
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -12,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class DragenCoveragePerContig(BaseMultiqcModule):
     def add_coverage_per_contig(self):
-        perchrom_data_by_phenotype_by_sample: Dict[str, Dict] = defaultdict(dict)
+        perchrom_data_by_phenotype_by_sample: dict[str, dict] = defaultdict(dict)
 
         for f in self.find_log_files("dragen/wgs_contig_mean_cov"):
             perchrom_data_by_phenotype = parse_wgs_contig_mean_cov(f)
@@ -30,7 +29,7 @@ class DragenCoveragePerContig(BaseMultiqcModule):
         perchrom_data_by_phenotype_by_sample = self.ignore_samples(perchrom_data_by_phenotype_by_sample)
 
         # Merge tumor and normal data:
-        perchrom_data_by_sample: Dict[str, Dict] = defaultdict(dict)
+        perchrom_data_by_sample: dict[str, dict] = defaultdict(dict)
         for sn in perchrom_data_by_phenotype_by_sample:
             for phenotype in perchrom_data_by_phenotype_by_sample[sn]:
                 new_sn = sn
@@ -122,23 +121,21 @@ def parse_wgs_contig_mean_cov(f):
     Two versions: for main contigs (chr1..chrY), and including non-main contigs (chrUn_*, *_random, HLA-*, *_alt, chrM)
     """
 
-    main_contig_perchrom_data = dict()
-    other_contig_perchrom_data = dict()
+    main_contig_perchrom_data = {}
+    other_contig_perchrom_data = {}
 
     for line in f["f"].splitlines():
-        chrom, bases, depth = line.split(",")
+        chrom, _bases, depth = line.split(",")
         chrom = chrom.strip()
         depth = float(depth)
         # skipping unplaced and alternative contigs, as well as the mitochondria (might attract 100 times more coverage
         # than human chromosomes):
         if (
-            chrom.startswith("chrUn_")
-            or chrom.endswith("_random")
-            or chrom.endswith("_alt")
+            chrom.startswith(("chrUn_", "HLA-"))
+            or chrom.endswith(("_random", "_alt"))
             or chrom == "chrM"
             or chrom == "MT"
             or chrom == "chrEBV"
-            or chrom.startswith("HLA-")
         ):
             other_contig_perchrom_data[chrom] = depth
         else:

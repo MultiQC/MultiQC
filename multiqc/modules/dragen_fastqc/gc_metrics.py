@@ -30,8 +30,8 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
     def gc_content_plot(self):
         """Create the HTML for the FastQC GC content plot"""
 
-        data = dict()
-        data_norm = dict()
+        data = {}
+        data_norm = {}
         LEN_GROUP = "READ LENGTHS"
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
@@ -50,15 +50,15 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
                     pct = percentage_from_content_metric(metric)
                     data[r_name][pct] = value
 
-                data_norm[r_name] = dict()
-                total = sum([c for c in data[r_name].values()])
+                data_norm[r_name] = {}
+                total = sum(list(data[r_name].values()))
                 for gc, count in data[r_name].items():
                     if total > 0:
                         data_norm[r_name][gc] = (count / total) * 100
 
         if len(data) == 0:
             log.debug("per_sequence_gc_content not found in FastQC reports")
-            return None
+            return
 
         pconfig = {
             "id": "dragenqc_per_sequence_gc_content_plot",
@@ -102,11 +102,11 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         """Create the HTML for the positional mean-quality score plot"""
 
         GROUP = "READ GC CONTENT QUALITY"
-        data = dict()
+        data = {}
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):
                 r_name = f"{s_name}_{mate}"
-                data[r_name] = dict()
+                data[r_name] = {}
 
                 for key, value in self.dragen_fastqc_data[s_name][mate][GROUP].items():
                     parts = key.split()
@@ -152,8 +152,8 @@ class DragenFastqcGcMetrics(BaseMultiqcModule):
         )
 
     def get_avg_gc_content_by_sample(self):
-        data = dict()
-        avg_gc_content_data = dict()
+        data = {}
+        avg_gc_content_data = {}
         GC_GROUP = "READ GC CONTENT"
         for s_name in sorted(self.dragen_fastqc_data):
             for mate in sorted(self.dragen_fastqc_data[s_name]):

@@ -3,13 +3,12 @@ import os
 import platform
 import re
 import sys
-from typing import Optional, Dict, Union
 
 import requests
 from packaging import version
 
 from multiqc import config
-from multiqc.utils.util_functions import strtobool, is_running_in_notebook
+from multiqc.utils.util_functions import is_running_in_notebook, strtobool
 
 logger = logging.getLogger(__name__)
 
@@ -28,14 +27,14 @@ def _is_uv_installed() -> bool:
     return False
 
 
-def check_version(interactive_function_name: Optional[str] = None):
+def check_version(interactive_function_name: str | None = None):
     # Check that we're running the latest version of MultiQC
     if config.no_version_check is True:
         return
 
     try:
         # Fetch the version info from the API
-        meta: Dict[str, Union[str, bool, None]] = {
+        meta: dict[str, str | bool | None] = {
             "version_multiqc": config.short_version,
             "version_python": platform.python_version(),
             "operating_system": platform.system(),
@@ -43,7 +42,7 @@ def check_version(interactive_function_name: Optional[str] = None):
             "is_singularity": os.path.exists("/.singularity.d"),
             "is_conda": os.path.exists(os.path.join(sys.prefix, "conda-meta")),
             "is_uv": _is_uv_installed(),
-            "is_ci": strtobool(os.getenv("CI", False)),
+            "is_ci": strtobool(os.getenv("CI", "false")),
             "is_notebook": is_running_in_notebook(),
             "interactive_function_name": interactive_function_name,
             "ai_summary": config.ai_summary,

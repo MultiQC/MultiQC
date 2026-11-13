@@ -2,7 +2,6 @@
 http://rseqc.sourceforge.net/#read-gc-py"""
 
 import logging
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -14,14 +13,14 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC read_GC reports and parse their data"""
 
     # Set up vars
-    read_gc: Dict = dict()
-    read_gc_pct: Dict = dict()
+    read_gc: dict = {}
+    read_gc_pct: dict = {}
 
     # Go through files and parse data
     for f in module.find_log_files("rseqc/read_gc"):
         if f["f"].startswith("GC%	read_count"):
-            gc = list()
-            counts = list()
+            gc = []
+            counts = []
             for line in f["f"].splitlines():
                 s = line.split()
                 try:
@@ -35,8 +34,8 @@ def parse_reports(module: BaseMultiqcModule) -> int:
                 if f["s_name"] in read_gc:
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
                 module.add_data_source(f, section="read_GC")
-                read_gc[f["s_name"]] = dict()
-                read_gc_pct[f["s_name"]] = dict()
+                read_gc[f["s_name"]] = {}
+                read_gc_pct[f["s_name"]] = {}
                 for i in sorted_gc_keys:
                     read_gc[f["s_name"]][gc[i]] = counts[i]
                     read_gc_pct[f["s_name"]][gc[i]] = (counts[i] / total) * 100

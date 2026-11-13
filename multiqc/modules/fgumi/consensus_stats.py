@@ -1,7 +1,7 @@
 """`simplex` / `duplex` / `codec --stats`: key/value/description rows of consensus-calling statistics."""
 
 import logging
-from typing import Any, Dict, Set
+from typing import Any
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
@@ -17,13 +17,13 @@ REJECTED_PREFIX = "raw_reads_rejected_for_"
 REQUIRED_KEYS = ("consensus_reads_emitted", "frac_raw_reads_used")
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    stats: Dict[str, Dict[str, float]] = {}
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
+    stats: dict[str, dict[str, float]] = {}
     for f in module.find_log_files("fgumi/consensus_stats"):
         rows = load_rows(f, ConsensusStatMetric)
         if rows is None:
             continue
-        values: Dict[str, float] = {}
+        values: dict[str, float] = {}
         for row in rows:
             try:
                 values[row.key] = float(row.value)
@@ -57,7 +57,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             bars, cats, {"id": "fgumi_consensus_rejections", "title": "fgumi: Consensus calling", "ylab": "Raw reads"}
         ),
     )
-    headers: Dict[str, Dict[str, Any]] = {
+    headers: dict[str, dict[str, Any]] = {
         "consensus_reads_emitted": {
             "title": f"Consensus reads ({config.read_count_prefix})",
             "description": f"Consensus reads emitted ({config.read_count_desc})",

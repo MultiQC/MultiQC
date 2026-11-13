@@ -43,7 +43,7 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
             license_url="https://github.com/sourmash-bio/sourmash/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
         n["compare"] = self.parse_compare()
         if n["compare"] > 0:
             log.info(f"Found {n['compare']} compare results")

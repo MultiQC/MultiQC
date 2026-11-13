@@ -42,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Find and load any BUSCO reports
-        self.busco_data = dict()
+        self.busco_data = {}
         for f in self.find_log_files("busco"):
             self.parse_busco_log(f)
 
@@ -58,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.busco_data, "multiqc_busco")
 
         # One Alignment Rate Plot per lineage
-        lineages = set([self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data.keys()])
+        lineages = {self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data}
         for lin in lineages:
             self.add_section(
                 name="Lineage Assessment" if lin is None else f"Lineage: {lin}",
@@ -129,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
         plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
-        keys = dict()
+        keys = {}
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}
 

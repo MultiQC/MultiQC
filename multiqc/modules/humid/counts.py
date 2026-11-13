@@ -1,4 +1,5 @@
 import logging
+
 from multiqc.plots import linegraph
 
 log = logging.getLogger(__name__)
@@ -6,7 +7,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(self):
     # To store the summary data
-    self.counts = dict()
+    self.counts = {}
 
     # Parse the output files
     parse_log_files(self)

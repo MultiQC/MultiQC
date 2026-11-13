@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from typing import Dict, List
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -27,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.qorts_data: Dict = dict()
+        self.qorts_data: dict = {}
         for f in self.find_log_files("qorts", filehandles=True):
             self.parse_qorts(f)
             self.add_data_source(f)
@@ -57,7 +56,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.qorts_strandedness_plot()
 
     def parse_qorts(self, f):
-        s_names: List[str] = []
+        s_names: list[str] = []
         for line in f["f"]:
             s = line.split("\t")
             if not s_names:
@@ -71,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
                 for s_name in s_names:
                     if s_name in self.qorts_data:
                         log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                    self.qorts_data[s_name] = dict()
+                    self.qorts_data[s_name] = {}
             else:
                 for i, s_name in enumerate(s_names):
                     # Hack to get around Java localisation with commas for decimal places

@@ -7,8 +7,8 @@ A child theme of 'default' - experimental / testing template.
 
 """
 
-import os
 import importlib
+import os
 
 template_parent = "default"
 template_dir = os.path.dirname(__file__)

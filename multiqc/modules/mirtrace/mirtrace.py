@@ -33,22 +33,22 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load miRTrace summary statistics table
-        self.summary_data = dict()
+        self.summary_data = {}
         for f in self.find_log_files("mirtrace/summary"):
             self.parse_summary(f)
 
         # Find and load miRTrace read length table
-        self.length_data = dict()
+        self.length_data = {}
         for f in self.find_log_files("mirtrace/length"):
             self.parse_length(f)
 
         # Find and load miRTrace contamination statistics summary_table
-        self.contamination_data = dict()
+        self.contamination_data = {}
         for f in self.find_log_files("mirtrace/contaminationbasic"):
             self.parse_contamination(f)
 
         # Find and load miRTrace miRNA complexity table
-        self.complexity_data = dict()
+        self.complexity_data = {}
         for f in self.find_log_files("mirtrace/mirnacomplexity"):
             self.parse_complexity(f)
 
@@ -101,12 +101,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     # Parse a miRTrace results.json file
     def parse_summary(self, f):
-        try:
-            cdict = json.loads(f["f"])
-        except ValueError as e:
-            raise e
+        cdict = json.loads(f["f"])
 
-        if "results" in cdict.keys():
+        if "results" in cdict:
             for record in cdict["results"]:
                 s_name = self.clean_s_name(record["verbosename"], f)
                 parsed_data = {}
@@ -128,7 +125,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.summary_data[s_name] = parsed_data
         else:
             log.debug(f"No valid data {f['fn']} in miRTrace summary")
-            return None
+            return
 
     # Parse a miRTrace mirtrace-stats-length.tsv file
     def parse_length(self, f):
@@ -140,7 +137,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "LENGTH":
                     log.debug(f"No valid data {f['fn']} for read length distribution")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]
@@ -166,7 +163,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "CLADE":
                     log.debug(f"No valid data {f['fn']} for contamination check")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]
@@ -192,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) == 0:
                 if s[0] != "DISTINCT_MIRNA_HAIRPINS_ACCUMULATED_COUNT":
                     log.debug(f"No valid data {f['fn']} for miRNA complexity")
-                    return None
+                    return
                 header = s[1:]
             else:
                 body[s[0]] = s[1 : len(s)]
@@ -235,7 +232,7 @@ class MultiqcModule(BaseMultiqcModule):
     def mirtrace_length_plot(self):
         """Generate the miRTrace Read Length Distribution"""
 
-        data = dict()
+        data = {}
         for s_name in self.length_data:
             try:
                 data[s_name] = {int(d): int(self.length_data[s_name][d]) for d in self.length_data[s_name]}
@@ -323,7 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Specify the order of the different possible categories
         keys = {}
-        for clade in self.contamination_data[list(self.contamination_data.keys())[0]]:
+        for clade in self.contamination_data[next(iter(self.contamination_data.keys()))]:
             keys[clade] = {"color": color_lib[idx], "name": clade}
             if idx < 23:
                 idx += 1
@@ -345,7 +342,7 @@ class MultiqcModule(BaseMultiqcModule):
     def mirtrace_complexity_plot(self):
         """Generate the miRTrace miRNA Complexity Plot"""
 
-        data = dict()
+        data = {}
         for s_name in self.complexity_data:
             try:
                 data[s_name] = {int(self.complexity_data[s_name][d]): int(d) for d in self.complexity_data[s_name]}

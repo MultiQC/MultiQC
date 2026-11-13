@@ -17,6 +17,7 @@ functions:
 
 ```python
 from multiqc.plots import bargraph, linegraph, scatter, table, violin, heatmap, box
+
 bargraph.plot(data=..., cats=..., pconfig=...)
 linegraph.plot(data=..., pconfig=...)
 scatter.plot(data=..., pconfig=...)
@@ -36,6 +37,7 @@ above. For example:
 from multiqc.plots import bargraph
 from multiqc import BaseMultiqcModule
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super().__init__(...)
@@ -45,7 +47,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="mymod_section",
             description="This plot shows some really nice data.",
             helptext="This longer string (can be **markdown**) helps explain how to interpret the plot",
-            plot=bargraph.plot(data, cats=..., pconfig=...)
+            plot=bargraph.plot(data, cats=..., pconfig=...),
         )
 ```
 
@@ -76,15 +78,16 @@ the rescue. A basic example is as follows:
 
 ```python
 from multiqc.plots import bargraph
+
 data = {
-    'sample 1': {
-        'aligned': 23542,
-        'not_aligned': 343,
+    "sample 1": {
+        "aligned": 23542,
+        "not_aligned": 343,
     },
-    'sample 2': {
-        'not_aligned': 7328,
-        'aligned': 1275,
-    }
+    "sample 2": {
+        "not_aligned": 7328,
+        "aligned": 1275,
+    },
 }
 html = bargraph.plot(data, pconfig=...)
 ```
@@ -94,7 +97,8 @@ dictionary keys. This can also be used to exclude a key from the plot.
 
 ```python
 from multiqc.plots import bargraph
-cats = ['aligned', 'not_aligned']
+
+cats = ["aligned", "not_aligned"]
 html = bargraph.plot(..., cats, pconfig=...)
 ```
 
@@ -103,14 +107,8 @@ and a colour too:
 
 ```python
 cats = {
-    "aligned": {
-        'name': 'Aligned Reads',
-        'color': '#8bbc21'
-    },
-    "not_aligned": {
-        'name': 'Unaligned Reads',
-        'color': '#f7a35c'
-    }
+    "aligned": {"name": "Aligned Reads", "color": "#8bbc21"},
+    "not_aligned": {"name": "Unaligned Reads", "color": "#f7a35c"},
 }
 ```
 
@@ -120,26 +118,26 @@ the plot. The defaults are as follows:
 ```python
 config = {
     # Building the plot
-    "id": "<random string>",                  # HTML ID used for the plot
-    "cpswitch": True,                         # Show the 'Counts / Percentages' switch?
-    "cpswitch_c_active": True,                # Initial display with 'Counts' specified? False for percentages.
-    "cpswitch_counts_label": "Counts",        # Label for 'Counts' button
+    "id": "<random string>",  # HTML ID used for the plot
+    "cpswitch": True,  # Show the 'Counts / Percentages' switch?
+    "cpswitch_c_active": True,  # Initial display with 'Counts' specified? False for percentages.
+    "cpswitch_counts_label": "Counts",  # Label for 'Counts' button
     "cpswitch_percent_label": "Percentages",  # Label for 'Percentages' button
-    "logswitch": False,                       # Show the 'Log10' switch?
-    "logswitch_active": False,                # Initial display with 'Log10' active?
-    "logswitch_label": "Log10",               # Label for 'Log10' button
-    "hide_zero_cats": True,                   # Hide categories where data for all samples is 0
+    "logswitch": False,  # Show the 'Log10' switch?
+    "logswitch_active": False,  # Initial display with 'Log10' active?
+    "logswitch_label": "Log10",  # Label for 'Log10' button
+    "hide_zero_cats": True,  # Hide categories where data for all samples is 0
     # Customising the plot
-    "title": None,                            # Plot title - should be in format "Module Name: Plot Title"
-    "ylab": None,                             # Y axis label
-    "ymax": None,                             # Max bar size limit (default is calculated from data)
-    "xsuffix": "%",                           # Suffix for the X-axis values and labels. Parsed from tt_label by default
-    "tt_label": "{x}: {y:.2f}%",              # Customise tooltip label, e.g. '{point.x} base pairs'
-    "stacking": "relative",                   # Set to "group" to have category bars side by side
-    "sort_samples": True,                     # Sort samples by name
-    "tt_decimals": 0,                         # Number of decimal places to use in the tooltip number
-    "tt_suffix": "",                          # Suffix to add after tooltip number
-    "height": 500                             # The default height of the plot, in pixels
+    "title": None,  # Plot title - should be in format "Module Name: Plot Title"
+    "ylab": None,  # Y axis label
+    "ymax": None,  # Max bar size limit (default is calculated from data)
+    "xsuffix": "%",  # Suffix for the X-axis values and labels. Parsed from tt_label by default
+    "tt_label": "{x}: {y:.2f}%",  # Customise tooltip label, e.g. '{point.x} base pairs'
+    "stacking": "relative",  # Set to "group" to have category bars side by side
+    "sort_samples": True,  # Sort samples by name
+    "tt_decimals": 0,  # Number of decimal places to use in the tooltip number
+    "tt_suffix": "",  # Suffix to add after tooltip number
+    "height": 500,  # The default height of the plot, in pixels
 }
 ```
 
@@ -162,9 +160,8 @@ and specify the `data_labels` config option with the text to be used for the but
 
 ```python
 from multiqc.plots import bargraph
-pconfig = {
-    'data_labels': ['Reads', 'Bases']
-}
+
+pconfig = {"data_labels": ["Reads", "Bases"]}
 data1 = ...
 data2 = ...
 html = bargraph.plot([data1, data2], pconfig=pconfig)
@@ -210,6 +207,7 @@ Or with additional customisation such as name and colour:
 
 ```python
 from multiqc.plots import bargraph
+
 cats = [
     {
         "aligned_reads": {"name": "Aligned Reads", "color": "#8bbc21"},
@@ -238,19 +236,19 @@ Use `sample_groups` to create grouped stacked bar charts where bars are organize
 from multiqc.plots import bargraph
 
 data = {
-    'sample1_25nt': {'Frame0': 50, 'Frame1': 30, 'Frame2': 20},
-    'sample1_26nt': {'Frame0': 60, 'Frame1': 25, 'Frame2': 15},
-    'sample2_25nt': {'Frame0': 55, 'Frame1': 28, 'Frame2': 17},
-    'sample2_26nt': {'Frame0': 65, 'Frame1': 22, 'Frame2': 13},
+    "sample1_25nt": {"Frame0": 50, "Frame1": 30, "Frame2": 20},
+    "sample1_26nt": {"Frame0": 60, "Frame1": 25, "Frame2": 15},
+    "sample2_25nt": {"Frame0": 55, "Frame1": 28, "Frame2": 17},
+    "sample2_26nt": {"Frame0": 65, "Frame1": 22, "Frame2": 13},
 }
 
 pconfig = {
-    'id': 'my_bargraph',
-    'title': 'My Bar Graph',
-    'sample_groups': {
-        '25nt': [['sample1_25nt', 'sample1'], ['sample2_25nt', 'sample2']],
-        '26nt': [['sample1_26nt', 'sample1'], ['sample2_26nt', 'sample2']],
-    }
+    "id": "my_bargraph",
+    "title": "My Bar Graph",
+    "sample_groups": {
+        "25nt": [["sample1_25nt", "sample1"], ["sample2_25nt", "sample2"]],
+        "26nt": [["sample1_26nt", "sample1"], ["sample2_26nt", "sample2"]],
+    },
 }
 
 html = bargraph.plot(data, cats, pconfig=pconfig)
@@ -270,6 +268,7 @@ each containing numeric `x:y` points. For example:
 
 ```python
 from multiqc.plots import linegraph
+
 data = {
     "sample 1": {
         "<x val 1>": "<y val 1>",
@@ -288,44 +287,47 @@ Additionally, a configuration dict can be supplied. The defaults are as follows:
 
 ```python
 from multiqc.plots import linegraph
+
 pconfig = {
     # Building the plot
-    "id": "<random string>",     # HTML ID used for plot
-    "categories": False,         # Set to True to use x values as categories instead of numbers.
-    "colors": dict(),            # Provide dict with keys = sample names and values colours
-    "smooth_points": None,       # Supply a number to limit number of points / smooth data
+    "id": "<random string>",  # HTML ID used for plot
+    "categories": False,  # Set to True to use x values as categories instead of numbers.
+    "colors": dict(),  # Provide dict with keys = sample names and values colours
+    "smooth_points": None,  # Supply a number to limit number of points / smooth data
     "smooth_points_sumcounts": True,  # Sum counts in bins, or average? Can supply list for multiple datasets
-    "logswitch": False,          # Show the 'Log10' switch?
-    "logswitch_active": False,   # Initial display with 'Log10' active?
+    "logswitch": False,  # Show the 'Log10' switch?
+    "logswitch_active": False,  # Initial display with 'Log10' active?
     "logswitch_label": "Log10",  # Label for 'Log10' button
-    "axis_controlled_by_switches": ["yaxis"], # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
-    "extra_series": None,        # See section below
+    "axis_controlled_by_switches": [
+        "yaxis"
+    ],  # Which axes should be impacted by the switch button (one or both of xaxis, yaxis)
+    "extra_series": None,  # See section below
     # Plot configuration
-    "title": None,               # Plot title - should be in format "Module Name: Plot Title"
-    "xlab": None,                # X axis label
-    "ylab": None,                # Y axis label
-    "xmax": None,                # Hard max x limit
-    "xmin": None,                # Hard min x limit
-    "ymax": None,                # Hard max y limit
-    "ymin": None,                # Hard min y limit
-    "x_clipmax": None,           # Max value allowed for automatic axis limit
-    "x_clipmin": None,           # Min value allowed for automatic axis limit
-    "y_clipmax": None,           # Max value allowed for automatic axis limit
-    "y_clipmin": None,           # Min value allowed for automatic axis limit
-    "x_minrange": None,          # Min range for x-axis (5 would allow 0..5, but also 15..20, etc.)
-    "y_minrange": None,          # Min range for y-axis (5 would allow 0..5, but also 15..20, etc.)
-    "xlog": False,               # Use log10 for the x-axis
-    "ylog": False,               # Use log10 scale for the y-axis
-    "y_bands": None,             # Horizontal colored background bands
-    "x_bands": None,             # Vertical colored background bands
-    "y_lines": None,             # Extra horizontal lines
-    "x_lines": None,             # Extra vertical lines
-    "xsuffix": "%",              # Suffix for the X-axis values and labels. Parsed from tt_label by default
-    "ysuffix": "%",              # Suffix for the Y-axis values and labels. Parsed from tt_label by default
+    "title": None,  # Plot title - should be in format "Module Name: Plot Title"
+    "xlab": None,  # X axis label
+    "ylab": None,  # Y axis label
+    "xmax": None,  # Hard max x limit
+    "xmin": None,  # Hard min x limit
+    "ymax": None,  # Hard max y limit
+    "ymin": None,  # Hard min y limit
+    "x_clipmax": None,  # Max value allowed for automatic axis limit
+    "x_clipmin": None,  # Min value allowed for automatic axis limit
+    "y_clipmax": None,  # Max value allowed for automatic axis limit
+    "y_clipmin": None,  # Min value allowed for automatic axis limit
+    "x_minrange": None,  # Min range for x-axis (5 would allow 0..5, but also 15..20, etc.)
+    "y_minrange": None,  # Min range for y-axis (5 would allow 0..5, but also 15..20, etc.)
+    "xlog": False,  # Use log10 for the x-axis
+    "ylog": False,  # Use log10 scale for the y-axis
+    "y_bands": None,  # Horizontal colored background bands
+    "x_bands": None,  # Vertical colored background bands
+    "y_lines": None,  # Extra horizontal lines
+    "x_lines": None,  # Extra vertical lines
+    "xsuffix": "%",  # Suffix for the X-axis values and labels. Parsed from tt_label by default
+    "ysuffix": "%",  # Suffix for the Y-axis values and labels. Parsed from tt_label by default
     "tt_label": "{point.x}: {point.y:.2f}",  # Customise tooltip label, e.g. '{point.x} base pairs'
-    "tt_decimals": None,         # Tooltip decimals when categories = True (when false use tt_label)
-    "height": 500,               # The default height of the plot, in pixels
-    "style": "line",             # The style of the line. Can be "line" or "lines+markers"
+    "tt_decimals": None,  # Tooltip decimals when categories = True (when false use tt_label)
+    "height": 500,  # The default height of the plot, in pixels
+    "style": "line",  # The style of the line. Can be "line" or "lines+markers"
 }
 html = linegraph.plot(..., pconfig)
 ```
@@ -403,6 +405,7 @@ For example, to add a dotted `x = y` reference line:
 
 ```python
 from multiqc.plots import linegraph
+
 max_x_val = ...
 max_y_val = ...
 pconfig = {
@@ -429,15 +432,16 @@ Background bands are colored rectangular regions that span across the plot. They
 
 ```python
 from multiqc.plots import linegraph
+
 pconfig = {
     "y_bands": [
-        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},           # Good range (green)
-        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},          # Warning range (yellow)
-        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},        # Bad range (red)
+        {"from": 0, "to": 5, "color": "#009500", "opacity": 0.13},  # Good range (green)
+        {"from": 5, "to": 20, "color": "#a07300", "opacity": 0.13},  # Warning range (yellow)
+        {"from": 20, "to": 100, "color": "#990101", "opacity": 0.13},  # Bad range (red)
     ],
     "x_bands": [
-        {"from": 10, "to": 50, "color": "#f0f0f0", "opacity": 0.3},   # Highlighted region
-    ]
+        {"from": 10, "to": 50, "color": "#f0f0f0", "opacity": 0.3},  # Highlighted region
+    ],
 }
 html = linegraph.plot(data, pconfig)
 ```
@@ -455,12 +459,8 @@ Reference lines are single horizontal or vertical lines that can mark specific t
 
 ```python
 pconfig = {
-    "y_lines": [
-        {"value": 30, "color": "#ff0000", "width": 2, "dash": "dash", "label": "Threshold"}
-    ],
-    "x_lines": [
-        {"value": 25, "color": "#0000ff", "width": 1, "dash": "solid"}
-    ]
+    "y_lines": [{"value": 30, "color": "#ff0000", "width": 2, "dash": "dash", "label": "Threshold"}],
+    "x_lines": [{"value": 25, "color": "#0000ff", "width": 1, "dash": "solid"}],
 }
 ```
 
@@ -482,6 +482,7 @@ Instead of x:y pairs, the box plot take a flat list of points for each sample:
 
 ```python
 from multiqc.plots import box
+
 data = {
     "sample 1": [9, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     "sample 2": [2, 4, 6, 6, 6, 10, 0, 1],
@@ -535,6 +536,7 @@ config options are shared between the two. The data structure is similar but not
 
 ```python
 from multiqc.plots import scatter
+
 data = {
     "sample 1": {
         "x": "<x val>",
@@ -612,24 +614,24 @@ The default header keys are:
 
 ```python
 single_header = {
-    "namespace": "",                 # Name for grouping. Prepends desc and is in Config Columns modal
-    "title": "[ dict key ]",         # Short title, table column title
-    "description": "[ dict key ]",   # Longer description, goes in mouse hover text
-    "max": None,                     # Minimum value in range, for bar / colour coding
-    "min": None,                     # Maximum value in range, for bar / colour coding
-    "ceiling": None,                 # Maximum value for automatic bar limit
-    "floor": None,                   # Minimum value for automatic bar limit
-    "minrange": None,                # Minimum range for automatic bar
-    "scale": "GnBu",                 # Colour scale for colour coding. False to disable.
-    "bgcols": None,                  # Dict with values: background colours for categorical data.
-    "colour": "<auto>",              # Colour for column grouping
-    "suffix": None,                  # Suffix for value (e.g. '%')
-    "format": "{:,.1f}",             # Value format string - default 1 decimal place
-    "cond_formatting_rules": None,   # Rules for conditional formatting table cell values - see docs below
-    "cond_formatting_colours": None, # Styles for conditional formatting of table cell values
-    "shared_key": None,              # See below for description
-    "modify": None,                  # Lambda function to modify values
-    "hidden": False,                 # Set to True to hide the column on page load
+    "namespace": "",  # Name for grouping. Prepends desc and is in Config Columns modal
+    "title": "[ dict key ]",  # Short title, table column title
+    "description": "[ dict key ]",  # Longer description, goes in mouse hover text
+    "max": None,  # Minimum value in range, for bar / colour coding
+    "min": None,  # Maximum value in range, for bar / colour coding
+    "ceiling": None,  # Maximum value for automatic bar limit
+    "floor": None,  # Minimum value for automatic bar limit
+    "minrange": None,  # Minimum range for automatic bar
+    "scale": "GnBu",  # Colour scale for colour coding. False to disable.
+    "bgcols": None,  # Dict with values: background colours for categorical data.
+    "colour": "<auto>",  # Colour for column grouping
+    "suffix": None,  # Suffix for value (e.g. '%')
+    "format": "{:,.1f}",  # Value format string - default 1 decimal place
+    "cond_formatting_rules": None,  # Rules for conditional formatting table cell values - see docs below
+    "cond_formatting_colours": None,  # Styles for conditional formatting of table cell values
+    "shared_key": None,  # See below for description
+    "modify": None,  # Lambda function to modify values
+    "hidden": False,  # Set to True to hide the column on page load
 }
 ```
 
@@ -637,15 +639,15 @@ A third parameter can be specified with settings for the whole table:
 
 ```python
 table_config = {
-    "namespace": "",                           # Name for grouping. Prepends desc and is in Config Columns modal
-    "id": "<string>",                          # ID used for the table
-    "title": "<table title>",                  # Title of the table. Used in the column config modal
-    "save_file": False,                        # Whether to save the table data to a file
-    "raw_data_fn": "multiqc_<table_id>_table", # File basename to use for raw data file
-    "sort_rows": True,                         # Whether to sort rows alphabetically
-    "only_defined_headers": True,              # Only show columns that are defined in the headers config
-    "col1_header": "Sample Name",              # The header used for the first column
-    "no_violin": False,                        # Force a table to always be plotted (beeswarm by default if many rows)
+    "namespace": "",  # Name for grouping. Prepends desc and is in Config Columns modal
+    "id": "<string>",  # ID used for the table
+    "title": "<table title>",  # Title of the table. Used in the column config modal
+    "save_file": False,  # Whether to save the table data to a file
+    "raw_data_fn": "multiqc_<table_id>_table",  # File basename to use for raw data file
+    "sort_rows": True,  # Whether to sort rows alphabetically
+    "only_defined_headers": True,  # Only show columns that are defined in the headers config
+    "col1_header": "Sample Name",  # The header used for the first column
+    "no_violin": False,  # Force a table to always be plotted (beeswarm by default if many rows)
 }
 ```
 
@@ -657,6 +659,7 @@ A very basic example of creating a table is shown below:
 
 ```python
 from multiqc.plots import table
+
 data = {
     "sample 1": {
         "aligned": 23542,
@@ -676,6 +679,7 @@ settings (e.g. no decimal places):
 ```python
 from multiqc.plots import table
 from multiqc import config
+
 data = {
     "sample 1": {
         "aligned": 23542,
@@ -753,14 +757,7 @@ For example, a header config for a column could look like this:
 
 ```python
 headers = {
-    "col": {
-        "title": "My table column",
-        "bgcols": {
-            "bad data": "#f8d7da",
-            "ok data": "#fff3cd",
-            "good data": "#d1e7dd"
-        }
-    }
+    "col": {"title": "My table column", "bgcols": {"bad data": "#f8d7da", "ok data": "#fff3cd", "good data": "#d1e7dd"}}
 }
 ```
 
@@ -810,7 +807,7 @@ headers = {
             "pass": [{"s_eq": "good data"}],
             "warn": [{"s_eq": "ok data"}],
             "fail": [{"s_eq": "bad data"}],
-        }
+        },
     }
 }
 ```
@@ -836,7 +833,7 @@ headers = {
             {"brightgreen": "#39FF14"},
             {"brown": "#A52A2A"},
             {"turquoise": "#30D5C8"},
-        ]
+        ],
     }
 }
 ```
@@ -876,6 +873,7 @@ to view a corresponding violin plot for the underlying data.
 
 ```python
 from multiqc.plots import violin
+
 data = {
     "sample 1": {
         "aligned": 23542,
@@ -899,6 +897,7 @@ to the same as the x-axis).
 
 ```python
 from multiqc.plots import heatmap
+
 heatmap.plot(data=..., xcats=..., ycats=..., pconfig=...)
 ```
 
@@ -906,6 +905,7 @@ A simple example:
 
 ```python
 from multiqc.plots import heatmap
+
 data = [
     [0.9, 0.87, 0.73, 0.6, 0.2, 0.3],
     [0.87, 1, 0.7, 0.6, 0.9, 0.3],
@@ -938,6 +938,7 @@ data = {
     },
 }
 from multiqc.plots import heatmap
+
 html = heatmap.plot(data, pconfig=...)
 ```
 
@@ -946,21 +947,21 @@ using a config dictionary:
 
 ```python
 pconfig = {
-    "title": None,                 # Plot title - should be in format "Module Name: Plot Title"
-    "xlab": None,                  # X-axis title
-    "ylab": None,                  # Y-axis title
-    "zlab": None,                  # Z-axis title, shown in the hover tooltip
-    "min": None,                   # Minimum value (when unset, derived automatically)
-    "max": None,                   # Maximum value (when unset, derived automatically)
-    "square": True,                # Force the plot to stay square? (maintain aspect ratio)
-    "xcats_samples": True,         # Is the x-axis sample names? Set to "False" to prevent report toolbox from affecting.
-    "ycats_samples": True,         # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
-    "colstops": [],                # Scale colour stops. See below.
-    "reverse_colors": False,        # Reverse the order of the colour axis
-    "tt_decimals": 2,              # Number of decimal places for tooltip
-    "legend": True,                # Colour axis key enabled or not
-    "display_values": True,        # Show values in each cell. Defaults True when less than 20 samples.
-    "height": 500                  # The default height of the interactive plot, in pixels
+    "title": None,  # Plot title - should be in format "Module Name: Plot Title"
+    "xlab": None,  # X-axis title
+    "ylab": None,  # Y-axis title
+    "zlab": None,  # Z-axis title, shown in the hover tooltip
+    "min": None,  # Minimum value (when unset, derived automatically)
+    "max": None,  # Maximum value (when unset, derived automatically)
+    "square": True,  # Force the plot to stay square? (maintain aspect ratio)
+    "xcats_samples": True,  # Is the x-axis sample names? Set to "False" to prevent report toolbox from affecting.
+    "ycats_samples": True,  # Is the y-axis sample names? Set to "False" to prevent report toolbox from affecting.
+    "colstops": [],  # Scale colour stops. See below.
+    "reverse_colors": False,  # Reverse the order of the colour axis
+    "tt_decimals": 2,  # Number of decimal places for tooltip
+    "legend": True,  # Colour axis key enabled or not
+    "display_values": True,  # Show values in each cell. Defaults True when less than 20 samples.
+    "height": 500,  # The default height of the interactive plot, in pixels
 }
 ```
 

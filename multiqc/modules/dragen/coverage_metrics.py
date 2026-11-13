@@ -682,7 +682,7 @@ def make_bed_texts(overall_mean_cov_data, coverage_data):
             else:
                 # Just 1 source file for all samples?
                 if len(bed_sources) == 1:
-                    text_description = "All samples are based on the " + extract_source(list(bed_sources)[0]) + "."
+                    text_description = "All samples are based on the " + extract_source(next(iter(bed_sources))) + "."
 
                 # There are at least 2 source files.
                 else:
@@ -847,7 +847,7 @@ def create_table_handlers():
                 regions[phenotype].add(region)
 
                 plots[phenotype]["config"] = {config: val for config, val in TABLE_CONFIG.items() if val is not None}
-                if region in REGION_TABLE_CONFIG and REGION_TABLE_CONFIG[region]:
+                if REGION_TABLE_CONFIG.get(region):
                     plots[phenotype]["config"].update(REGION_TABLE_CONFIG[region])
 
         sections = []
@@ -1179,11 +1179,11 @@ def create_coverage_headers_handler():
                     output_auto = MPAT["make_configs"](metric_match)
                     orig_metric = metric_IDs[metric_id]
 
-                    if "region" in output_auto and output_auto["region"]:
+                    if output_auto.get("region"):
                         region = output_auto["region"]
 
                     # Metric could not be recognized.
-                    if "warning" in output_auto and output_auto["warning"]:
+                    if output_auto.get("warning"):
                         log_data["unknown_metrics"].append(orig_metric)
 
                     # First set common configs from the SINGLE_HEADER.
@@ -1229,7 +1229,7 @@ def create_coverage_headers_handler():
 
         if region:
             metric = metric.replace(region, "region")
-            if region in REGIONS and REGIONS[region]:
+            if REGIONS.get(region):
                 configs.update(get_std_configs(REGIONS[region]))
 
         pct_case = PCT_PAT["RGX"].search(metric)

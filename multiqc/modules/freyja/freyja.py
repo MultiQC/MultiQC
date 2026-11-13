@@ -1,6 +1,5 @@
 import logging
 from ast import literal_eval
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -27,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the summary data
-        data_by_sample: Dict[str, Dict] = dict()
+        data_by_sample: dict[str, dict] = {}
 
         for f in self.find_log_files("freyja", filehandles=True):
             # Freyja has multiple summary files, but we only need to parse the one from the demix command.
@@ -42,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             summarized_line = next(line for line in f["f"] if line.startswith("summarized\t"))
             dict_str = summarized_line.split("\t")[1].strip()
             try:
-                sample_dict: Dict[str, float] = dict(literal_eval(dict_str))
+                sample_dict: dict[str, float] = dict(literal_eval(dict_str))
             except (ValueError, SyntaxError):
                 log.error(f"Error parsing 'summarized' line for '{s_name}': {dict_str}, skipping sample")
                 continue

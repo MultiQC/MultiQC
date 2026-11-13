@@ -4,14 +4,14 @@ import logging
 from collections import namedtuple
 from itertools import groupby
 
+from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.gatk.utils import parse_report
 from multiqc.plots import linegraph, scatter
-from multiqc.base_module import BaseMultiqcModule
 
 # Initialise the logger
 log = logging.getLogger(__name__)
 
-RecalTableType = namedtuple("RecalTableType", "pre_recalibration post_recalibration".split())
+RecalTableType = namedtuple("RecalTableType", ["pre_recalibration", "post_recalibration"])
 recal_table_type = RecalTableType(0, 1)
 
 

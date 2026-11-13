@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any MTNUCRATIO reports
-        self.mtnuc_data = dict()
+        self.mtnuc_data = {}
 
         for f in self.find_log_files("mtnucratio", filehandles=True):
             self.parseJSON(f)
@@ -46,11 +46,11 @@ class MultiqcModule(BaseMultiqcModule):
             parsed_json = json.load(f["f"])
             if "metrics" not in parsed_json and "metadata" not in parsed_json:
                 log.warning(f"No MTNUCRATIO JSON: '{f['fn']}'")
-                return None
+                return
         except json.JSONDecodeError as e:
             log.warning(f"Could not parse mtnucratio JSON: '{f['fn']}'")
             log.debug(e)
-            return None
+            return
 
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)

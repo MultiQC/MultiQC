@@ -50,8 +50,8 @@ class MultiqcModule(
             license_url="https://github.com/bhardwaj-lab/sincei/blob/master/LICENCE.txt",
         )
 
-        samples = dict()
-        cells = dict()
+        samples = {}
+        cells = {}
 
         # scFilterStats
         samples["scFilterStats"], cells["scFilterStats"] = self.parse_scFilterStats()

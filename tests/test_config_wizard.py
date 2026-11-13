@@ -8,6 +8,7 @@ from pathlib import Path
 import yaml
 
 from multiqc.utils.config_schema import MultiQCConfig
+from multiqc.utils.util_functions import is_union
 
 REPO_ROOT = Path(__file__).parent.parent
 CONFIG_DEFAULTS = REPO_ROOT / "multiqc" / "config_defaults.yaml"
@@ -151,7 +152,7 @@ def test_runtime_config_attrs_still_exist():
 
 def _unwrap_optional(t):
     """Return the inner type of an ``Optional[X]``; otherwise return ``t``."""
-    if typing.get_origin(t) is typing.Union:
+    if is_union(t):
         non_null = [a for a in typing.get_args(t) if a is not type(None)]
         if len(non_null) == 1:
             return non_null[0]
@@ -169,8 +170,9 @@ def _type_kind(t):
     Anything else falls into ``other``.
     """
     t = _unwrap_optional(t)
-    origin = typing.get_origin(t)
-    if origin is typing.Union or origin is typing.Literal:
+    # `or t` so a bare `dict` classifies the same as a parameterised `dict[str, Any]`
+    origin = typing.get_origin(t) or t
+    if is_union(t) or origin is typing.Literal:
         return "union-or-literal"
     if origin is list:
         return "list"

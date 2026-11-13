@@ -1,11 +1,9 @@
 import logging
 from copy import copy
-from typing import Dict, Tuple, Union
 
-from multiqc import config, BaseMultiqcModule
+from multiqc import BaseMultiqcModule
 from multiqc.modules.ngsbits.utils import parse_qcml_by
 from multiqc.plots import table
-
 
 log = logging.getLogger(__name__)
 
@@ -13,8 +11,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits MappingQC reports and parse their data"""
 
-    mappingqc: Dict[str, Dict[str, Union[float, str]]] = dict()
-    mappingqc_keys: Dict[str, Tuple[str, str]] = dict()
+    mappingqc: dict[str, dict[str, float | str]] = {}
+    mappingqc_keys: dict[str, tuple[str, str]] = {}
 
     for f in module.find_log_files("ngsbits/mappingqc"):
         values, params = parse_qcml_by(f["f"], "qualityParameter")
@@ -40,11 +38,11 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Convert numbers given in megabases to bases
     mappingqc_keys["bases usable"] = ("Bases usable in total.", "")
-    for _, kv in mappingqc.items():
+    for kv in mappingqc.values():
         kv["bases usable"] = kv["bases usable (MB)"] * 1e6
         kv.pop("bases usable (MB)")
 
-    headers: Dict = dict()
+    headers: dict = {}
     headers["bases usable"] = {
         "title": "Usable",
         "description": mappingqc_keys["bases usable"][0],
@@ -182,8 +180,8 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     for x in table_covs:
         gen_stats_headers[f"target region {x:d}x %"] = copy(headers[f"target region {x:d}x %"])
 
-    for k in gen_stats_headers:
-        gen_stats_headers[k]["hidden"] = True
+    for header in gen_stats_headers.values():
+        header["hidden"] = True
     gen_stats_headers["bases usable"]["hidden"] = False
     gen_stats_headers["target region 30x %"]["hidden"] = False
 

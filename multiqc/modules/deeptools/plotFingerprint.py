@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 class PlotFingerprintMixin:
     def parse_plotFingerprint(self):
         """Find plotFingerprint output. Both --outQualityMetrics and --outRawCounts"""
-        self.deeptools_plotFingerprintOutQualityMetrics = dict()
+        self.deeptools_plotFingerprintOutQualityMetrics = {}
         for f in self.find_log_files("deeptools/plotFingerprintOutQualityMetrics"):
             parsed_data = self.parsePlotFingerprintOutQualityMetrics(f)
             for k, v in parsed_data.items():
@@ -25,7 +25,7 @@ class PlotFingerprintMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotFingerprint")
 
-        self.deeptools_plotFingerprintOutRawCounts = dict()
+        self.deeptools_plotFingerprintOutRawCounts = {}
         for f in self.find_log_files("deeptools/plotFingerprintOutRawCounts"):
             parsed_data = self.parsePlotFingerprintOutRawCounts(f)
             for k, v in parsed_data.items():
@@ -106,7 +106,7 @@ class PlotFingerprintMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             if firstLine:
                 header = [str(x) for x in cols[1:]]
@@ -116,7 +116,7 @@ class PlotFingerprintMixin:
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning(f"Replacing duplicate sample {s_name}.")
-            d[s_name] = dict()
+            d[s_name] = {}
 
             try:
                 for i, c in enumerate(cols[1:]):
@@ -126,7 +126,7 @@ class PlotFingerprintMixin:
                                 f["fn"]
                             )
                         )
-                        return dict()
+                        return {}
                     if header[i] == "AUC" or header[i] == "Synthetic AUC":
                         continue
                     d[s_name][header[i]] = float(c)
@@ -136,11 +136,11 @@ class PlotFingerprintMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
         return d
 
     def parsePlotFingerprintOutRawCounts(self, f):
-        d = dict()
+        d = {}
         samples = []
         firstLine = True
         for line in f["f"].splitlines():
@@ -171,7 +171,7 @@ class PlotFingerprintMixin:
             cs = np.cumsum(v)
             cs = cs / float(cs[-1])
             # Convert for plotting
-            v2 = dict()
+            v2 = {}
             v2[0.0] = 0.0
             for _ in x:
                 v2[float(xp[_])] = float(cs[_])

@@ -27,13 +27,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.seqyclean_data = dict()
+        self.seqyclean_data = {}
         for f in self.find_log_files("seqyclean"):
             rows = f["f"].splitlines()
             headers = rows[0].split("\t")
             cols = rows[1].split("\t")
 
-            self.seqyclean_data[f["s_name"]] = dict()
+            self.seqyclean_data[f["s_name"]] = {}
             for header, col in zip(headers, cols):
                 # Add verions info
                 if header == "Version":

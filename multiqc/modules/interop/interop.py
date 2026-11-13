@@ -216,7 +216,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             if section == "summary":
                 data = line.split(",")
-                for idx in range(0, len(data)):
+                for idx in range(len(data)):
                     summary[lane][header[idx]] = data[idx]
                 continue
             if section == "details":
@@ -431,9 +431,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "PF Reads": {
                 "title": f"{config.read_count_prefix} PF Reads",
-                "description": "The total number of passing filter reads for this lane ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"The total number of passing filter reads for this lane ({config.read_count_desc})",
                 "modify": lambda x: float(x) * config.read_count_multiplier,
                 "format": "{:,.2f}",
                 "shared_key": "read_count",

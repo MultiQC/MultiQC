@@ -91,15 +91,15 @@ class MultiqcModule(BaseMultiqcModule):
                 self.gffcompare_data[sample]["accuracy"][split[0]]["precision"] = float(split[3])
 
             ## Additional count data
-            self.gffcompare_data[sample]["counts"]["matching_intron_chains"] = [
+            self.gffcompare_data[sample]["counts"]["matching_intron_chains"] = next(
                 int(s) for s in lines[17].replace("(", " ").split() if s.isdigit()
-            ][0]
-            self.gffcompare_data[sample]["counts"]["matching_transcripts"] = [
+            )
+            self.gffcompare_data[sample]["counts"]["matching_transcripts"] = next(
                 int(s) for s in lines[18].replace("(", " ").split() if s.isdigit()
-            ][0]
-            self.gffcompare_data[sample]["counts"]["matching_loci"] = [
+            )
+            self.gffcompare_data[sample]["counts"]["matching_loci"] = next(
                 int(s) for s in lines[19].replace("(", " ").split() if s.isdigit()
-            ][0]
+            )
 
             ## Missed/Novel genomic elements
             self.gffcompare_data[sample]["missed"]["Exons"] = [
@@ -203,7 +203,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "y": self.gffcompare_data[sample]["accuracy"][dataset]["precision"] / 100,
                     "name": dataset,
                 }
-                for sample in self.gffcompare_data.keys()
+                for sample in self.gffcompare_data
             }
             for dataset in datasets
         ]
@@ -238,7 +238,7 @@ class MultiqcModule(BaseMultiqcModule):
                         - self.gffcompare_data[sample]["novel"][dataset][0]
                     ),
                 }
-                for sample in self.gffcompare_data.keys()
+                for sample in self.gffcompare_data
             }
             for dataset in datasets
         ]
@@ -272,7 +272,7 @@ class MultiqcModule(BaseMultiqcModule):
                         - self.gffcompare_data[sample]["missed"][dataset][0]
                     ),
                 }
-                for sample in self.gffcompare_data.keys()
+                for sample in self.gffcompare_data
             }
             for dataset in datasets
         ]

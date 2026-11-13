@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any ClipAndMerge reports
-        self.clipandmerge_data = dict()
+        self.clipandmerge_data = {}
         for f in self.find_log_files("clipandmerge"):
             self.parse_clipandmerge_log(f)
 
@@ -60,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             "version": r"ClipAndMerge \(v. ([\d\.]+)\)",
         }
 
-        parsed_data = dict()
+        parsed_data = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:

@@ -3,7 +3,6 @@
 import logging
 import os
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.qualimap import get_s_name, parse_numerals, parse_version
@@ -14,7 +13,7 @@ log = logging.getLogger(__name__)
 
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find Qualimap RNASeq reports and parse their data"""
-    genome_results: Dict = dict()
+    genome_results: dict = {}
 
     int_metrics = {
         "read pairs aligned": "reads_aligned",
@@ -38,7 +37,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     value_regex = re.compile(r"\s+[\d,\.\xa0]+\s+")
     for f in module.find_log_files("qualimap/rnaseq/rnaseq_results"):
-        preparsed_d = dict()
+        preparsed_d = {}
         for line in f["f"].splitlines():
             if "=" in line:
                 key, val = line.split("=", 1)
@@ -126,7 +125,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     )
 
     # Coverage profile
-    cov_hist: Dict = dict()
+    cov_hist: dict = {}
     for f in module.find_log_files("qualimap/rnaseq/coverage", filehandles=True):
         s_name = get_s_name(module, f)
         # Save results
@@ -135,12 +134,12 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
         module.add_data_source(f, s_name=s_name, section="rna_coverage_histogram")
 
-        d = dict()
+        d = {}
         for line in f["f"]:
             if line.startswith("#"):
                 continue
             coverage, count = line.split(None, 1)
-            coverage = int(round(float(coverage.replace(",", "."))))
+            coverage = round(float(coverage.replace(",", ".")))
             count = float(count)
             d[coverage] = count
 
@@ -230,9 +229,9 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         module.write_data_file(cov_hist, "qualimap_rnaseq_cov_hist")
 
         # Make a normalised percentage version of the coverage data
-        cov_hist_percent: Dict = dict()
+        cov_hist_percent: dict = {}
         for s_name in cov_hist:
-            cov_hist_percent[s_name] = dict()
+            cov_hist_percent[s_name] = {}
             total = sum(cov_hist[s_name].values())
             if total == 0:
                 for k, v in cov_hist[s_name].items():

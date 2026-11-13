@@ -1,7 +1,7 @@
 import json
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -64,8 +64,8 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/FelixKrueger/TrimGalore/blob/master/LICENSE",
         )
 
-        data_by_sample: Dict[str, Dict[str, Any]] = {}
-        self._pair_key_to_samples: Dict[Tuple[str, ...], List[str]] = {}
+        data_by_sample: dict[str, dict[str, Any]] = {}
+        self._pair_key_to_samples: dict[tuple[str, ...], list[str]] = {}
         for f in self.find_log_files("trim_galore", filehandles=True):
             parsed = self._parse_log(f)
             if parsed is None:
@@ -86,8 +86,8 @@ class MultiqcModule(BaseMultiqcModule):
         log.info(f"Found {len(data_by_sample)} reports")
 
         auto_group_pairs = getattr(config, "trim_galore_config", {}).get("auto_group_pairs", True)
-        self._pair_display_by_key: Dict[Tuple[str, ...], str] = {}
-        explicit_groups: Optional[Dict[str, List[str]]] = None
+        self._pair_display_by_key: dict[tuple[str, ...], str] = {}
+        explicit_groups: dict[str, list[str]] | None = None
         if auto_group_pairs:
             explicit_groups, self._pair_display_by_key = self._derive_auto_groups(data_by_sample)
 
@@ -177,7 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(_flatten_for_data_file(data_by_sample), "multiqc_trim_galore")
 
-    def _parse_log(self, f) -> Optional[Tuple[str, Dict[str, Any], Tuple[str, ...]]]:
+    def _parse_log(self, f) -> tuple[str, dict[str, Any], tuple[str, ...]] | None:
         try:
             payload = json.load(f["f"])
         except json.JSONDecodeError as e:
@@ -211,8 +211,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _derive_auto_groups(
         self,
-        data_by_sample: Dict[str, Dict[str, Any]],
-    ) -> Tuple[Dict[str, List[str]], Dict[Tuple[str, ...], str]]:
+        data_by_sample: dict[str, dict[str, Any]],
+    ) -> tuple[dict[str, list[str]], dict[tuple[str, ...], str]]:
         """Build module-supplied groups from tool-derived pair info.
 
         Returns `(explicit_groups, pair_display_by_key)`. When the user has
@@ -220,8 +220,8 @@ class MultiqcModule(BaseMultiqcModule):
         auto-group's display name is run through `groups_for_sample` to
         merge into a super-group.
         """
-        auto_groups: Dict[str, List[str]] = {}
-        pair_display_by_key: Dict[Tuple[str, ...], str] = {}
+        auto_groups: dict[str, list[str]] = {}
+        pair_display_by_key: dict[tuple[str, ...], str] = {}
         for pair_key, members in self._pair_key_to_samples.items():
             sorted_members = sorted(members)
             # _clean_fastq_pair needs two names; SE pairs have only one.
@@ -235,7 +235,7 @@ class MultiqcModule(BaseMultiqcModule):
         if not config.table_sample_merge:
             return auto_groups, pair_display_by_key
 
-        by_super: Dict[str, List[str]] = defaultdict(list)
+        by_super: dict[str, list[str]] = defaultdict(list)
         for auto_display, samples in auto_groups.items():
             super_name, _ = self.groups_for_sample(SampleName(auto_display))
             by_super[str(super_name)].extend(samples)
@@ -243,10 +243,10 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _general_stats_table(
         self,
-        data_by_sample: Dict[str, Dict[str, Any]],
-        explicit_groups: Optional[Dict[str, List[str]]] = None,
+        data_by_sample: dict[str, dict[str, Any]],
+        explicit_groups: dict[str, list[str]] | None = None,
     ) -> None:
-        gen_stats: Dict[str, Dict[ColumnKey, Any]] = {}
+        gen_stats: dict[str, dict[ColumnKey, Any]] = {}
         for s_name, payload in data_by_sample.items():
             rp = payload["read_processing"]
             bp = payload["basepair_processing"]
@@ -260,7 +260,7 @@ class MultiqcModule(BaseMultiqcModule):
                 ColumnKey("tg_total_bp_written"): bp["total_bp_written"],
             }
 
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "tg_pct_with_adapter": {
                 "title": "% Adapter",
                 "description": "% reads where at least one adapter was detected",
@@ -319,8 +319,8 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def _filtered_reads_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        bar_data: Dict[str, Dict[str, int]] = {}
+    def _filtered_reads_plot(self, data_by_sample: dict[str, dict[str, Any]]):
+        bar_data: dict[str, dict[str, int]] = {}
         for s_name, payload in data_by_sample.items():
             rp = payload["read_processing"]
             bar_data[s_name] = {
@@ -348,8 +348,8 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    def _adapter_length_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        line_data: Dict[str, Dict[int, int]] = {}
+    def _adapter_length_plot(self, data_by_sample: dict[str, dict[str, Any]]):
+        line_data: dict[str, dict[int, int]] = {}
         for s_name, payload in data_by_sample.items():
             adapters = payload["adapter_trimming"]
             for a in adapters:
@@ -369,10 +369,10 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
 
-    def _pair_validation_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
+    def _pair_validation_plot(self, data_by_sample: dict[str, dict[str, Any]]):
         # pair_validation is identical between R1 and R2 JSONs of the same pair —
         # collapse them by the tool-derived pair_key. Skip SE samples (no pv).
-        all_rows: Dict[str, Dict[str, int]] = {}
+        all_rows: dict[str, dict[str, int]] = {}
         for pair_key, members in self._pair_key_to_samples.items():
             pv = data_by_sample[members[0]]["pair_validation"]
             if not pv:  # SE samples — `pair_validation` is null
@@ -389,7 +389,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # `pairs_removed_*` are sub-reasons of `pairs_removed` so are not added
         # to the affected-fraction sum here (would double-count).
-        def _kept(r: Dict[str, int]) -> bool:
+        def _kept(r: dict[str, int]) -> bool:
             return bool(r["pairs_analyzed"]) and (
                 (r["pairs_removed"] + r["r1_unpaired"] + r["r2_unpaired"]) / r["pairs_analyzed"] > 0.001
             )
@@ -398,7 +398,7 @@ class MultiqcModule(BaseMultiqcModule):
         dropped = sorted(n for n, r in all_rows.items() if not _kept(r))
         if not rows:
             return None, dropped
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "pairs_analyzed": {
                 "title": "Pairs analysed",
                 "description": "Total read pairs examined by pair validation",
@@ -449,9 +449,9 @@ class MultiqcModule(BaseMultiqcModule):
             dropped,
         )
 
-    def _poly_trimming_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
+    def _poly_trimming_plot(self, data_by_sample: dict[str, dict[str, Any]]):
+        rows: dict[str, dict[str, int]] = {}
+        dropped: list[str] = []
         for s_name, payload in data_by_sample.items():
             pa = payload["poly_a_trimming"]
             pg = payload["poly_g_trimming"]
@@ -467,7 +467,7 @@ class MultiqcModule(BaseMultiqcModule):
                 dropped.append(s_name)
         if not rows:
             return None, sorted(dropped)
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "poly_a_reads_trimmed": {
                 "title": "Poly-A reads trimmed",
                 "description": "Reads with a poly-A tail trimmed",
@@ -506,9 +506,9 @@ class MultiqcModule(BaseMultiqcModule):
             sorted(dropped),
         )
 
-    def _rrbs_plot(self, data_by_sample: Dict[str, Dict[str, Any]]):
-        rows: Dict[str, Dict[str, int]] = {}
-        dropped: List[str] = []
+    def _rrbs_plot(self, data_by_sample: dict[str, dict[str, Any]]):
+        rows: dict[str, dict[str, int]] = {}
+        dropped: list[str] = []
         for s_name, payload in data_by_sample.items():
             rr = payload["rrbs"]
             row = {
@@ -522,7 +522,7 @@ class MultiqcModule(BaseMultiqcModule):
                 dropped.append(s_name)
         if not rows:
             return None, sorted(dropped)
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "rrbs_trimmed_3prime": {
                 "title": "3' trimmed",
                 "description": "Reads trimmed at the 3' end for RRBS end-repair",
@@ -556,8 +556,8 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def _flatten_for_data_file(data_by_sample: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
-    flat: Dict[str, Dict[str, Any]] = {}
+def _flatten_for_data_file(data_by_sample: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    flat: dict[str, dict[str, Any]] = {}
     for s_name, p in data_by_sample.items():
         rp = p["read_processing"]
         bp = p["basepair_processing"]

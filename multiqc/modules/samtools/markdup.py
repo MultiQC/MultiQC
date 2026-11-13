@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-from typing import Dict, Union
 
 from multiqc.plots import bargraph, table
 
@@ -9,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def parse_samtools_markdup(module) -> int:
-    raw_by_sample: Dict = dict()
+    raw_by_sample: dict = {}
 
     for f in module.find_log_files("samtools/markdup_json", filehandles=True):
         raw_d = json.load(f["f"])
@@ -19,7 +18,7 @@ def parse_samtools_markdup(module) -> int:
         raw_by_sample[f["s_name"]] = raw_d
 
     for f in module.find_log_files("samtools/markdup_txt"):
-        raw_d = dict()
+        raw_d = {}
         for line in f["f"].splitlines():
             if ":" in line:
                 key, value = line.split(":")
@@ -40,12 +39,12 @@ def parse_samtools_markdup(module) -> int:
     # Superfluous function call to confirm that it is used in this module
     module.add_software_version(None)
 
-    val_by_metric_by_sample: Dict[str, Dict[str, Union[int, float]]] = {}
+    val_by_metric_by_sample: dict[str, dict[str, int | float]] = {}
     for s_name, raw_d in raw_by_sample.items():
         if len(raw_d) == 0:
             continue
 
-        d: Dict[str, Union[int, float]] = {}
+        d: dict[str, int | float] = {}
         val_by_metric_by_sample[s_name] = d
         rename_map = {
             "READ": "read",
@@ -66,14 +65,14 @@ def parse_samtools_markdup(module) -> int:
         }
         for name, val in raw_d.items():
             if name in rename_map:
-                d[rename_map[name]] = int(raw_d[name])
+                d[rename_map[name]] = int(val)
             elif name == "COMMAND":
                 m = re.search(r".*-d\s(\d+)", val)
                 if m:
                     d["optical_duplicate_distance"] = int(m.group(1))
 
         # Derive more metrics from counts
-        n_reads: Union[int, float] = d["paired"] + d["single"]
+        n_reads: int | float = d["paired"] + d["single"]
         d["duplicate_optical_total"] = d["duplicate_pair_optical"] + d["duplicate_single_optical"]
         d["duplicate_optical_fraction"] = d["duplicate_optical_total"] / n_reads if n_reads > 0 else 0.0
         d["duplicate_fraction"] = d["duplicate_total"] / n_reads if n_reads > 0 else 0.0
@@ -129,23 +128,21 @@ def parse_samtools_markdup(module) -> int:
             data=val_by_metric_by_sample,
             headers=dict(
                 genstats_headers,
-                **{
-                    "optical_duplicate_distance": {
-                        "title": "Optical distance",
-                        "description": "The optical distance for considering instrument duplicates",
-                        "min": 0,
-                        "format": "{:,d}",
-                        "scale": "RdYlGn",
-                    },
-                    "duplicate_optical_fraction": {
-                        "title": "Optical dups",
-                        "description": "The percent of optical/clustering duplicate reads",
-                        "min": 0,
-                        "max": 100,
-                        "modify": lambda x: x * 100,
-                        "suffix": "%",
-                        "scale": "RdYlGn-rev",
-                    },
+                optical_duplicate_distance={
+                    "title": "Optical distance",
+                    "description": "The optical distance for considering instrument duplicates",
+                    "min": 0,
+                    "format": "{:,d}",
+                    "scale": "RdYlGn",
+                },
+                duplicate_optical_fraction={
+                    "title": "Optical dups",
+                    "description": "The percent of optical/clustering duplicate reads",
+                    "min": 0,
+                    "max": 100,
+                    "modify": lambda x: x * 100,
+                    "suffix": "%",
+                    "scale": "RdYlGn-rev",
                 },
             ),
             pconfig={
@@ -162,7 +159,7 @@ def parse_samtools_markdup(module) -> int:
         "ylab": "SAM Records",
     }
 
-    keys: Dict[str, Dict[str, str]] = {
+    keys: dict[str, dict[str, str]] = {
         "non_duplicate": {"name": "Non-duplicates"},
         "duplicate_pair_optical": {"name": "Optical duplicates in pairs"},
         "duplicate_single_optical": {"name": "Optical duplicates in singletons"},

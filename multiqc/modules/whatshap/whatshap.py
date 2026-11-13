@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -29,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Store the whatshap stats results
-        self.whatshap_stats = dict()
+        self.whatshap_stats = {}
 
         # Iterate over all files we found
         for f in self.find_log_files("whatshap/stats", filehandles=True):
@@ -60,7 +59,7 @@ class MultiqcModule(BaseMultiqcModule):
         # general statistics table
         self.add_stats_table()
 
-    def parse_whatshap_stats(self, f: LoadedFileDict) -> Tuple[str, Dict[str, Dict[str, Union[int, float]]]]:
+    def parse_whatshap_stats(self, f: LoadedFileDict) -> tuple[str, dict[str, dict[str, int | float]]]:
         """Parse WhatsHap stats file"""
 
         def parse_numeric_values(data):
@@ -101,7 +100,7 @@ class MultiqcModule(BaseMultiqcModule):
             if len(header) != len(fields):
                 continue
 
-            data = {field: value for field, value in zip(header, fields)}
+            data = dict(zip(header, fields))
             if "chromosome" not in data or "sample" not in data:
                 continue
 
@@ -120,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
         # later on. WhatsHap uses the fictional 'ALL' chromosome to store the
         # summary for all results, so we re-use that to store all zero's
         if not results:
-            results = dict()
+            results = {}
             results[ALL_CHROM] = defaultdict(int)
 
         # If ALL chromosome is not present, and there are multiple contigs available,
@@ -144,7 +143,6 @@ class MultiqcModule(BaseMultiqcModule):
             avg_fields = {
                 "bp_per_block_avg",
                 "variant_per_block_avg",
-                "bp_per_block_avg",
             }
             results[ALL_CHROM] = defaultdict(int)
             for chrom in results:
@@ -186,7 +184,7 @@ class MultiqcModule(BaseMultiqcModule):
         # filed. Otherwise, we use the 'ALL' chromosome (it only gets added
         # by WhatsHap stats when there are multiple chromosomes).
         if len(sample_stats) == 1:
-            summary_field = list(sample_stats)[0]
+            summary_field = next(iter(sample_stats))
         else:
             summary_field = ALL_CHROM
         return summary_field
@@ -233,7 +231,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        general = dict()
+        general = {}
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
@@ -249,7 +247,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_bargraph_total_phased(self):
         """Add a bargraph of the total number of phased base pairs"""
-        pdata = dict()
+        pdata = {}
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)
@@ -405,7 +403,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        general = dict()
+        general = {}
         for sample, sample_stats in self.whatshap_stats.items():
             # Get the summary field
             summary_field = self.get_summary_field(sample_stats)

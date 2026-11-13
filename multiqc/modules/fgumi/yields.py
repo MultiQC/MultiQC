@@ -1,7 +1,5 @@
 """Yield by input read pairs from `simplex-metrics` / `duplex-metrics` (fgbio CollectDuplexSeqMetrics plots #4a/#4b)."""
 
-from typing import Dict, Optional, Set
-
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import linegraph
 
@@ -21,16 +19,16 @@ _SIMPLEX_TABS = [
 ]
 
 
-def _ratio(actual: float, ideal: float) -> Optional[float]:
+def _ratio(actual: float, ideal: float) -> float | None:
     """actual / ideal, or ``None`` when ideal is zero or non-finite (never a misleading 0)."""
     finite_ideal = finite(ideal)
     return finite(actual / finite_ideal) if finite_ideal else None
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    duplex: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
-    simplex: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
-    general: Dict[str, Dict[str, Optional[float]]] = {}
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
+    duplex: dict[str, dict[str, dict[int, float | None]]] = {}
+    simplex: dict[str, dict[str, dict[int, float | None]]] = {}
+    general: dict[str, dict[str, float | None]] = {}
     for f in module.find_log_files("fgumi/yield"):
         if f["f"] is None:
             continue
@@ -62,7 +60,7 @@ def parse_reports(module: BaseMultiqcModule) -> Set[str]:
             simplex_full = max(simplex_rows, key=lambda r: r.fraction)
             general.setdefault(s_name, {})["ss_consensus_families"] = simplex_full.ss_consensus_families
 
-    parsed: Set[str] = set()
+    parsed: set[str] = set()
     for kind, data, tabs in [("duplex", duplex, _DUPLEX_TABS), ("simplex", simplex, _SIMPLEX_TABS)]:
         data = module.ignore_samples(data)
         if not data:

@@ -3,7 +3,6 @@ http://rseqc.sourceforge.net/#tin-py"""
 
 import csv
 import logging
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC tin reports and parse their data"""
 
-    tin_data: Dict = dict()
+    tin_data: dict = {}
 
     for f in module.find_log_files("rseqc/tin", filehandles=True):
         # Parse contents

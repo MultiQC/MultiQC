@@ -20,7 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any DeDup reports
-        self.snp_cov_data = dict()
+        self.snp_cov_data = {}
 
         # Find and load JSON file
         for f in self.find_log_files("eigenstratdatabasetools", filehandles=True):
@@ -64,7 +64,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
-            self.snp_cov_data[s_clean] = dict()
+            self.snp_cov_data[s_clean] = {}
 
             for k, v in data[s_name].items():
                 try:

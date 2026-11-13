@@ -3,7 +3,6 @@ import logging
 import os
 from collections import defaultdict
 from itertools import islice
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -35,15 +34,15 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Gather data from all json files
-        self.bcl2fastq_data: Dict[str, Dict[str, dict]] = dict()
+        self.bcl2fastq_data: dict[str, dict[str, dict]] = {}
         for f in self.find_log_files("bcl2fastq"):
             self.parse_file_as_json(f)
 
         # Collect counts by lane and sample (+source_files)
-        self.bcl2fastq_bylane: dict = dict()
-        self.bcl2fastq_bysample: dict = dict()
-        self.bcl2fastq_bysample_lane: dict = dict()
-        self.source_files: Dict[str, list[str]] = dict()
+        self.bcl2fastq_bylane: dict = {}
+        self.bcl2fastq_bysample: dict = {}
+        self.bcl2fastq_bysample_lane: dict = {}
+        self.source_files: dict[str, list[str]] = {}
         self.split_data_by_lane_and_sample()
 
         # Filter to strip out ignored sample names
@@ -68,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add sample counts to general stats table
         self.add_general_stats()
         self.write_data_file(
-            {str(k): self.bcl2fastq_bylane[k] for k in self.bcl2fastq_bylane.keys()}, "multiqc_bcl2fastq_bylane"
+            {str(k): self.bcl2fastq_bylane[k] for k in self.bcl2fastq_bylane}, "multiqc_bcl2fastq_bylane"
         )
         self.write_data_file(self.bcl2fastq_bysample, "multiqc_bcl2fastq_bysample")
 
@@ -109,7 +108,7 @@ class MultiqcModule(BaseMultiqcModule):
         lcats_set: set[str] = set()
         for s_name in self.bcl2fastq_bysample_lane:
             lcats_set.update(self.bcl2fastq_bysample_lane[s_name].keys())
-        lcats = sorted(list(lcats_set))
+        lcats = sorted(lcats_set)
         self.add_section(
             name="Clusters by sample",
             anchor="bcl2fastq-bysample",
@@ -162,8 +161,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None, runId)
 
         if runId not in self.bcl2fastq_data:
-            self.bcl2fastq_data[runId] = dict()
-        run_data: Dict[str, Dict] = self.bcl2fastq_data[runId]
+            self.bcl2fastq_data[runId] = {}
+        run_data: dict[str, dict] = self.bcl2fastq_data[runId]
         for conversionResult in content.get("ConversionResults", []):
             lane_num = conversionResult["LaneNumber"]
             lane = f"L{conversionResult['LaneNumber']}"
@@ -173,7 +172,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "total": 0,
                 "total_yield": 0,
                 "perfectIndex": 0,
-                "samples": dict(),
+                "samples": {},
                 "yieldQ30": 0,
                 "qscore_sum": 0,
             }
@@ -181,8 +180,8 @@ class MultiqcModule(BaseMultiqcModule):
             rlane = run_data[lane]
 
             # Add undetermined barcodes
-            unknown_barcode = dict()
-            for lane_data in content.get("UnknownBarcodes", list()):
+            unknown_barcode = {}
+            for lane_data in content.get("UnknownBarcodes", []):
                 if lane_data["Lane"] == lane_num:
                     unknown_barcode = lane_data["Barcodes"]
                     break
@@ -196,9 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
                 sample = self.clean_s_name(sample, f)
                 if sample in run_data[lane]["samples"]:
                     log.debug(
-                        "Duplicate runId/lane/sample combination found! Overwriting: {}, {}".format(
-                            self.prepend_runid(runId, lane), sample
-                        )
+                        f"Duplicate runId/lane/sample combination found! Overwriting: {self.prepend_runid(runId, lane)}, {sample}"
                     )
                 run_data[lane]["samples"][sample] = {
                     "total": 0,
@@ -258,7 +255,7 @@ class MultiqcModule(BaseMultiqcModule):
                 }
 
         # Calculate Percents and averages
-        for lane_id, lane_data in run_data.items():
+        for lane_data in run_data.values():
             try:
                 lane_data["percent_Q30"] = (float(lane_data["yieldQ30"]) / float(lane_data["total_yield"])) * 100.0
             except ZeroDivisionError:
@@ -274,7 +271,7 @@ class MultiqcModule(BaseMultiqcModule):
             except ZeroDivisionError:
                 lane_data["mean_qscore"] = "NA"
 
-            for sample_id, sample in lane_data["samples"].items():
+            for sample in lane_data["samples"].values():
                 try:
                     sample["percent_Q30"] = (float(sample["yieldQ30"]) / float(sample["total_yield"])) * 100.0
                 except ZeroDivisionError:
@@ -363,13 +360,13 @@ class MultiqcModule(BaseMultiqcModule):
                             pass
 
     def add_general_stats(self):
-        data: Dict[str, Dict[str, ValueT]] = dict()
+        data: dict[str, dict[str, ValueT]] = {}
         for sample_id, sample in self.bcl2fastq_bysample.items():
-            percent_R_Q30 = dict()
+            percent_R_Q30 = {}
             for r_num in range(1, 5):
                 # Zero division is possible
                 try:
-                    percent_R_Q30[r_num] = "{0:.1f}".format(
+                    percent_R_Q30[r_num] = "{:.1f}".format(
                         float(100.0 * sample[f"R{r_num}_Q30"] / sample[f"R{r_num}_yield"])
                     )
                 except ZeroDivisionError:
@@ -393,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except KeyError:
                     pass
 
-        headers: Dict[str, ColumnDict] = {
+        headers: dict[str, ColumnDict] = {
             "total": {
                 "title": "Clusters",
                 "description": f"Total number of reads for this sample as determined by bcl2fastq demultiplexing ("
@@ -449,7 +446,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def lane_stats_table(self):
         """Return a table with overview stats for each bcl2fastq lane for a single flow cell"""
-        headers: Dict[str, ColumnDict] = {
+        headers: dict[str, ColumnDict] = {
             "total_yield": {
                 "title": f"{config.base_count_prefix} Total Yield",
                 "description": f"Number of bases ({config.base_count_desc})",
@@ -512,7 +509,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def get_bar_data_from_undetermined(data_by_flowcell):
         """Get data to plot for undetermined barcodes."""
-        bar_data: Dict[str, Dict[str, int]] = defaultdict(dict)
+        bar_data: dict[str, dict[str, int]] = defaultdict(dict)
         # get undetermined barcodes for each lanes
         for flowcell_id, data in data_by_flowcell.items():
             try:

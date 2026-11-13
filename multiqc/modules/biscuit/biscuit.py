@@ -147,7 +147,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.biscuit_data["read_avg_retention_rate"]
         )
 
-        n_samples = max([len(self.biscuit_data[k]) for k in self.biscuit_data.keys()])
+        n_samples = max([len(self.biscuit_data[k]) for k in self.biscuit_data])
         if n_samples == 0:
             raise ModuleNoSamplesFound
         log.info(f"Found {n_samples} samples")
@@ -478,141 +478,93 @@ class MultiqcModule(BaseMultiqcModule):
         shared_cofv = {"min": 0, "format": "{:,.3f}", "minrange": 50}
 
         pheader = {
-            "mu_a_b": dict(
-                shared_mean, **{"title": "All Genome Mean", "description": "Mean Sequencing Depth for All Reads"}
-            ),
-            "mu_q_b": dict(
-                shared_mean, **{"title": "Q40 Genome Mean", "description": "Mean Sequencing Depth for Q40 Reads"}
-            ),
+            "mu_a_b": dict(shared_mean, title="All Genome Mean", description="Mean Sequencing Depth for All Reads"),
+            "mu_q_b": dict(shared_mean, title="Q40 Genome Mean", description="Mean Sequencing Depth for Q40 Reads"),
             "mu_a_b_b": dict(
                 shared_mean,
-                **{
-                    "title": "Low GC All Gen. Mean",
-                    "description": "Mean Sequencing Depth for All Reads in Low GC-Content Regions",
-                },
+                title="Low GC All Gen. Mean",
+                description="Mean Sequencing Depth for All Reads in Low GC-Content Regions",
             ),
             "mu_q_b_b": dict(
                 shared_mean,
-                **{
-                    "title": "Low GC Q40 Gen. Mean",
-                    "description": "Mean Sequencing Depth for Q40 Reads in Low GC-Content Regions",
-                },
+                title="Low GC Q40 Gen. Mean",
+                description="Mean Sequencing Depth for Q40 Reads in Low GC-Content Regions",
             ),
             "mu_a_b_t": dict(
                 shared_mean,
-                **{
-                    "title": "High GC All Gen. Mean",
-                    "description": "Mean Sequencing Depth for All Reads in High GC-Content Regions",
-                },
+                title="High GC All Gen. Mean",
+                description="Mean Sequencing Depth for All Reads in High GC-Content Regions",
             ),
             "mu_q_b_t": dict(
                 shared_mean,
-                **{
-                    "title": "High GC Q40 Gen. Mean",
-                    "description": "Mean Sequencing Depth for Q40 Reads in High GC-Content Regions",
-                },
+                title="High GC Q40 Gen. Mean",
+                description="Mean Sequencing Depth for Q40 Reads in High GC-Content Regions",
             ),
-            "cv_a_b": dict(
-                shared_cofv, **{"title": "All Genome CoV", "description": "Sequencing Depth CoV for All Reads"}
-            ),
-            "cv_q_b": dict(
-                shared_cofv, **{"title": "Q40 Genome CoV", "description": "Sequencing Depth CoV for Q40 Reads"}
-            ),
+            "cv_a_b": dict(shared_cofv, title="All Genome CoV", description="Sequencing Depth CoV for All Reads"),
+            "cv_q_b": dict(shared_cofv, title="Q40 Genome CoV", description="Sequencing Depth CoV for Q40 Reads"),
             "cv_a_b_b": dict(
                 shared_cofv,
-                **{
-                    "title": "Low GC All Gen. CoV",
-                    "description": "Sequencing Depth CoV for All Reads in Low GC-Content Regions",
-                },
+                title="Low GC All Gen. CoV",
+                description="Sequencing Depth CoV for All Reads in Low GC-Content Regions",
             ),
             "cv_q_b_b": dict(
                 shared_cofv,
-                **{
-                    "title": "Low GC Q40 Gen. CoV",
-                    "description": "Sequencing Depth CoV for Q40 Reads in Low GC-Content Regions",
-                },
+                title="Low GC Q40 Gen. CoV",
+                description="Sequencing Depth CoV for Q40 Reads in Low GC-Content Regions",
             ),
             "cv_a_b_t": dict(
                 shared_cofv,
-                **{
-                    "title": "High GC All Gen. CoV",
-                    "description": "Sequencing Depth CoV for All Reads in High GC-Content Regions",
-                },
+                title="High GC All Gen. CoV",
+                description="Sequencing Depth CoV for All Reads in High GC-Content Regions",
             ),
             "cv_q_b_t": dict(
                 shared_cofv,
-                **{
-                    "title": "High GC Q40 Gen. CoV",
-                    "description": "Sequencing Depth CoV for Q40 Reads in High GC-Content Regions",
-                },
+                title="High GC Q40 Gen. CoV",
+                description="Sequencing Depth CoV for Q40 Reads in High GC-Content Regions",
             ),
-            "mu_a_c": dict(
-                shared_mean, **{"title": "All CpGs Mean", "description": "Mean Sequencing Depth for All CpGs"}
-            ),
-            "mu_q_c": dict(
-                shared_mean, **{"title": "Q40 CpGs Mean", "description": "Mean Sequencing Depth for Q40 CpGs"}
-            ),
+            "mu_a_c": dict(shared_mean, title="All CpGs Mean", description="Mean Sequencing Depth for All CpGs"),
+            "mu_q_c": dict(shared_mean, title="Q40 CpGs Mean", description="Mean Sequencing Depth for Q40 CpGs"),
             "mu_a_c_b": dict(
                 shared_mean,
-                **{
-                    "title": "Low GC All CpGs Mean",
-                    "description": "Mean Sequencing Depth for All CpGs in Low GC-Content Regions",
-                },
+                title="Low GC All CpGs Mean",
+                description="Mean Sequencing Depth for All CpGs in Low GC-Content Regions",
             ),
             "mu_q_c_b": dict(
                 shared_mean,
-                **{
-                    "title": "Low GC Q40 CpGs Mean",
-                    "description": "Mean Sequencing Depth for Q40 CpGs in Low GC-Content Regions",
-                },
+                title="Low GC Q40 CpGs Mean",
+                description="Mean Sequencing Depth for Q40 CpGs in Low GC-Content Regions",
             ),
             "mu_a_c_t": dict(
                 shared_mean,
-                **{
-                    "title": "High GC All CpGs Mean",
-                    "description": "Mean Sequencing Depth for All CpGs in High GC-Content Regions",
-                },
+                title="High GC All CpGs Mean",
+                description="Mean Sequencing Depth for All CpGs in High GC-Content Regions",
             ),
             "mu_q_c_t": dict(
                 shared_mean,
-                **{
-                    "title": "High GC Q40 CpGs Mean",
-                    "description": "Mean Sequencing Depth for Q40 CpGs in High GC-Content Regions",
-                },
+                title="High GC Q40 CpGs Mean",
+                description="Mean Sequencing Depth for Q40 CpGs in High GC-Content Regions",
             ),
-            "cv_a_c": dict(
-                shared_cofv, **{"title": "All CpGs CoV", "description": "Sequencing Depth CoV for All CpGs"}
-            ),
-            "cv_q_c": dict(
-                shared_cofv, **{"title": "Q40 CpGs CoV", "description": "Sequencing Depth CoV for Q40 CpGs"}
-            ),
+            "cv_a_c": dict(shared_cofv, title="All CpGs CoV", description="Sequencing Depth CoV for All CpGs"),
+            "cv_q_c": dict(shared_cofv, title="Q40 CpGs CoV", description="Sequencing Depth CoV for Q40 CpGs"),
             "cv_a_c_b": dict(
                 shared_cofv,
-                **{
-                    "title": "Low GC All CpGs CoV",
-                    "description": "Sequencing Depth CoV for All CpGs in Low GC-Content Regions",
-                },
+                title="Low GC All CpGs CoV",
+                description="Sequencing Depth CoV for All CpGs in Low GC-Content Regions",
             ),
             "cv_q_c_b": dict(
                 shared_cofv,
-                **{
-                    "title": "Low GC Q40 CpGs CoV",
-                    "description": "Sequencing Depth CoV for Q40 CpGs in Low GC-Content Regions",
-                },
+                title="Low GC Q40 CpGs CoV",
+                description="Sequencing Depth CoV for Q40 CpGs in Low GC-Content Regions",
             ),
             "cv_a_c_t": dict(
                 shared_cofv,
-                **{
-                    "title": "High GC All CpGs CoV",
-                    "description": "Sequencing Depth CoV for All CpGs in High GC-Content Regions",
-                },
+                title="High GC All CpGs CoV",
+                description="Sequencing Depth CoV for All CpGs in High GC-Content Regions",
             ),
             "cv_q_c_t": dict(
                 shared_cofv,
-                **{
-                    "title": "High GC Q40 CpGs CoV",
-                    "description": "Sequencing Depth CoV for Q40 CpGs in High GC-Content Regions",
-                },
+                title="High GC Q40 CpGs CoV",
+                description="Sequencing Depth CoV for Q40 CpGs in High GC-Content Regions",
             ),
         }
 
@@ -700,10 +652,10 @@ class MultiqcModule(BaseMultiqcModule):
     def chart_retention_readpos(self):
         """Charts _*RetentionByReadPos.txt"""
         pd = [
-            dict([(s_name, dd["1"]) for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()]),
-            dict([(s_name, dd["2"]) for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()]),
-            dict([(s_name, dd["1"]) for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()]),
-            dict([(s_name, dd["2"]) for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()]),
+            {s_name: dd["1"] for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()},
+            {s_name: dd["2"] for s_name, dd in self.biscuit_data["cpg_retention_readpos"].items()},
+            {s_name: dd["1"] for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()},
+            {s_name: dd["2"] for s_name, dd in self.biscuit_data["cph_retention_readpos"].items()},
         ]
 
         pconfig = {
@@ -946,7 +898,7 @@ def parse_covdist(f, fn):
         fields = line.split()
         data[int(float(fields[0]))] = int(float(fields[1]))
 
-    covs = sorted([k for k in data])[:31]
+    covs = sorted(data)[:31]
     _ccov_cnt = sum(data.values())
 
     ccov_cnts = []

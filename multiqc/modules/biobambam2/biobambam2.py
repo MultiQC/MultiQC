@@ -28,7 +28,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://gitlab.com/german.tischler/biobambam2/-/blob/master/COPYING",
         )
 
-        n = dict()
+        n = {}
         n["bamsormadup"] = MarkDuplicates.parse_reports(self, "biobambam2/bamsormadup")
         if len(n["bamsormadup"]) > 0:
             log.info(f"Found {len(n['bamsormadup'])} bamsormadup reports")

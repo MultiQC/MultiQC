@@ -85,7 +85,7 @@ You now need this:
 
 ```python
 from multiqc import config
-from multiqc.plots import bargraph   # Load specific plot types here
+from multiqc.plots import bargraph  # Load specific plot types here
 from multiqc.modules.base_module import BaseMultiqcModule
 ```
 
@@ -99,6 +99,7 @@ For example, change this:
 
 ```python
 import plots
+
 return plots.bargraph.plot(data, keys, pconfig)
 ```
 
@@ -106,6 +107,7 @@ to this:
 
 ```python
 from plots import bargraph
+
 return bargraph.plot(data, keys, pconfig)
 ```
 
@@ -136,10 +138,12 @@ To use the new syntax, add your search pattern to `config.sp` using the new `bef
 
 ```python
 from multiqc.utils import config
+
+
 def load_config():
     my_search_patterns = {
-        'my_plugin/my_mod': {'fn': '*_somefile.txt'},
-        'my_plugin/my_other_mod': {'fn': '*other_file.txt'},
+        "my_plugin/my_mod": {"fn": "*_somefile.txt"},
+        "my_plugin/my_other_mod": {"fn": "*other_file.txt"},
     }
     config.update_dict(config.sp, my_search_patterns)
 ```
@@ -161,11 +165,11 @@ Report sections can be added by the method called `self.add_section()`. For exam
 
 ```python
 self.add_section(
-  name='My Section',
-  anchor='my-html-id',
-  description='Description of what this plot shows.',
-  helptext='More extensive help text can about how to interpret this.',
-  plot=linegraph.plot(data, pconfig),
+    name="My Section",
+    anchor="my-html-id",
+    description="Description of what this plot shows.",
+    helptext="More extensive help text can about how to interpret this.",
+    plot=linegraph.plot(data, pconfig),
 )
 ```
 
@@ -179,24 +183,24 @@ A couple of minor updates to how numbers are handled in tables may affect your c
 Secondly, any table columns reporting a read and base counts should use new config options to allow user-configurable multipliers. For example, instead of this:
 
 ```python
-headers['read_counts'] = {
-  'title': 'M Reads',
-  'description': 'Read counts (millions)',
-  'modify': lambda x: x / 1000000,
-  'format': '{:.,2f} M',
-  'shared_key': 'read_count'
+headers["read_counts"] = {
+    "title": "M Reads",
+    "description": "Read counts (millions)",
+    "modify": lambda x: x / 1000000,
+    "format": "{:.,2f} M",
+    "shared_key": "read_count",
 }
 ```
 
 you should now use this:
 
 ```python
-headers['read_counts'] = {
-  'title': f'{config.read_count_prefix} Reads',
-  'description': f'Total raw sequences ({config.read_count_desc})',
-  'modify': lambda x: x * config.read_count_multiplier,
-  'format': '{:,.2f} ' + config.read_count_prefix,
-  'shared_key': 'read_count'
+headers["read_counts"] = {
+    "title": f"{config.read_count_prefix} Reads",
+    "description": f"Total raw sequences ({config.read_count_desc})",
+    "modify": lambda x: x * config.read_count_multiplier,
+    "format": "{:,.2f} " + config.read_count_prefix,
+    "shared_key": "read_count",
 }
 ```
 
@@ -205,11 +209,11 @@ Not as pretty, but allows users to view low depth coverage.
 Similarly, for base counts:
 
 ```python
-headers['base_counts'] = {
-  'title': f'{config.base_count_prefix} Bases',
-  'description': f'Total raw bases ({config.base_count_desc})',
-  'modify': lambda x: x * config.base_count_multiplier,
-  'format': '{:,.2f} ' + config.base_count_prefix,
-  'shared_key': 'base_count'
+headers["base_counts"] = {
+    "title": f"{config.base_count_prefix} Bases",
+    "description": f"Total raw bases ({config.base_count_desc})",
+    "modify": lambda x: x * config.base_count_multiplier,
+    "format": "{:,.2f} " + config.base_count_prefix,
+    "shared_key": "base_count",
 }
 ```

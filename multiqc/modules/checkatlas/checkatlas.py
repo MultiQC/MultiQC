@@ -1,7 +1,6 @@
 import logging
 import re
 from html import escape
-from typing import Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
@@ -21,7 +20,7 @@ QC_METRICS: dict[str, str] = {
 # makes the report sluggish without adding visual information.
 QC_PLOT_MAX_POINTS = 1000
 
-Coerced = Union[int, float, str]
+Coerced = int | float | str
 
 
 class MultiqcModule(BaseMultiqcModule):

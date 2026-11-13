@@ -4,7 +4,6 @@ Check that Plotly version is supported, and show an error and exit if it isn't.
 
 import logging
 import sys
-from typing import Optional
 
 from packaging import version
 
@@ -31,7 +30,7 @@ def check_plotly_version():
 def determine_barplot_height(
     max_n_samples: int,
     max_bars_in_group: int = 1,
-    legend_height: Optional[int] = None,
+    legend_height: int | None = None,
 ) -> int:
     """
     Used in bar and box plots

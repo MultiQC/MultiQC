@@ -1,7 +1,6 @@
 import json
 import logging
 import re
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -28,7 +27,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the mod data
-        self.ccs_data: Dict = dict()
+        self.ccs_data: dict = {}
         self.parse_v4_log_files()
         self.parse_v5_log_files()
         self.ccs_data = self.ignore_samples(self.ccs_data)
@@ -104,15 +103,15 @@ class MultiqcModule(BaseMultiqcModule):
 
     def add_sections(self):
         # First we gather all the filters we encountered
-        all_filters = dict()
+        all_filters = {}
         for s_name in self.ccs_data:
             for filter_reason in self.filter_and_pass(self.ccs_data[s_name]):
                 all_filters[filter_reason] = 0
 
         # Then we add the counts for each filter to the plot data
-        plot_data = dict()
+        plot_data = {}
         for s_name, data in self.ccs_data.items():
-            plot_data[s_name] = dict()
+            plot_data[s_name] = {}
             for reason in all_filters:
                 for attribute in data["attributes"]:
                     if attribute["name"] == reason:
@@ -151,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def filter_and_pass(self, data):
         """Gather the reasons why ZMWs were failed or passed"""
-        reasons = dict()
+        reasons = {}
 
         # We only have to use the attributes
         attributes = data["attributes"]
@@ -171,9 +170,9 @@ class MultiqcModule(BaseMultiqcModule):
     def convert_to_v5(self, data):
         """Convert the v4 format to the new CCS v5 json format"""
         # Initialise the v5 format dictionary
-        v5 = dict()
+        v5 = {}
         v5["id"] = "ccs_processing"
-        attributes = list()
+        attributes = []
         v5["attributes"] = attributes
 
         # Update names for top level entries, they have been changed in v5
@@ -221,11 +220,11 @@ class MultiqcModule(BaseMultiqcModule):
 
 def parse_PacBio_log(file_content):
     """Parse ccs log file"""
-    data = dict()
+    data = {}
     # This is a local dictionary to store which annotations belong to which
     # result dictionary. This will be used to structure the output, but will
     # not be part of the output itself
-    annotations = dict()
+    annotations = {}
     current_annotation = None
 
     for line in file_content:
@@ -242,7 +241,7 @@ def parse_PacBio_log(file_content):
             name = line[:-9]
             # We make a new heading with the current name under the data that
             # matches the current annotation
-            current_annotation = dict()
+            current_annotation = {}
             # We keep the dictonary accessible under 'current_annotation',
             # so we can keep adding new data to it without having to keep track
             # of where it belongs
@@ -275,7 +274,7 @@ def parse_PacBio_log(file_content):
 
 def parse_line(line):
     """Parse a line from the ccs log file"""
-    data = dict()
+    data = {}
 
     # If we got an empty line to parse
     if not line.strip():

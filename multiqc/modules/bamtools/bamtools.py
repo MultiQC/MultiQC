@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -28,9 +27,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers: Dict = dict()
-        self.general_stats_data: Dict = dict()
-        n = dict()
+        self.general_stats_headers: dict = {}
+        self.general_stats_data: dict = {}
+        n = {}
 
         # Call submodule functions
         n["stats"] = stats.parse_reports(self)

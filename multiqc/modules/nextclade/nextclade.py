@@ -25,7 +25,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.nextclade_data = dict()
+        self.nextclade_data = {}
         for f in self.find_log_files("nextclade", filehandles=True):
             self.parse_nextclade_log(f)
             self.add_data_source(f)

@@ -1,9 +1,8 @@
 import logging
-from typing import Dict, Set
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import family_sizes, grouping, consensus_families, yields, umis, consensus_stats, dedup, commands, review
+from . import commands, consensus_families, consensus_stats, dedup, family_sizes, grouping, review, umis, yields
 
 _TOOL_MODULES = (
     family_sizes,
@@ -102,7 +101,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/fulcrumgenomics/fgumi/blob/main/LICENSE",
         )
 
-        self.samples_parsed_by_tool: Dict[str, Set[str]] = {}
+        self.samples_parsed_by_tool: dict[str, set[str]] = {}
         for mod in _TOOL_MODULES:
             tool_name = mod.__name__.rsplit(".", 1)[-1]
             samples = mod.parse_reports(self)

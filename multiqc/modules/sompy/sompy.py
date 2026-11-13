@@ -23,9 +23,9 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(None)
 
         self.sompy_raw_sample_names = set()
-        self.sompy_combined_data = dict()
-        self.sompy_indel_data = dict()
-        self.sompy_snv_data = dict()
+        self.sompy_combined_data = {}
+        self.sompy_indel_data = {}
+        self.sompy_snv_data = {}
 
         for f in self.find_log_files("sompy"):
             self.parse_file(f)

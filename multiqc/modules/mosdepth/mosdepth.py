@@ -1,7 +1,7 @@
 import fnmatch
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import cast
 
 from multiqc import Plot, config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 def read_config():
-    cfg = getattr(config, "mosdepth_config", dict())
+    cfg = getattr(config, "mosdepth_config", {})
     if not isinstance(cfg, dict):
         return {}
 
@@ -56,8 +56,8 @@ def read_config():
     return cfg
 
 
-def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List[int]) -> Dict[str, float]:
-    genstats: Dict[str, float] = {}
+def genstats_cov_thresholds(cum_fraction_by_cov: dict[int, float], threshs: list[int]) -> dict[str, float]:
+    genstats: dict[str, float] = {}
     sorted_cum_fraction_by_cov = sorted(cum_fraction_by_cov.items())
     for t in threshs:
         # take next known value
@@ -68,7 +68,7 @@ def genstats_cov_thresholds(cum_fraction_by_cov: Dict[int, float], threshs: List
     return genstats
 
 
-def calc_median_coverage(cum_fraction_by_cov) -> Optional[float]:
+def calc_median_coverage(cum_fraction_by_cov) -> float | None:
     median_cov = None
     for this_cov, cum_fraction in sorted(cum_fraction_by_cov.items(), reverse=True):
         if cum_fraction >= 0.5:
@@ -187,20 +187,20 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         self.cfg = read_config()
-        genstats_by_sample: Dict[str, Dict[str, Union[int, float]]] = defaultdict(dict)  # mean coverage
+        genstats_by_sample: dict[str, dict[str, int | float]] = defaultdict(dict)  # mean coverage
 
         # Parse mean coverage
         for f in self.find_log_files("mosdepth/summary"):
             s_name = self.clean_s_name(f["fn"], f)
-            sample_stats: Dict[str, Union[int, float]] = {}
+            sample_stats: dict[str, int | float] = {}
             try:
                 for line in f["f"].splitlines():
                     # The first column can be a contig name, "total", "total_region".
                     # We want to use "total_region" if available. It is available when
                     # --by is specified. It always goes after "total", so we can just
                     # assume it will override the information collected for "total":
-                    if line.startswith("total\t") or line.startswith("total_region\t"):
-                        contig, length, bases, mean, min_cov, max_cov = line.split("\t")
+                    if line.startswith(("total\t", "total_region\t")):
+                        _contig, length, bases, mean, min_cov, max_cov = line.split("\t")
                         sample_stats["mean_coverage"] = float(mean)
                         sample_stats["min_coverage"] = float(min_cov)
                         sample_stats["max_coverage"] = float(max_cov)
@@ -269,7 +269,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if cum_cov_dist_by_sample:
                 xmax = 0
-                for sample, cum_cov_by_x in cum_cov_dist_by_sample.items():
+                for cum_cov_by_x in cum_cov_dist_by_sample.values():
                     for x, cumcov in cum_cov_by_x.items():
                         if cumcov is not None and cumcov > 1:  # require >1% to prevent long flat tail
                             xmax = max(xmax, x)
@@ -318,7 +318,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.write_data_file(perchrom_avg_by_sample, "mosdepth_perchrom")
 
                 num_contigs = max([len(x.keys()) for x in perchrom_avg_by_sample.values()])
-                perchrom_plot: Optional[Union[Plot, str]]
+                perchrom_plot: Plot | str | None
                 if num_contigs > 1:
                     perchrom_plot = linegraph.plot(
                         perchrom_avg_by_sample,
@@ -443,15 +443,15 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             },
         )
-        self.general_stats_addcols(cast(Dict[str, Dict[str, ValueT]], genstats_by_sample), genstats_headers)
+        self.general_stats_addcols(cast(dict[str, dict[str, ValueT]], genstats_by_sample), genstats_headers)
 
     def parse_cov_dist(
         self, scope: str
-    ) -> Tuple[
-        Dict[str, Dict],
-        Dict[str, Dict],
-        Dict[str, Tuple[float, float]],
-        Dict[str, Dict[str, Union[float, int, None]]],
+    ) -> tuple[
+        dict[str, dict],
+        dict[str, dict],
+        dict[str, tuple[float, float]],
+        dict[str, dict[str, float | int | None]],
     ]:
         """
         Two types of coverage distributions are parsed: global and region.
@@ -476,14 +476,14 @@ class MultiqcModule(BaseMultiqcModule):
         total   1       0.00
         """
 
-        cumulative_pct_by_cov_by_sample: Dict[str, Dict] = defaultdict(dict)  # cumulative distribution
-        bases_fraction_sum_per_contig_per_sample: Dict[str, Dict[str, float]] = defaultdict(
+        cumulative_pct_by_cov_by_sample: dict[str, dict] = defaultdict(dict)  # cumulative distribution
+        bases_fraction_sum_per_contig_per_sample: dict[str, dict[str, float]] = defaultdict(
             dict
         )  # per chromosome average coverage
-        xy_cov_by_sample: Dict[str, Tuple[float, float]] = dict()
-        genstats_by_sample: Dict[str, Dict[str, Union[float, int, None]]] = dict()
+        xy_cov_by_sample: dict[str, tuple[float, float]] = {}
+        genstats_by_sample: dict[str, dict[str, float | int | None]] = {}
 
-        threshs, hidden_threshs = config.get_cov_thresholds("mosdepth_config")
+        threshs, _hidden_threshs = config.get_cov_thresholds("mosdepth_config")
 
         excluded_contigs = set()
         included_contigs = set()
@@ -495,8 +495,8 @@ class MultiqcModule(BaseMultiqcModule):
             if s_name in cumulative_pct_by_cov_by_sample:  # both region and global might exist, prioritizing region
                 continue
 
-            bases_fraction_sum_per_contig: Dict[str, float] = defaultdict(float)
-            cum_fraction_by_cov: Dict[int, float] = dict()
+            bases_fraction_sum_per_contig: dict[str, float] = defaultdict(float)
+            cum_fraction_by_cov: dict[int, float] = {}
 
             line_num = 0
             try:
@@ -558,7 +558,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Applying the contig coverage cutoff. First, count the total coverage for
         # every contig.
-        total_cov_per_contig: Dict[str, float] = defaultdict(lambda: 0)
+        total_cov_per_contig: dict[str, float] = defaultdict(lambda: 0)
         total_cov = 0.0
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
@@ -570,12 +570,11 @@ class MultiqcModule(BaseMultiqcModule):
         passing_contigs = set()
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
-                if float(total_cov_per_contig[contig]) > req_cov:
-                    if contig not in passing_contigs:
-                        passing_contigs.add(contig)
+                if float(total_cov_per_contig[contig]) > req_cov and contig not in passing_contigs:
+                    passing_contigs.add(contig)
 
         rejected_contigs = set()
-        filtered_perchrom_avg_data: Dict[str, Dict[str, float]] = defaultdict(dict)
+        filtered_perchrom_avg_data: dict[str, dict[str, float]] = defaultdict(dict)
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
                 if contig not in passing_contigs:
@@ -584,19 +583,18 @@ class MultiqcModule(BaseMultiqcModule):
                     filtered_perchrom_avg_data[s_name][contig] = bases_fraction_sum
         bases_fraction_sum_per_contig_per_sample = filtered_perchrom_avg_data
 
-        if rejected_contigs:
-            if self.cfg.get("show_excluded_debug_logs") is True:
-                log.debug(
-                    f"Skipping {len(rejected_contigs)} contigs not passing the "
-                    f"cutoff of {self.cfg['perchrom_fraction_cutoff']}% of "
-                    f"{total_cov:.2f}x total coverage, which is {req_cov:.2f}x. "
-                    f"Skipping contigs: {''.join(rejected_contigs)}"
-                )
+        if rejected_contigs and self.cfg.get("show_excluded_debug_logs") is True:
+            log.debug(
+                f"Skipping {len(rejected_contigs)} contigs not passing the "
+                f"cutoff of {self.cfg['perchrom_fraction_cutoff']}% of "
+                f"{total_cov:.2f}x total coverage, which is {req_cov:.2f}x. "
+                f"Skipping contigs: {''.join(rejected_contigs)}"
+            )
 
         # Additionally, collect X and Y counts if we have them
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
-            x_cov: Optional[float] = None
-            y_cov: Optional[float] = None
+            x_cov: float | None = None
+            y_cov: float | None = None
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
                 if self.cfg.get("xchr"):
                     if str(self.cfg["xchr"]) == str(contig):

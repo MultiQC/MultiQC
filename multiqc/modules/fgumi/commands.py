@@ -3,7 +3,7 @@
 
 import itertools
 import logging
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -23,12 +23,12 @@ _CLIP_REASONS = {
 }
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     return _clip(module) | _filter(module) | _copy_umi(module) | _retag(module) | _downsample(module)
 
 
-def _clip(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Dict[str, int]]] = {}
+def _clip(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, dict[str, int]]] = {}
     for f in module.find_log_files("fgumi/clip"):
         rows = load_rows(f, ClippingMetric)
         if rows is None:
@@ -66,7 +66,7 @@ def _clip(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:
+def _read_filter_stats(f: Any) -> FilterStatsMetric | None:
     """The single row of a `filter --stats` file, in either layout: the headered one-row TSV, or the headerless
     key/value rows that fgumi 0.7.0 and earlier write. ``None`` (with a warning) if neither parses."""
     if f["f"] is None:
@@ -87,8 +87,8 @@ def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:
         return None
 
 
-def _filter(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Optional[float]]] = {}
+def _filter(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, float | None]] = {}
     for f in module.find_log_files("fgumi/filter_stats"):
         row = _read_filter_stats(f)
         if row is None:
@@ -132,8 +132,8 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, int]] = {
+def _copy_umi(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int]] = {
         s_name: rows[0].model_dump(include={"rx_written", "rx_overwritten", "names_trimmed"})
         for s_name, rows in iter_samples(module, "fgumi/copy_umi", CopyUmiMetric)
         if rows
@@ -160,9 +160,9 @@ def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _retag(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Union[int, str]]] = {}
-    samples: Set[str] = set()
+def _retag(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int | str]] = {}
+    samples: set[str] = set()
     # Rows are keyed "<sample> (<operation>)"; iter_samples applies sample filters to the bare sample name.
     for s_name, rows in iter_samples(module, "fgumi/retag", RetagMetric):
         samples.add(s_name)
@@ -200,8 +200,8 @@ def _retag(module: BaseMultiqcModule) -> Set[str]:
     return samples
 
 
-def _downsample(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[int, int]] = {
+def _downsample(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[int, int]] = {
         s_name: {r.family_size: r.count for r in rows}
         for s_name, rows in iter_samples(module, "fgumi/downsample_histogram", DownsampleHistogramMetric)
     }

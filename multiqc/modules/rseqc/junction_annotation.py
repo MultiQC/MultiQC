@@ -3,7 +3,6 @@ http://rseqc.sourceforge.net/#junction-annotation-py"""
 
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import bargraph
@@ -14,7 +13,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC junction_annotation reports and parse their data"""
 
-    junction_annotation_data: Dict = dict()
+    junction_annotation_data: dict = {}
     regexes = {
         "total_splicing_events": r"^Total splicing  Events:\s*(\d+)$",
         "known_splicing_events": r"^Known Splicing Events:\s*(\d+)$",
@@ -28,7 +27,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Go through files and parse data using regexes
     for f in module.find_log_files("rseqc/junction_annotation"):
-        d = dict()
+        d = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:

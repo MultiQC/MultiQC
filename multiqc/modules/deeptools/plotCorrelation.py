@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class plotCorrelationMixin:
     def parse_plotCorrelation(self):
         """Find plotCorrelation output"""
-        self.deeptools_plotCorrelationData = dict()
+        self.deeptools_plotCorrelationData = {}
         for f in self.find_log_files("deeptools/plotCorrelationData", filehandles=False):
             parsed_data = self.parsePlotCorrelationData(f)
             for sample, val_by_sample in parsed_data.items():
@@ -64,7 +64,7 @@ class plotCorrelationMixin:
         return len(self.deeptools_plotCorrelationData)
 
     def parsePlotCorrelationData(self, f):
-        d = dict()
+        d = {}
         x_samples = None
         for line in f["f"].splitlines():
             cols = line.split("\t")
@@ -75,7 +75,7 @@ class plotCorrelationMixin:
             else:
                 y_sample = str(cols[0]).strip("'")
                 y_sample = self.clean_s_name(y_sample, f)
-                d[y_sample] = dict()
+                d[y_sample] = {}
                 for x_sample, col in zip(x_samples, cols[1 : len(cols)]):
                     d[y_sample][x_sample] = float(col)
         return d
