@@ -124,9 +124,7 @@ def parse_reports(module: BaseMultiqcModule) -> set[str]:
             s_bait_name = f"{s_name}: {bait}"
             module.add_data_source(f, s_bait_name, section="HsMetrics")
 
-    # Remove empty dictionaries. Both loops iterate over a snapshot of the keys:
-    # popping from a dict while iterating it raises "dictionary changed size during
-    # iteration", so this crashed as soon as any sample or bait had no metrics.
+    # Remove empty dictionaries
     for s_name in list(data_by_bait_by_sample):
         data_by_bait = data_by_bait_by_sample[s_name]
         for bait in list(data_by_bait):

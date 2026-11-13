@@ -7,6 +7,8 @@ import math
 import shutil
 import sys
 import time
+import types
+import typing
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +16,12 @@ import numpy as np
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
+
+
+def is_union(annotation: Any) -> bool:
+    """True for ``Union[...]``, ``Optional[...]`` and PEP 604 ``X | Y`` annotations."""
+    # `X | Y` has origin types.UnionType, not typing.Union, before Python 3.14
+    return typing.get_origin(annotation) in (typing.Union, types.UnionType)
 
 
 def rmtree_with_retries(

@@ -749,7 +749,7 @@ def test_linegraph_axis_controlled_by_switches_string_instead_of_list():
         assert config.axis_controlled_by_switches is None
         errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
         assert "'axis_controlled_by_switches'" in errs
-        assert "list" in errs
+        assert "expected type 'list[Literal['xaxis', 'yaxis']]'" in errs
 
 
 def test_linegraph_axis_controlled_by_switches_in_plot():

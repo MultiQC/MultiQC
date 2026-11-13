@@ -504,9 +504,7 @@ def _add_config(conf: dict, conf_path=None):
     """
     Add to the global config with given MultiQC config dict
     """
-    # These config values are injected at runtime from config_defaults.yaml rather
-    # than declared at module level, so the `global` line is what tells readers and
-    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    # Annotation-only module names: `global` lets linters resolve them
     global custom_css_files, fn_clean_exts, fn_clean_trim  # noqa: PLW0602
     log_new_config = {}
     log_filename_patterns = []
@@ -578,9 +576,7 @@ def load_sample_names(sample_names_file: Path):
     As such, can also be done directly using a config file.
     """
 
-    # These config values are injected at runtime from config_defaults.yaml rather
-    # than declared at module level, so the `global` line is what tells readers and
-    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    # Annotation-only module names: `global` lets linters resolve them
     global sample_names_rename_buttons, sample_names_rename  # noqa: PLW0602
     num_cols = None
     try:
@@ -609,9 +605,7 @@ def load_sample_names(sample_names_file: Path):
 
 
 def load_replace_names(replace_names_file: Path):
-    # These config values are injected at runtime from config_defaults.yaml rather
-    # than declared at module level, so the `global` line is what tells readers and
-    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    # Annotation-only module names: `global` lets linters resolve them
     global sample_names_replace  # noqa: PLW0602
     try:
         with open(replace_names_file) as f:
@@ -626,9 +620,7 @@ def load_replace_names(replace_names_file: Path):
 
 
 def load_show_hide(show_hide_file: Path | None = None):
-    # These config values are injected at runtime from config_defaults.yaml rather
-    # than declared at module level, so the `global` line is what tells readers and
-    # linters they exist. Only mutated here, never rebound, hence the noqa.
+    # Annotation-only module names: `global` lets linters resolve them
     global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex  # noqa: PLW0602
     if show_hide_file:
         try:

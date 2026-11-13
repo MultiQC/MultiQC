@@ -5,7 +5,6 @@ Better validation of configs. Build on top of Pydantic, but prints more helpful 
 import inspect
 import logging
 import re
-import types
 import typing
 from collections import defaultdict
 from typing import Any
@@ -14,6 +13,7 @@ from PIL import ImageColor
 from pydantic import BaseModel
 
 from multiqc import config
+from multiqc.utils.util_functions import is_union
 
 logger = logging.getLogger(__name__)
 
@@ -229,25 +229,21 @@ class ValidatedConfig(BaseModel):
                 try:
                     check_type(val, expected_type)
                 except TypeCheckError as e:
-                    annotation = expected_type
+                    cast_type = typing.get_args(expected_type)[0] if is_union(expected_type) else expected_type
+                    cast_class = typing.get_origin(cast_type) or cast_type
                     try:  # try casting to expected type?
-                        # Unwrap Optional/Union to its first member before casting.
-                        # Checked with get_origin() rather than __name__: a PEP 604
-                        # union (`str | None`) is a types.UnionType on Python 3.10 to
-                        # 3.13 and has no __name__ at all, so name sniffing would raise
-                        # AttributeError here and silently skip the cast.
-                        if typing.get_origin(expected_type) in (typing.Union, types.UnionType):
-                            expected_type = typing.get_args(expected_type)[0]
-                        val = expected_type(val)  # type: ignore
-                        # A parameterised generic such as list[Literal["xaxis"]] is
-                        # callable and builds a list of invalid members without
-                        # complaining, so check the cast value really does fit
-                        check_type(val, annotation)
+                        if not isinstance(cast_class, type):
+                            raise TypeError(f"Cannot cast to {cast_type}")
+                        # list("abc") would split a string into characters
+                        if isinstance(val, str) and cast_class in (list, tuple, set):
+                            raise TypeError(f"Not casting a string to {cast_type}")
+                        val = cast_class(val)
+                        check_type(val, cast_type)
                     except Exception:
                         v_str = repr(val)
                         if len(v_str) > 20:
                             v_str = v_str[:20] + "..."
-                        expected_type_str = str(expected_type).replace("typing.", "")
+                        expected_type_str = str(cast_type).replace("typing.", "")
                         msg = rf"expected type '{expected_type_str}', got '{type(val).__name__}' {v_str}"
                         add_validation_error(path_in_cfg + (name,), msg)
                         logger.debug(f"{msg}: {e}")

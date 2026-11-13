@@ -77,8 +77,6 @@ def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
             entry_point: EntryPoint = config.avail_modules[this_module]
             module_initializer: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
             # Attributes stashed on the loaded entry point for the module to pick up.
-            # setattr() used to hide this from mypy; ruff rewrites that away, so the
-            # ignores now say plainly what is going on.
             module_initializer.mod_cust_config = mod_cust_config  # type: ignore[attr-defined]
             module_initializer.mod_id = this_module  # type: ignore[attr-defined]
 
@@ -128,11 +126,8 @@ def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
                 raise
 
             # Flag the error, but carry on.
-            # `exc_type` is read in the methods below rather than assigned in the class
-            # body: class scope is not visible to methods, so the old `type` attribute
-            # resolved to the builtin and put the literal word "type" in the issue title.
-            # B023 is silenced because this class is instantiated and rendered inside
-            # this same loop iteration, so late binding cannot bite.
+            # A local, not a class attribute: class scope is not visible to the methods.
+            # B023 is safe as the class is rendered within this loop iteration.
             exc_name = type(sys.exc_info()[1]).__name__
 
             class CustomTraceback:

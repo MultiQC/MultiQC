@@ -55,7 +55,7 @@ class DragenTrimmerMetrics(BaseMultiqcModule):
         ANALYSIS = "TRIMMER STATISTICS"
         trimmer_data = {}
         for sample, data in data_by_sample.items():
-            trimmer_data[sample] = dict(data[ANALYSIS].items())
+            trimmer_data[sample] = dict(data[ANALYSIS])
         return trimmer_data
 
 

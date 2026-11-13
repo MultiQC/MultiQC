@@ -13,9 +13,8 @@ Output: docs/markdown/config_schema.md
 import json
 import re
 import sys
-import types
 from pathlib import Path
-from typing import Any, Literal, Union, get_args, get_origin, get_type_hints
+from typing import Any, Literal, get_args, get_origin, get_type_hints
 
 import yaml
 
@@ -67,6 +66,7 @@ from multiqc.utils.config_schema import (
     SearchPattern,
     SectionOrderOverride,
 )
+from multiqc.utils.util_functions import is_union
 
 # Special-type names that are documented under "## Special Types" further down
 # the same page. References to these names are linkified to the in-page anchor.
@@ -117,9 +117,7 @@ def format_type_annotation(annotation):
     origin = get_origin(annotation)
     args = get_args(annotation)
 
-    # types.UnionType covers `str | None` on Python 3.10 to 3.13, where get_origin()
-    # does not report typing.Union
-    if origin in (Union, types.UnionType):
+    if is_union(annotation):
         # Drop the None branch; nearly every config field is Optional, so the
         # Optional[...] wrapper is noise in the rendered docs.
         non_null = [arg for arg in args if arg is not type(None)]
@@ -128,12 +126,12 @@ def format_type_annotation(annotation):
         formatted_args = [format_type_annotation(arg) for arg in non_null]
         return f"Union[{', '.join(formatted_args)}]"
 
-    elif origin is list or origin is list:
+    elif origin is list:
         if args:
             return f"List[{format_type_annotation(args[0])}]"
         return "List"
 
-    elif origin is dict or origin is dict:
+    elif origin is dict:
         if len(args) == 2:
             return f"Dict[{format_type_annotation(args[0])}, {format_type_annotation(args[1])}]"
         return "Dict"
@@ -155,9 +153,9 @@ def format_type_annotation(annotation):
         return "float"
     elif annotation is bool:
         return "bool"
-    elif annotation is dict or annotation is dict:
+    elif annotation is dict:
         return "Dict"
-    elif annotation is list or annotation is list:
+    elif annotation is list:
         return "List"
     elif annotation is Any:
         return "Any"

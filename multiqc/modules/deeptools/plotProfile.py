@@ -73,10 +73,11 @@ class plotProfileMixin:
                         "color": "#000000",
                     }
                 )
+                labels = [b for b in bin_labels if b]
                 plotBandHelp = f"""
-                    * Green: {next(filter(None, bin_labels))} upstream of gene to {list(filter(None, bin_labels))[1]}
-                    * Yellow: {list(filter(None, bin_labels))[1]} to {list(filter(None, bin_labels))[2]}
-                    * Pink: {list(filter(None, bin_labels))[2]} to {list(filter(None, bin_labels))[3]} downstream of gene
+                    * Green: {labels[0]} upstream of gene to {labels[1]}
+                    * Yellow: {labels[1]} to {labels[2]}
+                    * Pink: {labels[2]} to {labels[3]} downstream of gene
                     """
             except (ValueError, IndexError):
                 pass

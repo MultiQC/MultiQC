@@ -101,7 +101,7 @@ class DragenGcMetrics(BaseMultiqcModule):
         analysis = "GC METRICS SUMMARY"
         summary_data = {}
         for sample_name, sample_data in data_by_sample.items():
-            summary_data[sample_name] = dict(sample_data[analysis].items())
+            summary_data[sample_name] = dict(sample_data[analysis])
 
         return summary_data
 

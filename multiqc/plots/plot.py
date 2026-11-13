@@ -17,6 +17,7 @@ from typing import Any, Generic, Optional, TypeVar, Union, cast
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_serializer, field_validator
+from typing_extensions import Self
 
 from multiqc import config, report
 from multiqc.core import plot_data_store, tmp_dir
@@ -464,7 +465,6 @@ class BaseDataset(BaseModel):
 
 DatasetT = TypeVar("DatasetT", bound="BaseDataset")
 PConfigT = TypeVar("PConfigT", bound="PConfig")
-NormalizedPlotInputDataT = TypeVar("NormalizedPlotInputDataT", bound="NormalizedPlotInputData")
 
 
 def plot_anchor(pconfig: PConfig) -> Anchor:
@@ -504,9 +504,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         return pl.DataFrame(), set()
 
     @classmethod
-    def from_df(
-        cls: type[NormalizedPlotInputDataT], df: pl.DataFrame, pconfig: dict | PConfigT, anchor: Anchor
-    ) -> NormalizedPlotInputDataT:
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | PConfigT, anchor: Anchor) -> Self:
         """
         Abstract method to parse a dataframe (i.e. stored in parquet files)
         along with a pconfig dict into a NormalizedPlotInputData object.
@@ -540,9 +538,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         return report.plot_input_data[anchor]
 
     @classmethod
-    def merge_with_previous(
-        cls: type[NormalizedPlotInputDataT], new_data: NormalizedPlotInputDataT
-    ) -> NormalizedPlotInputDataT:
+    def merge_with_previous(cls, new_data: Self) -> Self:
         """
         If data from a previous run is available, merge it with the current data.
 
@@ -562,7 +558,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
             logger.debug(
                 f"merge_with_previous for {new_data.anchor}: merging {old_data.__class__.__name__} with {new_data.__class__.__name__}"
             )
-            merged_data = cls.merge(cast(NormalizedPlotInputDataT, old_data), new_data)
+            merged_data = cls.merge(cast(Self, old_data), new_data)
             logger.debug(f"merge_with_previous for {new_data.anchor}: merge completed")
         return merged_data
 
@@ -629,9 +625,7 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
                     plot_data_store.append_to_parquet(df)
 
     @classmethod
-    def merge(
-        cls: type[NormalizedPlotInputDataT], old_data: NormalizedPlotInputDataT, new_data: NormalizedPlotInputDataT
-    ) -> NormalizedPlotInputDataT:
+    def merge(cls, old_data: Self, new_data: Self) -> Self:
         """
         Merge old and new data.
 

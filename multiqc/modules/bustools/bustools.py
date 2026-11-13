@@ -220,7 +220,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {}
         for header, v in self.headers.items():
             if header in general_stats_headers:
-                headers[header] = dict(v.items())  # deep copy
+                headers[header] = v.copy()
                 if header not in ["numRecords", "numUMIs", "percentageReadsOnWhitelist"]:
                     headers[header]["hidden"] = True
         self.general_stats_addcols(self.bustools_data, headers)
