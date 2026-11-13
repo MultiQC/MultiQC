@@ -2,6 +2,15 @@
 // AI stuff
 ////////////////////////////////////////////////
 
+import {
+  claudeDefaultMaxTokens,
+  FALLBACK_CONTEXT_WINDOW,
+  parseContextOverflow,
+  parseModel,
+  ruleContextWindow,
+  shrinkBudget,
+} from "./ai-models.js";
+
 window.continueInSeqeraChatHandler = function (event) {
   let el = $(event.currentTarget);
   let seqeraWebsite = el.data("seqera-website");
@@ -15,14 +24,13 @@ window.continueInSeqeraChatHandler = function (event) {
   window.open(url, "_blank");
 };
 
-function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table") {
+// Fit as much of the report as possible into the token budget: tools and General Statistics first,
+// then every section that still fits, in report order. Sections that don't fit are listed by name.
+function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsView = "table", budget = null) {
   let userPrompt = "";
   let currentTokens = systemTokens ?? 0;
-  const providerId = $("#ai-provider").val();
-  const provider = window.AI_PROVIDERS[providerId];
   const model = $("#ai-model").val();
-
-  const maxTokens = getMaxTokens(model);
+  const maxTokens = budget ?? getPromptBudget(model);
 
   // Tools section is highest priority - always include
   userPrompt += "\n----------------------\n\n";
@@ -50,39 +58,39 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       "\n----------------------\n";
 
     userPrompt += genStatsContext;
-    const genStatsTokens = countTokens(genStatsContext);
-    if (currentTokens + genStatsTokens <= maxTokens) {
-      currentTokens += genStatsTokens;
-    } else {
+    currentTokens += countTokens(genStatsContext);
+    if (currentTokens > maxTokens) {
       console.error(
-        `General stats alone would already exceed the token limit of ${provider.name} (${
-          currentTokens + genStatsTokens
-        } > ${maxTokens}). Cannot summarize the report`,
+        `General stats alone exceed the token budget for ${model} (${currentTokens} > ${maxTokens}). ` +
+          "Cannot summarize the report",
       );
       return userPrompt;
     }
   }
 
-  let sectionsContext = "";
   if (!onlyGeneralStats) {
-    // Add sections until we approach the token limit
+    const skipped = [];
     for (const [sectionAnchor, section] of Object.entries(aiReportMetadata.sections)) {
       const mod = aiReportMetadata.tools[section.module_anchor];
-      sectionsContext += `\nTool: ${mod.name}\n`;
-      sectionsContext += formatSectionForAi(sectionAnchor);
-      sectionsContext += "\n\n----------------------";
-
-      const sectionsTokens = countTokens(sectionsContext);
-      if (currentTokens + sectionsTokens > maxTokens) {
-        console.warn(
-          `Truncating prompt to only the general stats to fit within the context window of ${provider.name} (${maxTokens} tokens). ` +
-            `Tokens estimate: ${currentTokens}, with sections: at least ${currentTokens + sectionsTokens}`,
-        );
-        return userPrompt; // Stop iterating through sections and return only general stats
+      const sectionContext = `\nTool: ${mod.name}\n` + formatSectionForAi(sectionAnchor) + "\n\n----------------------";
+      const sectionTokens = countTokens(sectionContext);
+      if (currentTokens + sectionTokens > maxTokens) {
+        skipped.push(`${mod.name}: ${section.name}`);
+        continue;
       }
+      userPrompt += sectionContext;
+      currentTokens += sectionTokens;
+    }
+    if (skipped.length > 0) {
+      console.warn(
+        `Left out ${skipped.length} report sections to fit the context window of ${model} (budget ${maxTokens} tokens)`,
+      );
+      userPrompt +=
+        "\n----------------------\n\nThese report sections were left out to fit the model's context window: " +
+        skipped.join("; ") +
+        "\n";
     }
   }
-  userPrompt += sectionsContext;
   return userPrompt;
 }
 
@@ -133,17 +141,31 @@ function formatSectionForAi(sectionAnchor, moduleAnchor, plotView) {
   return result;
 }
 
-function getMaxTokens(model) {
-  let contextWindow = $("#ai-context-window").val();
-  if (contextWindow) {
-    try {
-      return parseInt(contextWindow);
-    } catch (e) {
-      console.error("Error parsing custom context window", e);
-    }
+// The model's context window: the configured override, then what MultiQC found out when building
+// the report, then the model family rules, then a conservative default
+function getContextWindow(model) {
+  const providerId = $("#ai-provider").val();
+  if (providerId === "seqera") return 200000;
+  if (providerId === "custom") {
+    const custom = parseInt($("#ai-context-window").val());
+    if (custom > 0) return custom;
+  } else if (aiConfigCustomContextWindow && aiConfigCustomContextWindow !== "None") {
+    const configured = parseInt(aiConfigCustomContextWindow);
+    if (configured > 0) return configured;
   }
-  if (model.startsWith("claude")) return 200000;
-  return 128000; // default for gpt models
+  const config = window.aiModelConfig || {};
+  const known = (config.contextWindows || {})[model];
+  if (known) return known;
+  return ruleContextWindow(parseModel(model)) || config.fallbackContextWindow || FALLBACK_CONTEXT_WINDOW;
+}
+
+// Tokens available for the prompt, leaving room for the answer
+function getPromptBudget(model) {
+  const config = window.aiModelConfig || {};
+  const info = parseModel(model);
+  const outputTokens =
+    config.maxCompletionTokens || (info.vendor === "anthropic" ? claudeDefaultMaxTokens(info) : 4096);
+  return Math.max(1, Math.floor(getContextWindow(model) * 0.95) - outputTokens);
 }
 
 async function summarizeWithAi(button) {
@@ -163,25 +185,24 @@ async function summarizeWithAi(button) {
 
   let title = configTitle == "None" ? "" : configTitle + ": ";
 
-  let content;
   let systemPrompt;
+  // Builds the report data, fitting it into the budget
+  let buildContent;
   if (isGlobal) {
     systemPrompt = isMore ? window.systemPromptReportFull : window.systemPromptReportShort;
-    content = formatReportForAi(countTokens(systemPrompt));
+    buildContent = (budget) => formatReportForAi(countTokens(systemPrompt), false, "table", budget);
     title += "MultiQC report";
   } else if (sectionAnchor === "general_stats_table") {
     systemPrompt = window.systemPromptPlot;
-    content = formatReportForAi(countTokens(systemPrompt), true, plotView);
+    buildContent = (budget) => formatReportForAi(countTokens(systemPrompt), true, plotView, budget);
     title += "MultiQC General Statistics";
   } else {
     systemPrompt = window.systemPromptPlot;
-    content = formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
+    buildContent = () => formatSectionForAi(sectionAnchor, moduleAnchor, plotView);
     const section = aiReportMetadata.sections[sectionAnchor];
     title += `MultiQC ${section.name}`;
   }
 
-  // Check total tokens before making the request
-  const totalTokens = countTokens(systemPrompt + content);
   const providerId = $("#ai-provider").val();
   const provider = window.AI_PROVIDERS[providerId];
 
@@ -259,9 +280,15 @@ async function summarizeWithAi(button) {
     return;
   }
 
-  const maxTokens = getMaxTokens(modelName);
-  if (totalTokens > maxTokens) {
-    errorDiv.html(`Content exceeds the token limit of ${provider.name} (${totalTokens} > ${maxTokens})`).show();
+  let budget = getPromptBudget(modelName);
+  let content = buildContent(budget);
+  const totalTokens = countTokens(systemPrompt + content);
+  if (totalTokens > budget) {
+    errorDiv
+      .text(
+        `The report data is too large for the context window of ${modelName} (about ${totalTokens} > ${budget} tokens)`,
+      )
+      .show();
     if (wrapperDiv) wrapperDiv.show();
     return;
   }
@@ -280,7 +307,9 @@ async function summarizeWithAi(button) {
   }
 
   const startTime = performance.now();
-  await (async () => {
+  // If the provider says the prompt is too long, rebuild it from less of the report and try again
+  let overflowRetries = 3;
+  const generate = () => {
     let receievedMarkdown = "";
     window.runStreamGeneration({
       title: title + `, created on ${configCreationDate}`,
@@ -298,7 +327,23 @@ async function summarizeWithAi(button) {
         responseDiv.html(window.markdownToHtml(receievedMarkdown));
         button.html(`Generating...`);
       },
+      onStreamRestart: () => {
+        // The model declined and another model answers from the start
+        receievedMarkdown = "";
+        responseDiv.html("");
+      },
       onStreamError: (error) => {
+        const overflow = receievedMarkdown ? null : parseContextOverflow(String(error));
+        if (overflow && (isGlobal || sectionAnchor === "general_stats_table")) {
+          if (overflowRetries-- > 0) {
+            const estimatedTokens = countTokens(systemPrompt + content);
+            budget = shrinkBudget(budget, estimatedTokens, overflow);
+            content = buildContent(budget);
+            button.html(`Retrying with less of the report...`);
+            generate();
+            return;
+          }
+        }
         showToast("Error generating summary", error, "error");
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
@@ -335,7 +380,8 @@ async function summarizeWithAi(button) {
         disclaimerDiv.show();
       },
     });
-  })();
+  };
+  generate();
 }
 
 // Global (report-level) summary generation
@@ -548,8 +594,8 @@ $(function () {
 });
 
 function countTokens(text) {
-  // Use simple character-based estimation. Since the data has a lot of numbers
-  // and repetitive special characters, using a more conservative estimate than
-  // 4 chars per token suitable for real texts - 1.5 chars per token
-  return Math.ceil(text.length / 1.5);
+  // Character-based estimate. Report data is mostly numbers and separators, which tokenize at
+  // about 2 characters per token, rather than the ~4 of prose. If the provider says the prompt
+  // is too long, the prompt is rebuilt using the provider's own count.
+  return Math.ceil(text.length / 2);
 }

@@ -24,21 +24,26 @@ window.AI_PROVIDERS = {
   },
   anthropic: {
     name: "Anthropic",
-    defaultModel: "claude-3-5-sonnet-latest",
-    suggestedModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest"],
+    // Defaults come from the MultiQC version that built the report, see DEFAULT_MODELS in ai_models.py
+    get defaultModel() {
+      return window.aiModelConfig?.defaultModels?.anthropic || "claude-opus-5-5";
+    },
+    suggestedModels: ["claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5"],
     apiKeysUrl: "https://console.anthropic.com/settings/keys",
-    modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
+    modelsUrl: "https://platform.claude.com/docs/en/about-claude/models/overview",
   },
   openai: {
     name: "OpenAI",
-    defaultModel: "gpt-4o",
-    suggestedModels: ["gpt-4o", "gpt-4o-mini"],
+    get defaultModel() {
+      return window.aiModelConfig?.defaultModels?.openai || "gpt-6.1-sol";
+    },
+    suggestedModels: ["gpt-6.1-sol", "gpt-6.1-terra", "gpt-6-luna"],
     apiKeysUrl: "https://platform.openai.com/api-keys",
-    modelsUrl: "https://platform.openai.com/docs/models",
+    modelsUrl: "https://developers.openai.com/api/docs/models",
   },
   aws_bedrock: {
     name: "AWS Bedrock",
-    modelsUrl: "https://docs.anthropic.com/en/docs/intro-to-claude#model-options",
+    modelsUrl: "https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html",
   },
   custom: {
     name: "Custom",

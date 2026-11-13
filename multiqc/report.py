@@ -118,6 +118,7 @@ ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 ai_extra_query_options_base64: str = ""
 ai_prompts_base64: str = ""
+ai_js_config: Dict[str, Any] = {}  # model settings for the AI requests made from the report
 sample_names: List[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
 ai_pseudonym_map: Dict[str, str] = {}
 ai_pseudonym_map_base64: str = ""
@@ -191,6 +192,7 @@ def reset():
     global ai_report_metadata_base64
     global ai_extra_query_options_base64
     global ai_prompts_base64
+    global ai_js_config
     global sample_names
     global ai_pseudonym_map
     global ai_pseudonym_map_base64
@@ -226,6 +228,7 @@ def reset():
     ai_report_metadata_base64 = ""
     ai_extra_query_options_base64 = ""
     ai_prompts_base64 = ""
+    ai_js_config = {}
     sample_names = []
     ai_pseudonym_map = {}
     ai_pseudonym_map_base64 = ""

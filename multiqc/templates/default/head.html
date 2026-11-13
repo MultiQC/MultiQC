@@ -49,6 +49,7 @@ aiConfigExtraQueryOptions = JSON.parse(atob("{{ report.ai_extra_query_options_ba
 aiPrompts = JSON.parse(atob("{{ report.ai_prompts_base64 }}"));
 
 aiConfigCustomContextWindow = "{{ config.ai_custom_context_window }}";
+aiModelConfig = {{ report.ai_js_config | tojson }};
 
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
 aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));

@@ -487,12 +487,12 @@ click.rich_click.OPTION_GROUPS = {
 @click.option(
     "--ai-custom-endpoint",
     type=str,
-    help="Custom AI endpoint to use with OpenAI API",
+    help="Full URL of the chat endpoint for the custom AI provider",
 )
 @click.option(
     "--ai-custom-context-window",
     type=int,
-    help="Custom context window to use with OpenAI API (default: 128000)",
+    help="Override the AI model's context window, in tokens",
 )
 @click.option(
     "--no-ai",

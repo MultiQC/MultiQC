@@ -1,173 +1,125 @@
 import DOMPurify from "dompurify";
+import {
+  ANTHROPIC_API_VERSION,
+  ANTHROPIC_FALLBACK_BETA,
+  claudeDefaultMaxTokens,
+  claudeSupportsServerFallbacks,
+  claudeThinkingStyle,
+  findRejectedField,
+  parseContextOverflow,
+  parseModel,
+} from "./ai-models.js";
 
 function handleStreamError(error) {
-  if (error.toString().includes("Failed to fetch")) {
-    error = "Failed to connect to AI provider. Please check your internet connection and the API key, and try again.";
+  const text = error?.message ?? String(error);
+  if (text.includes("Failed to fetch")) {
+    return "Failed to connect to AI provider. Please check your internet connection and the API key, and try again.";
   }
-  return error;
+  return text;
 }
 
-function isReasoningModel(model) {
-  if (!model) return false;
-  const reasoningModels = [
-    // OpenAI reasoning models
-    "o1",
-    "o1-preview",
-    "o1-mini",
-    "o3",
-    "o3-mini",
-    "o3-pro",
-    "o4-mini",
-    // Anthropic Claude 4 series (extended thinking models)
-    "claude-3-7-sonnet-latest",
-    "claude-sonnet-4-5",
-    "claude-sonnet-4-0",
-    "claude-haiku-4-5",
-    "claude-haiku-4-0",
-    "claude-opus-4-5",
-    "claude-opus-4-0",
-  ];
-  return reasoningModels.some((prefix) => model.toLowerCase().startsWith(prefix));
+// Model settings from the MultiQC config, see _ai_js_config() in multiqc/core/ai.py
+function modelConfig() {
+  return window.aiModelConfig || {};
 }
 
-function getStoredReasoningEffort() {
-  return localStorage.getItem("ai_reasoning_effort") || "medium";
+const OPENAI_REQUIRED_FIELDS = ["model", "messages", "stream"];
+const ANTHROPIC_REQUIRED_FIELDS = ["model", "messages", "max_tokens", "stream"];
+
+// Merge extra request fields into a body. A null value removes the field.
+function applyExtraOptions(body, extraOptions) {
+  for (const [key, value] of Object.entries(extraOptions || {})) {
+    if (key === "thinking_budget_tokens") continue; // a MultiQC setting from older versions
+    if (value === null) delete body[key];
+    else body[key] = value;
+  }
+  return body;
 }
 
-function getStoredMaxCompletionTokens() {
-  const stored = localStorage.getItem("ai_max_completion_tokens");
-  if (stored) {
+// The `thinking` field for a Claude model, if extended thinking is turned on in the config
+function claudeThinking(info) {
+  const config = modelConfig();
+  if (!config.extendedThinking) return null;
+  const style = claudeThinkingStyle(info);
+  if (style === "adaptive") return { type: "adaptive" };
+  if (style === "budget") return { type: "enabled", budget_tokens: config.thinkingBudgetTokens || 10000 };
+  return null;
+}
+
+// Only what was asked for is sent, so each model runs with its own defaults
+function openAiBody(modelName, content, extraOptions) {
+  const config = modelConfig();
+  const info = parseModel(modelName);
+  const body = { model: modelName, messages: [{ role: "user", content: content }], stream: true };
+  if (config.reasoningEffort) body.reasoning_effort = config.reasoningEffort;
+  if (config.maxCompletionTokens) body.max_completion_tokens = config.maxCompletionTokens;
+  if (info.vendor === "anthropic") {
+    const thinking = claudeThinking(info); // Claude behind an OpenAI-compatible gateway
+    if (thinking) body.thinking = thinking;
+  }
+  return applyExtraOptions(body, extraOptions);
+}
+
+function anthropicBody(modelName, content, extraOptions) {
+  const config = modelConfig();
+  const info = parseModel(modelName);
+  const thinking = claudeThinking(info);
+  let maxTokens = config.maxCompletionTokens || claudeDefaultMaxTokens(info);
+  if (thinking && thinking.budget_tokens) maxTokens = Math.max(maxTokens, thinking.budget_tokens + 4096);
+  const body = {
+    model: modelName,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: content }],
+    stream: true,
+  };
+  if (thinking) body.thinking = thinking;
+  if (config.reasoningEffort) body.output_config = { effort: config.reasoningEffort };
+  // Re-run a refused request on another model instead of returning the refusal
+  if (claudeSupportsServerFallbacks(info)) body.fallbacks = "default";
+  return applyExtraOptions(body, extraOptions);
+}
+
+// Request fields a model has rejected, left out of later requests
+const rejectedFields = new Set();
+
+// POST a request. If the provider rejects an optional field, send the request again without it.
+async function postWithRepair(url, headersFor, body, requiredFields) {
+  body = Object.fromEntries(Object.entries(body).filter(([key]) => !rejectedFields.has(`${url} ${body.model} ${key}`)));
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const response = await fetch(url, { method: "POST", headers: headersFor(body), body: JSON.stringify(body) });
+    if (response.ok) return response;
+
+    const text = await response.text();
+    let message = text;
+    let param = null;
     try {
-      return parseInt(stored);
-    } catch (e) {
-      console.error("Error parsing stored max completion tokens", e);
+      const data = JSON.parse(text);
+      const error = data.error ?? data;
+      message = (typeof error === "object" ? error.message : error) || text;
+      param = typeof error?.param === "string" ? error.param : null;
+    } catch {}
+
+    if ([400, 422].includes(response.status) && !parseContextOverflow(message)) {
+      const field = findRejectedField(body, message, param, requiredFields);
+      if (field) {
+        console.warn(`The AI provider rejected '${field}' for ${body.model} (${message}). Sending without it.`);
+        rejectedFields.add(`${url} ${body.model} ${field}`);
+        const { [field]: _removed, ...rest } = body;
+        body = rest;
+        continue;
+      }
     }
+    throw new Error(`HTTP ${response.status}: ${message}`);
   }
-  return 4000; // Default value
+  throw new Error("The AI provider rejected the request");
 }
-
-function getStoredThinkingBudgetTokens() {
-  const stored = localStorage.getItem("ai_thinking_budget_tokens");
-  if (stored) {
-    try {
-      return parseInt(stored);
-    } catch (e) {
-      console.error("Error parsing stored thinking budget tokens", e);
-    }
-  }
-  return 10000; // Default value for Anthropic extended thinking
-}
-
-function getStoredExtendedThinking() {
-  const stored = localStorage.getItem("ai_extended_thinking");
-  return stored === "true"; // Default to false
-}
-
-function storeReasoningEffort(effort) {
-  localStorage.setItem("ai_reasoning_effort", effort);
-}
-
-function storeMaxCompletionTokens(tokens) {
-  localStorage.setItem("ai_max_completion_tokens", tokens.toString());
-}
-
-function storeThinkingBudgetTokens(tokens) {
-  localStorage.setItem("ai_thinking_budget_tokens", tokens.toString());
-}
-
-function storeExtendedThinking(enabled) {
-  localStorage.setItem("ai_extended_thinking", enabled.toString());
-}
-
-// Load reasoning model configuration on page load
-$(function () {
-  // Set up event handlers for reasoning model controls if they exist
-  $("#ai-reasoning-effort").change(function () {
-    storeReasoningEffort($(this).val());
-  });
-
-  $("#ai-max-completion-tokens").change(function () {
-    storeMaxCompletionTokens($(this).val());
-  });
-
-  $("#ai-thinking-budget-tokens").change(function () {
-    storeThinkingBudgetTokens($(this).val());
-  });
-
-  $("#ai-extended-thinking").change(function () {
-    storeExtendedThinking($(this).is(":checked"));
-  });
-
-  // Load stored values into controls if they exist
-  const storedEffort = getStoredReasoningEffort();
-  if ($("#ai-reasoning-effort").length && storedEffort) {
-    $("#ai-reasoning-effort").val(storedEffort);
-  }
-
-  const storedTokens = getStoredMaxCompletionTokens();
-  if ($("#ai-max-completion-tokens").length && storedTokens) {
-    $("#ai-max-completion-tokens").val(storedTokens);
-  }
-
-  const storedThinkingTokens = getStoredThinkingBudgetTokens();
-  if ($("#ai-thinking-budget-tokens").length && storedThinkingTokens) {
-    $("#ai-thinking-budget-tokens").val(storedThinkingTokens);
-  }
-
-  const storedExtendedThinking = getStoredExtendedThinking();
-  if ($("#ai-extended-thinking").length) {
-    $("#ai-extended-thinking").prop("checked", storedExtendedThinking);
-  }
-
-  // Show/hide reasoning model controls based on selected model
-  $("#ai-model").change(function () {
-    const modelName = $(this).val();
-    const isReasoning = isReasoningModel(modelName);
-    const isClaudeReasoning =
-      isReasoning &&
-      (modelName.toLowerCase().startsWith("claude-opus-4") ||
-        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
-        modelName.toLowerCase().startsWith("claude-haiku-4"));
-    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
-
-    // Show/hide reasoning-specific controls if they exist
-    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
-    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
-    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
-    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
-
-    if (isReasoning) {
-      console.log(
-        `Reasoning model selected: ${modelName} (${
-          isClaudeReasoning ? "Claude extended thinking" : "OpenAI reasoning"
-        })`,
-      );
-    }
-  });
-
-  // Initial state based on current model
-  const currentModel = $("#ai-model").val();
-  if (currentModel) {
-    const isReasoning = isReasoningModel(currentModel);
-    const isClaudeReasoning =
-      isReasoning &&
-      (currentModel.toLowerCase().startsWith("claude-opus-4") ||
-        currentModel.toLowerCase().startsWith("claude-sonnet-4") ||
-        currentModel.toLowerCase().startsWith("claude-haiku-4"));
-    const isOpenAIReasoning = isReasoning && !isClaudeReasoning;
-
-    $("#ai_reasoning_effort_group").toggle(isOpenAIReasoning);
-    $("#ai_max_completion_tokens_group").toggle(isOpenAIReasoning);
-    $("#ai_extended_thinking_group").toggle(isClaudeReasoning);
-    $("#ai_thinking_budget_tokens_group").toggle(isClaudeReasoning);
-  }
-});
 
 window.runStreamGeneration = function ({
   onStreamStart,
   onStreamNewToken,
   onStreamError,
   onStreamComplete,
+  onStreamRestart = () => {},
   systemPrompt,
   userMessage,
   tags = [],
@@ -211,158 +163,86 @@ window.runStreamGeneration = function ({
         return response.body.getReader();
       })
       .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
+        decodeStream(
+          providerId,
+          reader,
+          onStreamStart,
+          onStreamNewToken,
+          onStreamError,
+          onStreamComplete,
+          onStreamRestart,
+        ),
       )
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
   } else if (provider.name === "OpenAI" || provider.name === "Custom") {
-    let body = {};
+    let extraOptions = aiConfigExtraQueryOptions;
     if (provider.name === "Custom") {
       try {
-        body = JSON.parse($("#ai-query-options").val());
+        extraOptions = JSON.parse($("#ai-query-options").val() || "{}");
       } catch (e) {
         console.error("Error parsing extra query options", e);
       }
     }
-
-    // Check if this is a reasoning model
-    const isReasoning = isReasoningModel(modelName);
-    const isClaudeReasoning =
-      isReasoning &&
-      (modelName.toLowerCase().startsWith("claude-opus-4") ||
-        modelName.toLowerCase().startsWith("claude-sonnet-4") ||
-        modelName.toLowerCase().startsWith("claude-haiku-4"));
-
-    if (isReasoning && !isClaudeReasoning) {
-      console.log(`Using OpenAI reasoning model: ${modelName}`);
-
-      // For OpenAI reasoning models, use developer messages and specific parameters
-      const messages = [
-        {
-          role: "developer",
-          content:
-            "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
-        },
-        { role: "user", content: systemPrompt + "\n\n" + userMessage },
-      ];
-
-      body = {
-        ...body,
-        model: modelName,
-        messages: messages,
-        stream: true,
-        max_completion_tokens: getStoredMaxCompletionTokens(),
-        reasoning_effort: getStoredReasoningEffort(),
-      };
-
-      // Remove unsupported parameters for reasoning models
-      delete body.temperature;
-      delete body.top_p;
-      delete body.presence_penalty;
-      delete body.frequency_penalty;
-      delete body.max_tokens; // Use max_completion_tokens instead
-
-      console.log(
-        `OpenAI reasoning model parameters: max_completion_tokens=${body.max_completion_tokens}, reasoning_effort=${body.reasoning_effort}`,
-      );
-    } else if (isClaudeReasoning) {
-      const extendedThinkingEnabled = getStoredExtendedThinking();
-
-      if (extendedThinkingEnabled) {
-        console.log(`Using Claude 4 model with extended thinking: ${modelName}`);
-
-        const thinkingBudgetTokens = getStoredThinkingBudgetTokens();
-
-        body = {
-          ...body,
-          model: modelName,
-          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-          stream: true,
-          thinking: {
-            type: "enabled",
-            budget_tokens: thinkingBudgetTokens,
-          },
-        };
-
-        console.log(`Extended thinking parameters: budget_tokens=${thinkingBudgetTokens}`);
-      } else {
-        console.log(`Using Claude 4 model without extended thinking: ${modelName}`);
-
-        body = {
-          ...body,
-          model: modelName,
-          messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-          stream: true,
-        };
-      }
-    } else {
-      // Regular models
-      body = {
-        ...body,
-        model: modelName,
-        messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-        stream: true,
-      };
-    }
-
-    fetchOptions.body = JSON.stringify(body);
-    fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
-
+    const body = openAiBody(modelName, systemPrompt + "\n\n" + userMessage, extraOptions);
     const endpoint = provider.name === "Custom" ? customEndpoint : "https://api.openai.com/v1/chat/completions";
-    fetch(endpoint, fetchOptions)
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          onStreamError(
-            `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
-          );
-          throw new Error(errorData.error?.message || "Unknown error");
-        }
-        return response.body.getReader();
-      })
-      .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
-      )
-      .catch((error) => {
-        onStreamError(handleStreamError(error));
-      });
-  } else if (provider.name === "Anthropic") {
-    fetchOptions.headers = {
-      ...fetchOptions.headers,
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "anthropic-dangerous-direct-browser-access": "true",
-    };
-    fetchOptions.body = JSON.stringify({
-      model: modelName,
-      max_tokens: 4096,
-      messages: [{ role: "user", content: systemPrompt + "\n\n" + userMessage }],
-      stream: true,
-    });
+    const headersFor = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` });
 
-    fetch("https://api.anthropic.com/v1/messages", fetchOptions)
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json();
-          const errMessage = errorData.error ? `${errorData.error.type}: ${errorData.error.message}` : "Unknown error";
-          onStreamError(`HTTP ${response.status}: ${response.statusText} ${errMessage}`);
-          throw new Error(errMessage);
-        }
-        return response.body.getReader();
-      })
-      .then((reader) =>
-        decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete),
+    postWithRepair(endpoint, headersFor, body, OPENAI_REQUIRED_FIELDS)
+      .then((response) =>
+        decodeStream(
+          providerId,
+          response.body.getReader(),
+          onStreamStart,
+          onStreamNewToken,
+          onStreamError,
+          onStreamComplete,
+          onStreamRestart,
+        ),
       )
-      .catch((error) => {
-        onStreamError(handleStreamError(error));
-      });
+      .catch((error) => onStreamError(handleStreamError(error)));
+  } else if (provider.name === "Anthropic") {
+    const config = modelConfig();
+    const body = anthropicBody(modelName, systemPrompt + "\n\n" + userMessage, aiConfigExtraQueryOptions);
+    const headersFor = (b) => {
+      const headers = {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": config.anthropicApiVersion || ANTHROPIC_API_VERSION,
+        "anthropic-dangerous-direct-browser-access": "true",
+      };
+      if (b.fallbacks) headers["anthropic-beta"] = config.anthropicFallbackBeta || ANTHROPIC_FALLBACK_BETA;
+      return headers;
+    };
+
+    postWithRepair("https://api.anthropic.com/v1/messages", headersFor, body, ANTHROPIC_REQUIRED_FIELDS)
+      .then((response) =>
+        decodeStream(
+          providerId,
+          response.body.getReader(),
+          onStreamStart,
+          onStreamNewToken,
+          onStreamError,
+          onStreamComplete,
+          onStreamRestart,
+        ),
+      )
+      .catch((error) => onStreamError(handleStreamError(error)));
   } else {
     onStreamError(`Unsupported AI provider: ${provider.name}`);
   }
 };
 
-function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStreamError, onStreamComplete) {
+function decodeStream(
+  providerId,
+  reader,
+  onStreamStart,
+  onStreamNewToken,
+  onStreamError,
+  onStreamComplete,
+  onStreamRestart = () => {},
+) {
   // Decode the stream. Supports Anthropic and OpenAI streaming responses
   const decoder = new TextDecoder();
   let buffer = "";
@@ -452,21 +332,22 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
             if (type === "content_block_delta" && data.delta.type === "text_delta") {
               content = data.delta.text;
               type = "on_chat_model_stream";
+            } else if (type === "content_block_start" && data.content_block?.type === "fallback") {
+              // The model declined and another model answers from the start
+              type = "restart";
             } else if (type === "message_start") {
               model = data.message.model;
               role = data.message.role;
               type = "on_chat_model_start";
-            } else if (data.finish_reason) {
-              if (data.finish_reason === "end_turn") {
-                type = "on_chat_model_end";
-              } else {
-                type = "error";
-                error = `Streaming unexpectedly stopped. Reason: ${data.finish_reason}`;
-                if (data.error) error += `. Error: ${data.error}`;
-              }
-            } else if (data.error) {
+            } else if (type === "message_delta" && data.delta?.stop_reason === "refusal") {
               type = "error";
-              error = `Streaming unexpectedly stopped. Error: ${data.error}`;
+              error = "The model refused the request";
+            } else if (type === "message_delta" && data.delta?.stop_reason === "max_tokens") {
+              console.warn("The AI summary was cut short by the output token limit");
+            } else if (type === "error" || data.error) {
+              type = "error";
+              const err = data.error;
+              error = `Streaming unexpectedly stopped. Error: ${typeof err === "object" ? `${err.type}: ${err.message}` : err}`;
             }
           }
 
@@ -486,6 +367,9 @@ function decodeStream(providerId, reader, onStreamStart, onStreamNewToken, onStr
             case "on_chat_model_end":
               onStreamComplete(threadId);
               return acc;
+            case "restart":
+              onStreamRestart();
+              break;
             case "error":
               onStreamError(error);
               break;

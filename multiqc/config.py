@@ -123,6 +123,10 @@ ai_provider: AiProviderLiteral
 ai_model: str
 ai_custom_endpoint: Optional[str]
 ai_auth_type: Optional[Literal["bearer", "api-key"]]
+ai_custom_api_style: Optional[Literal["openai", "anthropic"]]
+ai_custom_headers: Optional[Dict[str, Optional[str]]]
+ai_custom_response_path: Optional[str]
+ai_custom_client: Optional[str]
 ai_retries: int
 ai_extra_query_options: Optional[Dict[str, Any]]
 ai_custom_context_window: Optional[int]
@@ -130,7 +134,7 @@ ai_prompt_short: Optional[str]
 ai_prompt_full: Optional[str]
 no_ai: bool
 ai_anonymize_samples: bool
-ai_reasoning_effort: Optional[Literal["low", "medium", "high"]]
+ai_reasoning_effort: Optional[str]
 ai_max_completion_tokens: Optional[int]
 ai_extended_thinking: bool
 ai_thinking_budget_tokens: Optional[int]

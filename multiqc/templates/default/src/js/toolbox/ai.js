@@ -195,8 +195,8 @@ window.initAI = function () {
       storedContextWindow = parseInt(aiConfigCustomContextWindow);
     } catch {}
   }
-  storedContextWindow = storedContextWindow ?? 128000;
-  $("#ai-context-window").val(storedContextWindow);
+  // Left empty unless set: the context window then comes from the model
+  if (storedContextWindow !== null && !isNaN(storedContextWindow)) $("#ai-context-window").val(storedContextWindow);
 
   updatePanel(providerId);
 

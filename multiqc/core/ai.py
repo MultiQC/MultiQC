@@ -1,17 +1,22 @@
 import base64
+import importlib
 import json
 import logging
 import math
 import os
 import re
+import time
+from functools import lru_cache
 from textwrap import indent
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Collection, Dict, List, NamedTuple, Optional, Set, Tuple
 
 import requests
 import yaml
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
+from multiqc.core import ai_models
+from multiqc.core.ai_models import DEFAULT_MODELS, ModelInfo, parse_model
 from multiqc.core.log_and_rich import run_with_spinner
 from multiqc.plots.plot import Plot
 from multiqc.types import Anchor, SampleName
@@ -19,40 +24,16 @@ from multiqc.utils import config_schema
 
 logger = logging.getLogger(__name__)
 
-# List of known reasoning models
-REASONING_MODELS = {
-    # OpenAI reasoning models
-    "o1",
-    "o1-preview",
-    "o1-mini",
-    "o3",
-    "o3-mini",
-    "o3-pro",
-    "o4-mini",
-    # Anthropic Claude 4 series (extended thinking models)
-    "claude-3-7-sonnet-latest",
-    "claude-sonnet-4-5",
-    "claude-sonnet-4-0",
-    "claude-haiku-4-5",
-    "claude-haiku-4-0",
-    "claude-opus-4-5",
-    "claude-opus-4-0",
-}
-
-
-REFURSAL_STUB_CONTENT = """\
+REFUSAL_STUB_CONTENT = """\
 AI summary could not be generated as the request was refused by the model
 """
 
 
-def is_reasoning_model(model_name: str) -> bool:
-    """Check if a model is a reasoning model based on its name."""
-    if not model_name:
-        return False
-
-    # Check if model name starts with any of the reasoning model prefixes
-    model_lower = model_name.lower()
-    return any(model_lower.startswith(prefix) for prefix in REASONING_MODELS)
+def _model_unavailable_stub(model: str) -> str:
+    return (
+        f"AI summary could not be generated because the model `{model}` is not available. "
+        "It may have been retired: set `ai_model` to a current model.\n"
+    )
 
 
 _MULTIQC_DESCRIPTION = """\
@@ -176,31 +157,165 @@ class InterpretationResponse(BaseModel):
     thread_id: Optional[str] = None
 
 
-ResponseT = TypeVar("ResponseT")
+class LlmResponse(NamedTuple):
+    content: str
+    model: str
+    thread_id: Optional[str] = None
+
+
+class ProviderError(Exception):
+    """An error returned by an AI provider, in the same shape for HTTP APIs and boto3."""
+
+    def __init__(self, status: Optional[int], message: str, param: Optional[str] = None):
+        super().__init__(f"HTTP {status}: {message}" if status else message)
+        self.status = status
+        self.message = message
+        self.param = param  # the request field the provider named, if it said
+
+
+class ContextOverflowError(Exception):
+    """The prompt was too long for the model. Rebuild a shorter one and try again."""
+
+    def __init__(self, overflow: ai_models.ContextOverflow, message: str):
+        super().__init__(message)
+        self.overflow = overflow
+
+
+class ModelUnavailableError(Exception):
+    """The model doesn't exist, or has been retired."""
+
+
+_MODEL_UNAVAILABLE_RE = re.compile(
+    r"end of its life|model identifier is invalid|"
+    r"model\b[^.]*\b(?:not found|does not exist|not available|has been (?:retired|deprecated|decommissioned))",
+    re.IGNORECASE,
+)
+
+# A model's maximum output, e.g. "max_tokens: 16000 > 8192, which is the maximum allowed"
+_MAX_TOKENS_LIMIT_RE = re.compile(r"max_tokens\D*?\d+\s*>\s*(?P<limit>\d+)")
+
+
+@lru_cache(maxsize=None)
+def _tiktoken_encoding():
+    import tiktoken
+
+    # o200k_base is the tokenizer of current OpenAI models. It's only an estimate for other
+    # providers: overflows are recovered from using the provider's own count.
+    return tiktoken.get_encoding("o200k_base")
+
+
+def _apply_extra_options(body: Dict[str, Any]) -> Dict[str, Any]:
+    """Merge `ai_extra_query_options` into a request body. A null value removes that field."""
+    for key, value in (config.ai_extra_query_options or {}).items():
+        if key == "thinking_budget_tokens":
+            continue  # a MultiQC setting from older versions, not an API field
+        if value is None:
+            body.pop(key, None)
+        else:
+            body[key] = value
+    return body
+
+
+def _merge_headers(base: Dict[str, str], extra: Optional[Dict[str, Optional[str]]]) -> Dict[str, str]:
+    """Override headers case-insensitively. A null value removes the header."""
+    merged = dict(base)
+    for key, value in (extra or {}).items():
+        for existing in [k for k in merged if k.lower() == key.lower()]:
+            del merged[existing]
+        if value is not None:
+            merged[key] = value
+    return merged
+
+
+def _expand_env_vars(value: str) -> str:
+    """Replace ${VAR} with the value of the environment variable, so secrets stay out of config files."""
+
+    def replace(m: "re.Match[str]") -> str:
+        name = m.group(1)
+        if name not in os.environ:
+            raise RuntimeError(f"ai_custom_headers refers to ${{{name}}}, but that environment variable is not set")
+        return os.environ[name]
+
+    return re.sub(r"\$\{(\w+)\}", replace, value)
+
+
+def _get_path(data: Any, path: str) -> Any:
+    """Follow a dotted path such as `choices.0.message.content` into a JSON response."""
+    for part in path.split("."):
+        if isinstance(data, list) and part.lstrip("-").isdigit():
+            data = data[int(part)]
+        elif isinstance(data, dict) and part in data:
+            data = data[part]
+        else:
+            raise ValueError(f"ai_custom_response_path '{path}' not found in the response (failed at '{part}')")
+    return data
+
+
+def _text_at_path(response: Any, path: str) -> str:
+    value = _get_path(response, path)
+    if not isinstance(value, str):
+        raise ValueError(f"ai_custom_response_path '{path}' points to a {type(value).__name__}, not to text")
+    return value
+
+
+def _error_details(response: requests.Response) -> Tuple[str, Optional[str]]:
+    """The message and the named field (if any) from an error response."""
+    try:
+        data = response.json()
+    except ValueError:
+        return response.text, None
+    error = data.get("error", data) if isinstance(data, dict) else data
+    if isinstance(error, dict):
+        message = error.get("message") or json.dumps(error)
+        param = error.get("param") if isinstance(error.get("param"), str) else None
+        return str(message), param
+    return str(error), None
 
 
 class Client:
+    """
+    Base class for AI summary providers.
+
+    To plug in your own provider, subclass this class, set `name`, `title` and `model`, implement
+    `query()`, and set `ai_provider: custom` and `ai_custom_client: "your_package.module:YourClient"`
+    in the MultiQC config.
+    The class is created with no arguments, so read API keys from environment variables.
+    MultiQC builds the prompt, fits it into `context_window()`, and handles the response.
+    """
+
+    name: str = "custom"
+    title: str = "Custom"
+    model: str = ""
+    # Request fields that are never dropped when a provider rejects a request
+    required_fields: Collection[str] = ("model", "messages")
+
     def __init__(self, api_key: Optional[str] = None):
-        self.name: str
-        self.title: str
-        self.model: str
         self.api_key: Optional[str] = api_key
         self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
         self.prompt_full = config.ai_prompt_full or PROMPT_FULL
+        self._context_window: Optional[int] = None
+        self._token_warning_printed = False
+        # Request fields the model has rejected, left out of later requests
+        self._rejected_fields: Set[str] = set()
 
-    def _query(self, prompt: str):
+    @property
+    def model_info(self) -> ModelInfo:
+        return parse_model(self.model)
+
+    def query(self, prompt: str) -> LlmResponse:
+        """Send the prompt to the model and return its answer."""
         raise NotImplementedError
 
-    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
-        response = self._query(self.prompt_short + "\n\n" + report_content)
+    def interpret_report_short(self, report_content: str) -> "InterpretationResponse":
+        response = self.query(self.prompt_short + "\n\n" + report_content)
 
         return InterpretationResponse(
             interpretation=InterpretationOutput(summary=response.content),
             model=response.model,
         )
 
-    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
-        response = self._query(self.prompt_full + "\n\n" + report_content)
+    def interpret_report_full(self, report_content: str) -> "InterpretationResponse":
+        response = self.query(self.prompt_full + "\n\n" + report_content)
 
         try:
             output = yaml.safe_load(response.content)
@@ -214,258 +329,390 @@ class Client:
                 model=response.model,
             )
 
-    def max_tokens(self) -> int:
-        raise NotImplementedError
+    def discover_context_window(self) -> Optional[int]:
+        """Ask the provider for the model's context window. Return None if it can't tell."""
+        return None
 
-    FALLBACK_LOG_PRINTED = False
+    def output_tokens(self) -> int:
+        """Tokens to leave free in the context window for the answer."""
+        return config.ai_max_completion_tokens or 4096
+
+    def context_window(self) -> int:
+        """
+        The model's input context window, from the first of: `ai_custom_context_window`,
+        the provider, the model family rules, or a conservative default.
+        """
+        if self._context_window is None:
+            window, source = config.ai_custom_context_window, "ai_custom_context_window"
+            if not window:
+                window, source = self.discover_context_window(), "the provider"
+            if not window:
+                window, source = ai_models.rule_context_window(self.model_info), "the model family"
+            if not window:
+                window, source = ai_models.FALLBACK_CONTEXT_WINDOW, "the default for unrecognised models"
+                logger.info(
+                    f"Can't tell the context window of model '{self.model}', assuming {window:,} tokens. "
+                    "Set ai_custom_context_window to use more or less of it."
+                )
+            logger.debug(f"Context window for {self.model}: {window:,} tokens, from {source}")
+            self._context_window = window
+        return self._context_window
+
+    def prompt_budget(self) -> int:
+        """Tokens available for the prompt, in the units of `n_tokens()`."""
+        return max(1, int(self.context_window() * 0.95) - self.output_tokens())
 
     def n_tokens(self, text: str) -> int:
-        """
-        Estimate token count. Using here tiktoken library. It's an OpenAI tokenizer, so it's not ideal for Anthropic,
-        but better than nothing. Anthropic's tokenizer is only available through API and counts towards the API quota :'(
-        """
+        """Estimate the number of tokens in a text."""
         try:
-            import tiktoken
-
-            model = self.model if self.name == "openai" else "gpt-4o"
-            encoding = tiktoken.encoding_for_model(model)
-            return len(encoding.encode(text))
+            return len(_tiktoken_encoding().encode(text, disallowed_special=()))
         except Exception as e:
-            if not self.FALLBACK_LOG_PRINTED:
-                logger.warning(f"Fail to call tiktoken, falling back to rough token estimation. Error: {e}")
-                self.FALLBACK_LOG_PRINTED = True
+            if not self._token_warning_printed:
+                logger.warning(f"Can't count tokens with tiktoken, estimating from the text length instead. Error: {e}")
+                self._token_warning_printed = True
             return int(len(text) / 1.5)
 
-    def _request_with_error_handling_and_retries(
-        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: Optional[int] = None
-    ) -> Dict[str, Any]:
-        """Make a request with retries and exponential backoff.
+    def _post(self, url: str, headers: Dict[str, str], body: Dict[str, Any]) -> Dict[str, Any]:
+        """POST JSON, raising ProviderError for any failure."""
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=(30, 900))
+        except requests.RequestException as e:
+            raise ProviderError(None, str(e)) from e
+        if not response.ok:
+            message, param = _error_details(response)
+            raise ProviderError(response.status_code, message, param)
+        return response.json()
 
-        Args:
-            send_request: Callable that makes the actual request
-            retries: Number of retries (0 means no retries)
+    def _get(self, url: str, headers: Dict[str, str]) -> Optional[Any]:
+        """GET JSON for optional lookups. Returns None on any failure."""
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            if response.ok:
+                return response.json()
+            logger.debug(f"GET {url} returned HTTP {response.status_code}")
+        except Exception as e:
+            logger.debug(f"GET {url} failed: {e}")
+        return None
+
+    def _probe_context_window(self, url: str, headers: Dict[str, str]) -> Optional[int]:
+        """Read the model's context window from a models endpoint, if it reports one."""
+        listing = self._get(url, headers)
+        entry = ai_models.find_model_entry(listing, self.model)
+        window = ai_models.find_context_window(entry)
+        if window:
+            logger.debug(f"{url} reports a context window of {window:,} tokens for {self.model}")
+        return window
+
+    def _send(self, body: Dict[str, Any], send: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
         """
-        import time
-
-        retries = retries or config.ai_retries or 3
+        Send a request and recover from what can be recovered from:
+        - timeouts, rate limits and server errors are retried with backoff
+        - a field the model rejects is dropped (or fixed) and the request sent again
+        - a prompt that's too long raises ContextOverflowError, so a shorter one can be built
+        - a missing or retired model raises ModelUnavailableError
+        """
+        body = {key: value for key, value in body.items() if key not in self._rejected_fields}
+        retries = config.ai_retries or 3
         attempt = 0
         while True:
             try:
                 if config.verbose:
-                    response = requests.post(url, headers=headers, json=body)
-                else:
-                    response = run_with_spinner(
-                        "ai",
-                        f"Summarizing report with {self.title}...",
-                        lambda: requests.post(url, headers=headers, json=body),
+                    return send(body)
+                return run_with_spinner("ai", f"Summarizing report with {self.title}...", lambda: send(body))
+            except ProviderError as e:
+                if e.status in (None, 400, 413, 422):
+                    overflow = ai_models.parse_context_overflow(e.message)
+                    if overflow is None and e.status == 413:  # payload too large
+                        overflow = ai_models.ContextOverflow(limit=None, actual=None)
+                    if overflow is not None:
+                        raise ContextOverflowError(overflow, e.message) from e
+                if e.status in (400, 422) and (repaired := self._repair_rejected_field(body, e)) is not None:
+                    body = repaired
+                    continue
+                if e.status == 404 or _MODEL_UNAVAILABLE_RE.search(e.message):
+                    raise ModelUnavailableError(f"Model '{self.model}' is not available from {self.title}: {e}") from e
+                if (e.status is None or e.status in (408, 409, 429) or e.status >= 500) and attempt < retries:
+                    attempt += 1
+                    backoff = 2 ** (attempt - 1)
+                    logger.warning(
+                        f"Failed to get a response from {self.title} (attempt {attempt}/{retries}). Error: {e}. "
+                        f"Retrying in {backoff}s..."
                     )
-                response.raise_for_status()
-                return response.json()
+                    time.sleep(backoff)
+                    continue
+                logger.error(f"Failed to get a response from {self.title}. Error: {e}")
+                if config.verbose:
+                    logger.debug(f"Request body: {json.dumps(_redact(body), indent=2)}")
+                raise
 
-            except Exception as e:
-                attempt += 1
-                if attempt > retries:
-                    logger.error(f"Failed to get a response from {self.title}. Error: {e}")
-                    if config.verbose:
-                        # redact content in messages
-                        for m in body["messages"]:
-                            if isinstance(m["content"], list):
-                                for chunk in m["content"]:
-                                    chunk["text"] = "<redacted>"
-                            elif isinstance(m["content"], str):
-                                m["content"] = "<redacted>"
-                        logger.debug(f"Request body: {json.dumps(body, indent=2)}")
-                    raise
+    def _repair_rejected_field(self, body: Dict[str, Any], error: ProviderError) -> Optional[Dict[str, Any]]:
+        """
+        If the provider rejected a field of the request, return the request without it (or with it
+        fixed, for fields that are required). Returns None if no field can be blamed.
+        """
+        message = error.message
+        named_param = error.param.split(".")[0].split("[")[0] if error.param else None
+        if named_param in body:
+            mentioned = [named_param]
+        else:
+            positions = {key: m.start() for key in body if (m := re.search(rf"\b{re.escape(key)}\b", message))}
+            mentioned = sorted(positions, key=lambda k: positions[k])
 
-                # Calculate backoff time - start at 1s and double each retry
-                backoff = 2 ** (attempt - 1)
-                logger.warning(
-                    f"Failed to get a response from {self.title} (attempt {attempt}/{retries}). Error: {e}. "
-                    f"Retrying in {backoff}s..."
-                )
-                time.sleep(backoff)
+        for key in mentioned:
+            if key == "max_tokens" and (m := _MAX_TOKENS_LIMIT_RE.search(message)):
+                limit = int(m["limit"])
+                if limit < body["max_tokens"]:
+                    logger.warning(f"{self.title} allows at most {limit} output tokens for {self.model}, using that")
+                    return {**body, "max_tokens": limit}
+            elif key == "anthropic_version" and body[key] != ai_models.BEDROCK_LEGACY_API_VERSION:
+                return {**body, key: ai_models.BEDROCK_LEGACY_API_VERSION}
+            elif key not in self.required_fields:
+                logger.warning(f"{self.title} rejected '{key}' for model {self.model} ({message}). Sending without it.")
+                self._rejected_fields.add(key)
+                return {k: v for k, v in body.items() if k != key}
+        return None
+
+
+def _redact(body: Dict[str, Any]) -> Dict[str, Any]:
+    """A copy of a request body with the prompt removed, for logging."""
+    redacted = json.loads(json.dumps(body))
+    for m in redacted.get("messages", []):
+        if isinstance(m.get("content"), list):
+            for chunk in m["content"]:
+                if isinstance(chunk, dict) and "text" in chunk:
+                    chunk["text"] = "<redacted>"
+        elif isinstance(m.get("content"), str):
+            m["content"] = "<redacted>"
+    if "message" in redacted:
+        redacted["message"] = "<redacted>"
+    return redacted
+
+
+def _thinking_budget_tokens() -> int:
+    legacy = (config.ai_extra_query_options or {}).get("thinking_budget_tokens")
+    return config.ai_thinking_budget_tokens or (int(legacy) if legacy else 10_000)
+
+
+def _claude_thinking(info: ModelInfo) -> Optional[Dict[str, Any]]:
+    """The `thinking` field for a Claude model, if `ai_extended_thinking` is on and the model supports it."""
+    if not config.ai_extended_thinking:
+        return None
+    style = ai_models.claude_thinking_style(info)
+    if style == "adaptive":
+        return {"type": "adaptive"}
+    if style == "budget":
+        return {"type": "enabled", "budget_tokens": _thinking_budget_tokens()}
+    logger.warning("ai_extended_thinking is set, but the model doesn't support extended thinking. Ignoring it.")
+    return None
+
+
+def _claude_output_tokens(info: ModelInfo, model_max: Optional[int] = None) -> int:
+    tokens = config.ai_max_completion_tokens or ai_models.claude_default_max_tokens(info)
+    if config.ai_extended_thinking and ai_models.claude_thinking_style(info) == "budget":
+        tokens = max(tokens, _thinking_budget_tokens() + 4096)  # the budget must be below max_tokens
+    if model_max:
+        tokens = min(tokens, model_max)
+    return tokens
+
+
+def _anthropic_body(info: ModelInfo, content: Any, max_tokens: int) -> Dict[str, Any]:
+    """
+    A Claude Messages API request body. Only what was asked for is sent: no sampling parameters,
+    and no thinking settings unless configured, so each model runs with its own defaults.
+    """
+    body: Dict[str, Any] = {"max_tokens": max_tokens, "messages": [{"role": "user", "content": content}]}
+    if thinking := _claude_thinking(info):
+        body["thinking"] = thinking
+    if config.ai_reasoning_effort:
+        body["output_config"] = {"effort": config.ai_reasoning_effort}
+    return body
+
+
+def _parse_anthropic_response(response: Dict[str, Any], model: str) -> LlmResponse:
+    """Read the answer from a Claude response, which can contain thinking and fallback blocks besides text."""
+    stop_reason = response.get("stop_reason")
+    if stop_reason == "refusal":
+        logger.warning(f"The model refused the request: {response.get('stop_details')}")
+        return LlmResponse(content=REFUSAL_STUB_CONTENT, model=response.get("model", model))
+    blocks = response.get("content") or []
+    # After a server-side fallback, only the text after the last switch is the answer
+    fallback_positions = [i for i, block in enumerate(blocks) if block.get("type") == "fallback"]
+    if fallback_positions:
+        blocks = blocks[fallback_positions[-1] + 1 :]
+    text = "".join(block["text"] for block in blocks if block.get("type") == "text")
+    if not text.strip():
+        if stop_reason == "max_tokens":
+            raise ValueError(
+                "The model used all of its output tokens before answering. Increase ai_max_completion_tokens."
+            )
+        raise ValueError(f"Response has no text: {json.dumps(response)[:1000]}")
+    if stop_reason == "max_tokens":
+        logger.warning("The AI summary was cut short by the output token limit. Increase ai_max_completion_tokens.")
+    return LlmResponse(content=text, model=response.get("model", model))
+
+
+def _parse_openai_response(response: Dict[str, Any], model: str) -> LlmResponse:
+    choice = response["choices"][0]
+    message = choice["message"]
+    content = message.get("content")
+    if isinstance(content, list):  # some servers return content parts
+        content = "".join(part.get("text", "") for part in content if isinstance(part, dict))
+    if message.get("refusal") and not content:
+        logger.warning(f"The model refused the request: {message['refusal']}")
+        return LlmResponse(content=REFUSAL_STUB_CONTENT, model=response.get("model", model))
+    if not content or not content.strip():
+        if choice.get("finish_reason") == "length":
+            raise ValueError(
+                "The model used all of its output tokens before answering. "
+                "Increase ai_max_completion_tokens, or unset it to use the model's maximum."
+            )
+        raise ValueError(f"Response has no text: {json.dumps(response)[:1000]}")
+    if choice.get("finish_reason") == "length":
+        logger.warning("The AI summary was cut short by the output token limit. Increase ai_max_completion_tokens.")
+    return LlmResponse(content=content, model=response.get("model", model))
 
 
 class OpenAiClient(Client):
-    def __init__(self, api_key: str, endpoint: Optional[str] = None):
+    """OpenAI, or any server with an OpenAI-compatible chat completions endpoint."""
+
+    def __init__(
+        self,
+        api_key: Optional[str],
+        endpoint: Optional[str] = None,
+        headers: Optional[Dict[str, Optional[str]]] = None,
+        response_path: Optional[str] = None,
+    ):
         super().__init__(api_key)
 
         if endpoint:
             self.endpoint = endpoint
             if not config.ai_model:
-                raise ValueError("Custom OpenAI endpoint is set, but no model is provided. Please set config.ai_model")
+                raise ValueError("Custom AI endpoint is set, but no model is provided. Please set config.ai_model")
             self.model = config.ai_model
             self.name = "custom"
             self.title = endpoint
         else:
             self.endpoint = "https://api.openai.com/v1/chat/completions"
-            self.model = config.ai_model or "gpt-4o"
+            self.model = config.ai_model or DEFAULT_MODELS["openai"]
             self.name = "openai"
             self.title = "OpenAI"
+        self.extra_headers = headers
+        self.response_path = response_path
 
-    def max_tokens(self) -> int:
-        if config.ai_custom_context_window:
-            return config.ai_custom_context_window
-
-        # Reasoning models have different context windows
-        if is_reasoning_model(self.model):
-            if self.model.startswith("o1-preview") or self.model.startswith("o1-mini"):
-                return 128000  # o1-preview and o1-mini have 128k context
-            elif (
-                self.model.startswith("claude-opus-4")
-                or self.model.startswith("claude-sonnet-4")
-                or self.model.startswith("claude-haiku-4")
-            ):
-                return 200000  # Claude 4 series have 200k context
+    def _headers(self) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            if config.ai_auth_type == "api-key":
+                headers["api-key"] = self.api_key
             else:
-                return 200000  # Other reasoning models (o3, o4-mini) have 200k context
+                headers["Authorization"] = f"Bearer {self.api_key}"
+        return _merge_headers(headers, self.extra_headers)
 
-        return 128000  # Default for regular models
+    def discover_context_window(self) -> Optional[int]:
+        if self.name != "custom":
+            return None  # OpenAI's models endpoint doesn't report context windows
+        return self._probe_context_window(ai_models.models_url_for_endpoint(self.endpoint), self._headers())
 
-    class ApiResponse(NamedTuple):
-        content: str
-        model: str
+    def query(self, prompt: str) -> LlmResponse:
+        body: Dict[str, Any] = {"model": self.model, "messages": [{"role": "user", "content": prompt}]}
+        if config.ai_reasoning_effort:
+            body["reasoning_effort"] = config.ai_reasoning_effort
+        if config.ai_max_completion_tokens:
+            body["max_completion_tokens"] = config.ai_max_completion_tokens
+        if self.model_info.vendor == "anthropic" and (thinking := _claude_thinking(self.model_info)):
+            body["thinking"] = thinking  # Claude behind an OpenAI-compatible gateway
+        body = _apply_extra_options(body)
 
-    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
-        is_reasoning = is_reasoning_model(self.model)
-
-        if is_reasoning:
-            logger.debug(f"Using reasoning model: {self.model}")
-
-        body: Dict[str, Any] = {}
-
-        # For reasoning models, don't include temperature and other unsupported parameters
-        if not is_reasoning:
-            body["temperature"] = 0.0
-
-        if config.ai_extra_query_options:
-            body.update(config.ai_extra_query_options)
-        if extra_options:
-            body.update(extra_options)
-
-        # Set up messages - reasoning models benefit from developer messages
-        messages = []
-        if is_reasoning:
-            # Add developer message to encourage proper formatting for reasoning models
-            messages.append(
-                {
-                    "role": "developer",
-                    "content": "You are a helpful assistant expert in bioinformatics. Please provide clear, well-formatted responses using markdown where appropriate.",
-                }
-            )
-
-        messages.append({"role": "user", "content": prompt})
-
-        body.update(
-            {
-                "model": self.model,
-                "messages": messages,
-            }
-        )
-
-        # For OpenAI reasoning models, use max_completion_tokens and reasoning effort
-        # Note: Claude 4 series are also reasoning models but may use different parameters
-        if is_reasoning and not (
-            self.model.startswith("claude-opus-4")
-            or self.model.startswith("claude-sonnet-4")
-            or self.model.startswith("claude-haiku-4")
-        ):
-            # Use config or reasonable default for max_completion_tokens
-            max_completion_tokens = config.ai_max_completion_tokens or 4000
-            if config.ai_extra_query_options and "max_completion_tokens" in config.ai_extra_query_options:
-                max_completion_tokens = config.ai_extra_query_options["max_completion_tokens"]
-
-            body["max_completion_tokens"] = max_completion_tokens
-
-            # Add reasoning effort parameter - use config or default to medium
-            reasoning_effort = config.ai_reasoning_effort or "medium"
-            if config.ai_extra_query_options and "reasoning_effort" in config.ai_extra_query_options:
-                reasoning_effort = config.ai_extra_query_options["reasoning_effort"]
-
-            body["reasoning_effort"] = reasoning_effort
-            logger.debug(
-                f"OpenAI reasoning model parameters: max_completion_tokens={max_completion_tokens}, reasoning_effort={reasoning_effort}"
-            )
-        elif is_reasoning and (
-            self.model.startswith("claude-opus-4")
-            or self.model.startswith("claude-sonnet-4")
-            or self.model.startswith("claude-haiku-4")
-        ):
-            # Claude 4 reasoning models - use extended thinking if enabled
-            if config.ai_extended_thinking:
-                thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
-                if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
-                    thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
-
-                body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens}
-                logger.debug(f"Claude 4 model with extended thinking enabled: budget_tokens={thinking_budget_tokens}")
-            else:
-                logger.debug("Claude 4 model without extended thinking (ai_extended_thinking=False)")
-
-        if config.ai_auth_type == "api-key":
-            headers = {
-                "Content-Type": "application/json",
-                "api-key": self.api_key,
-            }
-        else:
-            headers = {
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {self.api_key}",
-            }
-        response = self._request_with_error_handling_and_retries(
-            self.endpoint,
-            headers=headers,
-            body=body,
-        )
-        return OpenAiClient.ApiResponse(
-            content=response["choices"][0]["message"]["content"],
-            model=response.get("model", self.model),
-        )
+        response = self._send(body, lambda b: self._post(self.endpoint, self._headers(), b))
+        if self.response_path:
+            return LlmResponse(_text_at_path(response, self.response_path), response.get("model", self.model))
+        return _parse_openai_response(response, self.model)
 
 
 class AnthropicClient(Client):
-    def __init__(self, api_key: str):
+    """The Claude API, or a gateway that speaks the Claude Messages API."""
+
+    required_fields = ("model", "messages", "max_tokens")
+
+    def __init__(
+        self,
+        api_key: Optional[str],
+        endpoint: Optional[str] = None,
+        headers: Optional[Dict[str, Optional[str]]] = None,
+        response_path: Optional[str] = None,
+    ):
         super().__init__(api_key)
-        self.model = (
-            config.ai_model if config.ai_model and config.ai_model.startswith("claude") else "claude-sonnet-4-5"
-        )
-        self.name = "anthropic"
-        self.title = "Anthropic"
+        if endpoint:
+            if not config.ai_model:
+                raise ValueError("Custom AI endpoint is set, but no model is provided. Please set config.ai_model")
+            self.endpoint = endpoint
+            self.model = config.ai_model
+            self.name = "custom"
+            self.title = endpoint
+        else:
+            if config.ai_model and parse_model(config.ai_model).vendor == "anthropic":
+                self.model = config.ai_model
+            else:
+                if config.ai_model:
+                    logger.warning(
+                        f"ai_model '{config.ai_model}' is not a Claude model, using {DEFAULT_MODELS['anthropic']}"
+                    )
+                self.model = DEFAULT_MODELS["anthropic"]
+            self.endpoint = "https://api.anthropic.com/v1/messages"
+            self.name = "anthropic"
+            self.title = "Anthropic"
+        self.extra_headers = headers
+        self.response_path = response_path
+        self._model_details: Optional[Dict[str, Any]] = None
+        self._model_details_fetched = False
 
-    def max_tokens(self) -> int:
-        return 200000
+    def _headers(self, body: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+        headers = {"Content-Type": "application/json", "anthropic-version": ai_models.ANTHROPIC_API_VERSION}
+        if self.api_key:
+            headers["x-api-key"] = self.api_key
+        if body and "fallbacks" in body:
+            headers["anthropic-beta"] = ai_models.ANTHROPIC_FALLBACK_BETA
+        return _merge_headers(headers, self.extra_headers)
 
-    class ApiResponse(NamedTuple):
-        content: str
-        model: str
+    def _model_details_from_api(self) -> Optional[Dict[str, Any]]:
+        """The model's entry from the Claude models API (context window, max output), fetched once."""
+        if not self._model_details_fetched:
+            self._model_details_fetched = True
+            models_url = ai_models.models_url_for_endpoint(self.endpoint)
+            url = f"{models_url}/{self.model}" if self.name == "anthropic" else models_url
+            self._model_details = ai_models.find_model_entry(self._get(url, self._headers()), self.model)
+        return self._model_details
 
-    def _query(self, prompt: str) -> ApiResponse:
-        response = self._request_with_error_handling_and_retries(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "Content-Type": "application/json",
-                "x-api-key": self.api_key,
-                "anthropic-version": "2023-06-01",
-            },
-            body={
-                "model": self.model,
-                "max_tokens": 4096,
-                "messages": [
-                    {"role": "user", "content": prompt},
-                ],
-                "temperature": 0.0,
-            },
-        )
-        return AnthropicClient.ApiResponse(
-            content=response["content"][0]["text"],
-            model=response.get("model", self.model),
-        )
+    def discover_context_window(self) -> Optional[int]:
+        return ai_models.find_context_window(self._model_details_from_api())
+
+    def output_tokens(self) -> int:
+        details = self._model_details_from_api() or {}
+        model_max = details.get("max_tokens") if isinstance(details.get("max_tokens"), int) else None
+        return _claude_output_tokens(self.model_info, model_max)
+
+    def query(self, prompt: str) -> LlmResponse:
+        body = _anthropic_body(self.model_info, prompt, self.output_tokens())
+        body = {"model": self.model, **body}
+        if self.name == "anthropic" and ai_models.claude_supports_server_fallbacks(self.model_info):
+            # Re-run a refused request on another model instead of returning the refusal
+            body["fallbacks"] = "default"
+        body = _apply_extra_options(body)
+
+        response = self._send(body, lambda b: self._post(self.endpoint, self._headers(b), b))
+        if self.response_path:
+            return LlmResponse(_text_at_path(response, self.response_path), response.get("model", self.model))
+        return _parse_anthropic_response(response, self.model)
 
 
 class AWSBedrockClient(Client):
+    required_fields = ("anthropic_version", "messages", "max_tokens")
+
     def __init__(self):
         super().__init__()
 
+        if not config.ai_model:
+            raise ValueError("AWS Bedrock needs a model ID. Please set config.ai_model")
         self.model = config.ai_model
         self.name = "aws_bedrock"
         self.title = "AWS Bedrock"
@@ -474,49 +721,31 @@ class AWSBedrockClient(Client):
 
         self.client = boto3.client(service_name="bedrock-runtime")
 
-    def max_tokens(self) -> int:
-        return config.ai_custom_context_window or 200000
+    def output_tokens(self) -> int:
+        return _claude_output_tokens(self.model_info)
 
-    class ApiResponse(NamedTuple):
-        content: str
-        model: str
+    def _invoke(self, body: Dict[str, Any]) -> Dict[str, Any]:
+        from botocore.exceptions import BotoCoreError, ClientError  # type: ignore
 
-    def _query(self, prompt: str) -> ApiResponse:
-        # TODO consider error-handling/backoff
-        body = {
-            # this is the only allowable value as of 2025/03/04
-            # if they ever add more, we can make it configurable
-            # or add smart logic to figure it out.
-            "anthropic_version": "bedrock-2023-05-31",
-            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-            "max_tokens": 4096,
-        }
+        try:
+            response = self.client.invoke_model(
+                body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
+            )
+        except ClientError as e:
+            error = e.response.get("Error", {})
+            status = e.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+            raise ProviderError(status, f"{error.get('Code')}: {error.get('Message')}") from e
+        except BotoCoreError as e:
+            raise ProviderError(None, str(e)) from e
+        return json.loads(response["body"].read())
 
-        if config.ai_extended_thinking:
-            thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
-            if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
-                thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+    def query(self, prompt: str) -> LlmResponse:
+        body = _anthropic_body(self.model_info, [{"type": "text", "text": prompt}], self.output_tokens())
+        body["anthropic_version"] = ai_models.bedrock_api_version(self.model_info)
+        body = _apply_extra_options(body)
 
-            body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
-        else:
-            body["thinking"] = {"type": "disabled"}
-
-        response = self.client.invoke_model(
-            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
-        )
-
-        response_body = json.loads(response["body"].read())
-        if response_body["stop_reason"] == "refusal":
-            return AWSBedrockClient.ApiResponse(content=REFURSAL_STUB_CONTENT, model=self.model)
-        if not response_body.get("content", []):
-            logger.error(f"bedrock response does not have 'content': {response_body}")
-            raise ValueError("Unexpected bedrock response body")
-        text_blocks = [b for b in response_body["content"] if b["type"] == "text"]
-        if len(text_blocks) != 1:
-            logger.error(f"bedrock response does not contain 1 text block: {response_body}")
-            raise ValueError("Unexpected bedrock response body")
-        content = text_blocks[0]["text"]  # Extract the assistant's response
-        return AWSBedrockClient.ApiResponse(content=content, model=self.model)
+        response = self._send(body, self._invoke)
+        return _parse_anthropic_response(response, self.model)
 
 
 class SeqeraClient(Client):
@@ -529,38 +758,33 @@ class SeqeraClient(Client):
         self.tags = ["multiqc", f"multiqc_version:{config.version}"]
         # Model is determined by Seqera endpoint, not specified in request
         self.model = "seqera"
+        # Every field is needed by the Seqera endpoint, never drop any
+        self.required_fields = ("message", "tags", "title", "response_schema")
 
-    def max_tokens(self) -> int:
+    def discover_context_window(self) -> Optional[int]:
         return 200000
 
     def wrap_details(self, prompt) -> str:
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
-    class ApiResponse(NamedTuple):
-        content: Union[str, Dict[str, str]]
-        model: str
-        thread_id: Optional[str] = None
-
     def _send_request(
         self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
-    ) -> ApiResponse:
-        response = self._request_with_error_handling_and_retries(
-            f"{config.seqera_api_url}/internal-ai/report-summary",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            body={
-                "message": self.wrap_details(prompt + "\n\n" + report_content),
-                "tags": self.tags,
-                "title": self.chat_title,
-                **(extra_options or {}),
-            },
-        )
-        return SeqeraClient.ApiResponse(
+    ) -> LlmResponse:
+        body = {
+            "message": self.wrap_details(prompt + "\n\n" + report_content),
+            "tags": self.tags,
+            "title": self.chat_title,
+            **(extra_options or {}),
+        }
+        url = f"{config.seqera_api_url}/internal-ai/report-summary"
+        response = self._send(body, lambda b: self._post(url, {"Authorization": f"Bearer {self.api_key}"}, b))
+        return LlmResponse(
             content=response["generation"],
             model=response.get("model", self.model),
             thread_id=response.get("thread_id"),
         )
 
-    def interpret_report_short(self, report_content: str) -> InterpretationResponse:
+    def interpret_report_short(self, report_content: str) -> "InterpretationResponse":
         response = self._send_request(self.prompt_short, report_content, extra_options=None)
 
         return InterpretationResponse(
@@ -569,7 +793,7 @@ class SeqeraClient(Client):
             thread_id=response.thread_id,
         )
 
-    def interpret_report_full(self, report_content: str) -> InterpretationResponse:
+    def interpret_report_full(self, report_content: str) -> "InterpretationResponse":
         response = self._send_request(
             self.prompt_full,
             report_content,
@@ -749,6 +973,52 @@ def _auto_detect_provider() -> Optional[str]:
     return None
 
 
+def _load_client_class(spec: str) -> Client:
+    """Create a user-supplied client from `ai_custom_client`, given as `package.module:ClassName`."""
+    module_name, _, class_name = spec.partition(":")
+    try:
+        client_class = getattr(importlib.import_module(module_name), class_name)
+    except (ImportError, AttributeError) as e:
+        raise RuntimeError(f"Could not load the AI provider '{spec}': {e}") from e
+    if not (isinstance(client_class, type) and issubclass(client_class, Client)):
+        raise RuntimeError(f"The AI provider '{spec}' must be a subclass of multiqc.core.ai.Client")
+    return client_class()
+
+
+def _custom_client() -> Client:
+    """A client for `ai_provider: custom`: an OpenAI- or Claude-compatible endpoint."""
+    if not config.ai_model:
+        raise ValueError(
+            "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
+        )
+    if not config.ai_custom_endpoint:
+        raise ValueError(
+            "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_custom_endpoint is provided. Please set config.ai_custom_endpoint"
+        )
+    api_style = config.ai_custom_api_style or "openai"
+    key_variable = "ANTHROPIC_API_KEY" if api_style == "anthropic" else "OPENAI_API_KEY"
+    api_key = os.environ.get(key_variable)
+    headers: Optional[Dict[str, Optional[str]]] = None
+    if config.ai_custom_headers is not None:
+        headers = {
+            key: _expand_env_vars(value) if isinstance(value, str) else value
+            for key, value in config.ai_custom_headers.items()
+        }
+    elif not api_key:
+        raise RuntimeError(
+            f"config.ai_summary is set to true, and config.ai_provider is set to 'custom', but the {key_variable} "
+            "environment variable is not set. Set it, or set config.ai_custom_headers to authenticate another way"
+        )
+    logger.debug(f"Using custom {api_style}-style endpoint {config.ai_custom_endpoint}")
+    client_class = AnthropicClient if api_style == "anthropic" else OpenAiClient
+    return client_class(
+        api_key=api_key,
+        endpoint=config.ai_custom_endpoint,
+        headers=headers,
+        response_path=config.ai_custom_response_path,
+    )
+
+
 def get_llm_client() -> Optional[Client]:
     if not config.ai_summary:
         return None
@@ -787,12 +1057,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the ANTHROPIC_API_KEY environment variable, or change config.ai_provider"
             )
         logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
-        try:
-            return AnthropicClient(api_key)
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[anthropic]"`'
-            )
+        return AnthropicClient(api_key)
 
     elif provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
@@ -802,12 +1067,7 @@ def get_llm_client() -> Optional[Client]:
                 "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
             )
         logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
-        try:
-            return OpenAiClient(api_key)
-        except ModuleNotFoundError:
-            raise ModuleNotFoundError(
-                'AI summary requested through `config.ai_summary`, but required dependencies are not installed. Install them with `pip install "multiqc[openai]"`'
-            )
+        return OpenAiClient(api_key)
 
     elif provider == "aws_bedrock":
         try:
@@ -818,24 +1078,10 @@ def get_llm_client() -> Optional[Client]:
             )
 
     elif provider == "custom":
-        api_key = os.environ.get("OPENAI_API_KEY")
-        if not api_key:
-            raise RuntimeError(
-                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but OpenAI API "
-                "key not set. Please set the OPENAI_API_KEY environment variable, or change config.ai_provider"
-            )
-        if not config.ai_model:
-            raise ValueError(
-                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_model is provided. Please set config.ai_model"
-            )
-        if not config.ai_custom_endpoint:
-            raise ValueError(
-                "config.ai_summary is set to true, and config.ai_provider is set to 'custom', but no config.ai_custom_endpoint is provided. Please set config.ai_custom_endpoint"
-            )
-        logger.debug(
-            f"Using API key from the OPENAI_API_KEY environment variable to use with a custom endpoint {config.ai_custom_endpoint}"
-        )
-        return OpenAiClient(api_key=api_key, endpoint=config.ai_custom_endpoint)
+        if config.ai_custom_client:
+            return _load_client_class(config.ai_custom_client)
+        return _custom_client()
+
     else:
         avail_providers = config_schema.AiProviderLiteral.__args__  # type: ignore
         raise RuntimeError(
@@ -934,12 +1180,61 @@ def deanonymize_sample_names(text: str) -> str:
     return text
 
 
-def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Client] = None) -> Tuple[str, bool]:
-    # Account for system message, plus leave 10% buffer
-    max_tokens = client.max_tokens() if client is not None else math.inf
+class PromptBuild(NamedTuple):
+    prompt: str
+    n_tokens: int  # estimated, including the system prompt
+    too_long: bool  # even the General Statistics table doesn't fit
 
-    user_prompt: str = ""
-    current_n_tokens = client.n_tokens(system_prompt) if client is not None else 0
+
+_SEPARATOR = "\n----------------------\n\n"
+
+
+def _section_context(section: AiSectionMetadata, tool: AiToolMetadata) -> str:
+    context = _SEPARATOR
+    context += f"Tool: {tool.name}\n"
+    context += f"Section: {section.name}\n"
+    if section.description:
+        context += f"Section description: {_strip_html(section.description)}\n"
+    if section.comment:
+        context += f"Section comment: {_strip_html(section.comment)}\n"
+    if section.helptext:
+        context += f"Section help text: {_strip_html(section.helptext)}\n"
+
+    if section.content_before_plot:
+        context += report.anonymize_sample_name(section.content_before_plot) + "\n\n"
+    if section.content:
+        context += report.anonymize_sample_name(section.content) + "\n\n"
+
+    if section.plot_anchor and section.plot_anchor in report.plot_by_id:
+        plot = report.plot_by_id[section.plot_anchor]
+        if isinstance(plot, Plot):
+            if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
+                if plot.pconfig.title:
+                    context += f"Title: {plot.pconfig.title}\n"
+                context += "\n" + plot_content
+    return context
+
+
+def build_prompt(
+    metadata: AiReportMetadata,
+    system_prompt: str,
+    client: Optional[Client] = None,
+    budget: Optional[int] = None,
+) -> PromptBuild:
+    """
+    Build the report part of the prompt, fitting as much of the report as possible into the budget
+    (by default, the client's context window). Tools and the General Statistics table go first,
+    then every section that still fits, in report order. Sections that don't fit are listed by
+    name at the end, so the model knows they exist.
+    """
+
+    def count(text: str) -> int:
+        return client.n_tokens(text) if client is not None else 0
+
+    if budget is None:
+        budget = client.prompt_budget() if client is not None else None
+    limit = budget if budget is not None else math.inf
+    used = count(system_prompt)
 
     # Details about modules used in the report - include first in the prompt
     tools_context: str = ""
@@ -953,81 +1248,67 @@ def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Cli
         if tool.comment:
             tools_context += f"Comment: {tool.comment}\n"
         tools_context += "\n\n"
-        tools_context += "\n----------------------\n\n"
-    user_prompt += tools_context
+        tools_context += _SEPARATOR
+    prompt = tools_context
+    used += count(tools_context)
 
-    # General stats - also always include, otherwise we don't have anything to summarize
+    # General stats - always include, otherwise we don't have anything to summarize
     if general_stats_plot := report.plot_by_id.get(Anchor("general_stats_table")):
         if isinstance(general_stats_plot, Plot):
-            genstats_context = f"""
-    MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-    {general_stats_plot.format_for_ai_prompt()}
-    """
-            if client is not None:
-                genstats_n_tokens = client.n_tokens(genstats_context) if client is not None else 0
-                if current_n_tokens + genstats_n_tokens > max_tokens:
-                    # If it's too long already, try without hidden columns
-                    genstats_context = f"""
-        MultiQC General Statistics (overview of key QC metrics for each sample, across all tools)
-        {general_stats_plot.format_for_ai_prompt(keep_hidden=False)}
-        """
-                    genstats_n_tokens = client.n_tokens(genstats_context)
-                    if current_n_tokens + genstats_n_tokens > max_tokens:
-                        logger.debug(
-                            f"General stats (almost) exceeds the {client.title}'s context window ({current_n_tokens} + "
-                            f"{genstats_n_tokens} tokens, max: {client.max_tokens()} tokens). "
-                            "AI summary will not be generated. Try hiding some columns in the general stats table "
-                            "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns) to reduce the context. "
-                            "You can also open the HTML report in the browser, hide columns or samples dynamically, and request "
-                            "the AI summary dynamically, or copy the prompt into clipboard and use it with extrenal services."
-                        )
-                        return user_prompt + genstats_context, True
-                user_prompt += genstats_context
-                current_n_tokens += genstats_n_tokens
 
-    user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
+            def genstats_context(keep_hidden: bool) -> str:
+                return (
+                    "\nMultiQC General Statistics (overview of key QC metrics for each sample, across all tools)\n"
+                    f"{general_stats_plot.format_for_ai_prompt(keep_hidden=keep_hidden)}\n"
+                )
 
-    # Build sections context and use it unless it's too long for the LLM context
-    sec_context: str = ""
+            context = genstats_context(keep_hidden=True)
+            n = count(context)
+            if used + n > limit:
+                # If it's too long already, try without hidden columns
+                context = genstats_context(keep_hidden=False)
+                n = count(context)
+                if used + n > limit:
+                    logger.warning(
+                        f"The General Statistics table alone is too large for the model's context window "
+                        f"(about {used + n:,} tokens, limit {limit:,} tokens). "
+                        "AI summary will not be generated. Try hiding some columns in the general stats table "
+                        "(see https://docs.seqera.io/multiqc/reports/customisation#hiding-columns), using a model "
+                        "with a larger context window, or setting ai_custom_context_window if MultiQC's estimate "
+                        "of the context window is wrong."
+                    )
+                    return PromptBuild(prompt + context, used + n, too_long=True)
+            prompt += context
+            used += n
+
+    # Then every section that fits
+    skipped: List[str] = []
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
-        sec_context += "\n----------------------\n\n"
-        sec_context += f"Tool: {tool.name}\n"
-        sec_context += f"Section: {section.name}\n"
-        if section.description:
-            sec_context += f"Section description: {_strip_html(section.description)}\n"
-        if section.comment:
-            sec_context += f"Section comment: {_strip_html(section.comment)}\n"
-        if section.helptext:
-            sec_context += f"Section help text: {_strip_html(section.helptext)}\n"
+        context = _section_context(section, tool)
+        n = count(context)
+        if used + n > limit:
+            skipped.append(f"{tool.name}: {section.name}")
+            continue
+        prompt += context
+        used += n
 
-        if section.content_before_plot:
-            sec_context += report.anonymize_sample_name(section.content_before_plot) + "\n\n"
-        if section.content:
-            sec_context += report.anonymize_sample_name(section.content) + "\n\n"
+    if skipped:
+        note = (
+            _SEPARATOR
+            + "These report sections were left out to fit the model's context window: "
+            + "; ".join(skipped)
+            + "\n"
+        )
+        prompt += note
+        used += count(note)
+        logger.info(
+            f"Left out {len(skipped)} of {len(metadata.sections)} report sections to fit the model's context window. "
+            "Set ai_custom_context_window if the model can take more."
+        )
 
-        if section.plot_anchor and section.plot_anchor in report.plot_by_id:
-            plot = report.plot_by_id[section.plot_anchor]
-            if isinstance(plot, Plot):
-                if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
-                    if plot.pconfig.title:
-                        sec_context += f"Title: {plot.pconfig.title}\n"
-                    sec_context += "\n" + plot_content
-
-        # Check if adding this section would exceed the limit
-        # Using rough estimate of 4 chars per token
-        if client is not None:
-            sec_n_tokens = client.n_tokens(sec_context)
-            if current_n_tokens + sec_n_tokens > max_tokens:
-                logger.debug(
-                    f"Including only General Statistics table to fit within {client.title}'s context window ({client.max_tokens()} tokens). "
-                    f"Tokens estimate: {current_n_tokens}, with sections: {current_n_tokens + sec_n_tokens}"
-                )
-                return user_prompt, False
-
-    user_prompt += sec_context
-    user_prompt = re.sub(r"\n\n\n", "\n\n", user_prompt)  # strip triple newlines
-    return user_prompt, False
+    prompt = re.sub(r"\n\n\n+", "\n\n", prompt)  # strip triple newlines
+    return PromptBuild(prompt, used, too_long=False)
 
 
 def _save_prompt_to_file(system_prompt: str, prompt: str):
@@ -1035,6 +1316,53 @@ def _save_prompt_to_file(system_prompt: str, prompt: str):
     path = report.data_tmp_dir() / "llms-full.txt"
     path.write_text(f"{system_prompt}\n\n----------------------\n\n{prompt}", encoding="utf-8")
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
+
+
+def _ai_js_config(client: Optional[Client]) -> Dict[str, Any]:
+    """Settings the browser needs to make the same requests as Python does."""
+    js_config: Dict[str, Any] = {
+        "defaultModels": DEFAULT_MODELS,
+        "reasoningEffort": config.ai_reasoning_effort,
+        "maxCompletionTokens": config.ai_max_completion_tokens,
+        "extendedThinking": bool(config.ai_extended_thinking),
+        "thinkingBudgetTokens": config.ai_thinking_budget_tokens,
+        "anthropicApiVersion": ai_models.ANTHROPIC_API_VERSION,
+        "anthropicFallbackBeta": ai_models.ANTHROPIC_FALLBACK_BETA,
+        "fallbackContextWindow": ai_models.FALLBACK_CONTEXT_WINDOW,
+        "contextWindows": {},
+    }
+    if client is not None and client.model:
+        # What Python found out about the configured model, e.g. from the provider's models endpoint
+        js_config["contextWindows"][client.model] = client.context_window()
+    return js_config
+
+
+def _interpret(client: Client, prompt: str) -> InterpretationResponse:
+    if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
+        thread_id = "68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None
+        if config.ai_summary_full:
+            return InterpretationResponse(
+                interpretation=InterpretationOutput(
+                    summary=_EXAMPLE_SUMMARY_FOR_FULL,
+                    detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
+                ),
+                model="test-model",
+                thread_id=thread_id,
+            )
+        return InterpretationResponse(
+            interpretation=InterpretationOutput(
+                summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
+            ),
+            model="test-model",
+            thread_id=thread_id,
+        )
+    if config.ai_summary_full:
+        return client.interpret_report_full(prompt)
+    return client.interpret_report_short(prompt)
+
+
+# How many times to rebuild a shorter prompt after the provider says it's too long
+_MAX_OVERFLOW_RETRIES = 3
 
 
 def add_ai_summary_to_report():
@@ -1052,6 +1380,7 @@ def add_ai_summary_to_report():
             }
         ).encode()
     ).decode()
+    report.ai_js_config = _ai_js_config(None)
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
@@ -1065,14 +1394,13 @@ def add_ai_summary_to_report():
     # Now that everything for JS runtime is set, we only continue if static summaries are requested
     if not config.ai_summary:
         # Not generating report in Python, leaving for JS runtime, but saving full and complete prompt to llms-full.txt file
-        prompt, _ = build_prompt(metadata, system_prompt)
-        _save_prompt_to_file(system_prompt, prompt)
+        _save_prompt_to_file(system_prompt, build_prompt(metadata, system_prompt).prompt)
         return
 
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
     try:
         client = get_llm_client()
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:
         logger.error(f"Failed to initialize AI client: {e}")
         if config.strict:
             raise
@@ -1082,41 +1410,39 @@ def add_ai_summary_to_report():
     report.ai_provider_id = client.name
     report.ai_provider_title = client.title
     report.ai_model = client.model
+    report.ai_js_config = _ai_js_config(client)
 
-    prompt, exceeded_context_window = build_prompt(metadata, system_prompt, client)
-    _save_prompt_to_file(system_prompt, prompt)
-    if exceeded_context_window:
-        return
+    budget = client.prompt_budget()
+    response: Optional[InterpretationResponse] = None
+    for _ in range(_MAX_OVERFLOW_RETRIES + 1):
+        build = build_prompt(metadata, system_prompt, client, budget)
+        _save_prompt_to_file(system_prompt, build.prompt)
+        if build.too_long:
+            return
+        logger.debug(f"Prompt for {client.title} ({client.model}): about {build.n_tokens:,} tokens")
+        try:
+            response = _interpret(client, build.prompt)
+            break
+        except ContextOverflowError as e:
+            budget = ai_models.shrink_budget(budget, build.n_tokens, e.overflow)
+            logger.warning(f"The prompt was too long for {client.model}, retrying with less of the report. ({e})")
+        except ModelUnavailableError as e:
+            logger.warning(str(e))
+            response = InterpretationResponse(
+                interpretation=InterpretationOutput(summary=_model_unavailable_stub(client.model)),
+                model=client.model,
+            )
+            break
+        except Exception as e:
+            logger.error(f"Failed to interpret report with {client.title}: {e}")
+            if config.strict:
+                raise
+            return None
 
-    response: InterpretationResponse
-    try:
-        if config.ai_summary_full:
-            if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-                response = InterpretationResponse(
-                    interpretation=InterpretationOutput(
-                        summary=_EXAMPLE_SUMMARY_FOR_FULL,
-                        detailed_analysis=_EXAMPLE_DETAILED_SUMMARY,
-                    ),
-                    model="test-model",
-                    thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
-                )
-            else:
-                response = client.interpret_report_full(prompt)
-        else:
-            if config.development and os.environ.get("MQC_STUB_AI_RESPONSE"):
-                response = InterpretationResponse(
-                    interpretation=InterpretationOutput(
-                        summary="- All samples show :span[good quality metrics]{.text-green} with consistent CpG methylation (:span[75.7-77.0%]{.text-green}), alignment rates (:span[76-86%]{.text-green}), and balanced strand distribution (:span[~50/50]{.text-green})\n- :sample[2wk]{.text-yellow} samples show slightly higher duplication (:span[11-15%]{.text-yellow}) and trimming rates (:span[13-23%]{.text-yellow}) compared to :sample[1wk]{.text-green} samples (:span[6-9%]{.text-green} duplication, :span[2-3%]{.text-green} trimming)",
-                    ),
-                    model="test-model",
-                    thread_id="68bcead8-1bea-4b75-84d1-fc2ae6afed51" if client.name == "seqera" else None,
-                )
-            else:
-                response = client.interpret_report_short(prompt)
-    except Exception as e:
-        logger.error(f"Failed to interpret report with {client.title}: {e}")
+    if response is None:
+        logger.error(f"The prompt was still too long for {client.model} after {_MAX_OVERFLOW_RETRIES} retries")
         if config.strict:
-            raise
+            raise RuntimeError(f"Could not fit the report into the context window of {client.model}")
         return None
 
     if not response.interpretation:

@@ -75,6 +75,10 @@ ai_provider: seqera
 ai_model: null
 ai_custom_endpoint: null
 ai_auth_type: null
+ai_custom_api_style: null
+ai_custom_headers: null
+ai_custom_response_path: null
+ai_custom_client: null
 ai_retries: 3
 ai_extra_query_options: null
 ai_custom_context_window: null
@@ -82,10 +86,10 @@ ai_prompt_short: null
 ai_prompt_full: null
 no_ai: false
 ai_anonymize_samples: false
-ai_reasoning_effort: null # Reasoning effort level for OpenAI reasoning models (low, medium, high)
-ai_max_completion_tokens: null # Maximum completion tokens for OpenAI reasoning models
-ai_extended_thinking: false # Enable extended thinking for Anthropic Claude 4 models
-ai_thinking_budget_tokens: null # Budget tokens for Anthropic extended thinking
+ai_reasoning_effort: null # Reasoning effort, passed to the provider as given (eg. low, medium, high)
+ai_max_completion_tokens: null # Maximum output tokens, including reasoning or thinking tokens
+ai_extended_thinking: false # Turn on extended thinking for Claude models
+ai_thinking_budget_tokens: null # Thinking budget for Claude models older than 4.6
 
 # Development settings:
 seqera_api_url: "https://ai.seqera.io/v1/web"

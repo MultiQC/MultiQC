@@ -26,7 +26,7 @@
         id="ai-endpoint"
         placeholder="e.g. https://api.perplexity.ai/chat/completions"
       />
-      <div id="ai_endpoint_info" class="form-text">Use the OpenAI API-style requests with a custom endpoint.</div>
+      <div id="ai_endpoint_info" class="form-text">Full URL of an OpenAI-compatible chat completions endpoint.</div>
     </div>
 
     <div class="mt-3" id="ai_model_group">
@@ -60,14 +60,10 @@
 
     <div class="mt-3" id="ai_context_window_group" style="display: none;">
       <label for="ai-context-window">Context Window</label>
-      <input
-        type="number"
-        class="form-control form-control-sm"
-        id="ai-context-window"
-        placeholder="Enter context window size"
-      />
+      <input type="number" class="form-control form-control-sm" id="ai-context-window" placeholder="Automatic" />
       <div id="ai_context_window_info" class="form-text">
-        The maximum number of tokens that can be processed in a single request
+        The maximum number of tokens the model takes in a single request. Leave empty to use what MultiQC knows about
+        the model, or 128,000 tokens if it doesn't recognise it.
       </div>
     </div>
   </form>

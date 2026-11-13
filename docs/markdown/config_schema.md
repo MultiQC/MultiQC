@@ -3236,39 +3236,87 @@ AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, c
 
 **Type**: <code>str</code>
 
-Model name. Provider-specific.
+Model name. Defaults to claude-opus-5-5 for Anthropic and gpt-6.1-sol for OpenAI. Required for aws_bedrock and custom.
 
 **Examples**:
 
 ```yaml
-ai_model: gpt-4o
+ai_model: claude-opus-5-5
 ```
 
 ```yaml
-ai_model: claude-sonnet-4-5.
+ai_model: gpt-6.1-sol
 ```
 
 #### `ai_custom_endpoint`
 
 **Type**: <code>str</code>
 
-Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.
+Full URL of the chat endpoint for the 'custom' provider: an OpenAI-compatible chat completions endpoint, or a Claude-compatible messages endpoint with ai_custom_api_style: anthropic.
 
 **Examples**:
 
 ```yaml
-ai_custom_endpoint: http://localhost:11434/v1
+ai_custom_endpoint: http://localhost:8000/v1/chat/completions
 ```
 
 ```yaml
-ai_custom_endpoint: https://api.example.com/v1
+ai_custom_endpoint: https://llm-gateway.example.com/v1/messages
 ```
+
+#### `ai_custom_api_style`
+
+**Type**: <code>Literal["openai", "anthropic"]</code>
+
+Request format of the custom endpoint: 'openai' (chat completions, the default) or 'anthropic' (Claude messages API).
 
 #### `ai_auth_type`
 
 **Type**: <code>Literal["bearer", "api-key"]</code>
 
 Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
+
+#### `ai_custom_headers`
+
+**Type**: <code>Dict[str, str]</code>
+
+Extra HTTP headers for the custom endpoint. Write ${VAR} to insert an environment variable, so secrets stay out of config files. A null value removes a header MultiQC would send. When set, the API key environment variable is optional.
+
+**Example**:
+
+```yaml
+ai_custom_headers:
+  Authorization: null
+  x-api-key: ${MY_GATEWAY_TOKEN}
+```
+
+#### `ai_custom_response_path`
+
+**Type**: <code>str</code>
+
+Dotted path to the answer text in the custom endpoint's JSON response, for endpoints that don't use the standard OpenAI or Claude response format.
+
+**Examples**:
+
+```yaml
+ai_custom_response_path: completion.content
+```
+
+```yaml
+ai_custom_response_path: choices.0.message.content
+```
+
+#### `ai_custom_client`
+
+**Type**: <code>str</code>
+
+Python class that sends prompts to your own AI service, given as 'package.module:ClassName'. Used with ai_provider: custom instead of ai_custom_endpoint. The class must subclass multiqc.core.ai.Client.
+
+**Example**:
+
+```yaml
+ai_custom_client: my_lab.llm:GatewayClient
+```
 
 #### `seqera_website`
 
@@ -3294,45 +3342,59 @@ Number of times to retry an AI request on transient errors.
 
 **Type**: <code>Dict[str, Any]</code>
 
-Extra request-body fields merged into the AI request payload (provider-specific).
+Extra request-body fields merged into the AI request payload (provider-specific). A null value removes a field MultiQC would otherwise send.
 
-**Example**:
+**Examples**:
 
 ```yaml
 ai_extra_query_options:
-  temperature: 0.3
-  top_p: 0.9
+  seed: 42
+```
+
+```yaml
+ai_extra_query_options:
+  model: null
 ```
 
 #### `ai_custom_context_window`
 
 **Type**: <code>int</code>
 
-Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.
+Override the model's context window in tokens. By default MultiQC asks the provider, then uses what it knows about the model family, then assumes 128,000 tokens.
 
 #### `ai_max_completion_tokens`
 
 **Type**: <code>int</code>
 
-Maximum completion tokens for OpenAI reasoning models.
+Maximum output tokens for the AI response, including reasoning or thinking tokens. Defaults to 16,000 for Claude; other providers use the model's own maximum.
 
 #### `ai_reasoning_effort`
 
-**Type**: <code>Literal["low", "medium", "high"]</code>
+**Type**: <code>str</code>
 
-Reasoning effort for OpenAI reasoning models.
+Reasoning effort, passed to the provider as given (OpenAI reasoning_effort, Claude output_config.effort). The levels depend on the model, eg. low, medium, high, xhigh, max. If the model rejects it, the request is sent without it.
+
+**Examples**:
+
+```yaml
+ai_reasoning_effort: low
+```
+
+```yaml
+ai_reasoning_effort: high
+```
 
 #### `ai_extended_thinking`
 
 **Type**: <code>bool</code> (default: `false`)
 
-Enable extended thinking on Anthropic Claude models that support it.
+Turn on extended thinking for Claude models: adaptive thinking on Claude 4.6 and later, a token budget on older models. When off, each model uses its own default.
 
 #### `ai_thinking_budget_tokens`
 
 **Type**: <code>int</code>
 
-Token budget for Anthropic extended thinking when enabled.
+Token budget for extended thinking on Claude models older than 4.6.
 
 ## MegaQC
 

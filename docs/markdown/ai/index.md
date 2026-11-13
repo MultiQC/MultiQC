@@ -31,7 +31,7 @@ For more information, see [Seqera AI: Your privacy matters](https://seqera.io/ai
 ## Choosing a provider
 
 To use native summary generation, MultiQC needs to communicate with an LLM provider's API.
-All three supported services require an API key to work.
+All supported services require an API key or credentials to work.
 Remember: Treat your API keys like passwords and do not share them.
 
 - [Seqera Co-Scientist](https://ai.seqera.io/)
@@ -49,7 +49,7 @@ Remember: Treat your API keys like passwords and do not share them.
   - Bedrock supports a plethora of models across many providers
   - Sign up, access credentials and payment are handled via an AWS account
 - Other providers, via custom endpoint
-  - Works for providers supporting OpenAI-compatible API, specify a custom endpoint URL. See [Using custom OpenAI-compatible endpoints](#using-custom-openai-compatible-endpoints) for details
+  - Works with any OpenAI-compatible or Claude-compatible API, or your own Python class. See [Custom providers](#custom-providers) for details
 - Other providers, via your clipboard
   - You can use buttons in MultiQC reports to copy a prompt to your clipboard,
     in order to manually summarise report data.
@@ -61,148 +61,59 @@ Seqera Co-Scientist uses the latest AI provider models under the hood.
 
 ### Choosing a model
 
-If you're using OpenAI, Anthropic or AWS Bedrock you can choose the exact model used for report summaries.
+If you're using OpenAI, Anthropic, AWS Bedrock or a custom endpoint you can choose the exact model used for report summaries.
 This is done by setting `ai_model` in the MultiQC config.
 
-- Anthropic model names must begin with `claude`
-  - Default: `claude-sonnet-4-5`.
-  - See the [Anthropic docs](https://docs.anthropic.com/en/docs/intro-to-claude#model-options).
-- OpenAI model names must being with `gpt`
-  - Default: `gpt-4o`.
-  - See the [OpenAI docs](https://platform.openai.com/docs/models).
-- Bedrock model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)).
+- Anthropic: default `claude-opus-5-5`. Model names must contain `claude`.
+  See the [Anthropic docs](https://platform.claude.com/docs/en/about-claude/models/overview).
+- OpenAI: default `gpt-6.1-sol`.
+  See the [OpenAI docs](https://developers.openai.com/api/docs/models).
+- AWS Bedrock: required. Model names must be valid inputs to the `modelId` parameter of the `InvokeModel` API ([docs](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_InvokeModel.html#API_runtime_InvokeModel_RequestSyntax)), for example `us.anthropic.claude-opus-5-5`.
+- Custom endpoints: required. Use whatever name the endpoint expects.
 
 This model is used during report generation and also set as the default toolbox panel setting for browser report summaries.
 
-## Reasoning Models
+MultiQC doesn't keep a list of supported models. It reads the model family and version from the model name
+(for example `claude-opus-5-5`, `gpt-6.1-sol`, or a Bedrock ID such as `us.anthropic.claude-sonnet-4-5-20250929-v1:0`)
+and adapts the request to it, so newly released models work without a MultiQC update.
+It also sends only what is needed: no sampling settings such as `temperature`, and no reasoning settings
+unless you configure them, so each model runs with its own defaults.
+If a model rejects a setting anyway, MultiQC sends the request again without it and prints a warning.
 
-MultiQC supports reasoning models from multiple providers which provide enhanced reasoning capabilities for complex bioinformatics analysis interpretation. These models "think" before responding, using internal reasoning to provide more accurate and thorough analysis.
+### Reasoning and thinking
 
-### Supported Reasoning Models
-
-- OpenAI: `o1`, `o3`, `o3-mini`, `o4-mini`
-- Anthropic Claude 4 series: `claude-sonnet-4-5`
-
-### Configuration
-
-Simply set your AI model to a reasoning model:
+Current models reason before they answer. You can tune this with the following options, which apply to all providers:
 
 ```yaml
 # multiqc_config.yaml
-ai_summary: true
-ai_provider: openai # or Anthropic for Claude 4
-ai_model: o3-mini # or claude-sonnet-4-5, o4-mini, etc.
+ai_reasoning_effort: high # passed to the provider as given: OpenAI reasoning_effort, Claude output_config.effort
+ai_max_completion_tokens: 32000 # maximum output tokens, including reasoning or thinking
 ```
 
-Reasoning models support additional configuration parameters:
+- **`ai_reasoning_effort`**: the levels depend on the model, for example `low`, `medium`, `high`, `xhigh` or `max`.
+  Lower effort is faster and cheaper. Not set by default, so each model uses its own default.
+- **`ai_max_completion_tokens`**: defaults to 16,000 for Claude models. Other providers use the model's own maximum.
+  Reasoning tokens count towards this limit, so setting it too low can leave no room for the answer.
 
-**OpenAI reasoning models:**
+For Claude models, you can also turn on extended thinking:
 
 ```yaml
-# multiqc_config.yaml
-ai_summary: true
-ai_provider: openai
-ai_model: o3-mini
-ai_reasoning_effort: high # low, medium, or high
-ai_max_completion_tokens: 8000 # adjust based on needs
+ai_extended_thinking: true
+ai_thinking_budget_tokens: 15000 # only used by Claude models older than 4.6
 ```
 
-**Anthropic Claude 4 extended thinking:**
+On Claude 4.6 and later this uses adaptive thinking, where the model decides how much to think.
+Older models take a fixed token budget. When `ai_extended_thinking` is off, each model uses its own default:
+the newest Claude models think adaptively by default, and `ai_reasoning_effort: low` keeps that short.
 
-```yaml
-# multiqc_config.yaml
-ai_summary: true
-ai_provider: anthropic
-ai_model: claude-sonnet-4-5
-ai_extended_thinking: true # enable extended thinking
-ai_thinking_budget_tokens: 15000 # budget for extended thinking
-```
+Reasoning and thinking tokens are billed by the provider, but are not shown in the summary.
 
-### Configuration Options
+### Refusals
 
-**OpenAI reasoning models:**
-
-- **`ai_reasoning_effort`**: Controls how much time the model spends reasoning
-  - `low`: Faster responses, less thorough reasoning
-  - `medium`: Balanced speed and reasoning depth (default)
-  - `high`: Slower but most thorough reasoning
-- **`ai_max_completion_tokens`**: Maximum tokens for model output (default: 4000)
-  - Higher values allow longer, more detailed summaries
-
-**Anthropic extended thinking:**
-
-- **`ai_extended_thinking`**: Enable extended thinking for Claude 4 models (default: false)
-  - Must be set to `true` to enable extended thinking capabilities
-  - When disabled, Claude 4 models run as regular models without extended thinking
-- **`ai_thinking_budget_tokens`**: Maximum tokens for internal reasoning process (default: 10000)
-  - Only applies when `ai_extended_thinking` is enabled
-  - Controls how much "thinking" the model can do before responding
-  - Higher budgets enable more thorough analysis for complex problems
-  - The model may not use the entire budget allocated
-
-### Key Differences from Regular Models
-
-1. **Internal Reasoning**: Reasoning models "think" before responding, using hidden reasoning tokens
-2. **Enhanced Accuracy**: Better performance on complex analytical tasks
-3. **Different Parameters**: Use `max_completion_tokens` and `reasoning_effort`
-4. **Developer Messages**: Use developer messages instead of system messages for better performance
-
-### Usage Examples
-
-**Basic Configuration for o1-mini:**
-
-```yaml
-ai_summary: true
-ai_provider: openai
-ai_model: o1-mini
-```
-
-**High-Quality Analysis with o3:**
-
-```yaml
-ai_summary: true
-ai_summary_full: true
-ai_provider: openai
-ai_model: o3
-ai_reasoning_effort: high
-ai_max_completion_tokens: 6000
-```
-
-**Cost-Optimized Setup with o4-mini:**
-
-```yaml
-ai_summary: true
-ai_provider: openai
-ai_model: o4-mini
-ai_reasoning_effort: low
-ai_max_completion_tokens: 3000
-```
-
-**Anthropic Claude 4 Extended Thinking:**
-
-```yaml
-ai_summary: true
-ai_provider: anthropic
-ai_model: claude-sonnet-4-5
-ai_extended_thinking: true # enable extended thinking
-ai_thinking_budget_tokens: 12000 # budget for thinking process
-```
-
-### Model Recommendations
-
-- **`o4-mini`**: Most cost-effective, good for routine analysis
-- **`o3-mini`**: Balanced performance and cost
-- **`o3`**: Best reasoning capabilities for complex reports
-- **`o1-mini`**: Good for coding-heavy bioinformatics analysis
-
-### Notes
-
-- **Performance**: Both OpenAI reasoning models and Anthropic extended thinking may take longer to respond due to internal reasoning
-- **Billing**: Reasoning/thinking tokens are charged but internal reasoning is not visible in the output
-- **Context windows**: o1 series (128k), o3/o4 series (200k), Claude 4 series (200k+)
-- **OpenAI reasoning models**: Don't support parameters like `temperature`, use `reasoning_effort` and `max_completion_tokens`
-- **Anthropic extended thinking**: Uses standard Anthropic API with `thinking.budget_tokens` parameter, supports regular parameters like `temperature`
-- **Different approaches**: OpenAI uses specialized reasoning models, while Anthropic adds extended thinking capabilities to their regular models
+Claude Opus, Sonnet and Fable models from version 5 run safety classifiers that can occasionally decline
+legitimate requests, including some about biology. When using the Anthropic API directly,
+MultiQC asks Anthropic to re-run a declined request on another model automatically.
+If a request is still declined, or is declined on another provider, the report shows a short note instead of a summary.
 
 ## Summaries during report generation
 
@@ -218,14 +129,14 @@ To generate them, you must enable them either on the command line or via a Multi
 - Command line flags:
   - `--ai` / `--ai-summary`: Generate a short report summary and put it on top of the report (fast)
   - `--ai-summary-full`: Generate a detailed version of the summary with analysis and recommendations (slower)
-  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic` or `aws_bedrock`. Default `seqera`
+  - `--ai-provider <provider>`: Choose AI provider. One of `seqera`, `openai`, `anthropic`, `aws_bedrock` or `custom`. Default `seqera`
   - `--no-ai`: Disable AI toolbox and buttons in the report
 
 - Alternatively, MultiQC configuration file:
   ```yaml
   ai_summary: false # Set to true for short summaries
   ai_summary_full: false # Set to true for  long summaries
-  ai_provider: "seqera" # 'seqera', 'openai', 'anthropic' or 'aws_bedrock'. Default: 'seqera'
+  ai_provider: "seqera" # 'seqera', 'openai', 'anthropic', 'aws_bedrock' or 'custom'. Default: 'seqera'
   no_ai: false # Set to true to disable AI toolbox and buttons in the report
   ```
 
@@ -364,17 +275,37 @@ continue straight on with more in-depth questions.
 ## Context window
 
 A context window refers to the amount of text (in tokens) that an AI model can consider at once
-when processing input and generating responses, encompassing both the input prompt and the output.
-At the time of writing, modern LLMs typically have a context window size in 128-200k tokens,
-which translates to about 100-160k characters of report data.
-That means that very large reports, of thousands of samples, might not fit in the available LLM context window.
+when processing input and generating responses. Current models take 200k to 1M tokens or more.
+MultiQC sends as much of the report as fits, as more data gives better summaries.
 
-MultiQC uses the following logic, moving on to the next step if the prompt is still too large:
+MultiQC finds the context window of the model from the first of these that gives an answer:
 
-1. Attempt to include all report data in the prompt.
-2. Include just the general statistics table.
-3. Include the general statistics table, without hidden-by-default columns.
-4. Abort AI summary.
+1. The `ai_custom_context_window` config option (or the **Context Window** field in the report toolbox, for custom endpoints).
+2. The provider: the Anthropic models API, or the models listing of a custom endpoint
+   (vLLM, OpenRouter, LM Studio and LiteLLM report context windows there).
+3. What MultiQC knows about the model family, for Claude and OpenAI models.
+4. 128,000 tokens, for models it doesn't recognise.
+
+It then fills the prompt in order of priority:
+
+1. The list of tools used in the report.
+2. The general statistics table (without hidden-by-default columns, if the full table doesn't fit).
+3. Every report section that still fits, in report order. Sections that don't fit are listed by name, so the model knows about them.
+
+If the provider says the prompt is still too long, MultiQC reads the real limit from the error,
+rebuilds a shorter prompt and tries again.
+If even the general statistics table doesn't fit, no summary is generated.
+
+:::note
+
+Some local servers, such as Ollama, silently cut prompts that are longer than their context window
+instead of returning an error. Ollama's default context window (`num_ctx`) is much smaller than 128,000 tokens,
+so set `ai_custom_context_window` to match your server's settings.
+
+:::
+
+Sending a whole large report costs more: providers bill per token, and some charge more for prompts over a size
+threshold. Set `ai_custom_context_window` to cap how much is sent.
 
 If you're unable to generate an AI summary, you can try the following:
 
@@ -382,45 +313,109 @@ If you're unable to generate an AI summary, you can try the following:
 - Hide General statistics data in the browser, and request the AI summary dynamically:
   - Hide columns with the **Configure columns** button
   - Filter shown samples dynamically with the toolbox
-- Copy the prompt from `multiqc_data/llms-full.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services with a larger context window.
+- Use a model with a larger context window.
+- Copy the prompt from `multiqc_data/llms-full.txt` into clipboard with the **Copy prompt** button in the toolbox, and use it with external services.
 
-## Using custom OpenAI-compatible endpoints
+## Custom providers
 
-In addition to the built-in providers, MultiQC supports using custom OpenAI-compatible endpoints. This allows you to use self-hosted models or alternative providers that implement the OpenAI API specification.
+Besides the built-in providers, MultiQC can use self-hosted models, other providers, or an internal gateway.
+Set `ai_provider: custom` and either point MultiQC to an endpoint, or give it your own Python class.
 
-To use a custom endpoint:
+### OpenAI-compatible endpoints
 
-1. Select "Custom" as the AI provider in the toolbox
-2. Enter the endpoint URL (e.g., `http://localhost:8000/v1/chat/completions`)
-3. Specify the model name to use with this endpoint
-4. Provide an API key (if required by the endpoint)
-5. Optionally specify a custom context window size if different from the default 128k tokens
-
-You can configure this in the MultiQC config:
+Most self-hosted servers (vLLM, Ollama, LM Studio, LiteLLM) and many providers implement the OpenAI chat completions API:
 
 ```yaml
 ai_provider: custom
 ai_model: your-model-name
 ai_custom_endpoint: http://localhost:8000/v1/chat/completions
-ai_custom_context_window: 32000 # Optional
+ai_custom_context_window: 32000 # Optional, see "Context window" above
 ```
 
-Make sure to set the `OPENAI_API_KEY` environment variable to use with the custom endpoint:
+Set the `OPENAI_API_KEY` environment variable to the endpoint's API key:
 
 ```bash
 export OPENAI_API_KEY=your-api-key
 ```
 
-You can also customize the query payload sent to the endpoint by setting `ai_extra_query_options` in your config:
+To send the key in an `api-key` header instead of `Authorization: Bearer`, set `ai_auth_type: api-key`.
+
+### Claude-compatible endpoints
+
+For a gateway that speaks the Claude messages API, set `ai_custom_api_style: anthropic`,
+and the API key in `ANTHROPIC_API_KEY`:
 
 ```yaml
-ai_extra_query_options:
-  temperature: 0.7
-  top_p: 0.9
-  # Any other parameters supported by your endpoint
+ai_provider: custom
+ai_custom_api_style: anthropic
+ai_model: claude-opus-5-5
+ai_custom_endpoint: https://llm-gateway.example.com/v1/messages
 ```
 
-In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key, and optional extra query options manually.
+### Headers, request fields and responses
+
+For endpoints with their own authentication or request and response formats:
+
+```yaml
+ai_custom_headers:
+  x-api-key: ${MY_GATEWAY_TOKEN} # read from an environment variable
+  Authorization: null # null removes a header MultiQC would otherwise send
+ai_extra_query_options:
+  model: null # null removes a request field, here the model name
+  seed: 42 # any other field is added to the request
+ai_custom_response_path: completion.content # where the answer is in the JSON response
+```
+
+When `ai_custom_headers` is set, the API key environment variable is optional.
+Use `${VAR}` for secrets, so they stay out of config files.
+
+### Your own client class
+
+For anything else, write a Python class that subclasses `multiqc.core.ai.Client` and implements `query()`:
+
+```python
+# my_lab/llm.py
+import os
+
+import requests
+
+from multiqc.core.ai import Client, LlmResponse
+
+
+class GatewayClient(Client):
+    name = "gateway"
+    title = "Lab LLM gateway"
+    model = "lab-model"
+
+    def query(self, prompt: str) -> LlmResponse:
+        response = requests.post(
+            "https://llm.my-lab.org/generate",
+            headers={"x-api-key": os.environ["LAB_LLM_TOKEN"]},
+            json={"input": prompt},
+            timeout=600,
+        )
+        response.raise_for_status()
+        return LlmResponse(content=response.json()["output"], model=self.model)
+
+    def context_window(self) -> int:
+        return 200_000
+```
+
+```yaml
+ai_provider: custom
+ai_custom_client: my_lab.llm:GatewayClient
+```
+
+The class must be importable (installed, or on `PYTHONPATH`) and is created without arguments.
+MultiQC still builds the prompt, fits it into `context_window()`, and anonymises sample names if configured.
+
+### In the browser
+
+In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key,
+optional extra query options, and context window manually.
+In-browser summaries use the OpenAI chat completions format.
+Custom headers and client classes are only used when generating summaries with MultiQC on the command line,
+as they often contain secrets that should not be saved in a report.
 
 ## Configuring within Nextflow
 
