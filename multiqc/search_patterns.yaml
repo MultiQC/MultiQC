@@ -718,6 +718,11 @@ mirtrace/contaminationbasic:
   fn: "mirtrace-stats-contamination_basic.tsv"
 mirtrace/mirnacomplexity:
   fn: "mirtrace-stats-mirna-complexity.tsv"
+mlst:
+  - contents: "FILE\tSCHEME\tST\tSTATUS\tSCORE\tALLELES"
+    num_lines: 1
+  - contents: "FILE,SCHEME,ST,STATUS,SCORE,ALLELES"
+    num_lines: 1
 mtnucratio:
   fn: "*mtnuc.json"
 mosdepth/summary:

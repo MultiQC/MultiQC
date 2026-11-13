@@ -531,6 +531,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - mlst
   - checkm2
   - qc3C
   - nanoq
