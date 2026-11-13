@@ -820,7 +820,7 @@ somalier/samples:
   num_lines: 5
 somalier/pairs:
   fn: "*.pairs.tsv"
-  contents: "hom_concordance"
+  contents_re: '^#sample_a\tsample_b\trelatedness\tibs0\tibs2\t'
   num_lines: 5
 sourmash/compare:
   fn: "*.labels.txt"
