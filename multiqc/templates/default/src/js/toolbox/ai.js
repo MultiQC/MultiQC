@@ -171,7 +171,9 @@ window.initAI = function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
+  // A provider the browser doesn't know, such as a custom client class, falls back to the default
+  const configProviderId = window.AI_PROVIDERS[aiConfigProviderId] ? aiConfigProviderId : null;
+  const providerId = getStoredProvider() || configProviderId || "seqera";
   aiProviderSelect.val(providerId);
   const provider = window.AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");

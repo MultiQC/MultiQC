@@ -632,3 +632,22 @@ def test_payload_too_large_is_an_overflow(fake_api):
     with pytest.raises(ai.ContextOverflowError) as e:
         ai.OpenAiClient("key").query("prompt")
     assert e.value.overflow == ai_models.ContextOverflow(limit=None, actual=None)
+
+
+def test_anthropic_alias_model_details(fake_api):
+    """The models API returns the canonical ID for an alias, which still counts as the model's details."""
+    config.ai_model = "claude-opus-4-5"
+    fake_api(get_data={"id": "claude-opus-4-5-20251101", "max_input_tokens": 200_000, "max_tokens": 64_000})
+    client = ai.AnthropicClient("key")
+    assert client.context_window() == 200_000
+
+
+def test_build_prompt_note_fits_budget():
+    """When the list of left-out sections doesn't fit, only their number is given, within the budget."""
+    client = CountingClient()
+    sections = {f"section with a long name number {i}": 400 for i in range(40)}
+    metadata = metadata_with_sections(sections)
+    budget = 2000
+    build = ai.build_prompt(metadata, "system", client, budget=budget)
+    assert build.n_tokens <= budget
+    assert "report sections were left out" in build.prompt

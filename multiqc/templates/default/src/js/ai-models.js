@@ -13,8 +13,9 @@ export const BEDROCK_LEGACY_API_VERSION = "bedrock-2023-05-31";
 
 const UNKNOWN_MODEL = { vendor: null, tier: "", version: [0, 0], variant: "" };
 
-const CLAUDE_RE = /(?<![a-z])claude-([a-z]+)-(\d{1,2})(?:[-.](\d{1,2}))?(?!\d)/;
-const CLAUDE_OLD_RE = /(?<![a-z])claude-(\d)(?:[-.](\d))?-([a-z]+)/;
+// No lookbehind: older Safari versions can't parse it, which would break the whole report
+const CLAUDE_RE = /(?:^|[^a-z])claude-([a-z]+)-(\d{1,2})(?:[-.](\d{1,2}))?(?!\d)/;
+const CLAUDE_OLD_RE = /(?:^|[^a-z])claude-(\d)(?:[-.](\d))?-([a-z]+)/;
 const OPENAI_O_RE = /(?:^|\/)o(\d+)((?:[-:@].*)?)$/;
 const OPENAI_GPT_RE = /(?:^|\/)gpt-(\d+)(?:\.(\d+))?(.*)$/;
 
@@ -41,6 +42,7 @@ export function parseModel(model) {
   if (name.includes("claude")) return { vendor: "anthropic", tier: "", version: [0, 0], variant: "" };
   if ((m = OPENAI_O_RE.exec(name))) return { vendor: "openai", tier: "o", version: [+m[1], 0], variant: m[2] };
   if ((m = OPENAI_GPT_RE.exec(name))) {
+    if (m[1] === "35" && !m[2]) return { vendor: "openai", tier: "gpt", version: [3, 5], variant: m[3] }; // Azure
     return { vendor: "openai", tier: "gpt", version: [+m[1], +(m[2] || 0)], variant: m[3] };
   }
   return UNKNOWN_MODEL;
@@ -130,19 +132,34 @@ export function shrinkBudget(budget, estimatedTokens, overflow) {
   return Math.max(1, Math.min(newBudget, budget - 1));
 }
 
-// The first optional field of a request body that an error message blames, or null
-export function findRejectedField(body, message, param, requiredFields) {
-  const keys = Object.keys(body).filter((key) => !requiredFields.includes(key));
+const MAX_TOKENS_LIMIT_RE = /max_tokens\D*?\d+\s*>\s*(\d+)/;
+
+// A version of a request body that avoids the field an error blames, or null. See
+// Client._repair_rejected_field() in ai.py: an optional field is dropped, and an output
+// token limit above the model's maximum is lowered.
+export function repairRejectedField(body, message, param, requiredFields) {
+  message = message || "";
   const named = param ? param.split(".")[0].split("[")[0] : null;
-  if (named && keys.includes(named)) return named;
-  let best = null;
-  let bestPosition = Infinity;
-  for (const key of keys) {
-    const m = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).exec(message || "");
-    if (m && m.index < bestPosition) {
-      best = key;
-      bestPosition = m.index;
+  let mentioned;
+  if (named && named in body) {
+    mentioned = [named];
+  } else {
+    const positions = {};
+    for (const key of Object.keys(body)) {
+      const m = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).exec(message);
+      if (m) positions[key] = m.index;
+    }
+    mentioned = Object.keys(positions).sort((a, b) => positions[a] - positions[b]);
+  }
+  for (const key of mentioned) {
+    const limit = key === "max_tokens" ? MAX_TOKENS_LIMIT_RE.exec(message) : null;
+    if (limit) {
+      if (parseInt(limit[1]) < body.max_tokens)
+        return { field: key, body: { ...body, max_tokens: parseInt(limit[1]) } };
+    } else if (!requiredFields.includes(key)) {
+      const { [key]: _removed, ...rest } = body;
+      return { field: key, body: rest, dropped: true };
     }
   }
-  return best;
+  return null;
 }

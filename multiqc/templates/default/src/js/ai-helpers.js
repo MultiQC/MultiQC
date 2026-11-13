@@ -5,9 +5,9 @@ import {
   claudeDefaultMaxTokens,
   claudeSupportsServerFallbacks,
   claudeThinkingStyle,
-  findRejectedField,
   parseContextOverflow,
   parseModel,
+  repairRejectedField,
 } from "./ai-models.js";
 
 function handleStreamError(error) {
@@ -100,12 +100,11 @@ async function postWithRepair(url, headersFor, body, requiredFields) {
     } catch {}
 
     if ([400, 422].includes(response.status) && !parseContextOverflow(message)) {
-      const field = findRejectedField(body, message, param, requiredFields);
-      if (field) {
-        console.warn(`The AI provider rejected '${field}' for ${body.model} (${message}). Sending without it.`);
-        rejectedFields.add(`${url} ${body.model} ${field}`);
-        const { [field]: _removed, ...rest } = body;
-        body = rest;
+      const repaired = repairRejectedField(body, message, param, requiredFields);
+      if (repaired) {
+        console.warn(`The AI provider rejected '${repaired.field}' for ${body.model} (${message}). Retrying.`);
+        if (repaired.dropped) rejectedFields.add(`${url} ${body.model} ${repaired.field}`);
+        body = repaired.body;
         continue;
       }
     }
@@ -153,11 +152,10 @@ window.runStreamGeneration = function ({
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {
-            const error = `HTTP ${response.status}: ${response.statusText} ${
-              errorData.error?.message || "Unknown error"
-            }`;
-            onStreamError(error);
-            throw new Error(error);
+            // Reported once, by the .catch() below
+            throw new Error(
+              `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
+            );
           });
         }
         return response.body.getReader();

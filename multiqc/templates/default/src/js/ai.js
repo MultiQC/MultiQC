@@ -69,12 +69,16 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
   }
 
   if (!onlyGeneralStats) {
+    // Keep room to say how many sections were left out
+    const shortNote = (n) =>
+      `\n----------------------\n\n${n} report sections were left out to fit the model's context window.\n`;
+    const sectionsLimit = maxTokens - countTokens(shortNote(Object.keys(aiReportMetadata.sections).length));
     const skipped = [];
     for (const [sectionAnchor, section] of Object.entries(aiReportMetadata.sections)) {
       const mod = aiReportMetadata.tools[section.module_anchor];
       const sectionContext = `\nTool: ${mod.name}\n` + formatSectionForAi(sectionAnchor) + "\n\n----------------------";
       const sectionTokens = countTokens(sectionContext);
-      if (currentTokens + sectionTokens > maxTokens) {
+      if (currentTokens + sectionTokens > sectionsLimit) {
         skipped.push(`${mod.name}: ${section.name}`);
         continue;
       }
@@ -85,10 +89,15 @@ function formatReportForAi(systemTokens, onlyGeneralStats = false, generalStatsV
       console.warn(
         `Left out ${skipped.length} report sections to fit the context window of ${model} (budget ${maxTokens} tokens)`,
       );
-      userPrompt +=
+      // Name the sections that were left out, or just count them if the names don't fit
+      const notes = [
         "\n----------------------\n\nThese report sections were left out to fit the model's context window: " +
-        skipped.join("; ") +
-        "\n";
+          skipped.join("; ") +
+          "\n",
+        shortNote(skipped.length),
+      ];
+      const note = notes.find((n) => currentTokens + countTokens(n) <= maxTokens);
+      if (note) userPrompt += note;
     }
   }
   return userPrompt;
@@ -311,6 +320,7 @@ async function summarizeWithAi(button) {
   let overflowRetries = 3;
   const generate = () => {
     let receievedMarkdown = "";
+    let failed = false;
     window.runStreamGeneration({
       title: title + `, created on ${configCreationDate}`,
       systemPrompt: systemPrompt,
@@ -333,7 +343,11 @@ async function summarizeWithAi(button) {
         responseDiv.html("");
       },
       onStreamError: (error) => {
-        const overflow = receievedMarkdown ? null : parseContextOverflow(String(error));
+        if (failed) return;
+        failed = true;
+        let overflow = receievedMarkdown ? null : parseContextOverflow(String(error));
+        if (!overflow && !receievedMarkdown && String(error).includes("HTTP 413"))
+          overflow = { limit: null, actual: null };
         if (overflow && (isGlobal || sectionAnchor === "general_stats_table")) {
           if (overflowRetries-- > 0) {
             const estimatedTokens = countTokens(systemPrompt + content);

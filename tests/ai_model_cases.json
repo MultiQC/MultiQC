@@ -375,6 +375,17 @@
       "claude_max_tokens": 16000
     },
     {
+      "model": "gpt-35-turbo-16k",
+      "vendor": "openai",
+      "tier": "gpt",
+      "version": [3, 5],
+      "context_window": null,
+      "claude_thinking": null,
+      "server_fallbacks": false,
+      "bedrock_api_version": "bedrock-2023-05-31",
+      "claude_max_tokens": 16000
+    },
+    {
       "model": "o3",
       "vendor": "openai",
       "tier": "o",

@@ -679,8 +679,12 @@ class AnthropicClient(Client):
         if not self._model_details_fetched:
             self._model_details_fetched = True
             models_url = ai_models.models_url_for_endpoint(self.endpoint)
-            url = f"{models_url}/{self.model}" if self.name == "anthropic" else models_url
-            self._model_details = ai_models.find_model_entry(self._get(url, self._headers()), self.model)
+            if self.name == "anthropic":
+                # A single model. Its `id` can differ from an alias such as claude-opus-4-5
+                details = self._get(f"{models_url}/{self.model}", self._headers())
+                self._model_details = details if isinstance(details, dict) and "data" not in details else None
+            else:
+                self._model_details = ai_models.find_model_entry(self._get(models_url, self._headers()), self.model)
         return self._model_details
 
     def discover_context_window(self) -> Optional[int]:
@@ -1281,27 +1285,35 @@ def build_prompt(
             prompt += context
             used += n
 
-    # Then every section that fits
+    # Then every section that fits, keeping room to say how many were left out
+    def short_note(n_skipped: int) -> str:
+        return f"{_SEPARATOR}{n_skipped} report sections were left out to fit the model's context window.\n"
+
+    sections_limit = limit - count(short_note(len(metadata.sections)))
     skipped: List[str] = []
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
         context = _section_context(section, tool)
         n = count(context)
-        if used + n > limit:
+        if used + n > sections_limit:
             skipped.append(f"{tool.name}: {section.name}")
             continue
         prompt += context
         used += n
 
     if skipped:
-        note = (
-            _SEPARATOR
-            + "These report sections were left out to fit the model's context window: "
+        # Name the sections that were left out, or just count them if the names don't fit
+        for note in (
+            f"{_SEPARATOR}These report sections were left out to fit the model's context window: "
             + "; ".join(skipped)
-            + "\n"
-        )
-        prompt += note
-        used += count(note)
+            + "\n",
+            short_note(len(skipped)),
+        ):
+            n = count(note)
+            if used + n <= limit:
+                prompt += note
+                used += n
+                break
         logger.info(
             f"Left out {len(skipped)} of {len(metadata.sections)} report sections to fit the model's context window. "
             "Set ai_custom_context_window if the model can take more."
@@ -1325,7 +1337,7 @@ def _ai_js_config(client: Optional[Client]) -> Dict[str, Any]:
         "reasoningEffort": config.ai_reasoning_effort,
         "maxCompletionTokens": config.ai_max_completion_tokens,
         "extendedThinking": bool(config.ai_extended_thinking),
-        "thinkingBudgetTokens": config.ai_thinking_budget_tokens,
+        "thinkingBudgetTokens": _thinking_budget_tokens(),
         "anthropicApiVersion": ai_models.ANTHROPIC_API_VERSION,
         "anthropicFallbackBeta": ai_models.ANTHROPIC_FALLBACK_BETA,
         "fallbackContextWindow": ai_models.FALLBACK_CONTEXT_WINDOW,

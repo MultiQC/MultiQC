@@ -51,9 +51,9 @@ UNKNOWN_MODEL = ModelInfo(vendor=None, tier="", version=(0, 0))
 # claude-opus-4-5, claude-sonnet-4-5-20250929, claude-opus-5, us.anthropic.claude-opus-4-8-v1:0,
 # claude-opus-4-5@20251101 (Vertex), anthropic/claude-sonnet-4.5 (routers). The minor version is one
 # or two digits, so a date suffix such as -20250514 is not mistaken for it.
-_CLAUDE_RE = re.compile(r"(?<![a-z])claude-(?P<tier>[a-z]+)-(?P<major>\d{1,2})(?:[-.](?P<minor>\d{1,2}))?(?!\d)")
+_CLAUDE_RE = re.compile(r"(?:^|[^a-z])claude-(?P<tier>[a-z]+)-(?P<major>\d{1,2})(?:[-.](?P<minor>\d{1,2}))?(?!\d)")
 # Older style: claude-3-7-sonnet-latest, claude-3-haiku-20240307, anthropic/claude-3.5-sonnet
-_CLAUDE_OLD_RE = re.compile(r"(?<![a-z])claude-(?P<major>\d)(?:[-.](?P<minor>\d))?-(?P<tier>[a-z]+)")
+_CLAUDE_OLD_RE = re.compile(r"(?:^|[^a-z])claude-(?P<major>\d)(?:[-.](?P<minor>\d))?-(?P<tier>[a-z]+)")
 # o1, o3-mini, o4-mini-deep-research, openai/o3
 _OPENAI_O_RE = re.compile(r"(?:^|/)o(?P<major>\d+)(?P<variant>(?:[-:@].*)?)$")
 # gpt-4o, gpt-4.1-mini, gpt-5-chat-latest, gpt-6.1-sol, openai/gpt-5.5
@@ -75,6 +75,8 @@ def parse_model(model: Optional[str]) -> ModelInfo:
     if m := _OPENAI_O_RE.search(name):
         return ModelInfo("openai", "o", (int(m["major"]), 0), m["variant"])
     if m := _OPENAI_GPT_RE.search(name):
+        if m["major"] == "35" and not m["minor"]:  # Azure's name for gpt-3.5
+            return ModelInfo("openai", "gpt", (3, 5), m["variant"])
         return ModelInfo("openai", "gpt", (int(m["major"]), int(m["minor"] or 0)), m["variant"])
     return UNKNOWN_MODEL
 
