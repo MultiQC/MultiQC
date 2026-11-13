@@ -280,7 +280,7 @@ def choose_emoji(use_rich=False) -> str:
     if _no_unicode():
         return ""
 
-    today = datetime.date.today()  # noqa: DTZ011 - the viewer's local date is the point
+    today = datetime.date.today()
 
     selected_emoji = "🔍"
     for emoji, (month, day, days_before, days_after) in emoji_dates.items():

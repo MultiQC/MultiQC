@@ -74,7 +74,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = [
     "prek",
-    "ruff>=0.8.3",
+    "ruff>=0.17.5",
     "pdoc3",
     "pytest",
     "pytest-cov",
