@@ -4,9 +4,9 @@ import time
 import traceback
 import tracemalloc
 from collections.abc import Callable
+from importlib.metadata import EntryPoint
 
 import rich
-from importlib_metadata import EntryPoint
 from rich.panel import Panel
 from rich.syntax import Syntax
 

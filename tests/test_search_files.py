@@ -2,11 +2,11 @@
 Tests for discovering and excluding files
 """
 
+from importlib.metadata import EntryPoint
 from pathlib import Path
 
 import pytest
 import yaml
-from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError

@@ -2,7 +2,7 @@
 to run their own custom subroutines at predefined
 trigger points during MultiQC execution."""
 
-from importlib_metadata import entry_points
+from importlib.metadata import entry_points
 
 # Load the hooks
 hook_functions: dict[str, list] = {}
