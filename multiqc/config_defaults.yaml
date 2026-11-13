@@ -517,6 +517,7 @@ module_order:
   - bcftools
   - featurecounts
   - fgbio
+  - fastdup
   - fgumi
   - dragen
   - dragen_fastqc
