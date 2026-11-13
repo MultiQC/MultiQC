@@ -463,12 +463,11 @@ class BaseDataset(BaseModel):
             return "N/A"
         if isinstance(value, int):
             return f"{value:,d}"
-        try:  # maybe float can be formatted as int?
-            value = int(value)
-            return f"{value:,d}"
-        except ValueError:
-            pass
-        return f"{value:.1f}"
+        if float(value).is_integer():  # False for nan and inf
+            return f"{int(value):,d}"
+        if abs(value) >= 10_000:  # avoid exp notation from 4 significant figures
+            return f"{value:,.0f}"
+        return f"{value:.4g}"
 
     def format_dataset_for_ai_prompt(self, pconfig: Any, keep_hidden: bool = True) -> str:
         return ""
