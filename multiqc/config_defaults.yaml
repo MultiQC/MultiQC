@@ -326,6 +326,11 @@ fn_clean_exts:
   - ".hisat2"
   - "_duprate"
   - ".markdup"
+  - ".dupblaster"
+  - ".duplicate-metrics"
+  - ".sequencing-units"
+  - ".duplication-sampled"
+  - ".duplication-spectrum"
   - ".read_distribution"
   - ".junction_annotation"
   - ".infer_experiment"
@@ -536,6 +541,7 @@ module_order:
   - nanoq
   - nanostat
   - samblaster
+  - dupblaster
   - samtools
   - bamtools
   - sambamba
