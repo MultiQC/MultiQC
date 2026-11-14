@@ -12,7 +12,7 @@ def _stats(command="generate_families", **changes):
     stats = {
         "tool": "mgnifam",
         "schema_version": 1,
-        "version": "3.1.0",
+        "version": "4.0.0",
         "command": command,
         "chunk_id": "1",
         "exit_status": 0,
@@ -20,12 +20,14 @@ def _stats(command="generate_families", **changes):
         "families": {"input": 4, "successful": 3, "discarded": 1, "converged": 2, "crashed": 0},
         "discard_reasons": {"few seed sequences remained": 1},
         "histograms": {
+            "seed_msa_size": {"4": 3},
             "full_msa_size": {"4": 2, "16": 1},
             "model_length": {"120": 3},
             "representative_length": {"117": 3},
         },
     }
     if command == "update_families":
+        stats["parameters"]["skip_refine"] = False
         stats["histograms"].update(
             {"model_length_change": {"-1": 1, "0": 2}, "rounds_run": {"2": 3}, "retention": {"0.5": 1, "1.0": 2}}
         )
@@ -54,7 +56,7 @@ def _general_stats(sample):
 
 
 def test_both_commands_parse_as_separate_samples(run_module):
-    module = run_module({"1_stats.json": _stats(), "1_updated_stats.json": _stats("update_families")})
+    module = run_module({"1_mgnifam_stats.json": _stats(), "1_updated_mgnifam_stats.json": _stats("update_families")})
 
     assert set(module.mgnifam_data) == {"1", "1_updated"}
     generated = _general_stats("1")
@@ -65,6 +67,7 @@ def test_both_commands_parse_as_separate_samples(run_module):
     anchors = [section.anchor for section in module.sections]
     assert anchors == [
         "mgnifam-outcomes",
+        "mgnifam-seed-msa-size",
         "mgnifam-full-msa-size",
         "mgnifam-model-length",
         "mgnifam-model-length-change",
@@ -78,14 +81,16 @@ def test_crashed_chunks_are_flagged(run_module):
     )
     # A non-zero exit status is flagged even when no family is counted as crashed.
     failed = _stats(exit_status=3)
-    module = run_module({"1_stats.json": crashed, "2_stats.json": _stats(), "3_stats.json": failed})
+    module = run_module(
+        {"1_mgnifam_stats.json": crashed, "2_mgnifam_stats.json": _stats(), "3_mgnifam_stats.json": failed}
+    )
 
     section = next(s for s in module.sections if s.anchor == "mgnifam-outcomes")
     assert section.alerts and section.alerts[0].affected_samples == ["1", "3"]
 
 
 def test_update_sections_are_skipped_without_update_samples(run_module):
-    module = run_module({"1_stats.json": _stats()})
+    module = run_module({"1_mgnifam_stats.json": _stats()})
     anchors = [section.anchor for section in module.sections]
     assert "mgnifam-retention" not in anchors
 
@@ -94,9 +99,9 @@ def test_empty_chunk_renders_without_a_percentage(run_module):
     empty = _stats(
         families={"input": 0, "successful": 0, "discarded": 0, "converged": 0, "crashed": 0},
         discard_reasons={},
-        histograms={"full_msa_size": {}, "model_length": {}, "representative_length": {}},
+        histograms={"seed_msa_size": {}, "full_msa_size": {}, "model_length": {}, "representative_length": {}},
     )
-    module = run_module({"1_stats.json": empty})
+    module = run_module({"1_mgnifam_stats.json": empty})
 
     assert ColumnKey("successful_pct") not in _general_stats("1")
     # The section stays, with the chunk listed as having nothing to plot.
@@ -106,18 +111,38 @@ def test_empty_chunk_renders_without_a_percentage(run_module):
 
 def test_unsupported_schema_is_skipped(run_module):
     with pytest.raises(ModuleNoSamplesFound):
-        run_module({"1_stats.json": _stats(schema_version=2)})
+        run_module({"1_mgnifam_stats.json": _stats(schema_version=2)})
 
 
-def test_other_tools_stats_files_are_not_matched(run_module):
-    with pytest.raises(ModuleNoSamplesFound):
-        run_module({"1_stats.json": {"tool": "something_else", "families": {}}})
+def test_skip_refine_reports_no_seed_and_no_converged_count(run_module):
+    skip = _stats("update_families", parameters={"skip_refine": True})
+    skip["families"]["converged"] = None
+    skip["histograms"]["seed_msa_size"] = {}
+    module = run_module(
+        {"1_mgnifam_stats.json": _stats(), "1_updated_mgnifam_stats.json": skip}, preserve_module_raw_data=True
+    )
+
+    assert ColumnKey("converged") not in _general_stats("1_updated")
+    assert "converged" not in report.saved_raw_data["multiqc_mgnifam"]["1_updated"]
+    assert report.saved_raw_data["multiqc_mgnifam"]["1"]["converged"] == 2
+    assert _general_stats("1")[ColumnKey("converged")] == 2
+    # Left out of the seed plot entirely, not listed as a chunk with nothing to plot.
+    section = next(s for s in module.sections if s.anchor == "mgnifam-seed-msa-size")
+    assert not section.alerts
+
+
+def test_seed_section_is_skipped_when_every_chunk_skipped_refinement(run_module):
+    skip = _stats("update_families", parameters={"skip_refine": True})
+    skip["families"]["converged"] = None
+    skip["histograms"]["seed_msa_size"] = {}
+    module = run_module({"1_updated_mgnifam_stats.json": skip})
+    assert "mgnifam-seed-msa-size" not in [section.anchor for section in module.sections]
 
 
 def test_invalid_and_schemaless_files_are_skipped(run_module, tmp_path):
-    (tmp_path / "broken_stats.json").write_text('{\n  "tool": "mgnifam",\n  "schema_')
-    (tmp_path / "old_stats.json").write_text('{\n  "tool": "mgnifam"\n}\n')
-    module = run_module({"1_stats.json": _stats()})
+    (tmp_path / "broken_mgnifam_stats.json").write_text('{\n  "tool": "mgnifam",\n  "schema_')
+    (tmp_path / "old_mgnifam_stats.json").write_text('{\n  "tool": "mgnifam"\n}\n')
+    module = run_module({"1_mgnifam_stats.json": _stats()})
     assert set(module.mgnifam_data) == {"1"}
 
 
@@ -125,7 +150,7 @@ def test_retention_is_binned_for_display(run_module):
     stats = _stats("update_families")
     # 0.35 sits on a bin edge that floating-point division puts just below.
     stats["histograms"]["retention"] = {"0.35": 1, "0.91": 1, "0.93": 2, "1.0": 3}
-    run_module({"1_updated_stats.json": stats})
+    run_module({"1_updated_mgnifam_stats.json": stats})
 
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-retention-plot")
     points = dict(plot.datasets[0].lines[0].pairs)
@@ -135,7 +160,7 @@ def test_retention_is_binned_for_display(run_module):
 def test_histograms_are_exported_exactly(run_module):
     stats = _stats("update_families")
     stats["histograms"]["retention"] = {"0.91": 1, "1.0": 3}
-    run_module({"1_updated_stats.json": stats}, preserve_module_raw_data=True)
+    run_module({"1_updated_mgnifam_stats.json": stats}, preserve_module_raw_data=True)
 
     assert report.saved_raw_data["multiqc_mgnifam_histograms"]["1_updated"] == stats["histograms"]
 
@@ -144,11 +169,18 @@ def test_update_without_retention_is_a_format_break(run_module):
     stats = _stats("update_families")
     del stats["histograms"]["retention"]
     with pytest.raises(KeyError):
-        run_module({"1_updated_stats.json": stats})
+        run_module({"1_updated_mgnifam_stats.json": stats})
+
+
+def test_update_without_skip_refine_is_a_format_break(run_module):
+    stats = _stats("update_families")
+    del stats["parameters"]["skip_refine"]
+    with pytest.raises(KeyError):
+        run_module({"1_updated_mgnifam_stats.json": stats})
 
 
 def test_families_without_a_discard_reason_are_shown_as_unaccounted(run_module):
-    run_module({"1_stats.json": _stats(discard_reasons={}), "2_stats.json": _stats()})
+    run_module({"1_mgnifam_stats.json": _stats(discard_reasons={}), "2_mgnifam_stats.json": _stats()})
 
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-outcomes-plot")
     dataset = plot.datasets[0]
@@ -157,7 +189,7 @@ def test_families_without_a_discard_reason_are_shown_as_unaccounted(run_module):
 
 
 def test_discard_reason_acronyms_keep_their_case(run_module):
-    run_module({"1_stats.json": _stats(discard_reasons={"HMM build failed": 1})})
+    run_module({"1_mgnifam_stats.json": _stats(discard_reasons={"HMM build failed": 1})})
 
     plot = next(p for p in report.plot_by_id.values() if not isinstance(p, str) and p.id == "mgnifam-outcomes-plot")
     assert [cat.name for cat in plot.datasets[0].cats] == ["Successful", "HMM build failed"]
