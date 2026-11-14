@@ -93,6 +93,9 @@ or `json` instead).
 For more detailed instructions, run `multiqc -h` or see the
 [documentation](https://docs.seqera.io/multiqc/getting_started/running_multiqc).
 
+To generate downloadable reports from ChatGPT attachments, see the optional
+[ChatGPT MCP example](examples/chatgpt/README.md).
+
 ## Configuration
 
 To customise your reports, MultiQC reads from a YAML config file. See the [configuration docs](https://docs.seqera.io/multiqc/getting_started/config) for the full list of options and search paths.
