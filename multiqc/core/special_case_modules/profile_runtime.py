@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in sorted(report.runtimes.sp.keys(), key=lambda k: report.runtimes.sp[k], reverse=True):
-            pdata[SampleName(key)] = {CatName(key): report.runtimes.sp[key]}
+            pdata[SampleName(key)] = {CatName("Run time"): report.runtimes.sp[key]}
 
         pconfig = {
             "id": "multiqc_runtime_search_patterns_plot",
@@ -199,7 +199,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.runtimes.mods:
-            pdata[SampleName(key)] = {CatName(key): report.runtimes.mods[key]}
+            pdata[SampleName(key)] = {CatName("Run time"): report.runtimes.mods[key]}
 
         pconfig = {
             "id": "multiqc_runtime_modules_plot",
