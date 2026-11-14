@@ -389,6 +389,9 @@ fn_clean_exts:
   - "_hifi_trimmer"
   - ".hifi_trimmer"
   - "_trimmer"
+  - ".mismatch"
+  - ".potential_variants"
+  - ".read_pair_inconsistencies"
 
 # Search patterns for grouping paired samples in general stats (e.g. fastq R1/R2)
 # Affects all modules that support it (e.g. fastqc, cutadapt)
@@ -480,6 +483,7 @@ module_order:
   - somalier
   - methylqa
   - mosdepth
+  - tasmanian
   - phantompeakqualtools
   - qualimap
   - bamdst
