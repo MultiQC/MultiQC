@@ -1012,6 +1012,18 @@ riker/basic_quality_dist:
   fn: "*.quality-score-distribution.txt"
   contents_re: "^sample\\b.*\\bfrac_bases\\b"
   num_lines: 1
+riker/error_indel:
+  fn: "*.error-indel.txt"
+  contents_re: "^sample\\b.*\\bfrac_indel_error\\b"
+  num_lines: 1
+riker/error_mismatch:
+  fn: "*.error-mismatch.txt"
+  contents_re: "^sample\\b.*\\bfrac_error\\b"
+  num_lines: 1
+riker/error_overlap:
+  fn: "*.error-overlap.txt"
+  contents_re: "^sample\\b.*\\boverlapping_read_bases\\b"
+  num_lines: 1
 riker/gcbias_detail:
   fn: "*.gcbias-detail.txt"
   contents_re: "^sample\\b.*\\bnormalized_coverage\\b"

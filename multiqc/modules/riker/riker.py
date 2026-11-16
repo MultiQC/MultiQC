@@ -2,9 +2,9 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import alignment, basic, gcbias, hybcap, isize, wgs
+from . import alignment, basic, error, gcbias, hybcap, isize, wgs
 
-_TOOL_MODULES = (alignment, basic, gcbias, hybcap, isize, wgs)
+_TOOL_MODULES = (alignment, basic, error, gcbias, hybcap, isize, wgs)
 
 log = logging.getLogger(__name__)
 
