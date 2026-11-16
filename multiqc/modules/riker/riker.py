@@ -20,6 +20,7 @@ class MultiqcModule(BaseMultiqcModule):
     - `alignment` (equivalent to Picard's `CollectAlignmentSummaryMetrics`)
     - `basic` (equivalent to `CollectBaseDistributionByCycle`, `MeanQualityByCycle`,
       and `QualityScoreDistribution`)
+    - `error` (similar to Picard's `CollectSamErrorMetrics`)
     - `gcbias` (equivalent to `CollectGcBiasMetrics`)
     - `hybcap` (equivalent to `CollectHsMetrics`)
     - `isize` (equivalent to `CollectInsertSizeMetrics`)
@@ -28,7 +29,10 @@ class MultiqcModule(BaseMultiqcModule):
     Riker emits plain TSV files with `sample` as the first column and snake_case
     column names; this module parses those files directly. Per-target and per-base
     coverage outputs from `hybcap` (only emitted with `--per-target-coverage`)
-    are not parsed in this version. The `error` subtool is also not yet supported.
+    are not parsed in this version.
+
+    Note that `riker error` is intended for investigating sequencing error
+    profiles and is not intended for routine production QC.
 
     #### Coverage thresholds
 
