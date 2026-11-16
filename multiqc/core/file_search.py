@@ -96,8 +96,9 @@ def _module_list_to_search() -> tuple[list[dict[str, dict]], list[str]]:
     ]
 
     mod_order_keys = {next(iter(m.keys())) for m in report.module_order}
+    top_mod_keys = {next(iter(m.keys())) for m in mod_dicts_in_order}
     mod_dicts_in_order.extend(
-        [{m: {}} for m in config.avail_modules if m not in mod_order_keys and m not in mod_dicts_in_order]
+        [{m: {}} for m in config.avail_modules if m not in mod_order_keys and m not in top_mod_keys]
     )
     mod_dicts_in_order.extend(
         [
