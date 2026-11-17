@@ -1,6 +1,6 @@
 import logging
 from collections import Counter
-from typing import Any, Dict, List, Optional, Sequence, Union, cast
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -17,6 +17,8 @@ TEXT_COLUMNS = ("pool", "sample", "sub_sample", "mean_read_len_by_input")
 SUMMARY_COUNTS = ("total_reads", "reads_assigned", "reads_pass_through", "reads_unassigned", "reads_removed")
 PER_SAMPLE_COLUMNS = ("pool", "sample", "sub_sample", "reads", "frac_of_pool", "frac_bases_unextracted")
 SUMMARY_COLUMNS = (*SUMMARY_COUNTS, "frac_assigned", "frac_bases_unextracted", "mean_read_len_by_input")
+# Half of the 0.1% the table shows, so a sample's unextracted share is shown only where it visibly differs.
+UNEXTRACTED_TOLERANCE = 0.0005
 
 OUTCOME_CATS = {
     "reads_assigned": {"name": "Assigned", "color": "#437bb1"},
@@ -58,6 +60,17 @@ class MultiqcModule(BaseMultiqcModule):
     `<sample> (<sub_sample>)` when it has a sub-sample. If the same name turns up in more than one pool, or
     matches a pool name, the pool is added in front: `<pool>: <sample>`.
 
+    Sample names are cleaned like any other MultiQC sample name, so `sample_names_replace` applies to them. For
+    example, to drop the sub-sample so that unmux's rows join the rows other modules write for each sample:
+
+    ```yaml
+    sample_names_replace_regex: true
+    sample_names_replace:
+      ' \\([^)]*\\)$': ""
+    unmux_config:
+      general_stats_group_by_pool: false
+    ```
+
     #### Grouping by pool
 
     The tables and the reads per sample plot nest each sample under its pool. In the General Statistics table,
@@ -83,10 +96,13 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         summaries = dict(sorted(self.parse_summaries().items()))
+        self.files_by_row: Dict[int, LoadedFileDict[str]] = {}
         per_sample = dict(sorted(self.parse_per_sample().items()))
         if not summaries and not per_sample:
             raise ModuleNoSamplesFound
-        samples = name_samples(per_sample, set(summaries))
+        samples = name_samples(
+            per_sample, set(summaries), clean=lambda name, d: self.clean_s_name(name, self.files_by_row[id(d)])
+        )
         samples = {
             pool: {s_name: d for s_name, d in by_name.items() if not self.is_ignore_sample(s_name)}
             for pool, by_name in samples.items()
@@ -148,6 +164,7 @@ class MultiqcModule(BaseMultiqcModule):
                 d = {col: to_value(col, val) for col, val in row.items()}
                 d["pool"] = pool
                 require_counts(f, d, ("reads",))
+                self.files_by_row[id(d)] = f
                 data.setdefault(pool, []).append(d)
                 self.add_data_source(f, pool, section="per_sample")
                 self.add_software_version(None, pool)
@@ -294,11 +311,12 @@ class MultiqcModule(BaseMultiqcModule):
         extra_columns: Dict[str, None] = {}
         for pool in [*summaries, *(p for p in samples if p not in summaries)]:
             by_name = samples.get(pool, {})
+            pool_unextracted = (summaries.get(pool) or {}).get("frac_bases_unextracted")
             rows = [InputRow(sample=SampleName(pool), data=pool_row(summaries.get(pool), list(by_name.values())))]
             for s_name, d in by_name.items():
                 extras = {k: v for k, v in d.items() if k not in PER_SAMPLE_COLUMNS and v is not None}
                 extra_columns.update(dict.fromkeys(extras))
-                rows.append(InputRow(sample=SampleName(s_name), data={**metric_values(d), **extras}))
+                rows.append(InputRow(sample=SampleName(s_name), data={**metric_values(d, pool_unextracted), **extras}))
             rows_by_group[SampleGroup(pool)] = rows
         for d in summaries.values():
             extra_columns.update(dict.fromkeys(k for k in d if k not in SUMMARY_COLUMNS and not k.startswith("frac_")))
@@ -367,7 +385,7 @@ class MultiqcModule(BaseMultiqcModule):
             "frac_bases_unextracted": {
                 "title": "% Unextracted",
                 "description": "Bases of the kept reads that were not written into a --template or --tag output, "
-                "such as barcodes, linkers and adapters",
+                "such as barcodes, linkers and adapters. Shown on a sample row only where it differs from the pool's",
                 "min": 0,
                 "max": 100,
                 "suffix": "%",
@@ -395,8 +413,9 @@ class MultiqcModule(BaseMultiqcModule):
 
             _% Unextracted_ is the share of bases left out of every `--template` and `--tag` output, such as
             barcodes, linkers and adapters. It is 0 when reads are written out whole. Set by the read layout, it
-            usually is the same for every sample of a pool, and a change between runs of the same assay points to
-            a changed read structure.
+            usually is the same for every sample of a pool, so a sample row shows it only where it differs from
+            its pool's, for example when that sample's reads are shorter. A change between runs of the same assay
+            points to a changed read structure.
             """,
             plot=table.plot(
                 rows_by_group,
@@ -410,22 +429,29 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def name_samples(per_sample: Dict[str, List[Metrics]], pools: set) -> Dict[str, Dict[str, Metrics]]:
-    """Name each sample `<sample> (<sub_sample>)`, adding `<pool>: ` in front when a name is not unique."""
+def name_samples(
+    per_sample: Dict[str, List[Metrics]],
+    pools: set,
+    clean: Callable[[str, Metrics], str] = lambda name, _: name,
+) -> Dict[str, Dict[str, Metrics]]:
+    """Name each sample `<sample> (<sub_sample>)`, cleaned, adding `<pool>: ` in front when a name is not unique."""
 
     def base(d: Metrics) -> str:
         sample, sub_sample = str(d.get("sample") or ""), str(d.get("sub_sample") or "")
-        return f"{sample} ({sub_sample})" if sub_sample else sample
+        return clean(f"{sample} ({sub_sample})" if sub_sample else sample, d)
 
     pools = pools | set(per_sample)
-    counts = Counter(base(d) for rows in per_sample.values() for d in rows)
+    bases = {id(d): base(d) for rows in per_sample.values() for d in rows}
+    counts = Counter(bases.values())
     named: Dict[str, Dict[str, Metrics]] = {}
     for pool, rows in per_sample.items():
         named[pool] = {}
         for d in rows:
-            name = base(d)
+            name = bases[id(d)]
             if counts[name] > 1 or name in pools:
                 name = f"{pool}: {name}"
+            if name in named[pool]:
+                log.warning(f"Two samples of pool {pool} are both named {name!r}; keeping the last")
             named[pool][name] = d
     return named
 
@@ -448,8 +474,18 @@ def pool_row(summary: Optional[Metrics], samples: List[Metrics]) -> Dict[str, Va
     return {k: v for k, v in row.items() if v is not None}
 
 
-def metric_values(d: Metrics) -> Dict[str, Value]:
-    return {k: d[k] for k in ("reads", "frac_of_pool", "frac_bases_unextracted") if d.get(k) is not None}
+def metric_values(d: Metrics, pool_unextracted: Value = None) -> Dict[str, Value]:
+    """A sample's read columns, with its unextracted share only where it differs from its pool's."""
+    values = {k: d[k] for k in ("reads", "frac_of_pool") if d.get(k) is not None}
+    unextracted = d.get("frac_bases_unextracted")
+    if unextracted is None:
+        return values
+    if (
+        isinstance(pool_unextracted, (int, float))
+        and abs(number(unextracted) - pool_unextracted) < UNEXTRACTED_TOLERANCE
+    ):
+        return values
+    return {**values, "frac_bases_unextracted": unextracted}
 
 
 def read_rows(f: LoadedFileDict[str]) -> List[Dict[str, str]]:

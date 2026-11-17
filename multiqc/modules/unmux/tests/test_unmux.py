@@ -194,6 +194,44 @@ def test_general_stats_grouping_can_be_turned_off(all_pools):
     assert rows[SampleGroup("tumor (lib01)")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.195)
 
 
+def test_sample_names_follow_sample_names_replace(all_pools):
+    config.sample_names_replace_regex = True
+    config.sample_names_replace = {r" \(lib01\)$": ""}
+    setattr(config, "unmux_config", {"general_stats_group_by_pool": False})
+    module = all_pools()
+
+    names = set(saved(module, "multiqc_unmux_per_sample"))
+    assert {"tumor", "normal", "tumor (lib02)", "normal (lib02)"} <= names
+    assert general_stats_rows()[SampleGroup("tumor")][0].data[ColumnKey("frac_of_pool")] == pytest.approx(0.195)
+
+
+def test_names_made_equal_by_cleaning_get_the_pool_in_front(run_unmux):
+    config.sample_names_replace_regex = True
+    config.sample_names_replace = {r" \([^)]*\)$": ""}
+    module = run_unmux(
+        {
+            "p1.tsv": PER_SAMPLE_HEADER + "run1\tS1\tlib01\t10\t0.5\t0\n",
+            "p2.tsv": PER_SAMPLE_HEADER + "run2\tS1\tlib02\t10\t1.0\t0\n",
+        }
+    )
+
+    assert set(saved(module, "multiqc_unmux_per_sample")) == {"run1: S1", "run2: S1"}
+
+
+def test_unextracted_is_shown_on_a_sample_only_where_it_differs_from_the_pool(run_unmux):
+    run_unmux(
+        {
+            "s.tsv": SUMMARY_HEADER + "poolX\t40\t30\t0\t10\t0\t0.75\t0.2\t100\n",
+            "p.tsv": PER_SAMPLE_HEADER + "poolX\tS1\t\t20\t0.5\t0.2002\npoolX\tS2\t\t10\t0.25\t0.25\n",
+        }
+    )
+
+    pool, same, shorter = table_rows("poolX")
+    assert raw(pool, "frac_bases_unextracted") == pytest.approx(0.2)
+    assert ColumnKey("frac_bases_unextracted") not in same.data
+    assert raw(shorter, "frac_bases_unextracted") == pytest.approx(0.25)
+
+
 def test_general_stats_hides_reads_by_default(all_pools):
     all_pools()
 
