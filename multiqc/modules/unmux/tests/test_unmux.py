@@ -8,7 +8,7 @@ per-sample file, and run4 has ten samples of uneven depth. Edge cases use small 
 
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -36,7 +36,7 @@ def run_unmux(tmp_path):
     """Factory: copy the given test-data files and write the given inline files to a temp dir, then run unmux."""
     config.reset()
 
-    def _run(files: Dict[str, str], copy_from: Any = None) -> MultiqcModule:
+    def _run(files: dict[str, str], copy_from: Any = None) -> MultiqcModule:
         if copy_from is not None:
             for path in Path(copy_from).glob("*.tsv"):
                 shutil.copy(path, tmp_path / path.name)
@@ -58,14 +58,14 @@ def all_pools(run_unmux, test_data_dir):
     return lambda: run_unmux({}, copy_from=test_data_dir)
 
 
-def general_stats_rows() -> Dict[SampleGroup, List[InputRow]]:
-    rows: Dict[SampleGroup, List[InputRow]] = {}
+def general_stats_rows() -> dict[SampleGroup, list[InputRow]]:
+    rows: dict[SampleGroup, list[InputRow]] = {}
     for rows_by_group in report.general_stats_data.values():
         rows.update(rows_by_group)
     return rows
 
 
-def table_rows(group: str) -> List[InputRow]:
+def table_rows(group: str) -> list[InputRow]:
     plot: Any = report.plot_by_id[Anchor("unmux_metrics_table")]
     for dataset in plot.datasets:
         for section in dataset.dt.section_by_id.values():
@@ -79,12 +79,12 @@ def raw(row: InputRow, column: str) -> Any:
     return cell.raw if isinstance(cell, Cell) else cell
 
 
-def saved(module: MultiqcModule, key: str) -> Dict[str, Any]:
+def saved(module: MultiqcModule, key: str) -> dict[str, Any]:
     assert module.saved_raw_data is not None
     return module.saved_raw_data[key]
 
 
-def bar_values(plot_id: str, dataset_idx: int, sample: str) -> Dict[str, float]:
+def bar_values(plot_id: str, dataset_idx: int, sample: str) -> dict[str, float]:
     plot: Any = report.plot_by_id[Anchor(plot_id)]
     dataset = plot.datasets[dataset_idx]
     index = dataset.samples.index(sample)
@@ -186,7 +186,7 @@ def test_general_stats_groups_samples_under_their_pool(all_pools):
 
 
 def test_general_stats_grouping_can_be_turned_off(all_pools):
-    setattr(config, "unmux_config", {"general_stats_group_by_pool": False})
+    config.unmux_config = {"general_stats_group_by_pool": False}
     all_pools()
 
     rows = general_stats_rows()
@@ -197,7 +197,7 @@ def test_general_stats_grouping_can_be_turned_off(all_pools):
 def test_sample_names_follow_sample_names_replace(all_pools):
     config.sample_names_replace_regex = True
     config.sample_names_replace = {r" \(lib01\)$": ""}
-    setattr(config, "unmux_config", {"general_stats_group_by_pool": False})
+    config.unmux_config = {"general_stats_group_by_pool": False}
     module = all_pools()
 
     names = set(saved(module, "multiqc_unmux_per_sample"))

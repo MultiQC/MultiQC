@@ -1,6 +1,7 @@
 import logging
 from collections import Counter
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
+from collections.abc import Callable, Sequence
+from typing import Any, cast
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound, SampleGroupingConfig
@@ -10,8 +11,8 @@ from multiqc.types import ColumnKey, LoadedFileDict, SampleGroup, SampleName
 
 log = logging.getLogger(__name__)
 
-Value = Union[int, float, str, None]
-Metrics = Dict[str, Value]
+Value = int | float | str | None
+Metrics = dict[str, Value]
 
 TEXT_COLUMNS = ("pool", "sample", "sub_sample", "mean_read_len_by_input")
 SUMMARY_COUNTS = ("total_reads", "reads_assigned", "reads_pass_through", "reads_unassigned", "reads_removed")
@@ -96,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         summaries = dict(sorted(self.parse_summaries().items()))
-        self.files_by_row: Dict[int, LoadedFileDict[str]] = {}
+        self.files_by_row: dict[int, LoadedFileDict[str]] = {}
         per_sample = dict(sorted(self.parse_per_sample().items()))
         if not summaries and not per_sample:
             raise ModuleNoSamplesFound
@@ -127,11 +128,11 @@ class MultiqcModule(BaseMultiqcModule):
                 "multiqc_unmux_per_sample",
             )
 
-    def pool_name(self, f: LoadedFileDict[str], row: Dict[str, str]) -> str:
+    def pool_name(self, f: LoadedFileDict[str], row: dict[str, str]) -> str:
         return self.clean_s_name(row["pool"], f) if row.get("pool") else f["s_name"]
 
-    def parse_summaries(self) -> Dict[str, Metrics]:
-        data: Dict[str, Metrics] = {}
+    def parse_summaries(self) -> dict[str, Metrics]:
+        data: dict[str, Metrics] = {}
         for f in self.find_log_files("unmux/summary"):
             for row in read_rows(f):
                 pool = self.pool_name(f, row)
@@ -148,9 +149,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_software_version(None, pool)
         return self.ignore_samples(data)
 
-    def parse_per_sample(self) -> Dict[str, List[Metrics]]:
-        data: Dict[str, List[Metrics]] = {}
-        seen: Dict[str, str] = {}
+    def parse_per_sample(self) -> dict[str, list[Metrics]]:
+        data: dict[str, list[Metrics]] = {}
+        seen: dict[str, str] = {}
         for f in self.find_log_files("unmux/per_sample"):
             for row in read_rows(f):
                 pool = self.pool_name(f, row)
@@ -170,9 +171,9 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_software_version(None, pool)
         return data
 
-    def add_general_stats(self, summaries: Dict[str, Metrics], samples: Dict[str, Dict[str, Metrics]]) -> None:
-        data: Dict[str, Dict[str, Value]] = {}
-        groups: Dict[str, List[str]] = {}
+    def add_general_stats(self, summaries: dict[str, Metrics], samples: dict[str, dict[str, Metrics]]) -> None:
+        data: dict[str, dict[str, Value]] = {}
+        groups: dict[str, list[str]] = {}
         for pool, by_name in samples.items():
             for s_name, d in by_name.items():
                 data[s_name] = {"reads": d["reads"], "frac_of_pool": d.get("frac_of_pool")}
@@ -186,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
         if not data:
             return
 
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "frac_of_pool": {
                 "title": "% of Pool",
                 "description": "Share of the pool's reads written to this sample. A collapsed pool row adds up "
@@ -208,7 +209,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
         }
-        general_stats_headers = self.get_general_stats_headers(all_headers=cast(Dict[str, ColumnDict], headers))
+        general_stats_headers = self.get_general_stats_headers(all_headers=cast(dict[str, ColumnDict], headers))
         if not general_stats_headers:
             return
         group_by_pool = (getattr(config, "unmux_config", None) or {}).get("general_stats_group_by_pool", True)
@@ -221,7 +222,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def add_outcomes_section(self, summaries: Dict[str, Metrics]) -> None:
+    def add_outcomes_section(self, summaries: dict[str, Metrics]) -> None:
         plot_data = {pool: {cat: number(d[cat]) for cat in OUTCOME_CATS} for pool, d in summaries.items()}
         self.add_section(
             name="Read Outcomes",
@@ -250,10 +251,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def add_reads_per_sample_section(
-        self, summaries: Dict[str, Metrics], samples: Dict[str, Dict[str, Metrics]]
+        self, summaries: dict[str, Metrics], samples: dict[str, dict[str, Metrics]]
     ) -> None:
-        reads: Dict[str, Dict[str, float]] = {}
-        percent: Dict[str, Dict[str, float]] = {}
+        reads: dict[str, dict[str, float]] = {}
+        percent: dict[str, dict[str, float]] = {}
         for pool, by_name in samples.items():
             if not by_name:
                 continue
@@ -306,9 +307,9 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def add_metrics_section(self, summaries: Dict[str, Metrics], samples: Dict[str, Dict[str, Metrics]]) -> None:
-        rows_by_group: Dict[Union[str, SampleGroup], List[InputRow]] = {}
-        extra_columns: Dict[str, None] = {}
+    def add_metrics_section(self, summaries: dict[str, Metrics], samples: dict[str, dict[str, Metrics]]) -> None:
+        rows_by_group: dict[str | SampleGroup, list[InputRow]] = {}
+        extra_columns: dict[str, None] = {}
         for pool in [*summaries, *(p for p in samples if p not in summaries)]:
             by_name = samples.get(pool, {})
             pool_unextracted = (summaries.get(pool) or {}).get("frac_bases_unextracted")
@@ -323,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         any_removed = any(number(d["reads_removed"]) > 0 for d in summaries.values())
         any_pass_through = any(number(d["reads_pass_through"]) > 0 for d in summaries.values())
-        headers: Dict[str, Dict[str, Any]] = {
+        headers: dict[str, dict[str, Any]] = {
             "total_reads": {
                 "title": f"{config.read_count_prefix} Pool Reads",
                 "description": f"All reads of the pool, shown on pool rows ({config.read_count_desc})",
@@ -419,7 +420,7 @@ class MultiqcModule(BaseMultiqcModule):
             """,
             plot=table.plot(
                 rows_by_group,
-                cast(Dict[str, ColumnDict], headers),
+                cast(dict[str, ColumnDict], headers),
                 {
                     "id": f"{self.anchor}_metrics_table",
                     "title": "unmux: Demultiplexing Metrics",
@@ -430,10 +431,10 @@ class MultiqcModule(BaseMultiqcModule):
 
 
 def name_samples(
-    per_sample: Dict[str, List[Metrics]],
+    per_sample: dict[str, list[Metrics]],
     pools: set,
     clean: Callable[[str, Metrics], str] = lambda name, _: name,
-) -> Dict[str, Dict[str, Metrics]]:
+) -> dict[str, dict[str, Metrics]]:
     """Name each sample `<sample> (<sub_sample>)`, cleaned, adding `<pool>: ` in front when a name is not unique."""
 
     def base(d: Metrics) -> str:
@@ -443,7 +444,7 @@ def name_samples(
     pools = pools | set(per_sample)
     bases = {id(d): base(d) for rows in per_sample.values() for d in rows}
     counts = Counter(bases.values())
-    named: Dict[str, Dict[str, Metrics]] = {}
+    named: dict[str, dict[str, Metrics]] = {}
     for pool, rows in per_sample.items():
         named[pool] = {}
         for d in rows:
@@ -456,7 +457,7 @@ def name_samples(
     return named
 
 
-def pool_row(summary: Optional[Metrics], samples: List[Metrics]) -> Dict[str, Value]:
+def pool_row(summary: Metrics | None, samples: list[Metrics]) -> dict[str, Value]:
     """The headline row of a pool: its summary, with the read columns summed over its samples."""
     if summary is None:
         fracs = [d.get("frac_of_pool") for d in samples]
@@ -466,7 +467,7 @@ def pool_row(summary: Optional[Metrics], samples: List[Metrics]) -> Dict[str, Va
         }
     total = number(summary["total_reads"])
     kept = number(summary["reads_assigned"]) + number(summary["reads_pass_through"])
-    row: Dict[str, Value] = {
+    row: dict[str, Value] = {
         **{k: v for k, v in summary.items() if v is not None and not k.startswith("reads_")},
         "reads": kept,
         "frac_of_pool": kept / total if total > 0 else None,
@@ -474,7 +475,7 @@ def pool_row(summary: Optional[Metrics], samples: List[Metrics]) -> Dict[str, Va
     return {k: v for k, v in row.items() if v is not None}
 
 
-def metric_values(d: Metrics, pool_unextracted: Value = None) -> Dict[str, Value]:
+def metric_values(d: Metrics, pool_unextracted: Value = None) -> dict[str, Value]:
     """A sample's read columns, with its unextracted share only where it differs from its pool's."""
     values = {k: d[k] for k in ("reads", "frac_of_pool") if d.get(k) is not None}
     unextracted = d.get("frac_bases_unextracted")
@@ -488,7 +489,7 @@ def metric_values(d: Metrics, pool_unextracted: Value = None) -> Dict[str, Value
     return {**values, "frac_bases_unextracted": unextracted}
 
 
-def read_rows(f: LoadedFileDict[str]) -> List[Dict[str, str]]:
+def read_rows(f: LoadedFileDict[str]) -> list[dict[str, str]]:
     """The rows of an unmux metrics TSV as `{column: value}`, skipping repeated headers from concatenated files."""
     lines = f["f"].splitlines()
     if not lines:
@@ -525,7 +526,9 @@ def require_counts(f: LoadedFileDict[str], d: Metrics, columns: Sequence[str]) -
     """Fail on a read count unmux always writes but that is missing or not a whole number."""
     for column in columns:
         if not isinstance(d.get(column), int):
-            raise ValueError(f"unmux: {f['fn']} has no whole number in the required column '{column}'")
+            raise ValueError(  # noqa: TRY004  a malformed file is a bad value, not a caller's type error
+                f"unmux: {f['fn']} has no whole number in the required column '{column}'"
+            )
 
 
 def number(value: Value) -> float:
