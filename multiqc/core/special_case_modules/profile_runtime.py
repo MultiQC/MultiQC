@@ -3,7 +3,6 @@ Super Special-Case MultiQC module to produce report section on MultiQC performan
 """
 
 import logging
-from typing import Dict, Union
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -49,7 +48,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Table with time and memory usage per module
         """
-        table_data: Dict[str, Dict[str, float]] = {}
+        table_data: dict[str, dict[str, float]] = {}
         for key in report.runtimes.mods:
             table_data[key] = {
                 "run_time": report.runtimes.mods[key],
@@ -104,10 +103,10 @@ class MultiqcModule(BaseMultiqcModule):
     def file_search_counts_section(self):
         """Count of all files iterated through by MultiQC, by category"""
 
-        file_search_counts: Dict[str, int] = {k: len(paths) for k, paths in report.file_search_stats.items()}
+        file_search_counts: dict[str, int] = {k: len(paths) for k, paths in report.file_search_stats.items()}
 
-        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
-        pcats: Dict[CatName, Dict[str, str]] = dict()
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
+        pcats: dict[CatName, dict[str, str]] = {}
         for key in sorted(
             file_search_counts.keys(),
             key=lambda k: file_search_counts[k],
@@ -124,10 +123,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Files searched counts",
             anchor="multiqc_runtime_files_searched",
-            description="""
+            description=f"""
                 Number of files searched by MultiQC, categorised by what happened to them.
-                **Total file searches: {}**.
-            """.format(sum(file_search_counts.values())),
+                **Total file searches: {sum(file_search_counts.values())}**.
+            """,
             helptext="""
                 Note that only files are considered in this plot - skipped directories are not shown.
 
@@ -156,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
     def search_pattern_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in sorted(report.runtimes.sp.keys(), key=lambda k: report.runtimes.sp[k], reverse=True):
             pdata[SampleName(key)] = {CatName(key): report.runtimes.sp[key]}
 
@@ -172,10 +171,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_section(
             name="Search patterns run times",
             anchor="multiqc_runtime_search_patterns",
-            description="""
+            description=f"""
                 Time spent running each search pattern to find files for MultiQC modules.
-                **Total file search time: {:.2f} seconds**.
-            """.format(report.runtimes.total_sp),
+                **Total file search time: {report.runtimes.total_sp:.2f} seconds**.
+            """,
             helptext="""
                 **NOTE: Usually, MultiQC run time is fairly insignificant - in the order of seconds.
                 Unless you are running MultiQC on many thousands of analysis files, optimising this process
@@ -198,7 +197,7 @@ class MultiqcModule(BaseMultiqcModule):
     def module_times_section(self):
         """Section with a bar plot showing the time spent on each search pattern"""
 
-        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = dict()
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.runtimes.mods:
             pdata[SampleName(key)] = {CatName(key): report.runtimes.mods[key]}
 
@@ -228,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Section with a bar plot showing the memory usage of each module
         """
-        pdata: Dict[SampleName, Dict[CatName, Union[int, float]]] = {}
+        pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.peak_memory_bytes_per_module:
             pdata[SampleName(key)] = {CatName(key): report.peak_memory_bytes_per_module[key] / 1024 / 1024}
         for key in report.diff_memory_bytes_per_module:

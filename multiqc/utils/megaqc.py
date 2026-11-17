@@ -43,7 +43,7 @@ def multiqc_api_post(out_path: Path):
             api_r = json.loads(r.text)
         except Exception:
             log.error(f"Error: JSON response could not be parsed (status code: {r.status_code})")
-            return None
+            return
         if r.status_code == 200:
             if api_r["success"]:
                 log.info(f"{api_r['message']}")

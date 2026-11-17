@@ -2,7 +2,6 @@
 http://rseqc.sourceforge.net/#genebody-coverage-py"""
 
 import logging
-from typing import Dict, List
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -14,8 +13,8 @@ def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC gene_body_coverage reports and parse their data"""
 
     # Set up vars
-    gene_body_cov_hist_counts: Dict = dict()
-    gene_body_cov_hist_percent: Dict = dict()
+    gene_body_cov_hist_counts: dict = {}
+    gene_body_cov_hist_percent: dict = {}
 
     # TODO - Do separate parsing step to find skewness values
     # and add these to the general stats table?
@@ -26,7 +25,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         # RSeQC >= v2.4
         # NB: Capitalisation
         if f["f"].startswith("Percentile"):
-            keys: List = []
+            keys: list = []
             nrows = 0
             for line in f["f"].splitlines():
                 s = line.split("\t")
@@ -41,7 +40,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
                     if s_name in gene_body_cov_hist_counts:
                         log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     module.add_data_source(f, s_name, section="gene_body_coverage")
-                    gene_body_cov_hist_counts[s_name] = dict()
+                    gene_body_cov_hist_counts[s_name] = {}
                     for k, var in enumerate(s[1:]):
                         gene_body_cov_hist_counts[s_name][int(keys[k])] = float(var)
             if nrows == 0:
@@ -55,7 +54,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
             if f["s_name"] in gene_body_cov_hist_counts:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="gene_body_coverage")
-            gene_body_cov_hist_counts[f["s_name"]] = dict()
+            gene_body_cov_hist_counts[f["s_name"]] = {}
             nrows = 0
             for line in f["f"].splitlines():
                 s = line.split("\t")
@@ -88,7 +87,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Make a normalised coverage for plotting using the formula (cov - min_cov) / (max_cov - min_cov)
     for s_name in gene_body_cov_hist_counts:
-        gene_body_cov_hist_percent[s_name] = dict()
+        gene_body_cov_hist_percent[s_name] = {}
         # min_cov and max_cov are required to compute the normalized coverage
         min_cov = min(gene_body_cov_hist_counts[s_name].values())
         max_cov = max(gene_body_cov_hist_counts[s_name].values())
