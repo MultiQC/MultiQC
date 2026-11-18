@@ -6,12 +6,11 @@ import html
 import logging
 import math
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
-from multiqc.report import clean_htmlid
 from multiqc.plots import heatmap, linegraph
+from multiqc.report import clean_htmlid
 from multiqc.types import SectionAlert
 
 from .schemas import DuplexFamilySizeMetric, DuplexStrandFamilySizeMetric, SimplexFamilySizeMetric
@@ -31,12 +30,12 @@ _HEATMAP_HELP = (
 )
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     return _strand_family_sizes(module) | _ab_ba_family_sizes(module)
 
 
-def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
-    by_kind: Dict[str, Dict[str, Dict[str, Dict[int, Optional[float]]]]] = {"simplex": {}, "duplex": {}}
+def _strand_family_sizes(module: BaseMultiqcModule) -> set[str]:
+    by_kind: dict[str, dict[str, dict[str, dict[int, float | None]]]] = {"simplex": {}, "duplex": {}}
     for f in module.find_log_files("fgumi/strand_family_sizes"):
         if f["f"] is None:
             continue
@@ -47,7 +46,7 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
         # Not "<kind>_family_sizes": "duplex_family_sizes" is already the section of the AB x BA files.
         s_name = register(module, f, section=f"strand_family_sizes_{'duplex' if is_duplex else 'simplex'}")
         strands = ["cs", "ss", "ds"] if is_duplex else ["cs", "ss"]
-        entry: Dict[str, Dict[int, Optional[float]]] = {}
+        entry: dict[str, dict[int, float | None]] = {}
         for strand in strands:
             entry[strand] = {r.family_size: getattr(r, f"{strand}_count") for r in rows}
             entry[f"{strand}_cumulative"] = {
@@ -55,7 +54,7 @@ def _strand_family_sizes(module: BaseMultiqcModule) -> Set[str]:
             }
         by_kind["duplex" if is_duplex else "simplex"][s_name] = entry
 
-    parsed: Set[str] = set()
+    parsed: set[str] = set()
     labels = {"cs": "By coordinate + strand", "ss": "Single-strand families", "ds": "Double-strand families"}
     for kind, data in by_kind.items():
         data = module.ignore_samples(data)
@@ -104,11 +103,11 @@ def _label(size: int) -> str:
 
 
 def _heatmap_matrix(
-    rows: List[DuplexFamilySizeMetric], min_ba: int
-) -> Optional[Tuple[List[List[Optional[float]]], List[str], List[str]]]:
+    rows: list[DuplexFamilySizeMetric], min_ba: int
+) -> tuple[list[list[float | None]], list[str], list[str]] | None:
     """log10(count) with a row per capped BA size and a column per capped AB size (fgbio's x = AB, y = BA), and
     the column and row labels; rows with ``ba_size < min_ba`` are dropped."""
-    cells: Dict[Tuple[int, int], int] = defaultdict(int)
+    cells: dict[tuple[int, int], int] = defaultdict(int)
     for r in rows:
         if r.ba_size >= min_ba:
             cells[(min(r.ab_size, HEATMAP_CAP), min(r.ba_size, HEATMAP_CAP))] += r.count
@@ -121,14 +120,14 @@ def _heatmap_matrix(
     return matrix, [_label(ab) for ab in ab_sizes], [_label(ba) for ba in ba_sizes]
 
 
-def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
+def _ab_ba_family_sizes(module: BaseMultiqcModule) -> set[str]:
     rows_by_sample = dict(iter_samples(module, "fgumi/duplex_family_sizes", DuplexFamilySizeMetric))
     if not rows_by_sample:
         return set()
 
-    min_strand: Dict[str, Dict[int, int]] = {}
+    min_strand: dict[str, dict[int, int]] = {}
     for s_name, rows in rows_by_sample.items():
-        totals: Dict[int, int] = defaultdict(int)
+        totals: dict[int, int] = defaultdict(int)
         for r in rows:
             totals[min(r.ab_size, r.ba_size)] += r.count
         min_strand[s_name] = dict(sorted(totals.items()))
@@ -156,7 +155,7 @@ def _ab_ba_family_sizes(module: BaseMultiqcModule) -> Set[str]:
     return set(rows_by_sample)
 
 
-def _per_sample_heatmaps(module: BaseMultiqcModule, rows_by_sample: Dict[str, List[DuplexFamilySizeMetric]]) -> None:
+def _per_sample_heatmaps(module: BaseMultiqcModule, rows_by_sample: dict[str, list[DuplexFamilySizeMetric]]) -> None:
     for s_name, rows in rows_by_sample.items():
         if not rows:
             module.add_section(

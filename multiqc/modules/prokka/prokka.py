@@ -41,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.prokka = dict()
+        self.prokka = {}
         for f in self.find_log_files("prokka", filehandles=True):
             self.parse_prokka(f)
 
@@ -157,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if s_name in self.prokka:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.prokka[s_name] = dict()
+        self.prokka[s_name] = {}
         self.prokka[s_name]["organism"] = organism
         self.prokka[s_name]["contigs"] = int(contigs_line.split(":")[1])
         self.prokka[s_name]["bases"] = int(bases_line.split(":")[1])

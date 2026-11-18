@@ -1,14 +1,13 @@
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, cast
 
 from natsort import natsorted
 
-from multiqc.plots import bargraph, linegraph, table
+from multiqc.plots import linegraph, table
 from multiqc.plots.table_object import ColumnDict
-from multiqc import config
 from multiqc.types import SectionAlert
 
 
-def _drop_low_samples(data: Dict[str, Dict[Any, float]], threshold: float = 0.0) -> List[str]:
+def _drop_low_samples(data: dict[str, dict[Any, float]], threshold: float = 0.0) -> list[str]:
     """Remove samples whose max value is `<= threshold` from `data` in place.
 
     Useful for hiding lines that would be visually indistinguishable from zero
@@ -21,7 +20,7 @@ def _drop_low_samples(data: Dict[str, Dict[Any, float]], threshold: float = 0.0)
     return natsorted(dropped)
 
 
-def _filtered_samples_alert(dropped: List[str], metric: str, threshold_label: str) -> Optional[SectionAlert]:
+def _filtered_samples_alert(dropped: list[str], metric: str, threshold_label: str) -> SectionAlert | None:
     if not dropped:
         return None
     n = len(dropped)
@@ -72,11 +71,11 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     """
     Tabulate general information and statistics per sample
     """
-    plot_content = dict()
+    plot_content = {}
     reads_present = set()
     is_percent_q50_present = False
     for s_name in natsorted(sample_data.keys()):
-        general_stats = dict()
+        general_stats = {}
         general_stats.update({"group": group_lookup_dict[s_name]})
         general_stats.update({"project": project_lookup_dict.get(s_name, "")})
         general_stats.update({"num_polonies_sample": sample_data[s_name]["NumPolonies"]})
@@ -183,7 +182,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
     }
 
     plot_name = "Sample QC Metrics Table"
-    plot_html = table.plot(plot_content, cast(Dict[Any, ColumnDict], headers), pconfig=pconfig)
+    plot_html = table.plot(plot_content, cast(dict[Any, ColumnDict], headers), pconfig=pconfig)
     anchor = "sample_qc_metrics_table"
     description = "QC metrics per unique sample"
     helptext = """
@@ -207,7 +206,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     """Create the epic HTML for the FastQC sequence content heatmap"""
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_data: Dict[str, Dict[int, Any]] = {}
+        empty_data: dict[str, dict[int, Any]] = {}
         plot_html = linegraph.plot(
             empty_data,
             pconfig={
@@ -220,18 +219,18 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
         return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data, None
 
     # Prep the data
-    data: Dict[str, Dict[int, Any]] = {}
+    data: dict[str, dict[int, Any]] = {}
 
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):
         for base in "ACTG":
-            base_s_name = "__".join([s_name, base])
+            base_s_name = f"{s_name}__{base}"
             data[base_s_name] = {}
             R1 = sample_data[s_name]["Reads"][0]["Cycles"]
             r1r2_split = max(r1r2_split, len(R1))
 
     for s_name in natsorted(samples_with_reads):
-        paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(sample_data[s_name]["Reads"]) > 1
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         for cycle in range(len(R1)):
             base_no = cycle + 1
@@ -239,7 +238,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
             tot = sum([R1[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "G"]])
 
             for base in "ACTG":
-                base_s_name = "__".join([s_name, base])
+                base_s_name = f"{s_name}__{base}"
                 data[base_s_name].update(
                     {base_no: float(R1[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None}
                 )
@@ -251,7 +250,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
                 tot = sum([R2[cycle]["BaseComposition"][base] for base in ["A", "C", "T", "G"]])
 
                 for base in "ACTG":
-                    base_s_name = "__".join([s_name, base])
+                    base_s_name = f"{s_name}__{base}"
                     data[base_s_name].update(
                         {base_no: float(R2[cycle]["BaseComposition"][base] / float(tot)) * 100.0 if tot > 0 else None}
                     )
@@ -289,7 +288,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
 def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_data: Dict[str, Dict[int, float]] = {}
+        empty_data: dict[str, dict[int, float]] = {}
         plot_html = linegraph.plot(
             empty_data,
             pconfig={
@@ -301,7 +300,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         )
         return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data, None
 
-    data: Dict[str, Dict[int, float]] = {}
+    data: dict[str, dict[int, float]] = {}
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):
         data[s_name] = {}
@@ -310,7 +309,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
     for s_name in natsorted(samples_with_reads):
-        paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(sample_data[s_name]["Reads"]) > 1
         R1 = sample_data[s_name]["Reads"][0]["Cycles"]
         R1_cycle_num = len(R1)
         for cycle in range(len(R1)):
@@ -378,7 +377,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     """
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_gc_hist: Dict[str, Dict[float, float]] = {}
+        empty_gc_hist: dict[str, dict[float, float]] = {}
         plot_html = linegraph.plot(
             empty_gc_hist,
             pconfig={
@@ -390,7 +389,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
         )
         return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist, None
 
-    gc_hist_dict: Dict[str, Dict[float, float]] = {}
+    gc_hist_dict: dict[str, dict[float, float]] = {}
     for s_name in natsorted(samples_with_reads):
         r0 = sample_data[s_name]["Reads"][0]
         if "PerReadGCCountHistogram" not in r0:
@@ -455,7 +454,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     """
     samples_with_reads = [s for s in sample_data if _sample_has_reads(sample_data[s])]
     if not samples_with_reads:
-        empty_content: Dict[str, Dict[int, float]] = {}
+        empty_content: dict[str, dict[int, float]] = {}
         plot_html = linegraph.plot(
             empty_content,
             pconfig={
@@ -467,7 +466,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
         )
         return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content, None
 
-    plot_content: Dict[str, Dict[int, float]] = {}
+    plot_content: dict[str, dict[int, float]] = {}
 
     r1r2_split = 0
     for s_name in natsorted(samples_with_reads):
@@ -477,7 +476,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
         r1r2_split = max(r1r2_split, R1_cycle_num)
 
     for s_name in natsorted(samples_with_reads):
-        paired_end = True if len(sample_data[s_name]["Reads"]) > 1 else False
+        paired_end = len(sample_data[s_name]["Reads"]) > 1
         plot_content.update({s_name: {}})
         # Read 1
         cycles = sample_data[s_name]["Reads"][0]["Cycles"]

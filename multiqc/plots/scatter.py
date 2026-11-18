@@ -5,7 +5,8 @@ import json
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple, Union, cast
+from collections.abc import Mapping
+from typing import Any, Union, cast
 
 import numpy as np
 import polars as pl
@@ -21,26 +22,26 @@ logger = logging.getLogger(__name__)
 
 
 class ScatterConfig(PConfig):
-    categories: Optional[List[str]] = None  # x-axis labels
-    groups: Optional[List[str]] = None  # color groups
-    extra_series: Union[Dict[str, Any], List[Dict[str, Any]], List[List[Dict[str, Any]]], None] = None
-    marker_size: Optional[int] = None
-    marker_line_width: Optional[int] = None
-    color: Optional[str] = None
-    opacity: Optional[float] = None
-    marker_symbol: Optional[str] = None
+    categories: list[str] | None = None  # x-axis labels
+    groups: list[str] | None = None  # color groups
+    extra_series: dict[str, Any] | list[dict[str, Any]] | list[list[dict[str, Any]]] | None = None
+    marker_size: int | None = None
+    marker_line_width: int | None = None
+    color: str | None = None
+    opacity: float | None = None
+    marker_symbol: str | None = None
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("scatterplot",), **data)
 
 
 # {'color': 'rgb(211,211,211,0.05)', 'name': 'background: EUR', 'x': -0.294, 'y': -1.527}
-ValueT = Union[str, float, int]
-PointT = Dict[str, ValueT]
+ValueT = str | float | int
+PointT = dict[str, ValueT]
 
 
 class ScatterNormalizedInputData(NormalizedPlotInputData):
-    datasets: List[Dict[str, Any]]
+    datasets: list[dict[str, Any]]
     pconfig: ScatterConfig
 
     def is_empty(self) -> bool:
@@ -97,8 +98,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
     @staticmethod
     def create(
-        data: Union[Dict[str, Any], List[Dict[str, Any]]],
-        pconfig: Union[Mapping[str, Any], ScatterConfig, None] = None,
+        data: dict[str, Any] | list[dict[str, Any]],
+        pconfig: Mapping[str, Any] | ScatterConfig | None = None,
     ) -> "ScatterNormalizedInputData":
         pconf: ScatterConfig = cast(ScatterConfig, ScatterConfig.from_pconfig_dict(pconfig))
 
@@ -147,9 +148,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
         return cls.from_df(merged_df, new_data.pconfig, new_data.anchor)
 
     @classmethod
-    def from_df(
-        cls, df: pl.DataFrame, pconfig: Union[Dict, ScatterConfig], anchor: Anchor
-    ) -> "ScatterNormalizedInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | ScatterConfig, anchor: Anchor) -> "ScatterNormalizedInputData":
         """
         Create a ScatterNormalizedInputData object from a polars DataFrame.
         """
@@ -193,7 +192,7 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
                     point["x"] = parse_value(row["x"], row["x_type"])
                     point["y"] = parse_value(row["y"], row["y_type"])
                     # Add any additional point attributes
-                    for col in row.keys():
+                    for col in row:
                         if col.startswith("point_"):
                             key = col[6:]  # Remove "point_" prefix
                             point[key] = row[col]
@@ -215,8 +214,8 @@ class ScatterNormalizedInputData(NormalizedPlotInputData):
 
 
 def plot(
-    data: Union[Dict[str, Any], List[Dict[str, Any]]],
-    pconfig: Union[Mapping[str, Any], ScatterConfig, None],
+    data: dict[str, Any] | list[dict[str, Any]],
+    pconfig: Mapping[str, Any] | ScatterConfig | None,
 ) -> Union["ScatterPlot", str, None]:
     """
     Plot a scatter plot with X,Y data.
@@ -234,9 +233,9 @@ def plot(
 
 
 class Dataset(BaseDataset):
-    points: List[PointT]
+    points: list[PointT]
 
-    def sample_names(self) -> List[SampleName]:
+    def sample_names(self) -> list[SampleName]:
         return [
             SampleName(point["name"]) for point in self.points if "name" in point and isinstance(point["name"], str)
         ]
@@ -244,7 +243,7 @@ class Dataset(BaseDataset):
     @staticmethod
     def create(
         dataset: BaseDataset,
-        points: List[Dict[str, Any]],
+        points: list[dict[str, Any]],
         pconfig: ScatterConfig,
     ) -> "Dataset":
         dataset = Dataset(
@@ -253,14 +252,14 @@ class Dataset(BaseDataset):
         )
 
         dataset.trace_params.update(
-            textfont=dict(size=8),
-            marker=dict(
-                size=10,
-                line=dict(width=1),
-                opacity=1,
-                color="rgba(124, 181, 236, .5)",
-                symbol="circle",
-            ),
+            textfont={"size": 8},
+            marker={
+                "size": 10,
+                "line": {"width": 1},
+                "opacity": 1,
+                "color": "rgba(124, 181, 236, .5)",
+                "symbol": "circle",
+            },
         )
         # if categories is provided, set them as x-axis ticks
         if pconfig.categories:
@@ -321,7 +320,7 @@ class Dataset(BaseDataset):
 
         # If there are few unique colors, we can additionally put a unique list into a legend
         # (even though some color might belong to many distinct names - we will just crop the list)
-        names_by_legend_key: Dict[Tuple[Any, Any, Any, Any], Set[str]] = defaultdict(set)
+        names_by_legend_key: dict[tuple[Any, Any, Any, Any], set[str]] = defaultdict(set)
 
         for el in self.points:
             legend_key = (el.get("color"), el.get("marker_size"), el.get("marker_line_width"), el.get("group"))
@@ -330,7 +329,7 @@ class Dataset(BaseDataset):
             names_by_legend_key[legend_key].add(name)
         layout.showlegend = True
 
-        in_legend: Set[Tuple[Any, Any, Any, Any]] = set()
+        in_legend: set[tuple[Any, Any, Any, Any]] = set()
         for el in self.points:
             x = el["x"]
             name = el["name"]
@@ -356,7 +355,7 @@ class Dataset(BaseDataset):
             params = copy.deepcopy(self.trace_params)
             marker = params.pop("marker")
             if color:
-                marker["color"] = mqc_colour.color_to_rgb_string(cast(Optional[str], el.get("color")))
+                marker["color"] = mqc_colour.color_to_rgb_string(cast(str | None, el.get("color")))
 
             if "marker_line_width" in el:
                 marker["line"]["width"] = el["marker_line_width"]
@@ -387,7 +386,7 @@ class Dataset(BaseDataset):
         fig.layout.height += len(in_legend) * 5  # extra space for legend
         return fig
 
-    def get_x_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+    def get_x_range(self) -> tuple[Any | None, Any | None]:
         if not self.points:
             return None, None
         xmax, xmin = None, None
@@ -403,7 +402,7 @@ class Dataset(BaseDataset):
                 xmin = x
         return xmin, xmax
 
-    def get_y_range(self) -> Tuple[Optional[Any], Optional[Any]]:
+    def get_y_range(self) -> tuple[Any | None, Any | None]:
         if not self.points:
             return None, None
         ymax, ymin = None, None
@@ -446,11 +445,11 @@ class Dataset(BaseDataset):
 
 
 class ScatterPlot(Plot[Dataset, ScatterConfig]):
-    datasets: List[Dataset]
+    datasets: list[Dataset]
 
     @staticmethod
     def create(
-        points_lists: List[List[PointT]],
+        points_lists: list[list[PointT]],
         pconfig: ScatterConfig,
         anchor: Anchor,
     ) -> "ScatterPlot":
@@ -487,9 +486,9 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
     def from_inputs(inputs: ScatterNormalizedInputData) -> Union["ScatterPlot", str, None]:
         pconf = inputs.pconfig
         sample_names = []
-        plotdata: List[List[Dict[str, Any]]] = list()
+        plotdata: list[list[dict[str, Any]]] = []
         for data_index, ds in enumerate(inputs.datasets):
-            d: List[Dict[str, Any]] = list()
+            d: list[dict[str, Any]] = []
             for s_name in ds:
                 sample_names.append(SampleName(s_name))
                 # Ensure any overwriting conditionals from data_labels (e.g. ymax) are taken in consideration
@@ -530,28 +529,27 @@ class ScatterPlot(Plot[Dataset, ScatterConfig]):
 
             plotdata.append(d)
 
-        if pconf.square:
-            if pconf.ymax is None and pconf.xmax is None:
-                # Find the max value
-                max_val = 0.0
-                for d in plotdata:
-                    for s in d:
-                        max_val = max(max_val, s["x"], s["y"])
-                max_val = 1.02 * float(max_val)  # add 2% padding
-                pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
-                pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
+        if pconf.square and pconf.ymax is None and pconf.xmax is None:
+            # Find the max value
+            max_val = 0.0
+            for d in plotdata:
+                for s in d:
+                    max_val = max(max_val, s["x"], s["y"])
+            max_val = 1.02 * float(max_val)  # add 2% padding
+            pconf.xmax = pconf.xmax if pconf.xmax is not None else max_val
+            pconf.ymax = pconf.ymax if pconf.ymax is not None else max_val
 
         # Add extra annotation data series
         # noinspection PyBroadException
         try:
             if pconf.extra_series:
-                extra_series: List[List[Dict[str, Any]]] = []
+                extra_series: list[list[dict[str, Any]]] = []
                 if isinstance(pconf.extra_series, dict):
                     extra_series = [[pconf.extra_series]]
                 elif isinstance(pconf.extra_series[0], dict):
-                    extra_series = [cast(List[Dict[str, Any]], [pconf.extra_series])]
+                    extra_series = [cast(list[dict[str, Any]], [pconf.extra_series])]
                 else:
-                    extra_series = cast(List[List[Dict[str, Any]]], pconf.extra_series)
+                    extra_series = cast(list[list[dict[str, Any]]], pconf.extra_series)
                 for i, es in enumerate(extra_series):
                     for s in es:
                         plotdata[i].append(s)

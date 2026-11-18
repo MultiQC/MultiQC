@@ -3,7 +3,6 @@
 import gzip
 import logging
 import os
-from typing import Dict, Union
 
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
@@ -36,7 +35,7 @@ EXPECTED_COLUMNS = [
 def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
     """Find Glimpse concordance errors by allele frequency bin groups logs and parse their data"""
 
-    metrics_by_idn_by_var_by_sample: Dict[str, Dict[str, Dict[str, Dict[str, Union[int, float, str]]]]] = dict()
+    metrics_by_idn_by_var_by_sample: dict[str, dict[str, dict[str, dict[str, int | float | str]]]] = {}
     for f in module.find_log_files("glimpse/err_grp", filecontents=False, filehandles=False):
         with gzip.open(os.path.join(f["root"], f["fn"])) as f_gz:
             lines = [line.decode().rstrip() for line in f_gz.readlines()]
@@ -69,11 +68,11 @@ def parse_glimpse_err_grp(module: BaseMultiqcModule) -> int:
     GCsVAF = "GCsVAF"
     vtypes = [GCsSAF, GCsIAF, GCsVAF]
     samples = metrics_by_idn_by_var_by_sample.keys()
-    data_best_gt_rsquared: Dict[str, Dict[str, Dict]] = {v: {s: {} for s in samples} for v in vtypes}
-    data_imputed_ds_rsquared: Dict[str, Dict[str, Dict]] = {v: {s: {} for s in samples} for v in vtypes}
+    data_best_gt_rsquared: dict[str, dict[str, dict]] = {v: {s: {} for s in samples} for v in vtypes}
+    data_imputed_ds_rsquared: dict[str, dict[str, dict]] = {v: {s: {} for s in samples} for v in vtypes}
     for sname, metrics_by_idn_by_var in metrics_by_idn_by_var_by_sample.items():
         for var_type, metrics_by_idn in metrics_by_idn_by_var.items():
-            for idn, metrics in metrics_by_idn.items():
+            for metrics in metrics_by_idn.values():
                 data_best_gt_rsquared[var_type][sname].update({metrics["mean_af"]: metrics["best_gt_rsquared"]})
                 data_imputed_ds_rsquared[var_type][sname].update({metrics["mean_af"]: metrics["imputed_ds_rsquared"]})
 
@@ -146,7 +145,7 @@ def accuracy_plot(module, data):
     )
 
 
-def parse_err_grp_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, float, str]]]]:
+def parse_err_grp_report(lines) -> dict[str, dict[str, dict[str, int | float | str]]]:
     """
     Example:
     #Genotype concordance by allele frequency bin (SNPs)
@@ -160,10 +159,10 @@ def parse_err_grp_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
 
     Returns a dictionary with the contig name (rname) as the key and the rest of the fields as a dictionary
     """
-    parsed_data: Dict[str, Dict[str, Dict[str, Union[int, float, str]]]] = {}
+    parsed_data: dict[str, dict[str, dict[str, int | float | str]]] = {}
     expected_header = "#Genotype concordance by allele frequency bin (SNPs)"
     if lines[0] != expected_header:
-        logging.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
+        log.warning(f"Expected header for GLIMPSE2_concordance: {expected_header}, got: {lines[0]}.")
         return {}
 
     for line in lines[1:]:
@@ -171,7 +170,7 @@ def parse_err_grp_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
         if fields[0][0] == "#":  # Skip comments
             continue
         if len(fields) != len(EXPECTED_COLUMNS):
-            logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
+            log.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
         (
             variants,
             idn,
@@ -195,26 +194,26 @@ def parse_err_grp_report(lines) -> Dict[str, Dict[str, Dict[str, Union[int, floa
         ) = fields
         if variants not in parsed_data:
             parsed_data[variants] = {}
-        parsed_data[variants][idn] = dict(
-            variants=str(variants),
-            idn=int(idn),
-            n_genotypes=int(n_genotypes),
-            mean_af=float(mean_af),
-            val_gt_RR=int(val_gt_RR),
-            val_gt_RA=int(val_gt_RA),
-            val_gt_AA=int(val_gt_AA),
-            filtered_gp=int(filtered_gp),
-            RR_hom_matches=int(RR_hom_matches),
-            RA_het_matches=int(RA_het_matches),
-            AA_hom_matches=int(AA_hom_matches),
-            RR_hom_mismatches=int(RR_hom_mismatches),
-            RA_het_mismatches=int(RA_het_mismatches),
-            AA_hom_mismatches=int(AA_hom_mismatches),
-            RR_hom_mismatches_rate_percent=float(RR_hom_mismatches_rate_percent),
-            RA_het_mismatches_rate_percent=float(RA_het_mismatches_rate_percent),
-            AA_hom_mismatches_rate_percent=float(AA_hom_mismatches_rate_percent),
-            best_gt_rsquared=float(best_gt_rsquared),
-            imputed_ds_rsquared=float(imputed_ds_rsquared),
-        )
+        parsed_data[variants][idn] = {
+            "variants": str(variants),
+            "idn": int(idn),
+            "n_genotypes": int(n_genotypes),
+            "mean_af": float(mean_af),
+            "val_gt_RR": int(val_gt_RR),
+            "val_gt_RA": int(val_gt_RA),
+            "val_gt_AA": int(val_gt_AA),
+            "filtered_gp": int(filtered_gp),
+            "RR_hom_matches": int(RR_hom_matches),
+            "RA_het_matches": int(RA_het_matches),
+            "AA_hom_matches": int(AA_hom_matches),
+            "RR_hom_mismatches": int(RR_hom_mismatches),
+            "RA_het_mismatches": int(RA_het_mismatches),
+            "AA_hom_mismatches": int(AA_hom_mismatches),
+            "RR_hom_mismatches_rate_percent": float(RR_hom_mismatches_rate_percent),
+            "RA_het_mismatches_rate_percent": float(RA_het_mismatches_rate_percent),
+            "AA_hom_mismatches_rate_percent": float(AA_hom_mismatches_rate_percent),
+            "best_gt_rsquared": float(best_gt_rsquared),
+            "imputed_ds_rsquared": float(imputed_ds_rsquared),
+        }
 
     return parsed_data

@@ -5,7 +5,8 @@ import json
 import logging
 import math
 from collections import OrderedDict, defaultdict
-from typing import Any, Dict, List, Literal, Mapping, NewType, Optional, Sequence, Set, Tuple, TypedDict, Union, cast
+from collections.abc import Mapping, Sequence
+from typing import Any, Literal, NewType, TypedDict, Union, cast
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore
@@ -32,45 +33,41 @@ from multiqc.validation import ValidatedConfig
 
 logger = logging.getLogger(__name__)
 
-SampleNameT = Union[SampleName, str]
+SampleNameT = SampleName | str
 CatName = NewType("CatName", str)
-CatNameT = Union[CatName, str]
-InputDatasetT = Union[Mapping[SampleName, Mapping[CatName, Any]], Mapping[str, Mapping[str, Any]]]
-SampleGroupEntry = List[str]  # [sample_name, offset_group]
+CatNameT = CatName | str
+InputDatasetT = Mapping[SampleName, Mapping[CatName, Any]] | Mapping[str, Mapping[str, Any]]
+SampleGroupEntry = list[str]  # [sample_name, offset_group]
 
 
 class CatConf(ValidatedConfig):
     name: str
-    color: Optional[str] = None
+    color: str | None = None
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         super().__init__(path_in_cfg=path_in_cfg or ("cats",), **data)
 
 
 # Either a list of strings, or a cat conf - a mapping from category names to their properties dicts or objects
-InputCategoriesT = Union[
-    Sequence[str],
-    Mapping[CatName, Mapping[str, Any]],
-    Sequence[CatName],
-    Mapping[str, Mapping[str, Any]],
-    Sequence[str],
-]
+InputCategoriesT = (
+    Sequence[str] | Mapping[CatName, Mapping[str, Any]] | Sequence[CatName] | Mapping[str, Mapping[str, Any]]
+)
 
 
 class BarPlotConfig(PConfig):
-    stacking: Union[Literal["group", "overlay", "relative", "normal"], None] = "relative"
-    hide_empty: Optional[bool] = Field(None, deprecated="hide_zero_cats")
+    stacking: Literal["group", "overlay", "relative", "normal"] | None = "relative"
+    hide_empty: bool | None = Field(None, deprecated="hide_zero_cats")
     hide_zero_cats: bool = True
     sort_samples: bool = True
     cluster_samples: bool = False  # Enable clustering of samples based on their category profiles
     cluster_method: str = "complete"  # linkage method: single, complete, average, weighted, etc.
     cluster_switch_clustered_active: bool = True  # Whether the clustered view is initially active
-    use_legend: Optional[bool] = None
-    suffix: Optional[str] = None
-    lab_format: Optional[str] = None
-    sample_groups: Optional[Dict[str, List[SampleGroupEntry]]] = None
+    use_legend: bool | None = None
+    suffix: str | None = None
+    lab_format: str | None = None
+    sample_groups: dict[str, list[SampleGroupEntry]] | None = None
 
-    def __init__(self, path_in_cfg: Optional[Tuple[str, ...]] = None, **data):
+    def __init__(self, path_in_cfg: tuple[str, ...] | None = None, **data):
         if "suffix" in data:
             data["ysuffix"] = data["suffix"]
             del data["suffix"]
@@ -98,14 +95,14 @@ class CatDataDict(TypedDict):
 
     name: str
     color: str
-    data: List[float]
-    data_pct: List[float]
+    data: list[float]
+    data_pct: list[float]
 
 
-DatasetT = Dict[SampleName, Dict[CatName, Union[int, float]]]
+DatasetT = dict[SampleName, dict[CatName, int | float]]
 
 
-def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "complete") -> List[SampleName]:
+def _cluster_samples(data: DatasetT, cats: dict[CatName, Any], method: str = "complete") -> list[SampleName]:
     """
     Cluster samples based on their category profiles using hierarchical clustering.
 
@@ -155,29 +152,29 @@ def _cluster_samples(data: DatasetT, cats: Dict[CatName, Any], method: str = "co
         return [sample_names[i] for i in clustered_indices]
 
     except Exception as e:
-        logger.warning(f"Sample clustering failed: {str(e)}")
+        logger.warning(f"Sample clustering failed: {e!s}")
         return sample_names
 
 
 def _reorder_by_groups(
-    datasets: List[DatasetT],
-    sample_groups: Dict[str, List[List[str]]],
-) -> Tuple[List[DatasetT], List[List[str]], List[Dict[str, str]]]:
+    datasets: list[DatasetT],
+    sample_groups: dict[str, list[list[str]]],
+) -> tuple[list[DatasetT], list[list[str]], list[dict[str, str]]]:
     """
     Reorder samples according to groups and generate group labels for multicategory axis.
 
     Returns:
         Tuple of (reordered datasets, group labels per dataset, offset groups per dataset)
     """
-    new_datasets: List[DatasetT] = []
-    group_labels_per_ds: List[List[str]] = []
-    offset_groups_per_ds: List[Dict[str, str]] = []
+    new_datasets: list[DatasetT] = []
+    group_labels_per_ds: list[list[str]] = []
+    offset_groups_per_ds: list[dict[str, str]] = []
 
     for dataset in datasets:
         new_dataset: DatasetT = {}
-        group_labels: List[str] = []
-        offset_groups: Dict[str, str] = {}
-        grouped_samples: Set[SampleName] = set()
+        group_labels: list[str] = []
+        offset_groups: dict[str, str] = {}
+        grouped_samples: set[SampleName] = set()
 
         for group_label, group_samples in sample_groups.items():
             for sample_name_str, offset_group in group_samples:
@@ -190,7 +187,7 @@ def _reorder_by_groups(
                 else:
                     logger.debug(f"Sample '{sample_name_str}' in sample_groups not found in dataset")
 
-        ungrouped = [s for s in dataset.keys() if s not in grouped_samples]
+        ungrouped = [s for s in dataset if s not in grouped_samples]
         if ungrouped:
             for s in ungrouped:
                 new_dataset[s] = dataset[s]
@@ -205,19 +202,19 @@ def _reorder_by_groups(
 
 
 class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
-    data: List[DatasetT]
-    cats: List[Dict[CatName, CatConf]]
-    group_labels: Optional[List[List[str]]] = None
-    offset_groups: Optional[List[Dict[str, str]]] = None
+    data: list[DatasetT]
+    cats: list[dict[CatName, CatConf]]
+    group_labels: list[list[str]] | None = None
+    offset_groups: list[dict[str, str]] | None = None
 
     def is_empty(self) -> bool:
         return len(self.data) == 0 or all(len(ds) == 0 for ds in self.data)
 
     @staticmethod
     def create(
-        data: Union[InputDatasetT, Sequence[InputDatasetT]],
-        cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
-        pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+        data: InputDatasetT | Sequence[InputDatasetT],
+        cats: InputCategoriesT | Sequence[InputCategoriesT] | None = None,
+        pconfig: dict[str, Any] | BarPlotConfig | None = None,
     ) -> "BarPlotInputData":
         """
         We want to be permissive with user input, e.g. allow one dataset or a list of datasets,
@@ -236,31 +233,31 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 pconf.cluster_samples = False
 
         # Given one dataset - turn it into a list
-        raw_datasets: List[DatasetT]
+        raw_datasets: list[DatasetT]
         if isinstance(data, Sequence):
-            raw_datasets = cast(List[DatasetT], data)
+            raw_datasets = cast(list[DatasetT], data)
         else:
             raw_datasets = [cast(DatasetT, data)]
         del data
 
         # Make list of cats from different inputs
-        raw_cats_per_ds: List[InputCategoriesT]
+        raw_cats_per_ds: list[InputCategoriesT]
         if not cats:
             # Not supplied, generate default categories
             raw_cats_per_ds = []
             for val_by_cat_by_sample in raw_datasets:
-                ds_cats: List[CatName] = []
+                ds_cats: list[CatName] = []
                 for sample_name, val_by_cat in val_by_cat_by_sample.items():
-                    for _cat_name in val_by_cat.keys():
+                    for _cat_name in val_by_cat:
                         if _cat_name not in raw_cats_per_ds:
                             ds_cats.append(CatName(_cat_name))
                 raw_cats_per_ds.append(ds_cats)
-        elif isinstance(cats, List) and isinstance(cats[0], str):
+        elif isinstance(cats, list) and isinstance(cats[0], str):
             # ["Cat1", "Cat2"] - list of strings for one dataset
-            raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(List[str], cats)]]
+            raw_cats_per_ds = [[CatName(cat_name) for cat_name in cast(list[str], cats)]]
         elif isinstance(cats, Sequence):
             # [["Cat1", "Cat2"], {"Cat3": {}, "Cat4": {}}] - list of lists or dicts for multiple datasets
-            raw_cats_per_ds = [ds_cats for ds_cats in cast(List[Dict], cats)]
+            raw_cats_per_ds = list(cast(list[dict], cats))
         else:
             raw_cats_per_ds = [cats]
 
@@ -275,9 +272,9 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
             )
 
         # Parse the categories into pydantic objects
-        categories_per_ds: List[Dict[CatName, CatConf]] = []
+        categories_per_ds: list[dict[CatName, CatConf]] = []
         for raw_ds_cats in raw_cats_per_ds:
-            ds_categories: Dict[CatName, CatConf] = dict()
+            ds_categories: dict[CatName, CatConf] = {}
             if isinstance(raw_ds_cats, list):
                 for cat_name in raw_ds_cats:
                     ds_categories[CatName(cat_name)] = CatConf(path_in_cfg=("cats",), name=cat_name)
@@ -297,19 +294,19 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         if pconf.id and pconf.id in config.custom_plot_config:
             for cat_name, user_cat_props in config.custom_plot_config[pconf.id].items():
                 for ds_idx in range(len(categories_per_ds)):
-                    if cat_name in categories_per_ds[ds_idx].keys():
+                    if cat_name in categories_per_ds[ds_idx]:
                         for prop_name, prop_val in user_cat_props.items():
                             setattr(categories_per_ds[ds_idx][CatName(cat_name)], prop_name, prop_val)
 
         # Filter data to keep only numerals, remove unknown categories and fill missing with NaNs
-        filtered_datasets: List[DatasetT] = []
+        filtered_datasets: list[DatasetT] = []
         for ds_idx, raw_ds in enumerate(raw_datasets):
             filtered_ds: DatasetT = {}
             filtered_datasets.append(filtered_ds)
             for sample_name in list(raw_ds.keys()):
                 raw_val_by_cat = raw_ds[sample_name]
                 filtered_val_by_cat = {}
-                for cat_id, _ in categories_per_ds[ds_idx].items():
+                for cat_id in categories_per_ds[ds_idx]:
                     # Remove categories that are not in the categories_per_ds, and fill missing with NaNs
                     val = raw_val_by_cat.get(cat_id, None)
                     if val is not None and not isinstance(val, (float, int)):
@@ -323,9 +320,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                                 val = None
                     if val is None:
                         val = float("nan")
-                    elif isinstance(val, float):
-                        if math.floor(val) == val:
-                            val = int(val)
+                    elif isinstance(val, float) and math.floor(val) == val:
+                        val = int(val)
                     filtered_val_by_cat[cat_id] = val
                 # Remove samples with no data
                 if all(math.isnan(v) for v in filtered_val_by_cat.values()):
@@ -333,8 +329,8 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
                 filtered_datasets[ds_idx][sample_name] = filtered_val_by_cat
 
         # Reorder samples by groups and generate group labels for multicategory axis
-        group_labels_per_ds: Optional[List[List[str]]] = None
-        offset_groups_per_ds: Optional[List[Dict[str, str]]] = None
+        group_labels_per_ds: list[list[str]] | None = None
+        offset_groups_per_ds: list[dict[str, str]] | None = None
         if pconf.sample_groups:
             filtered_datasets, group_labels_per_ds, offset_groups_per_ds = _reorder_by_groups(
                 filtered_datasets, pconf.sample_groups
@@ -398,7 +394,7 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         return self.finalize_df(df)
 
     @classmethod
-    def from_df(cls, df: pl.DataFrame, pconfig: Union[Dict, BarPlotConfig], anchor: Anchor) -> "BarPlotInputData":
+    def from_df(cls, df: pl.DataFrame, pconfig: dict | BarPlotConfig, anchor: Anchor) -> "BarPlotInputData":
         """
         Load plot data from a parquet file.
         """
@@ -422,9 +418,9 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
         pconf = cast(BarPlotConfig, BarPlotConfig.from_df(df))
 
         # Reconstruct data structure
-        datasets: List[DatasetT] = []
+        datasets: list[DatasetT] = []
         data_labels = []
-        cats_per_dataset: List[Dict[CatName, CatConf]] = []
+        cats_per_dataset: list[dict[CatName, CatConf]] = []
 
         # Group by dataset_idx
         max_dataset_idx = df.select(pl.col("dataset_idx").max()).item() if not df.is_empty() else 0
@@ -529,9 +525,9 @@ class BarPlotInputData(NormalizedPlotInputData[BarPlotConfig]):
 
 
 def plot(
-    data: Union[InputDatasetT, Sequence[InputDatasetT]],
-    cats: Optional[Union[InputCategoriesT, Sequence[InputCategoriesT]]] = None,
-    pconfig: Optional[Union[Dict[str, Any], BarPlotConfig]] = None,
+    data: InputDatasetT | Sequence[InputDatasetT],
+    cats: InputCategoriesT | Sequence[InputCategoriesT] | None = None,
+    pconfig: dict[str, Any] | BarPlotConfig | None = None,
 ) -> Union["BarPlot", str, None]:
     """
     Create a horizontal bar graph. Also save data to intermediate format.
@@ -558,19 +554,19 @@ def plot(
 class Category(BaseModel):
     name: str
     color: str
-    data: List[float]
-    data_pct: List[float]
+    data: list[float]
+    data_pct: list[float]
 
 
 class Dataset(BaseDataset):
-    cats: List[Category]
-    samples: List[str]
-    cats_clustered: Optional[List[Category]] = None
-    samples_clustered: Optional[List[str]] = None
-    group_labels: Optional[List[str]] = None
-    offset_groups: Optional[Dict[str, str]] = None
+    cats: list[Category]
+    samples: list[str]
+    cats_clustered: list[Category] | None = None
+    samples_clustered: list[str] | None = None
+    group_labels: list[str] | None = None
+    offset_groups: dict[str, str] | None = None
 
-    def sample_names(self) -> List[SampleName]:
+    def sample_names(self) -> list[SampleName]:
         return [SampleName(sample) for sample in self.samples]
 
     @staticmethod
@@ -580,17 +576,17 @@ class Dataset(BaseDataset):
         samples: Sequence[str],
         cluster_samples: bool = False,
         cluster_method: str = "complete",
-        original_data: Optional[DatasetT] = None,
-        original_cats: Optional[Dict[CatName, Any]] = None,
-        group_labels: Optional[List[str]] = None,
-        offset_groups: Optional[Dict[str, str]] = None,
+        original_data: DatasetT | None = None,
+        original_cats: dict[CatName, Any] | None = None,
+        group_labels: list[str] | None = None,
+        offset_groups: dict[str, str] | None = None,
     ) -> "Dataset":
         # Need to reverse samples as the bar plot will show them reversed
         samples = list(reversed(samples))
         # Also reverse group_labels to match
         if group_labels is not None:
             group_labels = list(reversed(group_labels))
-        fixed_cats: List[Category] = []
+        fixed_cats: list[Category] = []
         for input_cat in cats:
             if "name" not in input_cat:
                 raise ValueError(f"Bar plot {dataset.plot_id}: missing 'name' key in category")
@@ -679,7 +675,7 @@ class Dataset(BaseDataset):
                     cats_clustered.append(cat_clustered)
 
             except Exception as e:
-                logger.warning(f"Failed to create clustered data: {str(e)}")
+                logger.warning(f"Failed to create clustered data: {e!s}")
 
         dataset = Dataset(
             **dataset.model_dump(),
@@ -723,7 +719,7 @@ class Dataset(BaseDataset):
         return fig
 
     def save_data_file(self) -> None:
-        val_by_cat_by_sample: Dict[str, Dict[str, str]] = defaultdict(dict)
+        val_by_cat_by_sample: dict[str, dict[str, str]] = defaultdict(dict)
         for cat in self.cats:
             for d_idx, d_val in enumerate(cat.data):
                 s_name = self.samples[d_idx]
@@ -762,12 +758,12 @@ class Dataset(BaseDataset):
 
 
 class BarPlot(Plot[Dataset, BarPlotConfig]):
-    datasets: List[Dataset]
+    datasets: list[Dataset]
     sort_switch_sorted_active: bool = False
     cluster_switch_clustered_active: bool = False
 
-    def sample_names(self) -> List[SampleName]:
-        names: List[SampleName] = []
+    def sample_names(self) -> list[SampleName]:
+        names: list[SampleName] = []
         for ds in self.datasets:
             names.extend(SampleName(sample) for sample in ds.samples)
         return names
@@ -776,20 +772,20 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
     def from_inputs(inputs: BarPlotInputData) -> Union["BarPlot", str, None]:
         # Parse the data into a chart friendly format
         scale = mqc_colour.mqc_colour_scale("plot_defaults")  # to add colors to the categories if not set
-        plot_samples: List[List[SampleName]] = list()
-        plot_data: List[List[CatDataDict]] = list()
+        plot_samples: list[list[SampleName]] = []
+        plot_data: list[list[CatDataDict]] = []
         for ds_idx, d in enumerate(inputs.data):
-            ordered_samples_names: List[SampleName] = [SampleName(s) for s in d.keys()]
+            ordered_samples_names: list[SampleName] = [SampleName(s) for s in d]
             if isinstance(d, OrderedDict):
                 # Legacy: users assumed that passing an OrderedDict indicates that we
                 # want to keep the sample order https://github.com/MultiQC/MultiQC/issues/2204
                 pass
             elif inputs.pconfig.sort_samples:
-                ordered_samples_names = natsorted([SampleName(s) for s in d.keys()])
-            cat_data_dicts: List[CatDataDict] = list()
-            sample_d_count: Dict[SampleName, int] = dict()
+                ordered_samples_names = natsorted([SampleName(s) for s in d])
+            cat_data_dicts: list[CatDataDict] = []
+            sample_d_count: dict[SampleName, int] = {}
             for cat_idx, cat_name in enumerate(inputs.cats[ds_idx].keys()):
-                cat_data: List[Union[int, float]] = list()
+                cat_data: list[int | float] = []
                 cat_count = 0
                 for s in ordered_samples_names:
                     if cat_name in d[SampleName(s)]:
@@ -842,10 +838,10 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         samples_lists: Sequence[Sequence[SampleNameT]],
         pconfig: BarPlotConfig,
         anchor: Anchor,
-        original_data: Optional[List[DatasetT]] = None,
-        original_cats: Optional[List[Dict[CatName, Any]]] = None,
-        group_labels: Optional[List[List[str]]] = None,
-        offset_groups: Optional[List[Dict[str, str]]] = None,
+        original_data: list[DatasetT] | None = None,
+        original_cats: list[dict[CatName, Any]] | None = None,
+        group_labels: list[list[str]] | None = None,
+        offset_groups: list[dict[str, str]] | None = None,
     ) -> "BarPlot":
         """
         :param cats_lists: each dataset is a list of dicts with the keys: {name, color, data},
@@ -911,25 +907,25 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
 
         # Configure yaxis based on whether we're using multicategory
         if uses_multicategory:
-            yaxis_config = dict(
-                showgrid=False,
-                automargin=True,  # to make sure there is enough space for ticks labels
-                title=None,
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+            yaxis_config = {
+                "showgrid": False,
+                "automargin": True,  # to make sure there is enough space for ticks labels
+                "title": None,
+                "hoverformat": model.layout.xaxis.hoverformat,
+                "ticksuffix": model.layout.xaxis.ticksuffix,
                 # For multicategory, don't set type or categoryorder - let Plotly auto-detect
-            )
+            }
         else:
-            yaxis_config = dict(
-                showgrid=False,
-                categoryorder="trace",  # keep sample order
-                automargin=True,  # to make sure there is enough space for ticks labels
-                title=None,
-                hoverformat=model.layout.xaxis.hoverformat,
-                ticksuffix=model.layout.xaxis.ticksuffix,
+            yaxis_config = {
+                "showgrid": False,
+                "categoryorder": "trace",  # keep sample order
+                "automargin": True,  # to make sure there is enough space for ticks labels
+                "title": None,
+                "hoverformat": model.layout.xaxis.hoverformat,
+                "ticksuffix": model.layout.xaxis.ticksuffix,
                 # Prevent JavaScript from automatically parsing categorical values as numbers:
-                type="category",
-            )
+                "type": "category",
+            }
 
         model.layout.update(
             height=height,
@@ -937,11 +933,11 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             bargroupgap=0,
             bargap=0.2,
             yaxis=yaxis_config,
-            xaxis=dict(
-                title=dict(text=model.layout.yaxis.title.text),
-                hoverformat=model.layout.yaxis.hoverformat,
-                ticksuffix=model.layout.yaxis.ticksuffix,
-            ),
+            xaxis={
+                "title": {"text": model.layout.yaxis.title.text},
+                "hoverformat": model.layout.yaxis.hoverformat,
+                "ticksuffix": model.layout.yaxis.ticksuffix,
+            },
             # Re-initiate legend to reset to default legend location on the top right
             legend=go.layout.Legend(
                 # We use legend groups with subplots to simulate standard legend interactivity
@@ -954,10 +950,10 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             ),
             # Use "closest" for multicategory to show only the hovered bar, otherwise "y unified"
             hovermode="closest" if uses_multicategory else "y unified",
-            hoverlabel=dict(
-                bgcolor="white",
-                font=dict(color="rgba(60,60,60,1)"),
-            ),
+            hoverlabel={
+                "bgcolor": "white",
+                "font": {"color": "rgba(60,60,60,1)"},
+            },
             showlegend=pconfig.use_legend if pconfig.use_legend is not None else True,
         )
 
@@ -979,56 +975,50 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                 xmin_cnt = min(min(cat.data[i] for cat in dataset.cats) for i in range(len(dataset.samples)))
             else:
                 # max sum of all categories across all samples
-                xmax_cnt = max(
-                    sum(cat.data[i] if cat.data[i] > 0 else 0 for cat in dataset.cats)
-                    for i in range(len(dataset.samples))
-                )
-                xmin_cnt = min(
-                    sum(cat.data[i] if cat.data[i] < 0 else 0 for cat in dataset.cats)
-                    for i in range(len(dataset.samples))
-                )
+                xmax_cnt = max(sum(max(0, cat.data[i]) for cat in dataset.cats) for i in range(len(dataset.samples)))
+                xmin_cnt = min(sum(min(0, cat.data[i]) for cat in dataset.cats) for i in range(len(dataset.samples)))
 
-            minallowed = 0 if xmin_cnt > 0 else xmin_cnt  # allow bar to start below zero
+            minallowed = min(xmin_cnt, 0)  # allow bar to start below zero
             maxallowed = dataset.layout["yaxis"]["autorangeoptions"]["maxallowed"]
             if maxallowed is None:
                 maxallowed = xmax_cnt
 
             # For multicategory, use minimal yaxis config without numeric settings
             if dataset.group_labels:
-                yaxis_update = dict(
-                    title=None,
-                    hoverformat=dataset.layout["xaxis"]["hoverformat"],
-                    ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
+                yaxis_update = {
+                    "title": None,
+                    "hoverformat": dataset.layout["xaxis"]["hoverformat"],
+                    "ticksuffix": dataset.layout["xaxis"]["ticksuffix"],
                     # Skip autorangeoptions for multicategory - they don't apply to categorical axes
-                )
+                }
             else:
-                yaxis_update = dict(
-                    title=None,
-                    hoverformat=dataset.layout["xaxis"]["hoverformat"],
-                    ticksuffix=dataset.layout["xaxis"]["ticksuffix"],
-                    autorangeoptions=dataset.layout["xaxis"].get(
+                yaxis_update = {
+                    "title": None,
+                    "hoverformat": dataset.layout["xaxis"]["hoverformat"],
+                    "ticksuffix": dataset.layout["xaxis"]["ticksuffix"],
+                    "autorangeoptions": dataset.layout["xaxis"].get(
                         "autorangeoptions",
-                        dict(clipmin=None, clipmax=None, minallowed=None, maxallowed=None),
+                        {"clipmin": None, "clipmax": None, "minallowed": None, "maxallowed": None},
                     ),
-                )
+                }
             dataset.layout.update(
                 yaxis=yaxis_update,
-                xaxis=dict(
-                    title=dict(text=dataset.layout["yaxis"]["title"]["text"]),
-                    hoverformat=dataset.layout["yaxis"]["hoverformat"],
-                    ticksuffix=dataset.layout["yaxis"]["ticksuffix"],
-                    autorangeoptions=dict(
-                        clipmin=dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmin"),
-                        clipmax=dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmax"),
-                        minallowed=minallowed,
-                        maxallowed=maxallowed,
-                    ),
-                ),
+                xaxis={
+                    "title": {"text": dataset.layout["yaxis"]["title"]["text"]},
+                    "hoverformat": dataset.layout["yaxis"]["hoverformat"],
+                    "ticksuffix": dataset.layout["yaxis"]["ticksuffix"],
+                    "autorangeoptions": {
+                        "clipmin": dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmin"),
+                        "clipmax": dataset.layout["yaxis"].get("autorangeoptions", {}).get("clipmax"),
+                        "minallowed": minallowed,
+                        "maxallowed": maxallowed,
+                    },
+                },
                 showlegend=len(dataset.cats) > 1 if pconfig.use_legend is None else pconfig.use_legend,
             )
             dataset.trace_params.update(
                 orientation="h",
-                marker=dict(line=dict(width=0)),
+                marker={"line": {"width": 0}},
                 textposition="inside",
                 insidetextanchor="start",
             )
@@ -1052,7 +1042,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
         if model.add_pct_tab:
             for _, dataset in enumerate(model.datasets):
                 # Count totals for each category
-                sums: List[float] = [0 for _ in dataset.cats[0].data]
+                sums: list[float] = [0 for _ in dataset.cats[0].data]
                 for cat in dataset.cats:
                     for sample_idx, val in enumerate(cat.data):
                         if not math.isnan(val):
@@ -1060,7 +1050,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
 
                 # Now, calculate percentages for each category
                 for cat in dataset.cats:
-                    values = [x for x in cat.data]
+                    values = list(cat.data)
                     for sample_idx, val in enumerate(values):
                         sum_for_sample = sums[sample_idx]
                         if sum_for_sample == 0:
@@ -1076,8 +1066,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
                     )
                 else:
                     dataset.pct_range["xaxis"]["min"] = min(
-                        sum(cat.data_pct[i] if cat.data_pct[i] < 0 else 0 for cat in dataset.cats)
-                        for i in range(len(dataset.samples))
+                        sum(min(0, cat.data_pct[i]) for cat in dataset.cats) for i in range(len(dataset.samples))
                     )
 
         if model.add_log_tab:
@@ -1092,7 +1081,7 @@ class BarPlot(Plot[Dataset, BarPlotConfig]):
             cluster_switch_clustered_active=pconfig.cluster_switch_clustered_active,
         )
 
-    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> List[str]:
+    def buttons(self, flat: bool, module_anchor: Anchor, section_anchor: Anchor) -> list[str]:
         """
         Bar plot-specific controls, only for the interactive version.
         """
