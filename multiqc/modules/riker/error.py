@@ -1,14 +1,15 @@
 """Parse riker `error` outputs (error-mismatch.txt, error-indel.txt, error-overlap.txt).
 
-Each file has one row per (stratifier, covariate) combination, e.g. error rate by base 
+Each file has one row per (stratifier, covariate) combination, e.g. error rate by base
 quality ('bq') or by read cycle. The row where both are 'all' holds the overall metrics for
-the sample, and is one reported in general stats. 
+the sample, and is one reported in general stats.
 
 """
 
 import logging
 from typing import Dict, Optional
 from .util import read_tsv, to_float, to_int
+
 log = logging.getLogger(__name__)
 
 
@@ -30,7 +31,7 @@ def _parse_mismatch(module) -> set:
     for f in module.find_log_files("riker/error_mismatch", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
-            #skip the stratified rows, only the overall row is used for the General Stats table. 
+            # skip the stratified rows, only the overall row is used for the General Stats table.
             if not sample or not _is_overall_row(row):
                 continue
             s_name = module.clean_s_name(sample, f)
