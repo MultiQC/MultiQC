@@ -7,7 +7,7 @@ the sample, and is one reported in general stats.
 """
 
 import logging
-from typing import Dict, Optional
+
 from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ def _is_overall_row(row) -> bool:
 
 
 def _parse_mismatch(module) -> set:
-    data_by_sample: Dict[str, Dict[str, Optional[float]]] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
 
     for f in module.find_log_files("riker/error_mismatch", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
