@@ -354,6 +354,10 @@ diamond:
 disambiguate:
   contents: "unique species A pairs"
   num_lines: 2
+dnaapler:
+  fn: "*_all_reorientation_summary.tsv"
+  contents: "Gene_Reoriented"
+  num_lines: 2
 dragen/vc_metrics:
   fn: "*.vc_metrics.csv"
 dragen/gvcf_metrics:
