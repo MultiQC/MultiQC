@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict
+from typing import Any, Dict, List, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
