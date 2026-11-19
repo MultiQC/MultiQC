@@ -36,9 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
         scatter_data: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
 
         for f in self.find_log_files("dnaapler"):
-            s_name = self.clean_s_name(
-                f["fn"].removesuffix("_all_reorientation_summary.tsv"), f
-            )
+            s_name = self.clean_s_name(f["fn"].removesuffix("_all_reorientation_summary.tsv"), f)
             if s_name in parsed_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
 
@@ -69,9 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
                             }
                         )
                     except ValueError:
-                        log.debug(
-                            f"Could not parse alignment metrics for {s_name} ({contig_id})"
-                        )
+                        log.debug(f"Could not parse alignment metrics for {s_name} ({contig_id})")
 
             if sample_counts:
                 parsed_data[s_name] = dict(sample_counts)
@@ -90,18 +86,12 @@ class MultiqcModule(BaseMultiqcModule):
 
         valid_samples = set(parsed_data.keys())
         for gene in list(scatter_data.keys()):
-            scatter_data[gene] = [
-                pt
-                for pt in scatter_data[gene]
-                if pt["name"].split(": ")[0] in valid_samples
-            ]
+            scatter_data[gene] = [pt for pt in scatter_data[gene] if pt["name"].split(": ")[0] in valid_samples]
 
         summary_data: Dict[str, Dict[str, Union[int, float]]] = {}
         for s_name, counts in parsed_data.items():
             total = sum(counts.values())
-            unreoriented = counts.get("Contig_ignored", 0) + counts.get(
-                "No_MMseqs2_hits", 0
-            )
+            unreoriented = counts.get("Contig_ignored", 0) + counts.get("No_MMseqs2_hits", 0)
             reoriented = total - unreoriented
             summary_data[s_name] = {
                 "reoriented_contigs": reoriented,
@@ -116,9 +106,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(summary_data, "multiqc_dnaapler")
 
-    def add_general_stats(
-        self, summary_data: Dict[str, Dict[str, Union[int, float]]]
-    ) -> None:
+    def add_general_stats(self, summary_data: Dict[str, Dict[str, Union[int, float]]]) -> None:
         headers: Dict[str, Dict[str, Any]] = {
             "reoriented_contigs": {
                 "title": "Reoriented",
@@ -140,9 +128,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         self.general_stats_addcols(summary_data, headers)
 
-    def add_reorientation_barplot(
-        self, parsed_data: Dict[str, Dict[str, int]]
-    ) -> None:
+    def add_reorientation_barplot(self, parsed_data: Dict[str, Dict[str, int]]) -> None:
         known_cats: Dict[str, Dict[str, str]] = {
             "dnaA": {"name": "dnaA (chromosome)", "color": "#1f78b4"},
             "repA": {"name": "repA (plasmid)", "color": "#33a02c"},
@@ -156,9 +142,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         all_keys = {k for counts in parsed_data.values() for k in counts}
-        cats: Dict[str, Dict[str, str]] = {
-            k: v for k, v in known_cats.items() if k in all_keys
-        }
+        cats: Dict[str, Dict[str, str]] = {k: v for k, v in known_cats.items() if k in all_keys}
         for k in sorted(all_keys - set(known_cats.keys())):
             cats[k] = {"name": k}
 
@@ -174,9 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
             plot=bargraph.plot(parsed_data, cats, pconfig=pconfig),
         )
 
-    def add_alignment_scatter(
-        self, scatter_data: Dict[str, List[Dict[str, Any]]]
-    ) -> None:
+    def add_alignment_scatter(self, scatter_data: Dict[str, List[Dict[str, Any]]]) -> None:
         pconfig: Dict[str, Any] = {
             "id": "dnaapler_alignment_quality",
             "title": "dnaapler: Start-Gene Hit Alignment Quality",
