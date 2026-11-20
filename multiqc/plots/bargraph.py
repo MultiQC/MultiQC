@@ -1,5 +1,8 @@
 """MultiQC functions to plot a bargraph"""
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["numpy", "polars", "natsort"]
+
 import copy
 import json
 import logging

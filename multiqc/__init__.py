@@ -7,6 +7,9 @@ Makes the following available under the main multiqc namespace:
 - __version__
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["multiqc", "multiqc.base_module", "multiqc.interactive", "multiqc.multiqc", "multiqc.plots.plot"]
+
 import sys
 import warnings
 
@@ -21,7 +24,9 @@ if sys.version_info < tuple(map(int, OLDEST_SUPPORTED_PYTHON_VERSION.split("."))
         "things will break."
     )
 
-# Load config and report before anything else:
+# Load config and report before anything else. On Python 3.15+ everything except
+# config is deferred until first accessed (see __lazy_modules__ above), which keeps
+# `import multiqc` and `multiqc --version` fast.
 from multiqc import (
     config,
     report,

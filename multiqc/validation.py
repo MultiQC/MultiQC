@@ -2,6 +2,9 @@
 Better validation of configs. Build on top of Pydantic, but prints more helpful error messages.
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["PIL"]
+
 import inspect
 import logging
 import re

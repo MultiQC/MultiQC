@@ -4,6 +4,9 @@ This replaces the individual plot parquet files with a single file that contains
 It also stores all report metadata (modules, data sources, configs) to make reports fully reproducible.
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars"]
+
 import json
 import logging
 import os
