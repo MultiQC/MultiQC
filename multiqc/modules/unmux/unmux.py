@@ -1,6 +1,7 @@
 import logging
+import re
 from collections import Counter
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, cast
 
 from multiqc import config
@@ -94,6 +95,28 @@ class MultiqcModule(BaseMultiqcModule):
     unmux_config:
       general_stats_group_by_pool: false
     ```
+
+    #### Unassigned reasons
+
+    The Unassigned Reasons plot names each tag group as unmux does. To give the groups plainer names in the plot
+    and the table, map each group to a label:
+
+    ```yaml
+    unmux_config:
+      group_labels:
+        bc1: "Round 1"
+        bc2: "Round 2"
+    ```
+
+    The Demultiplexing Metrics table has one column per unassigned reason, on pool rows only, such as
+    `% Unassigned: Round 1: too few matches`. The reason with the most reads over all pools is visible and the
+    others are hidden. To show another, use its column ID, which is built from the unmux names, not the labels:
+
+    ```yaml
+    table_columns_visible:
+      unmux_metrics_table:
+        unassigned_bc2_min_finds_per_group: true
+    ```
     """
 
     def __init__(self):
@@ -111,6 +134,10 @@ class MultiqcModule(BaseMultiqcModule):
         self.files_by_row: dict[int, LoadedFileDict[str]] = {}
         per_sample = dict(sorted(self.parse_per_sample().items()))
         unassigned = dict(sorted(self.parse_unassigned().items()))
+        self.group_labels: dict[str, str] = {
+            str(group): str(label)
+            for group, label in ((getattr(config, "unmux_config", None) or {}).get("group_labels") or {}).items()
+        }
         if not summaries and not per_sample and not unassigned:
             raise ModuleNoSamplesFound
         samples = name_samples(
@@ -132,7 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.add_unassigned_section(unassigned)
         if any(samples.values()):
             self.add_reads_per_sample_section(summaries, samples)
-        self.add_metrics_section(summaries, samples)
+        self.add_metrics_section(summaries, samples, unassigned)
 
         if summaries:
             self.write_data_file(summaries, "multiqc_unmux_summary")
@@ -143,7 +170,10 @@ class MultiqcModule(BaseMultiqcModule):
             )
         if unassigned:
             self.write_data_file(
-                {pool: {reason_label(d): d["reads"] for d in rows} for pool, rows in unassigned.items()},
+                {
+                    pool: {reason_label(d, self.group_labels): d["reads"] for d in rows}
+                    for pool, rows in unassigned.items()
+                },
                 "multiqc_unmux_unassigned",
             )
 
@@ -296,7 +326,7 @@ class MultiqcModule(BaseMultiqcModule):
         for pool, rows in unassigned.items():
             total = sum(number(d["reads"]) for d in rows)
             for d in rows:
-                label = reason_label(d)
+                label = reason_label(d, self.group_labels)
                 cats.setdefault(label, {"name": label})
                 reads.setdefault(pool, {})[label] = number(d["reads"])
                 if total > 0:
@@ -407,13 +437,26 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def add_metrics_section(self, summaries: dict[str, Metrics], samples: dict[str, dict[str, Metrics]]) -> None:
+    def add_metrics_section(
+        self,
+        summaries: dict[str, Metrics],
+        samples: dict[str, dict[str, Metrics]],
+        unassigned: dict[str, list[Metrics]],
+    ) -> None:
         rows_by_group: dict[str | SampleGroup, list[InputRow]] = {}
         extra_columns: dict[str, None] = {}
+        reason_labels: dict[str, str] = {}
+        reason_reads: dict[str, float] = {}
         for pool in [*summaries, *(p for p in samples if p not in summaries)]:
             by_name = samples.get(pool, {})
             pool_unextracted = (summaries.get(pool) or {}).get("frac_bases_unextracted")
-            rows = [InputRow(sample=SampleName(pool), data=pool_row(summaries.get(pool), list(by_name.values())))]
+            pool_data = pool_row(summaries.get(pool), list(by_name.values()))
+            for d in unassigned.get(pool, []):
+                key = reason_key(d)
+                reason_labels.setdefault(key, reason_label(d, self.group_labels))
+                reason_reads[key] = reason_reads.get(key, 0.0) + number(d["reads"])
+                pool_data[key] = number(d["frac_of_pool"])
+            rows = [InputRow(sample=SampleName(pool), data=pool_data)]
             for s_name, d in by_name.items():
                 extras = {k: v for k, v in d.items() if k not in PER_SAMPLE_COLUMNS and v is not None}
                 extra_columns.update(dict.fromkeys(extras))
@@ -500,6 +543,25 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": True,
             },
         }
+        leading = max(reason_reads, key=lambda key: reason_reads[key]) if reason_reads else None
+        reason_headers = {
+            key: {
+                "title": f"% Unassigned: {label}",
+                "description": f"Unassigned reads counted as '{label}', as a share of the pool. Shown on pool rows",
+                "min": 0,
+                "max": 100,
+                "suffix": "%",
+                "scale": "OrRd",
+                "modify": lambda x: x * 100.0,
+                "hidden": key != leading,
+            }
+            for key, label in sorted(reason_labels.items(), key=lambda item: label_rank(item[1]))
+        }
+        headers = {
+            k: v
+            for col, header in headers.items()
+            for k, v in [(col, header), *(reason_headers.items() if col == "frac_unassigned" else [])]
+        }
         for col in extra_columns:
             headers[col] = {"title": col, "description": f"{col}, as written by unmux", "hidden": True}
 
@@ -510,7 +572,9 @@ class MultiqcModule(BaseMultiqcModule):
             helptext="""
             Click a pool row to show its samples. Sample rows share the read columns of the pool row: a pool row's
             _Reads_ and _% of Pool_ are the sums over its samples, or over its passed through reads when the run
-            had no samples. _Pool Reads_, _% Unassigned_ and _% Removed_ belong to the pool only.
+            had no samples. _Pool Reads_, _% Unassigned_ and _% Removed_ belong to the pool only, as do the
+            _% Unassigned_ columns for each reason, of which only the reason with the most reads is shown by
+            default.
 
             _% Unextracted_ is the share of bases left out of every `--template` and `--tag` output, such as
             barcodes, linkers and adapters. It is 0 when reads are written out whole. Set by the read layout, it
@@ -530,7 +594,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def reason_label(d: Metrics) -> str:
+def reason_label(d: Metrics, group_labels: Mapping[str, str] | None = None) -> str:
     """A category name for an unassigned reason, such as `round1: too few matches` or `No sample`."""
     reason = str(d["reason"])
     if reason == "no_sample":
@@ -538,7 +602,16 @@ def reason_label(d: Metrics) -> str:
     if reason == "missing_stream":
         return f"{d.get('stream') or '?'}: stream missing"
     label = REASONS.get(reason, reason)
-    return f"{d['group']}: {label}" if d.get("group") else label
+    if not d.get("group"):
+        return label
+    group = str(d["group"])
+    return f"{(group_labels or {}).get(group, group)}: {label}"
+
+
+def reason_key(d: Metrics) -> str:
+    """A column ID for an unassigned reason from unmux's own names, such as `unassigned_bc1_min_finds_per_group`."""
+    parts = [d.get("group") or d.get("stream") or "", d["reason"]]
+    return "unassigned_" + re.sub(r"\W+", "_", "_".join(str(p) for p in parts if p))
 
 
 def label_rank(label: str) -> int:

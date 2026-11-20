@@ -381,3 +381,43 @@ def test_unassigned_header_only_file_adds_no_section(run_unmux, test_data_dir):
 
     assert "multiqc_unmux_unassigned" not in (module.saved_raw_data or {})
     assert "unmux_unassigned" not in report.plot_by_id
+
+
+def table_columns() -> dict[str, Any]:
+    plot: Any = report.plot_by_id[Anchor("unmux_metrics_table")]
+    return {
+        str(k): c for section in plot.datasets[0].dt.section_by_id.values() for k, c in section.column_by_key.items()
+    }
+
+
+def test_group_labels_rename_groups_in_the_plot_and_table(all_pools):
+    config.unmux_config = {"group_labels": {"round1": "Round 1", "linker": "Linker"}}
+    module = all_pools()
+
+    assert saved(module, "multiqc_unmux_unassigned")["run5"]["Round 1: too few matches"] == 148
+    assert bar_values("unmux_unassigned", 1, "run6")["Linker: too few matches"] == 333
+    assert bar_values("unmux_unassigned", 1, "run6")["round2: too few matches"] == 398
+    assert table_columns()["unassigned_round1_min_finds_per_group"].title == "% Unassigned: Round 1: too few matches"
+
+
+def test_pool_rows_carry_each_unassigned_reason_and_show_the_leading_one(all_pools):
+    all_pools()
+
+    pool, *samples = table_rows("run6")
+    assert raw(pool, "unassigned_round2_min_finds_per_group") == pytest.approx(0.0995)
+    assert raw(pool, "unassigned_no_sample") == pytest.approx(0.0055)
+    assert not any(ColumnKey("unassigned_no_sample") in row.data for row in samples)
+    assert ColumnKey("unassigned_no_sample") not in table_rows("run1")[0].data
+
+    columns = table_columns()
+    # Over run5 and run6, round 2 fails 520 reads, more than any other reason.
+    assert not columns["unassigned_round2_min_finds_per_group"].hidden
+    assert columns["unassigned_linker_min_finds_per_group"].hidden
+    assert columns["unassigned_no_sample"].hidden
+
+
+def test_another_reason_column_can_be_shown_by_its_id(all_pools):
+    config.table_columns_visible = {"unmux_metrics_table": {"unassigned_round1_min_finds_per_group": True}}
+    all_pools()
+
+    assert not table_columns()["unassigned_round1_min_finds_per_group"].hidden
