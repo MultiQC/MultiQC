@@ -1,5 +1,8 @@
 """Core MultiQC module to parse output from custom script output"""
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["markdown", "natsort"]
+
 import base64
 import json
 import logging

@@ -2,6 +2,9 @@
 MultiQC datatable class, used by tables and violin plots
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["natsort"]
+
 import logging
 import math
 import re

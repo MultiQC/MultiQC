@@ -4,6 +4,18 @@ Primarily called by multiqc.__main__.py
 Imported by __init__.py so available as multiqc.run()
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = [
+    "multiqc",
+    "multiqc.core.exec_modules",
+    "multiqc.core.file_search",
+    "multiqc.core.order_modules_and_sections",
+    "multiqc.core.update_config",
+    "multiqc.core.version_check",
+    "multiqc.core.write_results",
+    "multiqc.validation",
+]
+
 import logging
 import os
 import subprocess
