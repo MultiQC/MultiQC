@@ -1,9 +1,10 @@
 """Tests for the unmux module.
 
-Most tests run on `data/modules/unmux` in MultiQC/test-data: unmux 0.4.0 metrics from simulated reads for four
-pools. Pool run1 has samples with sub-samples and removed reads. Pool run2.fq takes unmux's default names with
-no sample sheet, and MultiQC trims it to run2. Pool run3 passes every read through and writes an empty
-per-sample file, and run4 has ten samples of uneven depth. Edge cases use small inline files.
+Most tests run on `data/modules/unmux` in MultiQC/test-data: unmux metrics from simulated reads for six pools.
+Pool run1 has samples with sub-samples and removed reads. Pool run2.fq takes unmux's default names with no
+sample sheet, and MultiQC trims it to run2. Pool run3 passes every read through and writes an empty per-sample
+file, and run4 has ten samples of uneven depth. Pools run5 and run6 have three barcode rounds and a linker, and
+add the unassigned reasons file. Edge cases use small inline files.
 """
 
 import shutil
@@ -24,6 +25,7 @@ SUMMARY_HEADER = (
     "pool\ttotal_reads\treads_assigned\treads_pass_through\treads_unassigned\treads_removed\tfrac_assigned"
     "\tfrac_bases_unextracted\tmean_read_len_by_input\n"
 )
+UNASSIGNED_HEADER = "pool\treason\tgroup\tstream\treads\tfrac_of_pool\n"
 
 
 @pytest.fixture
@@ -99,8 +101,9 @@ def test_no_files_raises(run_unmux):
 def test_every_pool_and_sample_is_found(all_pools):
     module = all_pools()
 
-    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4"}
-    assert len(saved(module, "multiqc_unmux_per_sample")) == 17
+    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4", "run5", "run6"}
+    assert len(saved(module, "multiqc_unmux_per_sample")) == 25
+    assert set(saved(module, "multiqc_unmux_unassigned")) == {"run5", "run6"}
 
 
 def test_files_are_found_by_header_not_name(run_unmux, test_data_dir):
@@ -245,11 +248,13 @@ def test_concatenated_files_hold_several_pools(run_unmux, test_data_dir):
         {
             "all.summary.tsv": "".join(p.read_text() for p in sorted(test_data_dir.glob("*.summary.tsv"))),
             "all.per_sample.tsv": "".join(p.read_text() for p in sorted(test_data_dir.glob("*.per_sample.tsv"))),
+            "all.unassigned.tsv": "".join(p.read_text() for p in sorted(test_data_dir.glob("*.unassigned.tsv"))),
         }
     )
 
-    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4"}
-    assert len(saved(module, "multiqc_unmux_per_sample")) == 17
+    assert set(saved(module, "multiqc_unmux_summary")) == {"run1", "run2", "run3", "run4", "run5", "run6"}
+    assert len(saved(module, "multiqc_unmux_per_sample")) == 25
+    assert set(saved(module, "multiqc_unmux_unassigned")) == {"run5", "run6"}
 
 
 def test_a_name_shared_by_two_pools_gets_the_pool_in_front(run_unmux):
@@ -301,8 +306,78 @@ def test_ignored_pools_and_samples_are_dropped(all_pools):
         SUMMARY_HEADER + "poolZ\t1\t2\n",
         SUMMARY_HEADER + "poolZ\t\t0\t0\t0\t0\t0\t0\t\n",
         PER_SAMPLE_HEADER + "poolZ\tS1\t\tmany\t0.5\t0\n",
+        UNASSIGNED_HEADER + "poolZ\tno_sample\t\t\tmany\t0.5\n",
     ],
 )
 def test_malformed_files_fail_loudly(run_unmux, content):
     with pytest.raises(ValueError, match="unmux: bad.tsv"):
         run_unmux({"bad.tsv": content})
+
+
+def test_unassigned_reasons_are_labeled_by_group(all_pools):
+    module = all_pools()
+
+    assert saved(module, "multiqc_unmux_unassigned")["run5"] == {
+        "round1: too few matches": 148,
+        "linker: too few matches": 111,
+        "round2: too few matches": 122,
+        "round3: too few matches": 55,
+        "round3: too many matches": 55,
+        "No sample": 84,
+    }
+
+
+def test_unassigned_reasons_add_up_to_the_unassigned_reads(all_pools):
+    module = all_pools()
+
+    for pool in ("run5", "run6"):
+        reasons = bar_values("unmux_unassigned", 1, pool)
+        assert sum(reasons.values()) == saved(module, "multiqc_unmux_summary")[pool]["reads_unassigned"]
+        assert sum(bar_values("unmux_unassigned", 0, pool).values()) == pytest.approx(100.0)
+    assert bar_values("unmux_unassigned", 2, "run6")["round2: too few matches"] == pytest.approx(9.95)
+
+
+def test_unassigned_reasons_keep_group_order_and_put_no_sample_last(run_unmux):
+    run_unmux(
+        {
+            "u.tsv": UNASSIGNED_HEADER
+            + "poolX\tmax_finds_per_tag\tbc2\t\t3\t0.03\n"
+            + "poolX\tmissing_stream\t\tumi\t2\t0.02\n"
+            + "poolX\tno_sample\t\t\t4\t0.04\n",
+            "v.tsv": UNASSIGNED_HEADER
+            + "poolY\tno_sample\t\t\t1\t0.01\n"
+            + "poolY\tmin_finds_per_group\tbc1\t\t5\t0.05\n",
+        }
+    )
+
+    plot: Any = report.plot_by_id[Anchor("unmux_unassigned")]
+    assert [cat.name for cat in plot.datasets[0].cats] == [
+        "bc2: a tag found too many times",
+        "bc1: too few matches",
+        "umi: stream missing",
+        "No sample",
+    ]
+    assert bar_values("unmux_unassigned", 1, "poolX") == {
+        "bc2: a tag found too many times": 3,
+        "umi: stream missing": 2,
+        "No sample": 4,
+    }
+
+
+def test_unassigned_file_alone_still_reports(run_unmux):
+    module = run_unmux({"u.tsv": UNASSIGNED_HEADER + "poolX\tno_sample\t\t\t4\t0.04\n"})
+
+    assert set(saved(module, "multiqc_unmux_unassigned")) == {"poolX"}
+    assert "unmux_unassigned" in report.plot_by_id
+
+
+def test_unassigned_header_only_file_adds_no_section(run_unmux, test_data_dir):
+    module = run_unmux(
+        {
+            "s.tsv": (test_data_dir / "run1.unmux.summary.tsv").read_text(),
+            "u.tsv": UNASSIGNED_HEADER,
+        }
+    )
+
+    assert "multiqc_unmux_unassigned" not in (module.saved_raw_data or {})
+    assert "unmux_unassigned" not in report.plot_by_id

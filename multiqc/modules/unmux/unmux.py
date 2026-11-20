@@ -14,12 +14,20 @@ log = logging.getLogger(__name__)
 Value = int | float | str | None
 Metrics = dict[str, Value]
 
-TEXT_COLUMNS = ("pool", "sample", "sub_sample", "mean_read_len_by_input")
+TEXT_COLUMNS = ("pool", "sample", "sub_sample", "mean_read_len_by_input", "reason", "group", "stream")
 SUMMARY_COUNTS = ("total_reads", "reads_assigned", "reads_pass_through", "reads_unassigned", "reads_removed")
 PER_SAMPLE_COLUMNS = ("pool", "sample", "sub_sample", "reads", "frac_of_pool", "frac_bases_unextracted")
 SUMMARY_COLUMNS = (*SUMMARY_COUNTS, "frac_assigned", "frac_bases_unextracted", "mean_read_len_by_input")
 # Half of the 0.1% the table shows, so a sample's unextracted share is shown only where it visibly differs.
 UNEXTRACTED_TOLERANCE = 0.0005
+
+REASONS = {
+    "min_finds_per_group": "too few matches",
+    "max_finds_per_group": "too many matches",
+    "min_finds_per_tag": "a tag found too few times",
+    "max_finds_per_tag": "a tag found too many times",
+}
+NO_SAMPLE_COLOR = "#999999"
 
 OUTCOME_CATS = {
     "reads_assigned": {"name": "Assigned", "color": "#437bb1"},
@@ -36,13 +44,15 @@ class MultiqcModule(BaseMultiqcModule):
     group `LB`). A run with no samples passes every record through, and `--remove` rules drop records that match
     a tag.
 
-    The module reads the two metrics files unmux writes when asked, recognising each by its header, so any file
+    The module reads the three metrics files unmux writes when asked, recognising each by its header, so any file
     name works:
 
     - The `--metrics-summary` file: one row per pool, counting reads that were assigned to a sample, passed
       through, left unassigned or removed.
     - The `--metrics-per-sample` file: one row per sample, or per sub-sample, with its reads and its share of
       the pool.
+    - The `--metrics-unassigned` file: one row per reason the pool's unassigned reads matched no sample, such
+      as a tag group with too few matches.
 
     Files from many runs can be given together, and a file may hold the rows of several pools, for example when
     the files of several runs are concatenated. A pass-through run writes an empty per-sample file, which is fine.
@@ -52,7 +62,8 @@ class MultiqcModule(BaseMultiqcModule):
     ```bash
     unmux r1.fq r2.fq --pool pool1 --group bc=barcodes.tsv --sample-from-group bc --out %sample.bam \\
       --metrics-per-sample %pool.unmux.per_sample.tsv \\
-      --metrics-summary %pool.unmux.summary.tsv
+      --metrics-summary %pool.unmux.summary.tsv \\
+      --metrics-unassigned %pool.unmux.unassigned.tsv
     ```
 
     #### Sample names
@@ -99,7 +110,8 @@ class MultiqcModule(BaseMultiqcModule):
         summaries = dict(sorted(self.parse_summaries().items()))
         self.files_by_row: dict[int, LoadedFileDict[str]] = {}
         per_sample = dict(sorted(self.parse_per_sample().items()))
-        if not summaries and not per_sample:
+        unassigned = dict(sorted(self.parse_unassigned().items()))
+        if not summaries and not per_sample and not unassigned:
             raise ModuleNoSamplesFound
         samples = name_samples(
             per_sample, set(summaries), clean=lambda name, d: self.clean_s_name(name, self.files_by_row[id(d)])
@@ -116,6 +128,8 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_general_stats(summaries, samples)
         if summaries:
             self.add_outcomes_section(summaries)
+        if any(unassigned.values()):
+            self.add_unassigned_section(unassigned)
         if any(samples.values()):
             self.add_reads_per_sample_section(summaries, samples)
         self.add_metrics_section(summaries, samples)
@@ -126,6 +140,11 @@ class MultiqcModule(BaseMultiqcModule):
             self.write_data_file(
                 {s_name: d for by_name in samples.values() for s_name, d in by_name.items()},
                 "multiqc_unmux_per_sample",
+            )
+        if unassigned:
+            self.write_data_file(
+                {pool: {reason_label(d): d["reads"] for d in rows} for pool, rows in unassigned.items()},
+                "multiqc_unmux_unassigned",
             )
 
     def pool_name(self, f: LoadedFileDict[str], row: dict[str, str]) -> str:
@@ -168,6 +187,25 @@ class MultiqcModule(BaseMultiqcModule):
                 self.files_by_row[id(d)] = f
                 data.setdefault(pool, []).append(d)
                 self.add_data_source(f, pool, section="per_sample")
+                self.add_software_version(None, pool)
+        return data
+
+    def parse_unassigned(self) -> dict[str, list[Metrics]]:
+        data: dict[str, list[Metrics]] = {}
+        seen: dict[str, str] = {}
+        for f in self.find_log_files("unmux/unassigned"):
+            for row in read_rows(f):
+                pool = self.pool_name(f, row)
+                if self.is_ignore_sample(pool):
+                    continue
+                if seen.setdefault(pool, f["fn"]) != f["fn"]:
+                    log.debug(f"Duplicate pool found in {f['fn']}! Overwriting: {pool}")
+                    data[pool] = []
+                    seen[pool] = f["fn"]
+                d = {col: to_value(col, val) for col, val in row.items() if col != "pool"}
+                require_counts(f, d, ("reads",))
+                data.setdefault(pool, []).append(d)
+                self.add_data_source(f, pool, section="unassigned")
                 self.add_software_version(None, pool)
         return data
 
@@ -246,6 +284,68 @@ class MultiqcModule(BaseMultiqcModule):
                     "ylab": "Reads",
                     "cpswitch_counts_label": "Number of Reads",
                     "cpswitch_c_active": False,
+                },
+            ),
+        )
+
+    def add_unassigned_section(self, unassigned: dict[str, list[Metrics]]) -> None:
+        reads: dict[str, dict[str, float]] = {}
+        of_unassigned: dict[str, dict[str, float]] = {}
+        of_pool: dict[str, dict[str, float]] = {}
+        cats: dict[str, dict[str, str]] = {}
+        for pool, rows in unassigned.items():
+            total = sum(number(d["reads"]) for d in rows)
+            for d in rows:
+                label = reason_label(d)
+                cats.setdefault(label, {"name": label})
+                reads.setdefault(pool, {})[label] = number(d["reads"])
+                if total > 0:
+                    of_unassigned.setdefault(pool, {})[label] = number(d["reads"]) / total * 100.0
+                of_pool.setdefault(pool, {})[label] = number(d["frac_of_pool"]) * 100.0
+        # Groups first, in the order unmux matched them, then missing streams, then reads no sample claimed.
+        cats = dict(sorted(cats.items(), key=lambda item: label_rank(item[0])))
+        if "No sample" in cats:
+            cats["No sample"]["color"] = NO_SAMPLE_COLOR
+
+        self.add_section(
+            name="Unassigned Reasons",
+            anchor=f"{self.anchor}-unassigned",
+            description="Why the unassigned reads of each pool matched no sample, by tag group.",
+            helptext="""
+            unmux matches the tag groups of a read in order and stops at the first that fails, so each unassigned
+            read is counted once, under the group that failed it. A group fails when it has:
+
+            * _too few matches_: fewer of its tags matched than `minFindsPerGroup` allows. With
+              `minFindsPerGroup=1` no tag of the group matched within the allowed distance and location.
+            * _too many matches_: more of its tags matched than `maxFindsPerGroup` allows, for example two
+              different barcodes in one window.
+            * _a tag found too few times_ or _too many times_: one tag matched fewer or more times than
+              `minFindsPerTag` or `maxFindsPerTag` allow.
+
+            A read can also pass every group and still be unassigned:
+
+            * _stream missing_: a `--template` stream is built from a group that did not match.
+            * _No sample_: every group matched, but no sample claims the tags it matched, for example a barcode
+              left out of the sample sheet.
+
+            _% of Unassigned_ divides each by the pool's unassigned reads, so a pool's bar adds up to 100%.
+            _% of Pool_ divides each by all reads of the pool. A group that fails more reads in one pool than in
+            the others points to a problem with that part of the read, such as a worn primer or a shifted
+            position.
+            """,
+            plot=bargraph.plot(
+                [of_unassigned, reads, of_pool],
+                [cats, cats, cats],
+                {
+                    "id": f"{self.anchor}_unassigned",
+                    "title": "unmux: Unassigned Reasons",
+                    "ylab": "% of Unassigned",
+                    "cpswitch": False,
+                    "data_labels": [
+                        {"name": "% of Unassigned", "ylab": "% of Unassigned", "ysuffix": "%", "ymax": 100},
+                        {"name": "Reads", "ylab": "Reads"},
+                        {"name": "% of Pool", "ylab": "% of Pool", "ysuffix": "%"},
+                    ],
                 },
             ),
         )
@@ -428,6 +528,24 @@ class MultiqcModule(BaseMultiqcModule):
                 },
             ),
         )
+
+
+def reason_label(d: Metrics) -> str:
+    """A category name for an unassigned reason, such as `round1: too few matches` or `No sample`."""
+    reason = str(d["reason"])
+    if reason == "no_sample":
+        return "No sample"
+    if reason == "missing_stream":
+        return f"{d.get('stream') or '?'}: stream missing"
+    label = REASONS.get(reason, reason)
+    return f"{d['group']}: {label}" if d.get("group") else label
+
+
+def label_rank(label: str) -> int:
+    """Sort missing streams after the groups and reads no sample claimed last, keeping the order seen otherwise."""
+    if label == "No sample":
+        return 2
+    return 1 if label.endswith(": stream missing") else 0
 
 
 def name_samples(
