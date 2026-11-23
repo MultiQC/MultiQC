@@ -1,5 +1,7 @@
 from multiqc import report
 from multiqc.core.special_case_modules.profile_runtime import MultiqcModule
+from multiqc.plots.bargraph import BarPlot
+from multiqc.types import Anchor
 
 
 def test_profile_runtime_bar_plots_use_single_category():
@@ -13,5 +15,7 @@ def test_profile_runtime_bar_plots_use_single_category():
 
     MultiqcModule()
     for plot_id in ("multiqc_runtime_search_patterns_plot", "multiqc_runtime_modules_plot"):
-        plot = report.plot_by_id[plot_id]
+        plot = report.plot_by_id[Anchor(plot_id)]
+        assert isinstance(plot, BarPlot)
         assert len(plot.datasets[0].cats) == 1
+        assert len(plot.datasets[0].samples) == n

@@ -195,7 +195,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def module_times_section(self):
-        """Section with a bar plot showing the time spent on each search pattern"""
+        """Section with a bar plot showing the time spent on each module"""
 
         pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.runtimes.mods:
@@ -229,7 +229,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         pdata: dict[SampleName, dict[CatName, int | float]] = {}
         for key in report.peak_memory_bytes_per_module:
-            pdata[SampleName(key)] = {CatName(key): report.peak_memory_bytes_per_module[key] / 1024 / 1024}
+            pdata[SampleName(key)] = {CatName("Peak memory"): report.peak_memory_bytes_per_module[key] / 1024 / 1024}
         for key in report.diff_memory_bytes_per_module:
             pdata[SampleName(key)][CatName("Memory change")] = report.diff_memory_bytes_per_module[key] / 1024 / 1024
 
