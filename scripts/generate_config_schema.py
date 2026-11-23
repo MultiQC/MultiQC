@@ -11,7 +11,7 @@ from pathlib import Path
 # so this script always reflects local edits, with or without `pip install -e`.
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from multiqc.utils.config_schema import config_to_schema  # noqa: E402
+from multiqc.utils.config_schema import config_to_schema
 
 
 def main():

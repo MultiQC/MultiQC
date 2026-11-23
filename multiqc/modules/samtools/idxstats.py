@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_samtools_idxstats(module):
     """Find Samtools idxstats logs and parse their data"""
 
-    module.samtools_idxstats = dict()
+    module.samtools_idxstats = {}
     for f in module.find_log_files("samtools/idxstats"):
         parsed_data = parse_single_report(f["f"])
         if len(parsed_data) > 0:
@@ -33,14 +32,14 @@ def parse_samtools_idxstats(module):
     module.add_software_version(None)
 
     # Prep the data for the plots
-    keys = list()
-    pdata: Dict = dict()
-    pdata_norm: Dict = dict()
-    pdata_obs_exp: Dict = dict()
-    xy_counts: Dict = dict()
+    keys = []
+    pdata: dict = {}
+    pdata_norm: dict = {}
+    pdata_obs_exp: dict = {}
+    xy_counts: dict = {}
     # Count the total mapped reads for every chromosome
-    chrs_mapped: Dict[str, int] = defaultdict(lambda: 0)
-    sample_mapped: Dict[str, int] = defaultdict(lambda: 0)
+    chrs_mapped: dict[str, int] = defaultdict(lambda: 0)
+    sample_mapped: dict[str, int] = defaultdict(lambda: 0)
     total_mapped = 0
     # Cutoff, can be customised in config
     cutoff = float(getattr(config, "samtools_idxstats_fraction_cutoff", 0.001))
@@ -93,9 +92,9 @@ def parse_samtools_idxstats(module):
     # Ok, one last time. We have the chromosomes that we want to plot,
     # now collect the counts
     for s_name in module.samtools_idxstats:
-        pdata[s_name] = dict()
-        pdata_norm[s_name] = dict()
-        pdata_obs_exp[s_name] = dict()
+        pdata[s_name] = {}
+        pdata_norm[s_name] = {}
+        pdata_obs_exp[s_name] = {}
         genome_size = float(sum([stats[1] for stats in module.samtools_idxstats[s_name].values()]))
         for k in keys:
             try:
@@ -112,8 +111,8 @@ def parse_samtools_idxstats(module):
     # X/Y ratio plot
     if len(xy_counts) > 0:
         xy_keys = {
-            "x": {"name": xchr if xchr else "Chromosome X"},
-            "y": {"name": ychr if ychr else "Chromosome Y"},
+            "x": {"name": xchr or "Chromosome X"},
+            "y": {"name": ychr or "Chromosome Y"},
         }
         module.add_section(
             name="XY counts",
@@ -165,7 +164,7 @@ def parse_samtools_idxstats(module):
 def parse_single_report(f):
     """Parse a samtools idxstats idxstats"""
 
-    parsed_data = dict()
+    parsed_data = {}
     for line in f.splitlines():
         s = line.split("\t")
         try:

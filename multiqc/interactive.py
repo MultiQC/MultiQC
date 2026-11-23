@@ -5,10 +5,8 @@ Python environment, such as Jupyter notebooks.
 
 import logging
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Union
-
-from numpy import isin
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -32,25 +30,25 @@ logger = logging.getLogger("multiqc")
 
 
 def parse_logs(
-    *analysis_dir: Union[str, Path, List[Union[str, Path]]],
-    verbose: Optional[bool] = None,
-    file_list: Optional[bool] = None,
-    prepend_dirs: Optional[bool] = None,
-    dirs_depth: Optional[int] = None,
-    fn_clean_sample_names: Optional[bool] = None,
-    require_logs: Optional[bool] = None,
-    use_filename_as_sample_name: Optional[bool] = None,
-    strict: Optional[bool] = None,
-    quiet: Optional[bool] = None,
-    no_ansi: Optional[bool] = None,
-    profile_runtime: Optional[bool] = None,
-    no_version_check: Optional[bool] = None,
+    *analysis_dir: str | Path | list[str | Path],
+    verbose: bool | None = None,
+    file_list: bool | None = None,
+    prepend_dirs: bool | None = None,
+    dirs_depth: int | None = None,
+    fn_clean_sample_names: bool | None = None,
+    require_logs: bool | None = None,
+    use_filename_as_sample_name: bool | None = None,
+    strict: bool | None = None,
+    quiet: bool | None = None,
+    no_ansi: bool | None = None,
+    profile_runtime: bool | None = None,
+    no_version_check: bool | None = None,
     ignore: Sequence[str] = (),
     ignore_samples: Sequence[str] = (),
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[Union[str, Path]] = (),
-    module_order: Sequence[Union[str, Dict]] = (),
+    config_files: Sequence[str | Path] = (),
+    module_order: Sequence[str | dict] = (),
     extra_fn_clean_exts: Sequence = (),
     extra_fn_clean_trim: Sequence = (),
     preserve_module_raw_data: bool = True,
@@ -107,21 +105,20 @@ def parse_logs(
         logger.warning(e)
 
 
-def list_data_sources() -> List[str]:
+def list_data_sources() -> list[str]:
     """
     Return a list of the data sources that have been loaded.
 
     @return: List of data sources paths from loaded modules
     """
-    file_list = []
-    for mod, sections in report.data_sources.items():
-        for section, sources in sections.items():
-            for sname, source in sources.items():
-                file_list.append(source)
+    file_list: list[str] = []
+    for sections in report.data_sources.values():
+        for sources in sections.values():
+            file_list.extend(sources.values())
     return file_list
 
 
-def list_modules() -> List[str]:
+def list_modules() -> list[str]:
     """
     Return a list of the modules that have been loaded, in order according to config.
 
@@ -130,7 +127,7 @@ def list_modules() -> List[str]:
     return [m.anchor for m in report.modules]
 
 
-def list_samples() -> List[str]:
+def list_samples() -> list[str]:
     """
     Return a list of the samples that have been loaded.
 
@@ -138,36 +135,36 @@ def list_samples() -> List[str]:
     """
     samples = set()
 
-    for _, plot in report.plot_by_id.items():
+    for plot in report.plot_by_id.values():
         if isinstance(plot, Plot):
             for ds in plot.datasets:
                 samples |= set(ds.sample_names())
 
     # Also add samples from report.plot_data
-    for plot_id, plot_dump in report.plot_data.items():
+    for plot_dump in report.plot_data.values():
         if isinstance(plot_dump, dict):
             for ds in plot_dump.get("datasets", []):
                 samples |= set(ds.get("all_samples", []))
 
     # And from general_stats_data
-    for section_key, rows_by_group in report.general_stats_data.items():
-        for s, rows in rows_by_group.items():
+    for rows_by_group in report.general_stats_data.values():
+        for rows in rows_by_group.values():
             for row in rows:
                 samples.add(row.sample)
 
     return sorted(samples)
 
 
-def list_plots() -> Dict:
+def list_plots() -> dict:
     """
     Return plot names that have been loaded, indexed by module and section.
 
     @return: Dict of plot names indexed by module and section
     """
 
-    result: Dict[ModuleId, List] = {}
+    result: dict[ModuleId, list] = {}
     for module in report.modules:
-        result[module.id] = list()
+        result[module.id] = []
         for section in module.sections:
             if not section.plot_anchor:
                 continue
@@ -188,7 +185,7 @@ def list_plots() -> Dict:
 def get_plot(
     module: str,
     section: str,
-) -> Union[Plot, str, None]:
+) -> Plot | str | None:
     """
     Get plot Object by module name and section ID.
 
@@ -209,7 +206,7 @@ def get_plot(
     return report.plot_by_id[sec.plot_anchor]
 
 
-def _load_plot(dump: Dict) -> Plot:
+def _load_plot(dump: dict) -> Plot:
     """
     Load a plot and datasets from a JSON dump.
     """
@@ -231,7 +228,7 @@ def _load_plot(dump: Dict) -> Plot:
         raise ValueError(f"Plot type {plot_type} is unknown or unsupported")
 
 
-def get_general_stats_data(sample: Optional[str] = None) -> Dict:
+def get_general_stats_data(sample: str | None = None) -> dict:
     """
     Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
     return only data for that sample.
@@ -240,7 +237,7 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
     @return: Dict of general stats data indexed by sample and data key
     """
 
-    data: Dict[str, Dict] = defaultdict(dict)
+    data: dict[str, dict] = defaultdict(dict)
     for section_key, rows_by_group in report.general_stats_data.items():
         header = report.general_stats_headers[section_key]
         for s, rows in rows_by_group.items():
@@ -259,10 +256,10 @@ def get_general_stats_data(sample: Optional[str] = None) -> Dict:
 
 
 def get_module_data(
-    module: Optional[str] = None,
-    sample: Optional[str] = None,
-    key: Optional[str] = None,
-) -> Dict:
+    module: str | None = None,
+    sample: str | None = None,
+    key: str | None = None,
+) -> dict:
     """
     Return parsed module data, indexed (if available) by data key, then by sample. Module is either
     the module name, or the anchor.
@@ -285,7 +282,7 @@ def get_module_data(
         if not mod:
             raise ValueError(f'Module "{module}" is not found. Use multiqc.list_modules() to list available modules')
 
-    data_by_module: Dict[str, Dict] = {}
+    data_by_module: dict[str, dict] = {}
     for m in report.modules:
         if module and (m.name.lower() != module and m.anchor != module):
             continue
@@ -295,14 +292,14 @@ def get_module_data(
                 f"`'{m.name}' raw module data is not available - set `parse_logs(preserve_module_raw_data=True)` to preserve it"
             )
 
-        data_by_key: Dict[str, Dict] = m.saved_raw_data
+        data_by_key: dict[str, dict] = m.saved_raw_data
         if sample:
             data_by_key = {data_key: data_by_sample.get(sample, {}) for data_key, data_by_sample in data_by_key.items()}
         if key:
             if module and key not in m.saved_raw_data:
                 raise ValueError(f"Key '{key}' is not found in module '{module}'")
         elif len(data_by_key) == 1:  # only one key, flatten
-            data_by_key = data_by_key[list(data_by_key.keys())[0]]
+            data_by_key = data_by_key[next(iter(data_by_key.keys()))]
 
         data_by_module[m.anchor] = data_by_key
 
@@ -328,7 +325,7 @@ def add_custom_content_section(
     anchor,
     description="",
     content_before_plot="",
-    plot: Optional[Union[Plot, str]] = None,
+    plot: Plot | str | None = None,
     content="",
     comment="",
     helptext="",
@@ -366,37 +363,37 @@ def add_custom_content_section(
 
 
 def write_report(
-    title: Optional[str] = None,
-    report_comment: Optional[str] = None,
-    template: Optional[str] = None,
-    output_dir: Optional[Union[str, Path]] = None,
-    filename: Optional[str] = None,
-    make_data_dir: Optional[bool] = None,
-    data_format: Optional[str] = None,
-    zip_data_dir: Optional[bool] = None,
-    force: Optional[bool] = None,
-    overwrite: Optional[bool] = None,
-    make_report: Optional[bool] = None,
-    export_plots: Optional[bool] = None,
-    plots_force_flat: Optional[bool] = None,
-    plots_force_interactive: Optional[bool] = None,
-    strict: Optional[bool] = None,
-    development: Optional[bool] = None,
-    make_pdf: Optional[bool] = None,
-    no_megaqc_upload: Optional[bool] = None,
-    quiet: Optional[bool] = None,
-    verbose: Optional[bool] = None,
-    no_ansi: Optional[bool] = None,
-    profile_runtime: Optional[bool] = None,
-    no_version_check: Optional[bool] = None,
+    title: str | None = None,
+    report_comment: str | None = None,
+    template: str | None = None,
+    output_dir: str | Path | None = None,
+    filename: str | None = None,
+    make_data_dir: bool | None = None,
+    data_format: str | None = None,
+    zip_data_dir: bool | None = None,
+    force: bool | None = None,
+    overwrite: bool | None = None,
+    make_report: bool | None = None,
+    export_plots: bool | None = None,
+    plots_force_flat: bool | None = None,
+    plots_force_interactive: bool | None = None,
+    strict: bool | None = None,
+    development: bool | None = None,
+    make_pdf: bool | None = None,
+    no_megaqc_upload: bool | None = None,
+    quiet: bool | None = None,
+    verbose: bool | None = None,
+    no_ansi: bool | None = None,
+    profile_runtime: bool | None = None,
+    no_version_check: bool | None = None,
     run_modules: Sequence[str] = (),
     exclude_modules: Sequence[str] = (),
-    config_files: Sequence[Union[str, Path]] = (),
+    config_files: Sequence[str | Path] = (),
     custom_css_files: Sequence[str] = (),
-    module_order: Sequence[Union[str, Dict]] = (),
+    module_order: Sequence[str | dict] = (),
     clean_up=True,
     return_html: bool = False,
-) -> Optional[str]:
+) -> str | None:
     """
     Render HTML from parsed module data, and write a report and data files to disk.
 
@@ -466,7 +463,7 @@ def write_report(
     return html_content if return_html else None
 
 
-def load_config(config_file: Union[str, Path]):
+def load_config(config_file: str | Path):
     """
     Load config on top of the current config from a MultiQC config file.
 

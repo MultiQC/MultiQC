@@ -1,7 +1,6 @@
 import logging
 import os
 import re
-from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -30,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Kallisto reports
-        kallisto_data: Dict = dict()
+        kallisto_data: dict = {}
         for f in self.find_log_files("kallisto", filehandles=True):
             self.parse_kallisto_log(f, kallisto_data)
 
@@ -55,11 +54,11 @@ class MultiqcModule(BaseMultiqcModule):
         # Alignment Rate Plot
         self.add_section(plot=self.kallisto_alignment_plot(kallisto_data))
 
-    def parse_kallisto_log(self, f, kallisto_data: Dict):
-        s_name: Optional[str] = None
-        total_reads: Optional[float] = None
-        pseudo_aligned_reads: Optional[float] = None
-        frag_length: Optional[float] = None
+    def parse_kallisto_log(self, f, kallisto_data: dict):
+        s_name: str | None = None
+        total_reads: float | None = None
+        pseudo_aligned_reads: float | None = None
+        frag_length: float | None = None
         for line in f["f"]:
             # Get input filename
             m = re.search(r"\[quant\] will process (pair|file|sample) 1: (\S+)", line)

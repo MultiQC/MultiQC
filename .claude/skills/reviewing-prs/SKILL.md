@@ -64,7 +64,7 @@ Always cite the file and line: `multiqc/modules/foo/foo.py:123`.
 The rules to check the diff against live in the existing skill files — do not
 duplicate them here. Load whichever apply to the change type:
 
-- **All MultiQC code** → [../../../CLAUDE.md](../../../CLAUDE.md) (style, em-dash
+- **All MultiQC code** → [../../../AGENTS.md](../../../AGENTS.md) (style, em-dash
   ban, crash-loudly, helper-vs-inline, mandatory module rules).
 - **New module / module change** → [../implementing-new-modules/SKILL.md](../implementing-new-modules/SKILL.md)
   "Common Pitfalls" section is the primary review checklist. Also load
