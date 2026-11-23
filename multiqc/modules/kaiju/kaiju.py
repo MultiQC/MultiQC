@@ -40,26 +40,22 @@ class MultiqcModule(BaseMultiqcModule):
                 # One report can have several samples, raise error if sample already viewed with this taxonomic rank
                 s_names = parsed_data.keys()
                 for s_name in s_names:
-                    if taxo_rank in self.kaiju_data and s_name in self.kaiju_data[taxo_rank].keys():
-                        log.debug(
-                            "Duplicate sample found in logs at {} rank! Overwriting sample: {}".format(
-                                taxo_rank, s_name
-                            )
-                        )
+                    if taxo_rank in self.kaiju_data and s_name in self.kaiju_data[taxo_rank]:
+                        log.debug(f"Duplicate sample found in logs at {taxo_rank} rank! Overwriting sample: {s_name}")
 
                     # Superfluous function call to confirm that it is used in this module
                     # Replace None with actual version if it is available
                     self.add_software_version(None, s_name)
 
                 self.add_data_source(f)
-                if taxo_rank in self.kaiju_data.keys():
+                if taxo_rank in self.kaiju_data:
                     self.kaiju_data[taxo_rank].update(parsed_data)
                 else:
                     self.kaiju_data[taxo_rank] = parsed_data
 
         # Filters to strip out ignored sample names
         all_samples_name = []
-        for taxo_rank in self.kaiju_data.keys():
+        for taxo_rank in self.kaiju_data:
             self.kaiju_data[taxo_rank] = self.ignore_samples(self.kaiju_data[taxo_rank])
             all_samples_name.extend(self.kaiju_data[taxo_rank].keys())
         self.all_s_name = set(all_samples_name)
@@ -76,9 +72,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         log.info(f"Found {num_samples} reports")
 
-        self.kaiju_total_pct = dict()
-        self.kaiju_sample_total_readcounts = dict()
-        self.kaiju_sample_unclassified = dict()
+        self.kaiju_total_pct = {}
+        self.kaiju_sample_total_readcounts = {}
+        self.kaiju_sample_unclassified = {}
 
         self.sum_sample_counts()
         self.kaiju_stats_table()
@@ -92,9 +88,9 @@ class MultiqcModule(BaseMultiqcModule):
         for line in f["f"]:
             if line.startswith("file\t"):
                 continue
-            (s_file, pct, reads, taxon_id, taxon_names) = line.rstrip().split("\t")
+            (s_file, pct, reads, _taxon_id, taxon_names) = line.rstrip().split("\t")
             s_name = self.clean_s_name(s_file, f)
-            if s_name not in parsed_data.keys():
+            if s_name not in parsed_data:
                 parsed_data[s_name] = {"assigned": {}}
 
             if taxon_names.startswith("cannot be assigned") or taxon_names == "unclassified":
@@ -121,7 +117,7 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, samples_values in data.items():
                 # perform sum at first level only
                 if rank_name not in self.kaiju_total_pct:
-                    self.kaiju_total_pct[rank_name] = dict()
+                    self.kaiju_total_pct[rank_name] = {}
                 # If total did not already compute
                 if s_name not in self.kaiju_sample_total_readcounts:
                     first_pass_total = True
@@ -163,9 +159,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
         headers["assigned"] = {
             "title": f"{config.read_count_prefix} Reads assigned",
-            "description": "Number of reads assigned ({})  at {} rank".format(
-                config.read_count_desc, general_taxo_rank
-            ),
+            "description": f"Number of reads assigned ({config.read_count_desc})  at {general_taxo_rank} rank",
             "modify": lambda x: x * config.read_count_multiplier,
             "scale": "Blues",
         }
@@ -177,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             "scale": "OrRd",
         }
         tdata = {}
-        for s_name, d in self.kaiju_sample_total_readcounts.items():
+        for s_name in self.kaiju_sample_total_readcounts:
             tdata[s_name] = {
                 # Default values in case if data is not available for this sample at this rank
                 "assigned": 0,
@@ -233,7 +227,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Pull out counts for this rank + classif from each sample
                 for s_name, d in self.kaiju_data[rank_name].items():
                     if s_name not in rank_data:
-                        rank_data[s_name] = dict()
+                        rank_data[s_name] = {}
                     if s_name not in counts_shown:
                         counts_shown[s_name] = 0
                     if classif in d["assigned"]:

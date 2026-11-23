@@ -1,8 +1,8 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
+
 from .bbmap_filetypes import file_types, section_order
 
 log = logging.getLogger(__name__)
@@ -69,7 +69,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Init data dict
-        self.mod_data: Dict = {key: {} for key in file_types}
+        self.mod_data: dict = {key: {} for key in file_types}
 
         # Find output files
         module_filetypes = [("bbmap/" + ft, ft) for ft in file_types]
@@ -294,10 +294,9 @@ class MultiqcModule(BaseMultiqcModule):
                         kv[line[0]] = line[1]
                 else:
                     # It should be the table header. Verify:
-                    if line != cols:
-                        if line != cols + list(log_descr.get("extracols", {}).keys()):
-                            log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
-                            return False
+                    if line != cols and line != cols + list(log_descr.get("extracols", {}).keys()):
+                        log.error("Table headers do not match those 'on file'. %s != %s", repr(line), repr(cols))
+                        return False
             else:
                 if isinstance(log_descr["cols"], dict):
                     line = [value_type(value) for value_type, value in zip(log_descr["cols"].values(), line)]
@@ -340,10 +339,10 @@ class MultiqcModule(BaseMultiqcModule):
             table_headers[column_header].update(header_options)
 
         tconfig = {"id": file_type + "_bbm_table", "namespace": "BBTools", "title": "BBTools " + file_type}
-        for sample in table_data:
-            for key, value in table_data[sample].items():
+        for sample_data in table_data.values():
+            for key, value in sample_data.items():
                 try:
-                    table_data[sample][key] = float(value)
+                    sample_data[key] = float(value)
                 except ValueError:
                     pass
         return table.plot(table_data, table_headers, tconfig)

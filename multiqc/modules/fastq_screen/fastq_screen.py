@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any FastQ Screen reports
-        self.fq_screen_data = dict()
+        self.fq_screen_data = {}
         self.num_orgs = 0
         for f in self.find_log_files("fastq_screen", filehandles=True):
             parsed_data = self.parse_fqscreen(f)
@@ -73,7 +73,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if version_match:
                     self.add_software_version(version_match.group(1), f["s_name"])
                 continue
-            if line.startswith("%Hit_no_genomes:") or line.startswith("%Hit_no_libraries:"):
+            if line.startswith(("%Hit_no_genomes:", "%Hit_no_libraries:")):
                 nohits_pct = float(line.split(":", 1)[1])
                 parsed_data["No hits"] = {"percentages": {"one_hit_one_library": nohits_pct}}
             else:
@@ -131,9 +131,9 @@ class MultiqcModule(BaseMultiqcModule):
         return parsed_data
 
     def parse_csv(self):
-        totals = dict()
+        totals = {}
         for s in sorted(self.fq_screen_data.keys()):
-            totals[s] = dict()
+            totals[s] = {}
             for org in self.fq_screen_data[s]:
                 if org == "total_reads":
                     totals[s]["total_reads"] = self.fq_screen_data[s][org]
@@ -166,7 +166,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {}
         org_counts = {}
         for s_name in sorted(self.fq_screen_data):
-            data[s_name] = dict()
+            data[s_name] = {}
             sum_alignments = 0
             for org in self.fq_screen_data[s_name]:
                 if org == "total_reads":
@@ -175,9 +175,7 @@ class MultiqcModule(BaseMultiqcModule):
                     data[s_name][org] = self.fq_screen_data[s_name][org]["counts"]["one_hit_one_library"]
                 except KeyError:
                     log.error(
-                        "No counts found for '{}' ('{}'). Could be malformed or very old FastQ Screen results. Skipping sample".format(
-                            org, s_name
-                        )
+                        f"No counts found for '{org}' ('{s_name}'). Could be malformed or very old FastQ Screen results. Skipping sample"
                     )
                     continue
                 try:
@@ -192,7 +190,7 @@ class MultiqcModule(BaseMultiqcModule):
                 data[s_name]["Multiple Genomes"] = self.fq_screen_data[s_name]["total_reads"] - sum_alignments
 
         # Sort the categories by the total read counts
-        cats = dict()
+        cats = {}
         for org in sorted(org_counts, key=org_counts.get, reverse=True):
             if org not in cats and org != "No hits":
                 cats[org] = {"name": org}
@@ -248,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
                     org_counts[org] = 0
                 try:
                     pdata_unsorted[org][s_name] = dd["bisulfite_counts"]
-                    total_counts = sum([c for c in dd["bisulfite_counts"].values()])
+                    total_counts = sum(list(dd["bisulfite_counts"].values()))
                     org_counts[org] += total_counts
                     max_count = max(max_count, total_counts)
                 except (TypeError, KeyError):
@@ -267,7 +265,7 @@ class MultiqcModule(BaseMultiqcModule):
                 pcats.append(cats)
 
         if len(pdata) == 0:
-            return None
+            return
 
         self.add_section(
             name="Bisulfite Reads", anchor="fastq_screen_bisulfite", plot=bargraph.plot(pdata, pcats, pconfig)

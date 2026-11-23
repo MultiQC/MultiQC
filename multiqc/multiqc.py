@@ -10,7 +10,6 @@ import subprocess
 import sys
 import time
 import traceback
-from typing import Optional, Tuple
 
 import rich_click as click
 
@@ -145,7 +144,7 @@ click.rich_click.OPTION_GROUPS = {
 }
 
 
-@click.command(context_settings=dict(help_option_names=["-h", "--help"]))
+@click.command(context_settings={"help_option_names": ["-h", "--help"]})
 @click.argument(
     "analysis_dir",
     type=click.Path(exists=True),
@@ -508,7 +507,7 @@ click.rich_click.OPTION_GROUPS = {
     help="Check a MultiQC configuration file for errors and exit.",
 )
 @click.version_option(config.version, prog_name="multiqc")
-def run_cli(analysis_dir: Tuple[str], clean_up: bool, check_config: bool, **kwargs):
+def run_cli(analysis_dir: tuple[str], clean_up: bool, check_config: bool, **kwargs):
     # Main MultiQC run command for use with the click command line, complete with all click function decorators.
     # To make it easy to use MultiQC within notebooks and other locations that don't need click, we simply pass the
     # parsed variables on to a vanilla python function.
@@ -557,7 +556,7 @@ class RunResult:
     * optionally, the HTML report content if return_html=True was specified
     """
 
-    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: Optional[str] = None):
+    def __init__(self, sys_exit_code: int = 0, message: str = "", html_content: str | None = None):
         self.sys_exit_code = sys_exit_code
         self.message = message
         self.html_content = html_content
@@ -566,7 +565,7 @@ class RunResult:
 def run(
     *analysis_dir,
     clean_up: bool = True,
-    cfg: Optional[ClConfig] = None,
+    cfg: ClConfig | None = None,
     interactive: bool = True,
     return_html: bool = False,
 ) -> RunResult:
@@ -671,13 +670,12 @@ def run(
                 logger.warning(f" - {report.runtimes.total_compression:.2f}s: Compressing report data")
                 logger.info("For more information, see the 'Run Time' section in the report")
 
-        if report.num_flat_plots > 0 and not config.plots_force_flat:
-            if not config.plots_force_interactive:
-                log_and_rich.rich_console_print(
-                    "[blue]|           multiqc[/] | "
-                    "Flat-image plots used. Disable with '--interactive'. "
-                    "See [link=https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots]docs[/link]."
-                )
+        if report.num_flat_plots > 0 and not config.plots_force_flat and not config.plots_force_interactive:
+            log_and_rich.rich_console_print(
+                "[blue]|           multiqc[/] | "
+                "Flat-image plots used. Disable with '--interactive'. "
+                "See [link=https://docs.seqera.io/multiqc/getting_started/config#flat--interactive-plots]docs[/link]."
+            )
 
         sys_exit_code = 0
         if config.strict and len(report.lint_errors) > 0:

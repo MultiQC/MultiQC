@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -40,7 +39,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HISAT2 reports
-        self.hisat2_data: Dict = dict()
+        self.hisat2_data: dict = {}
         for f in self.find_log_files("hisat2", filehandles=True):
             self.parse_hisat2_logs(f)
 
