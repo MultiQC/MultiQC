@@ -391,7 +391,15 @@ class Client:
         if not response.ok:
             message, param = _error_details(response)
             raise ProviderError(response.status_code, message, param)
-        return response.json()
+        try:
+            return response.json()
+        except ValueError as e:
+            redirected = f" after a redirect to {response.url}" if response.history else ""
+            raise ProviderError(
+                response.status_code,
+                f"Expected JSON from {url}, got {response.headers.get('content-type')}{redirected}. "
+                "The endpoint may have moved.",
+            ) from e
 
     def _get(self, url: str, headers: dict[str, str]) -> Any | None:
         """GET JSON for optional lookups. Returns None on any failure."""
@@ -810,8 +818,11 @@ class SeqeraClient(Client):
         }
         url = f"{config.seqera_api_url}/internal-ai/report-summary"
         response = self._send(body, lambda b: self._post(url, {"Authorization": f"Bearer {self.api_key}"}, b))
+        content = response["generation"]
+        if isinstance(content, list):  # content blocks, when the model thinks before answering
+            content = "".join(block["text"] for block in content if block.get("type") == "text")
         return LlmResponse(
-            content=response["generation"],
+            content=content,
             model=response.get("model", self.model),
             thread_id=response.get("thread_id"),
         )
@@ -1469,13 +1480,10 @@ def add_ai_summary_to_report():
             logger.warning(str(e))
             if config.strict:
                 raise
-            response = InterpretationResponse(
-                interpretation=InterpretationOutput(
-                    summary=_model_unavailable_stub(client.model, client.name == "custom" and not uses_custom_client)
-                ),
-                model=client.model,
+            report.ai_global_summary = _model_unavailable_stub(
+                client.model, client.name == "custom" and not uses_custom_client
             )
-            break
+            return
         except Exception as e:
             logger.error(f"Failed to interpret report with {client.title}: {e}")
             if config.strict:

@@ -158,9 +158,9 @@ window.runStreamGeneration = function ({
     if (apiKey) {
       fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
     }
+    // Not streamed: Seqera AI's streamed replies are empty while its model thinks before answering
     fetchOptions.body = JSON.stringify({
       message: title + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
-      stream: true,
       tags: ["multiqc", ...tags],
       title: title,
     });
@@ -175,19 +175,21 @@ window.runStreamGeneration = function ({
             );
           });
         }
-        return response.body.getReader();
+        return response.json();
       })
-      .then((reader) =>
-        decodeStream(
-          providerId,
-          reader,
-          onStreamStart,
-          onStreamNewToken,
-          onStreamError,
-          onStreamComplete,
-          onStreamRestart,
-        ),
-      )
+      .then((data) => {
+        // A list of content blocks when the model thinks before answering
+        const generation = data.generation;
+        const text = Array.isArray(generation)
+          ? generation
+              .filter((block) => block.type === "text")
+              .map((block) => block.text)
+              .join("")
+          : generation;
+        onStreamStart(data.model || modelName || "seqera");
+        if (text) onStreamNewToken(text);
+        onStreamComplete(data.thread_id);
+      })
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });

@@ -735,3 +735,31 @@ def test_custom_client_is_not_offered_to_the_browser():
     ai.add_ai_summary_to_report()
     assert report.ai_provider_id == "custom_client"
     assert report.ai_global_summary.endswith("characters")
+
+
+def test_seqera_answer_as_content_blocks(fake_api):
+    blocks = [{"type": "thinking", "thinking": "...", "signature": "x"}, {"type": "text", "text": "Summary"}]
+    fake_api(FakeResponse(200, {"generation": blocks, "thread_id": "t1"}))
+    response = ai.SeqeraClient("token").interpret_report_short("data")
+    assert response.interpretation.summary == "Summary"
+    assert response.thread_id == "t1"
+
+
+class HtmlResponse(FakeResponse):
+    """What a moved endpoint returns: a web page, after a redirect."""
+
+    def __init__(self):
+        super().__init__(200, None)
+        self.headers = {"content-type": "text/html"}
+        self.url = "https://cloud.seqera.io/?coScientist=open"
+        self.history = [FakeResponse(302, None)]
+
+    def json(self):
+        raise json.JSONDecodeError("Expecting value", "<!doctype html>", 0)
+
+
+def test_non_json_response_names_the_redirect(fake_api):
+    api = fake_api(HtmlResponse())
+    with pytest.raises(ai.ProviderError, match="redirect to https://cloud.seqera.io"):
+        ai.SeqeraClient("token").interpret_report_short("data")
+    assert len(api.requests) == 1

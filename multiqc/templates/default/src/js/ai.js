@@ -317,6 +317,27 @@ async function summarizeWithAi(button) {
   const generate = () => {
     let receievedMarkdown = "";
     let failed = false;
+    const onError = (error) => {
+      if (failed) return;
+      failed = true;
+      let overflow = receievedMarkdown ? null : parseContextOverflow(String(error));
+      if (!overflow && !receievedMarkdown && String(error).includes("HTTP 413"))
+        overflow = { limit: null, actual: null };
+      if (overflow && (isGlobal || sectionAnchor === "general_stats_table")) {
+        if (overflowRetries-- > 0) {
+          const estimatedTokens = countTokens(systemPrompt + content);
+          budget = shrinkBudget(budget, estimatedTokens, overflow, outputTokens(modelName));
+          content = buildContent(budget);
+          button.html(`Retrying with less of the report...`);
+          generate();
+          return;
+        }
+      }
+      showToast("Error generating summary", error, "error");
+      wrapUpResponse(disclaimerDiv, provider.name, modelName);
+      if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
+      disclaimerDiv.hide();
+    };
     window.runStreamGeneration({
       title: title + `, created on ${configCreationDate}`,
       systemPrompt: systemPrompt,
@@ -338,28 +359,9 @@ async function summarizeWithAi(button) {
         receievedMarkdown = "";
         responseDiv.html("");
       },
-      onStreamError: (error) => {
-        if (failed) return;
-        failed = true;
-        let overflow = receievedMarkdown ? null : parseContextOverflow(String(error));
-        if (!overflow && !receievedMarkdown && String(error).includes("HTTP 413"))
-          overflow = { limit: null, actual: null };
-        if (overflow && (isGlobal || sectionAnchor === "general_stats_table")) {
-          if (overflowRetries-- > 0) {
-            const estimatedTokens = countTokens(systemPrompt + content);
-            budget = shrinkBudget(budget, estimatedTokens, overflow, outputTokens(modelName));
-            content = buildContent(budget);
-            button.html(`Retrying with less of the report...`);
-            generate();
-            return;
-          }
-        }
-        showToast("Error generating summary", error, "error");
-        wrapUpResponse(disclaimerDiv, provider.name, modelName);
-        if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
-        disclaimerDiv.hide();
-      },
+      onStreamError: onError,
       onStreamComplete: (threadId) => {
+        if (!receievedMarkdown) return onError("The AI provider returned an empty response");
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {

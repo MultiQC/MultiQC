@@ -3389,7 +3389,7 @@ Base URL used for Seqera Platform links in the report.
 
 #### `seqera_api_url`
 
-**Type**: <code>str</code> (default: `"https://ai.seqera.io/v1/web"`)
+**Type**: <code>str</code> (default: `"https://ai-api.seqera.io/v1/web"`)
 
 Base URL for the Seqera Platform API. Defaults to the public instance.
 

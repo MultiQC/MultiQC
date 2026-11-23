@@ -92,7 +92,7 @@ ai_extended_thinking: false # Turn on extended thinking for Claude models
 ai_thinking_budget_tokens: null # Thinking budget for Claude models older than 4.6
 
 # Development settings:
-seqera_api_url: "https://ai.seqera.io/v1/web"
+seqera_api_url: "https://ai-api.seqera.io/v1/web"
 seqera_website: "https://ai.seqera.io"
 
 plots_force_flat: false
