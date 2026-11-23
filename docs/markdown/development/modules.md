@@ -1094,20 +1094,18 @@ For categorical metrics that can take a value from a predefined set, use one of 
 
 ### Grouping samples
 
-If you have a set of samples that should be grouped together in the report using the [sample grouping configuration option](../reports/customisation.md#sample-grouping), you can include the `group_samples_config` parameter to the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
+If you have a set of samples that should be grouped together in the report using the [sample grouping configuration option](../reports/customisation.md#sample-grouping), you can include the `group_samples_config` parameter to the `self.general_stats_addcols` function. For example:
 
 ```python
 self.general_stats_addcols(
     ...,
     group_samples_config=SampleGroupingConfig(
-        cols_to_sum=[ColumnKey("total_sequences")],
+        cols_to_sum=[ColumnKey("total_reads")],
         cols_to_weighted_average=[
-            (ColumnKey("percent_gc"), ColumnKey("total_sequences")),
-            (ColumnKey("avg_sequence_length"), ColumnKey("total_sequences")),
-            (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
-            (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
+            (ColumnKey("percent_gc"), ColumnKey("total_reads")),
+            (ColumnKey("percent_duplicates"), ColumnKey("total_reads")),
         ],
-        extra_functions=[_summarize_statues],
+        extra_functions=[_summarize_statuses],
     ),
 )
 ```
@@ -1122,20 +1120,19 @@ In this configuration, you can specify how to merge data for each column:
 
 #### Extra functions
 
-The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, FastQC uses it to recalculate the `percent_fails` value:
+The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, a module could use it to recalculate a `percent_fails` value across all samples in a group:
 
 ```python
-def _summarize_statues(merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]):
-    # Add count of fail statuses
-    _num_statuses = 0
-    _num_fails = 0
+def _summarize_statuses(merged_row: InputRow, group_s_names: list[tuple[str | None, SampleName, SampleName]]):
+    num_statuses = 0
+    num_fails = 0
     for _, _, original_sn in group_s_names:
-        for st in self.fastqc_data[original_sn]["statuses"].values():
-            _num_statuses += 1
-            if st == "fail":
-                _num_fails += 1
-    if _num_statuses > 0:
-        merged_row.data[ColumnKey("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
+        for status in self.toolname_data[original_sn]["statuses"].values():
+            num_statuses += 1
+            if status == "fail":
+                num_fails += 1
+    if num_statuses > 0:
+        merged_row.data[ColumnKey("percent_fails")] = (num_fails / num_statuses) * 100.0
 ```
 
 #### Explicit groups

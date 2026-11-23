@@ -537,7 +537,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 ColumnKey("percent_fails"): {
                     "title": "Failed",
-                    "description": "Percentage of modules failed in FastQC report (includes those not plotted here)",
+                    "description": "Percentage of modules failed in FastQC report (includes those not plotted here, excluding Basic Statistics)",
                     "max": 100,
                     "min": 0,
                     "suffix": "%",
@@ -1499,7 +1499,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 In this heatmap, we summarise all of these into a single heatmap for a quick overview.
                 Note that not all FastQC sections have plots in MultiQC reports, but all status checks
-                are shown in this heatmap.
+                except Basic Statistics (which always passes) are shown in this heatmap.
             """,
             plot=heatmap.plot(data, xcats=list(status_cats.values()), ycats=s_names, pconfig=pconfig),
         )
