@@ -455,12 +455,16 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
 
 
 def test_rerun_in_same_dir_no_duplicate_modules(tmp_path, monkeypatch):
-    """Running twice in one directory picks up the first run's parquet; fresh custom content must replace, not duplicate, those modules."""
+    """Running twice in one directory picks up the first run's parquet.
+
+    Fresh custom content must replace, not duplicate, those modules.
+    """
     for i in range(1, 6):
         (tmp_path / f"plot{i}_mqc.png").touch()
+    # Run twice from the same directory, as in the original issue
     monkeypatch.chdir(tmp_path)
 
-    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, prepend_dirs=False, filename="run1", force=True))
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run1", force=True))
     multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run2", force=True))
 
     html = (tmp_path / "run2.html").read_text()
