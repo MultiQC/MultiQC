@@ -2,8 +2,8 @@
 // AI stuff
 ////////////////////////////////////////////////
 
+import { outputTokens } from "./ai-helpers.js";
 import {
-  claudeDefaultMaxTokens,
   FALLBACK_CONTEXT_WINDOW,
   parseContextOverflow,
   parseModel,
@@ -170,11 +170,7 @@ function getContextWindow(model) {
 
 // Tokens available for the prompt, leaving room for the answer
 function getPromptBudget(model) {
-  const config = window.aiModelConfig || {};
-  const info = parseModel(model);
-  const outputTokens =
-    config.maxCompletionTokens || (info.vendor === "anthropic" ? claudeDefaultMaxTokens(info) : 4096);
-  return Math.max(1, Math.floor(getContextWindow(model) * 0.95) - outputTokens);
+  return Math.max(1, Math.floor(getContextWindow(model) * 0.95) - outputTokens(model));
 }
 
 async function summarizeWithAi(button) {
@@ -351,7 +347,7 @@ async function summarizeWithAi(button) {
         if (overflow && (isGlobal || sectionAnchor === "general_stats_table")) {
           if (overflowRetries-- > 0) {
             const estimatedTokens = countTokens(systemPrompt + content);
-            budget = shrinkBudget(budget, estimatedTokens, overflow);
+            budget = shrinkBudget(budget, estimatedTokens, overflow, outputTokens(modelName));
             content = buildContent(budget);
             button.html(`Retrying with less of the report...`);
             generate();

@@ -199,7 +199,7 @@ def models_url_for_endpoint(endpoint: str) -> str:
 class ContextOverflow:
     """What a provider said when a prompt was too long for the model."""
 
-    limit: int | None  # the model's input limit, if the error gave it
+    limit: int | None  # the model's context window, if the error gave it
     actual: int | None  # the prompt's size in the provider's tokens, if the error gave it
 
 
@@ -207,7 +207,7 @@ _OVERFLOW_PATTERNS = (
     # Anthropic, Bedrock: "prompt is too long: 1050000 tokens > 1000000 maximum"
     re.compile(r"(?P<actual>\d+)\s*tokens?\s*>\s*(?P<limit>\d+)"),
     # Anthropic (older): "input length and `max_tokens` exceed context limit: 197000 + 8192 > 200000"
-    re.compile(r"(?P<actual>\d+)\s*\+\s*(?P<reserve>\d+)\s*>\s*(?P<limit>\d+)"),
+    re.compile(r"(?P<actual>\d+)\s*\+\s*\d+\s*>\s*(?P<limit>\d+)"),
     # OpenAI, vLLM: "maximum context length is 128000 tokens. However, your messages resulted in 130000 tokens"
     re.compile(
         r"maximum context length is (?P<limit>\d+)\D+?(?:resulted in|requested|has|contains)\D*?(?P<actual>\d+)",
@@ -234,23 +234,23 @@ def parse_context_overflow(message: str) -> ContextOverflow | None:
     for pattern in _OVERFLOW_PATTERNS:
         if m := pattern.search(text):
             groups = m.groupdict()
-            limit = int(groups["limit"]) - int(groups.get("reserve") or 0)
             actual = int(groups["actual"]) if groups.get("actual") else None
-            return ContextOverflow(limit=limit, actual=actual)
+            return ContextOverflow(limit=int(groups["limit"]), actual=actual)
     return ContextOverflow(limit=None, actual=None)
 
 
-def shrink_budget(budget: int, estimated_tokens: int, overflow: ContextOverflow) -> int:
+def shrink_budget(budget: int, estimated_tokens: int, overflow: ContextOverflow, output_tokens: int) -> int:
     """
-    A smaller prompt budget after a context overflow. When the provider reported both its limit and
-    the prompt's size, use the ratio of its token count to MultiQC's estimate, which also corrects
-    for tokenizer differences. Otherwise halve the budget.
+    A smaller prompt budget after a context overflow, leaving `output_tokens` free for the answer.
+    When the provider reported both its limit and the prompt's size, use the ratio of its token count
+    to MultiQC's estimate, which also corrects for tokenizer differences. Otherwise halve the budget.
     """
-    if overflow.limit and overflow.actual and estimated_tokens:
+    room = overflow.limit - output_tokens if overflow.limit else None
+    if room and room > 0 and overflow.actual and estimated_tokens:
         tokens_per_estimated_token = overflow.actual / estimated_tokens
-        new_budget = int(overflow.limit / tokens_per_estimated_token * 0.95)
-    elif overflow.limit:
-        new_budget = int(overflow.limit * 0.9)
+        new_budget = int(room / tokens_per_estimated_token * 0.95)
+    elif room and room > 0:
+        new_budget = int(room * 0.9)
     else:
         new_budget = budget // 2
     return max(1, min(new_budget, budget - 1))

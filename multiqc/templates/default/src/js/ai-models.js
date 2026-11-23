@@ -93,7 +93,7 @@ export function bedrockApiVersion(info) {
 
 const OVERFLOW_PATTERNS = [
   /(?<actual>\d+)\s*tokens?\s*>\s*(?<limit>\d+)/,
-  /(?<actual>\d+)\s*\+\s*(?<reserve>\d+)\s*>\s*(?<limit>\d+)/,
+  /(?<actual>\d+)\s*\+\s*\d+\s*>\s*(?<limit>\d+)/,
   /maximum context length is (?<limit>\d+)\D+?(?:resulted in|requested|has|contains)\D*?(?<actual>\d+)/i,
   /\((?<actual>\d+)\)\s*exceeds the maximum number of tokens allowed\s*\((?<limit>\d+)\)/,
   /maximum context length is (?<limit>\d+)/i,
@@ -111,7 +111,7 @@ export function parseContextOverflow(message) {
     if (m) {
       const g = m.groups;
       return {
-        limit: parseInt(g.limit) - parseInt(g.reserve || "0"),
+        limit: parseInt(g.limit),
         actual: g.actual ? parseInt(g.actual) : null,
       };
     }
@@ -120,12 +120,13 @@ export function parseContextOverflow(message) {
 }
 
 // A smaller prompt budget after a context overflow. See shrink_budget() in ai_models.py
-export function shrinkBudget(budget, estimatedTokens, overflow) {
+export function shrinkBudget(budget, estimatedTokens, overflow, outputTokens) {
   let newBudget;
-  if (overflow.limit && overflow.actual && estimatedTokens) {
-    newBudget = Math.floor((overflow.limit / (overflow.actual / estimatedTokens)) * 0.95);
-  } else if (overflow.limit) {
-    newBudget = Math.floor(overflow.limit * 0.9);
+  const room = overflow.limit ? overflow.limit - outputTokens : null;
+  if (room > 0 && overflow.actual && estimatedTokens) {
+    newBudget = Math.floor((room / (overflow.actual / estimatedTokens)) * 0.95);
+  } else if (room > 0) {
+    newBudget = Math.floor(room * 0.9);
   } else {
     newBudget = Math.floor(budget / 2);
   }

@@ -188,6 +188,9 @@ class ContextOverflowError(Exception):
         self.overflow = overflow
 
 
+_RETRYABLE_STATUSES = (408, 409, 429)
+
+
 class ModelUnavailableError(Exception):
     """The model doesn't exist, or has been retired."""
 
@@ -419,7 +422,7 @@ class Client:
         - a missing or retired model raises ModelUnavailableError
         """
         body = {key: value for key, value in body.items() if key not in self._rejected_fields}
-        retries = config.ai_retries or 3
+        retries = config.ai_retries if config.ai_retries is not None else 3
         attempt = 0
         while True:
             try:
@@ -437,10 +440,13 @@ class Client:
                     body = repaired
                     continue
                 if e.status == 404 or (
-                    e.status is not None and 400 <= e.status < 500 and _MODEL_UNAVAILABLE_RE.search(e.message)
+                    e.status is not None
+                    and 400 <= e.status < 500
+                    and e.status not in _RETRYABLE_STATUSES
+                    and _MODEL_UNAVAILABLE_RE.search(e.message)
                 ):
                     raise ModelUnavailableError(f"Model '{self.model}' is not available from {self.title}: {e}") from e
-                if (e.status is None or e.status in (408, 409, 429) or e.status >= 500) and attempt < retries:
+                if (e.status is None or e.status in _RETRYABLE_STATUSES or e.status >= 500) and attempt < retries:
                     attempt += 1
                     backoff = 2 ** (attempt - 1)
                     logger.warning(
@@ -498,8 +504,16 @@ def _redact(body: dict[str, Any]) -> dict[str, Any]:
 
 
 def _thinking_budget_tokens() -> int:
+    if config.ai_thinking_budget_tokens:
+        return config.ai_thinking_budget_tokens
     legacy = (config.ai_extra_query_options or {}).get("thinking_budget_tokens")
-    return config.ai_thinking_budget_tokens or (int(legacy) if legacy else 10_000)
+    if not legacy:
+        return 10_000
+    try:
+        return int(legacy)
+    except (TypeError, ValueError):
+        logger.warning(f"Ignoring ai_extra_query_options.thinking_budget_tokens '{legacy}': not a number")
+        return 10_000
 
 
 def _claude_thinking(info: ModelInfo) -> dict[str, Any] | None:
@@ -678,7 +692,12 @@ class AnthropicClient(Client):
     def _headers(self, body: dict[str, Any] | None = None) -> dict[str, str]:
         headers = {"Content-Type": "application/json", "anthropic-version": ai_models.ANTHROPIC_API_VERSION}
         if self.api_key:
-            headers["x-api-key"] = self.api_key
+            if self.name == "custom" and config.ai_auth_type == "bearer":
+                headers["Authorization"] = f"Bearer {self.api_key}"
+            elif self.name == "custom" and config.ai_auth_type == "api-key":
+                headers["api-key"] = self.api_key
+            else:
+                headers["x-api-key"] = self.api_key
         if body and "fallbacks" in body:
             headers["anthropic-beta"] = ai_models.ANTHROPIC_FALLBACK_BETA
         return _merge_headers(headers, self.extra_headers)
@@ -1342,6 +1361,8 @@ def _ai_js_config(client: Client | None) -> dict[str, Any]:
         "maxCompletionTokens": config.ai_max_completion_tokens,
         "extendedThinking": bool(config.ai_extended_thinking),
         "thinkingBudgetTokens": _thinking_budget_tokens(),
+        "customApiStyle": config.ai_custom_api_style or "openai",
+        "customAuthType": config.ai_auth_type,
         "anthropicApiVersion": ai_models.ANTHROPIC_API_VERSION,
         "anthropicFallbackBeta": ai_models.ANTHROPIC_FALLBACK_BETA,
         "fallbackContextWindow": ai_models.FALLBACK_CONTEXT_WINDOW,
@@ -1397,6 +1418,10 @@ def add_ai_summary_to_report():
         ).encode()
     ).decode()
     report.ai_js_config = _ai_js_config(None)
+    uses_custom_client = config.ai_provider == "custom" and bool(config.ai_custom_client)
+    if uses_custom_client:
+        # Not a provider the browser can call, so the report toolbox falls back to its default
+        report.ai_provider_id = "custom_client"
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
     # Save for the JS runtime. We want to do it regardless of config.ai_anonymize_samples,
@@ -1413,22 +1438,23 @@ def add_ai_summary_to_report():
         _save_prompt_to_file(system_prompt, build_prompt(metadata, system_prompt).prompt)
         return
 
-    # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
+    # Catches everything: a custom client class can raise anything, and the report should still be written
     try:
         client = get_llm_client()
-    except (RuntimeError, TypeError, ValueError) as e:
+        assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
+        js_config = _ai_js_config(client)
+        budget = client.prompt_budget()
+    except Exception as e:
         logger.error(f"Failed to initialize AI client: {e}")
         if config.strict:
             raise
         return
-    assert client is not None, "get_llm_client() should not return None when config.ai_summary is True"
 
-    report.ai_provider_id = client.name
+    if not uses_custom_client:
+        report.ai_provider_id = client.name
     report.ai_provider_title = client.title
     report.ai_model = client.model
-    report.ai_js_config = _ai_js_config(client)
-
-    budget = client.prompt_budget()
+    report.ai_js_config = js_config
     response: InterpretationResponse | None = None
     for _ in range(_MAX_OVERFLOW_RETRIES + 1):
         build = build_prompt(metadata, system_prompt, client, budget)
@@ -1440,7 +1466,7 @@ def add_ai_summary_to_report():
             response = _interpret(client, build.prompt)
             break
         except ContextOverflowError as e:
-            budget = ai_models.shrink_budget(budget, build.n_tokens, e.overflow)
+            budget = ai_models.shrink_budget(budget, build.n_tokens, e.overflow, client.output_tokens())
             logger.warning(f"The prompt was too long for {client.model}, retrying with less of the report. ({e})")
         except ModelUnavailableError as e:
             logger.warning(str(e))
@@ -1448,7 +1474,7 @@ def add_ai_summary_to_report():
                 raise
             response = InterpretationResponse(
                 interpretation=InterpretationOutput(
-                    summary=_model_unavailable_stub(client.model, client.name == "custom")
+                    summary=_model_unavailable_stub(client.model, client.name == "custom" and not uses_custom_client)
                 ),
                 model=client.model,
             )

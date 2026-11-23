@@ -3463,7 +3463,7 @@
         }
       ],
       "default": null,
-      "description": "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+      "description": "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header. By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints an x-api-key header.",
       "group": "Provider",
       "section": "AI Summary",
       "title": "Ai Auth Type"

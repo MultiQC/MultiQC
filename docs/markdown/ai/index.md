@@ -352,6 +352,8 @@ ai_model: claude-opus-5-5
 ai_custom_endpoint: https://llm-gateway.example.com/v1/messages
 ```
 
+The key is sent in an `x-api-key` header. Set `ai_auth_type: bearer` or `ai_auth_type: api-key` if the gateway expects another header.
+
 ### Headers, request fields and responses
 
 For endpoints with their own authentication or request and response formats:
@@ -414,7 +416,7 @@ MultiQC still builds the prompt, fits it into `context_window()`, and anonymises
 
 In browser, you can also select "Custom" provider from the toolbox, and enter the endpoint URL, model name, API key,
 optional extra query options, and context window manually.
-In-browser summaries use the OpenAI chat completions format.
+In-browser summaries use the API style set by `ai_custom_api_style` (OpenAI chat completions by default).
 Custom headers and client classes are only used when generating summaries with MultiQC on the command line,
 as they often contain secrets that should not be saved in a report.
 

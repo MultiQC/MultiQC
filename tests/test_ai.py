@@ -131,13 +131,15 @@ console.log(JSON.stringify({{ models, overflow }}));
 def test_shrink_budget():
     # Provider counted 1.5x MultiQC's estimate: scale the budget to fit, with a margin
     overflow = ai_models.ContextOverflow(limit=1_000_000, actual=1_200_000)
-    assert ai_models.shrink_budget(900_000, 800_000, overflow) == int(1_000_000 / 1.5 * 0.95)
+    assert ai_models.shrink_budget(900_000, 800_000, overflow, 0) == int(1_000_000 / 1.5 * 0.95)
+    # Room is kept for the answer
+    assert ai_models.shrink_budget(900_000, 800_000, overflow, 100_000) == int(900_000 / 1.5 * 0.95)
     # Limit only
-    assert ai_models.shrink_budget(900_000, 800_000, ai_models.ContextOverflow(500_000, None)) == 450_000
+    assert ai_models.shrink_budget(900_000, 800_000, ai_models.ContextOverflow(500_000, None), 0) == 450_000
     # Nothing known: halve
-    assert ai_models.shrink_budget(900_000, 800_000, ai_models.ContextOverflow(None, None)) == 450_000
+    assert ai_models.shrink_budget(900_000, 800_000, ai_models.ContextOverflow(None, None), 0) == 450_000
     # Always shrinks
-    assert ai_models.shrink_budget(100, 10, ai_models.ContextOverflow(1_000_000, 10)) == 99
+    assert ai_models.shrink_budget(100, 10, ai_models.ContextOverflow(1_000_000, 10), 0) == 99
 
 
 def test_models_endpoint_helpers():
@@ -674,3 +676,52 @@ def test_build_prompt_note_fits_budget():
     build = ai.build_prompt(metadata, "system", client, budget=budget)
     assert build.n_tokens <= budget
     assert "report sections were left out" in build.prompt
+
+
+def test_rate_limit_naming_the_model_is_retried(fake_api):
+    api = fake_api(
+        FakeResponse(429, {"error": {"message": "The model gpt-x is not available right now, please retry"}}),
+        openai_response("Summary"),
+    )
+    assert ai.OpenAiClient("key").query("prompt").content == "Summary"
+    assert len(api.requests) == 2
+
+
+def test_zero_retries(fake_api, monkeypatch):
+    monkeypatch.setattr(config, "ai_retries", 0)
+    api = fake_api(FakeResponse(503, {"error": {"message": "overloaded"}}))
+    with pytest.raises(ai.ProviderError):
+        ai.AnthropicClient("key").query("prompt")
+    assert len(api.requests) == 1
+
+
+def test_custom_anthropic_style_bearer_auth(fake_api, monkeypatch):
+    monkeypatch.setattr(config, "ai_model", "claude-sonnet-5-5")
+    monkeypatch.setattr(config, "ai_auth_type", "bearer")
+    api = fake_api(claude_response(TEXT))
+    ai.AnthropicClient("key", endpoint="https://gateway.example.com/v1/messages").query("prompt")
+    headers = api.requests[0]["headers"]
+    assert headers["Authorization"] == "Bearer key"
+    assert "x-api-key" not in headers
+
+
+def test_failing_client_setup_does_not_stop_report(monkeypatch):
+    config.ai_summary = True
+    monkeypatch.setattr(config, "ai_extra_query_options", {"thinking_budget_tokens": "high"})
+
+    def broken_client():
+        raise KeyError("MY_GATEWAY_TOKEN")
+
+    monkeypatch.setattr(ai, "get_llm_client", broken_client)
+    ai.add_ai_summary_to_report()
+    assert not report.ai_global_summary
+    assert report.ai_js_config["thinkingBudgetTokens"] == 10_000
+
+
+def test_custom_client_is_not_offered_to_the_browser():
+    config.ai_provider = "custom"
+    config.ai_summary = True
+    config.ai_custom_client = "tests.test_ai:EchoClient"
+    ai.add_ai_summary_to_report()
+    assert report.ai_provider_id == "custom_client"
+    assert report.ai_global_summary.endswith("characters")

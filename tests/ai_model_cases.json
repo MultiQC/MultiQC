@@ -515,7 +515,7 @@
     },
     {
       "message": "input length and `max_tokens` exceed context limit: 197000 + 8192 > 200000, decrease input length or `max_tokens` and try again",
-      "limit": 191808,
+      "limit": 200000,
       "actual": 197000
     },
     {

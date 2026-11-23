@@ -60,23 +60,40 @@ function openAiBody(modelName, content, extraOptions) {
   return applyExtraOptions(body, extraOptions);
 }
 
-function anthropicBody(modelName, content, extraOptions) {
+// Tokens to leave free in the context window for the answer
+export function outputTokens(modelName) {
+  const config = modelConfig();
+  const info = parseModel(modelName);
+  if (info.vendor !== "anthropic") return config.maxCompletionTokens || 4096;
+  let tokens = config.maxCompletionTokens || claudeDefaultMaxTokens(info);
+  const thinking = claudeThinking(info);
+  if (thinking && thinking.budget_tokens) tokens = Math.max(tokens, thinking.budget_tokens + 4096); // the budget must be below max_tokens
+  return tokens;
+}
+
+function anthropicBody(modelName, content, extraOptions, serverFallbacks) {
   const config = modelConfig();
   const info = parseModel(modelName);
   const thinking = claudeThinking(info);
-  let maxTokens = config.maxCompletionTokens || claudeDefaultMaxTokens(info);
-  if (thinking && thinking.budget_tokens) maxTokens = Math.max(maxTokens, thinking.budget_tokens + 4096);
   const body = {
     model: modelName,
-    max_tokens: maxTokens,
+    max_tokens: outputTokens(modelName),
     messages: [{ role: "user", content: content }],
     stream: true,
   };
   if (thinking) body.thinking = thinking;
   if (config.reasoningEffort) body.output_config = { effort: config.reasoningEffort };
   // Re-run a refused request on another model instead of returning the refusal
-  if (claudeSupportsServerFallbacks(info)) body.fallbacks = "default";
+  if (serverFallbacks && claudeSupportsServerFallbacks(info)) body.fallbacks = "default";
   return applyExtraOptions(body, extraOptions);
+}
+
+// The API key header for a custom endpoint: ai_auth_type, or the API style's own header
+function customAuthHeaders(apiKey, defaultHeader) {
+  if (!apiKey) return {};
+  const authType = modelConfig().customAuthType || defaultHeader;
+  if (authType === "bearer") return { Authorization: `Bearer ${apiKey}` };
+  return { [authType]: apiKey };
 }
 
 // Request fields a model has rejected, left out of later requests
@@ -174,18 +191,27 @@ window.runStreamGeneration = function ({
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });
-  } else if (provider.name === "OpenAI" || provider.name === "Custom") {
-    let extraOptions = aiConfigExtraQueryOptions;
-    if (provider.name === "Custom") {
-      try {
-        extraOptions = JSON.parse($("#ai-query-options").val() || "{}");
-      } catch (e) {
-        console.error("Error parsing extra query options", e);
-      }
+    return;
+  }
+
+  const isCustom = provider.name === "Custom";
+  let extraOptions = aiConfigExtraQueryOptions;
+  if (isCustom) {
+    try {
+      extraOptions = JSON.parse($("#ai-query-options").val() || "{}");
+    } catch (e) {
+      console.error("Error parsing extra query options", e);
     }
+  }
+  const claudeStyle = provider.name === "Anthropic" || (isCustom && modelConfig().customApiStyle === "anthropic");
+
+  if (provider.name === "OpenAI" || (isCustom && !claudeStyle)) {
     const body = openAiBody(modelName, systemPrompt + "\n\n" + userMessage, extraOptions);
-    const endpoint = provider.name === "Custom" ? customEndpoint : "https://api.openai.com/v1/chat/completions";
-    const headersFor = () => ({ "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` });
+    const endpoint = isCustom ? customEndpoint : "https://api.openai.com/v1/chat/completions";
+    const headersFor = () => ({
+      "Content-Type": "application/json",
+      ...(isCustom ? customAuthHeaders(apiKey, "bearer") : { Authorization: `Bearer ${apiKey}` }),
+    });
 
     postWithRepair(endpoint, headersFor, body, OPENAI_REQUIRED_FIELDS)
       .then((response) =>
@@ -200,24 +226,26 @@ window.runStreamGeneration = function ({
         ),
       )
       .catch((error) => onStreamError(handleStreamError(error)));
-  } else if (provider.name === "Anthropic") {
+  } else if (claudeStyle) {
     const config = modelConfig();
-    const body = anthropicBody(modelName, systemPrompt + "\n\n" + userMessage, aiConfigExtraQueryOptions);
+    const body = anthropicBody(modelName, systemPrompt + "\n\n" + userMessage, extraOptions, !isCustom);
+    const endpoint = isCustom ? customEndpoint : "https://api.anthropic.com/v1/messages";
     const headersFor = (b) => {
       const headers = {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
         "anthropic-version": config.anthropicApiVersion || ANTHROPIC_API_VERSION,
-        "anthropic-dangerous-direct-browser-access": "true",
+        ...(isCustom
+          ? customAuthHeaders(apiKey, "x-api-key")
+          : { "x-api-key": apiKey, "anthropic-dangerous-direct-browser-access": "true" }),
       };
       if (b.fallbacks) headers["anthropic-beta"] = config.anthropicFallbackBeta || ANTHROPIC_FALLBACK_BETA;
       return headers;
     };
 
-    postWithRepair("https://api.anthropic.com/v1/messages", headersFor, body, ANTHROPIC_REQUIRED_FIELDS)
+    postWithRepair(endpoint, headersFor, body, ANTHROPIC_REQUIRED_FIELDS)
       .then((response) =>
         decodeStream(
-          providerId,
+          "anthropic",
           response.body.getReader(),
           onStreamStart,
           onStreamNewToken,
@@ -248,6 +276,19 @@ function decodeStream(
   let model = undefined;
   let threadId = undefined;
   let started = false;
+  let stopped = false;
+
+  const fail = (error) => {
+    if (stopped) return;
+    stopped = true;
+    reader.cancel().catch(() => {});
+    onStreamError(error);
+  };
+  const complete = (id) => {
+    if (stopped) return;
+    stopped = true;
+    onStreamComplete(id);
+  };
 
   return recursivelyProcessStream();
   function recursivelyProcessStream() {
@@ -255,8 +296,8 @@ function decodeStream(
     return reader
       .read()
       .then(({ value, done }) => {
-        if (done) {
-          onStreamComplete(threadId);
+        if (done || stopped) {
+          complete(threadId);
           return;
         }
 
@@ -266,11 +307,11 @@ function decodeStream(
         // Process all complete lines
         buffer = lines.reduce((acc, line) => {
           line = line.trim();
-          if (!line) return acc;
+          if (!line || stopped) return acc;
           if (!line.startsWith("data: ")) {
             if (line.includes('"type":"invalid_request_error"')) {
               // "{"type":"error","error":{"type":"invalid_request_error","message":"messages.1.content: Input should be a valid list"}}"
-              onStreamError(line);
+              fail(line);
               return acc;
             }
             return acc;
@@ -278,7 +319,7 @@ function decodeStream(
           let jsonString = line.slice(6);
           if (jsonString === "[DONE]") {
             // OpenAI last line is "data: [DONE]"
-            onStreamComplete();
+            complete();
             return acc;
           }
           let data;
@@ -287,7 +328,7 @@ function decodeStream(
           } catch (e) {
             // Unexpected JSON format. Ignore the line, but if somethings is really wrong,
             // we should anyway call onStreamComplete in the end
-            // onStreamError(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
+            // fail(`Error parsing JSON from streaming response. JSON: ${jsonString}, error: ${e}`);
             return acc;
           }
 
@@ -309,10 +350,12 @@ function decodeStream(
               error = `Streaming unexpectedly stopped. Reason: ${finishReason}`;
             }
           } else if (providerId === "openai" || providerId === "custom") {
-            content = data.choices[0].delta.content;
+            const choice = data.choices?.[0];
+            if (!choice) return acc; // e.g. Azure's prompt_filter_results chunk
+            content = choice.delta?.content;
             model = data.model;
-            role = data.choices[0].delta.role;
-            finishReason = data.choices[0].finish_reason;
+            role = choice.delta?.role;
+            finishReason = choice.finish_reason;
             // OpenAI doesn't define type, so we need to infer it from the other fields
             if (content) {
               type = "on_chat_model_stream";
@@ -364,13 +407,13 @@ function decodeStream(
               if (content) onStreamNewToken(content);
               break;
             case "on_chat_model_end":
-              onStreamComplete(threadId);
+              complete(threadId);
               return acc;
             case "restart":
               onStreamRestart();
               break;
             case "error":
-              onStreamError(error);
+              fail(error);
               break;
           }
           return acc;
@@ -378,7 +421,7 @@ function decodeStream(
 
         return recursivelyProcessStream();
       })
-      .catch((error) => onStreamError(error));
+      .catch((error) => fail(error));
   }
 }
 

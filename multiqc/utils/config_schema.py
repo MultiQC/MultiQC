@@ -965,7 +965,9 @@ class MultiQCConfig(BaseModel):
             ai_auth_type: Literal["bearer", "api-key"] | None = cfg(
                 (
                     "Authentication scheme used by the custom endpoint. "
-                    "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
+                    "'bearer' sends an Authorization header, 'api-key' sends an api-key header. "
+                    "By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints "
+                    "an x-api-key header."
                 ),
             )
             ai_custom_headers: dict[str, str | None] | None = cfg(
