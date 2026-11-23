@@ -3,7 +3,7 @@
 //
 // A port of multiqc/core/ai_models.py, for requests made from the report. MultiQC doesn't keep a
 // list of model names: it reads the vendor, tier and version from a model ID and applies
-// "at least version X" rules. Both implementations are tested against tests/data/ai_model_cases.json.
+// "at least version X" rules. Both implementations are tested against tests/ai_model_cases.json.
 ////////////////////////////////////////////////
 
 export const FALLBACK_CONTEXT_WINDOW = 128000;

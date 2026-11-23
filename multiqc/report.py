@@ -21,7 +21,7 @@ from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path, PosixPath
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 import yaml
 from dotenv import load_dotenv

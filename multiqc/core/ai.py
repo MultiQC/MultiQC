@@ -31,7 +31,12 @@ AI summary could not be generated as the request was refused by the model
 """
 
 
-def _model_unavailable_stub(model: str) -> str:
+def _model_unavailable_stub(model: str, custom_endpoint: bool = False) -> str:
+    if custom_endpoint:
+        return (
+            f"AI summary could not be generated because the model `{model}` is not available, "
+            "or `ai_custom_endpoint` is not the right URL.\n"
+        )
     return (
         f"AI summary could not be generated because the model `{model}` is not available. "
         "It may have been retired: set `ai_model` to a current model.\n"
@@ -431,7 +436,9 @@ class Client:
                 if e.status in (400, 422) and (repaired := self._repair_rejected_field(body, e)) is not None:
                     body = repaired
                     continue
-                if e.status == 404 or _MODEL_UNAVAILABLE_RE.search(e.message):
+                if e.status == 404 or (
+                    e.status is not None and 400 <= e.status < 500 and _MODEL_UNAVAILABLE_RE.search(e.message)
+                ):
                     raise ModelUnavailableError(f"Model '{self.model}' is not available from {self.title}: {e}") from e
                 if (e.status is None or e.status in (408, 409, 429) or e.status >= 500) and attempt < retries:
                     attempt += 1
@@ -1437,8 +1444,12 @@ def add_ai_summary_to_report():
             logger.warning(f"The prompt was too long for {client.model}, retrying with less of the report. ({e})")
         except ModelUnavailableError as e:
             logger.warning(str(e))
+            if config.strict:
+                raise
             response = InterpretationResponse(
-                interpretation=InterpretationOutput(summary=_model_unavailable_stub(client.model)),
+                interpretation=InterpretationOutput(
+                    summary=_model_unavailable_stub(client.model, client.name == "custom")
+                ),
                 model=client.model,
             )
             break
@@ -1471,4 +1482,7 @@ def add_ai_summary_to_report():
     if config.ai_summary_full and interpretation.detailed_analysis:
         report.ai_global_detailed_analysis = deanonymize_sample_names(interpretation.detailed_analysis)
 
-    logger.info(f"Summarised report with {report.ai_provider_title}")
+    msg = f"Summarised report with {report.ai_provider_title}"
+    if client._rejected_fields:
+        msg += f" (without {', '.join(sorted(client._rejected_fields))}, which the model rejected)"
+    logger.info(msg)

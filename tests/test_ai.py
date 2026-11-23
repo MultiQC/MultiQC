@@ -314,6 +314,15 @@ def test_missing_model(fake_api):
         ai.AnthropicClient("key").query("prompt")
 
 
+def test_temporarily_unavailable_model_is_retried(fake_api):
+    api = fake_api(
+        FakeResponse(503, {"error": {"message": "The model is currently not available due to high load"}}),
+        claude_response(TEXT),
+    )
+    assert ai.AnthropicClient("key").query("prompt").content == "Summary"
+    assert len(api.requests) == 2
+
+
 def test_context_overflow_is_raised(fake_api):
     fake_api(FakeResponse(400, {"error": {"message": "prompt is too long: 1050000 tokens > 1000000 maximum"}}))
     with pytest.raises(ai.ContextOverflowError) as e:
@@ -601,6 +610,20 @@ def test_summary_stub_for_retired_model(monkeypatch):
     ai.add_ai_summary_to_report()
     assert "echo-1" in report.ai_global_summary
     assert "ai_model" in report.ai_global_summary
+
+
+def test_retired_model_raises_in_strict_mode(monkeypatch):
+    config.ai_summary = True
+    monkeypatch.setattr(config, "strict", True)
+    client = CountingClient()
+
+    def interpret(prompt: str):
+        raise ai.ModelUnavailableError("Model 'echo-1' is not available")
+
+    monkeypatch.setattr(ai, "get_llm_client", lambda: client)
+    monkeypatch.setattr(client, "interpret_report_short", interpret)
+    with pytest.raises(ai.ModelUnavailableError):
+        ai.add_ai_summary_to_report()
 
 
 def test_js_config(monkeypatch):

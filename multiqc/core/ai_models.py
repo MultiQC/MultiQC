@@ -8,7 +8,7 @@ conservative treatment: a minimal request and a modest context window.
 
 The same rules are implemented for the browser in
 `multiqc/templates/default/src/js/ai-models.js`. Both are tested against
-`tests/data/ai_model_cases.json`, so keep them in sync.
+`tests/ai_model_cases.json`, so keep them in sync.
 """
 
 import logging

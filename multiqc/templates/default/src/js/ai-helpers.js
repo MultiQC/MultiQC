@@ -295,6 +295,7 @@ function decodeStream(
           let content = undefined;
           let role = undefined;
           let finishReason = undefined;
+          let error = undefined;
 
           // Detect provider
           if (providerId === "seqera") {

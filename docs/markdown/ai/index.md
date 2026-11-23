@@ -368,6 +368,7 @@ ai_custom_response_path: completion.content # where the answer is in the JSON re
 
 When `ai_custom_headers` is set, the API key environment variable is optional.
 Use `${VAR}` for secrets, so they stay out of config files.
+`${VAR}` can read any environment variable and sends it to `ai_custom_endpoint`, so only run MultiQC with config files you trust.
 
 ### Your own client class
 
