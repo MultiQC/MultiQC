@@ -454,6 +454,24 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     assert agg.data[ColumnKey("reads")].raw == 20000
 
 
+def test_rerun_in_same_dir_no_duplicate_modules(tmp_path, monkeypatch):
+    """Running twice in one directory picks up the first run's parquet.
+
+    Fresh custom content must replace, not duplicate, those modules.
+    """
+    for i in range(1, 6):
+        (tmp_path / f"plot{i}_mqc.png").touch()
+    # Run twice from the same directory, as in the original issue
+    monkeypatch.chdir(tmp_path)
+
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run1", force=True))
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run2", force=True))
+
+    html = (tmp_path / "run2.html").read_text()
+    for i in range(1, 6):
+        assert html.count(f'id="mqc-module-section-plot{i}"') == 1
+
+
 def test_wide_tables_merge_keeps_samples_missing_from_earlier_tables():
     from multiqc.core.plot_data_store import wide_table_to_parquet
 
