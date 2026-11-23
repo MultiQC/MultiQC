@@ -1,9 +1,5 @@
 """Tests for MULTIQC_* environment variable config handling."""
 
-import os
-
-import pytest
-
 from multiqc import config
 
 

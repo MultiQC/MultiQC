@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class EstimateReadFilteringMixin:
     def parse_estimate_read_filtering(self):
         """Find estimateReadFiltering output. Only the output from --table is supported."""
-        self.deeptools_estimateReadFiltering = dict()
+        self.deeptools_estimateReadFiltering = {}
         for f in self.find_log_files("deeptools/estimateReadFiltering"):
             parsed_data = self.parse_estimate_read_filtering_file(f)
             for k, v in parsed_data.items():
@@ -108,7 +108,7 @@ class EstimateReadFilteringMixin:
             },
         }
 
-        tdata = dict()
+        tdata = {}
         for k, v in self.deeptools_estimateReadFiltering.items():
             tdata[k] = {
                 "M Entries": v["total"] / 1000000.0,
@@ -154,12 +154,12 @@ class EstimateReadFilteringMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.debug(f"Replacing duplicate sample {s_name}.")
-            d[s_name] = dict()
+            d[s_name] = {}
 
             try:
                 d[s_name]["total"] = self._int(cols[1])
@@ -180,5 +180,5 @@ class EstimateReadFilteringMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
         return d

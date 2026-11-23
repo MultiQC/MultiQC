@@ -3,7 +3,8 @@
 import logging
 import os
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any
 
 import packaging.version
 import yaml
@@ -23,8 +24,8 @@ def normalize_name(name: str):
 def update_versions_from_config():
     """Update report with software versions from config if provided"""
     # Parse software version from config if provided
-    versions_from_config: Dict[str, Dict[str, List[str]]] = load_versions_from_config()
-    softwares: Dict[str, List[str]]
+    versions_from_config: dict[str, dict[str, list[str]]] = load_versions_from_config()
+    softwares: dict[str, list[str]]
     for group, softwares in versions_from_config.items():
         # Try to find if the software is listed among the executed modules.
         # Unlisted software are still reported in the `Software Versions` section.
@@ -33,12 +34,12 @@ def update_versions_from_config():
         # Map normalized module software names to the nicely formatted names.
         module_softwares = {}
         if module is not None:
-            module_softwares = {normalize_name(m_software): m_software for m_software in module.versions.keys()}
+            module_softwares = {normalize_name(m_software): m_software for m_software in module.versions}
 
             # Use the nicely formatted module name as group name
             group = module.name
 
-        software_versions: List[str]
+        software_versions: list[str]
         for software_name, software_versions in softwares.items():
             # Update versions if the software is listed among the executed modules
             if module is not None and not config.disable_version_detection:
@@ -55,17 +56,17 @@ def update_versions_from_config():
             report.software_versions[group][software_name] = software_versions
 
 
-def load_versions_from_config() -> Dict[str, Dict[str, List[str]]]:
+def load_versions_from_config() -> dict[str, dict[str, list[str]]]:
     """Try to load software versions from config"""
     log.debug("Reading software versions from config.software_versions")
-    versions_config: Dict[str, Dict[str, List[str]]]
+    versions_config: dict[str, dict[str, list[str]]]
     if not isinstance(config.software_versions, dict):
         log.error("Expected the `software_versions` config section to be a dictionary")
         versions_config = {}
     else:
         versions_config = validate_software_versions(config.software_versions)
 
-    versions_from_files: Dict[str, Dict[str, List[str]]] = defaultdict(lambda: defaultdict(list))
+    versions_from_files: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
     for f in report.files.get(ModuleId("software_versions"), []):
         file_name = os.path.join(f["root"], f["fn"])
         with open(file_name) as fh:
@@ -98,17 +99,17 @@ def load_versions_from_config() -> Dict[str, Dict[str, List[str]]]:
 
     # Parse the aggregated versions
     for group in versions_config:
-        softwares: Dict[str, List[str]] = versions_config[group]
+        softwares: dict[str, list[str]] = versions_config[group]
         for tool, tool_versions in softwares.items():
             # Try and convert version to packaging.versions.Version object and remove duplicates
-            ver_and_verstr = list(set((parse_version(version), version) for version in tool_versions))
+            ver_and_verstr = list({(parse_version(version), version) for version in tool_versions})
             ver_and_verstr = sort_versions(ver_and_verstr)
             softwares[tool] = [v for _, v in ver_and_verstr]
 
     return versions_config
 
 
-def validate_software_versions(versions_config: Dict[str, Any]) -> Dict[str, Dict[str, List[str]]]:
+def validate_software_versions(versions_config: dict[str, Any]) -> dict[str, dict[str, list[str]]]:
     """
     Validate software versions input from config file
 
@@ -137,7 +138,7 @@ def validate_software_versions(versions_config: Dict[str, Any]) -> Dict[str, Dic
     Returns a dict of dicts of list in the format (1).
     """
 
-    def _filter_list(lst: List[str]) -> List[str]:
+    def _filter_list(lst: list[str]) -> list[str]:
         """Remove all non-string version tags"""
         fixed_lst = []
         for item in lst:
@@ -149,7 +150,7 @@ def validate_software_versions(versions_config: Dict[str, Any]) -> Dict[str, Dic
                 fixed_lst.append(item)
         return fixed_lst
 
-    output: Dict[str, Dict[str, List]] = defaultdict(lambda: defaultdict(list))
+    output: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
 
     for level1_key, level1_values in versions_config.items():
         group = level1_key
@@ -178,8 +179,8 @@ def validate_software_versions(versions_config: Dict[str, Any]) -> Dict[str, Dic
 
 
 def sort_versions(
-    ver_and_verstr: Sequence[Tuple[Optional[packaging.version.Version], str]],
-) -> List[Tuple[Optional[packaging.version.Version], str]]:
+    ver_and_verstr: Sequence[tuple[packaging.version.Version | None, str]],
+) -> list[tuple[packaging.version.Version | None, str]]:
     """
     Sort list of versions in descending order. Accepts list with both strings and packaging.version.Version
     objects.
@@ -198,7 +199,7 @@ def find_matching_module(software_name: str, modules):
     return d.get(normalize_name(software_name))
 
 
-def parse_version(version: str) -> Optional[packaging.version.Version]:
+def parse_version(version: str) -> packaging.version.Version | None:
     """
     Check if version string is PEP 440 compliant to enable version normalization and proper ordering.
     Returns tuple with version and a boolean indicating if version is PEP 440 compliant.

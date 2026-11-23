@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any THetA2 reports
-        self.theta2_data = dict()
+        self.theta2_data = {}
         for f in self.find_log_files("theta2", filehandles=True):
             parsed_data = self.parse_theta2_report(f["f"])
             if len(parsed_data) > 0:

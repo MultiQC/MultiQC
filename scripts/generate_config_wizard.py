@@ -20,10 +20,10 @@ from typing import Any, get_args
 # Allow the script to be either run directly or imported via importlib (eg. from tests).
 sys.path.insert(0, str(Path(__file__).parent))
 
-from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups  # noqa: E402
+from _config_schema_loader import load_schema_and_defaults, load_sections_with_groups
 
-import multiqc  # noqa: E402
-from multiqc.utils.config_schema import AiProviderLiteral  # noqa: E402
+import multiqc
+from multiqc.utils.config_schema import AiProviderLiteral
 
 MULTIQC_LOGO_SVG = """\
 <svg width="1318" height="250" viewBox="0 0 1318 250" fill="none" xmlns="http://www.w3.org/2000/svg">

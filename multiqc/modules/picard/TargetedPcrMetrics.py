@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard TargetedPcrMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -14,8 +13,8 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard TargetedPcrMetrics reports and parse their data"""
 
-    data_by_sample: Dict = dict()
-    histogram_by_sample: Dict = dict()
+    data_by_sample: dict = {}
+    histogram_by_sample: dict = {}
 
     picard_config = getattr(config, "picard_config", {})
     skip_histo = picard_config.get("targeted_pcr_skip_histogram", False)
@@ -61,8 +60,8 @@ def parse_reports(module):
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
                 module.add_data_source(f, s_name, section="TargetedPcrMetrics")
-                data_by_sample[s_name] = dict()
-                histogram_by_sample[s_name] = dict()
+                data_by_sample[s_name] = {}
+                histogram_by_sample[s_name] = {}
 
                 for k, v in zip(keys, vals):
                     try:
@@ -77,7 +76,7 @@ def parse_reports(module):
                 keys = f["f"].readline().strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
-                histogram_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = {}
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
