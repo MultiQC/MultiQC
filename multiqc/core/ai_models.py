@@ -13,13 +13,14 @@ The same rules are implemented for the browser in
 
 import logging
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Defaults used when `ai_model` is not set. Bump these when a provider releases a new generation.
-DEFAULT_MODELS: Dict[str, str] = {
+DEFAULT_MODELS: dict[str, str] = {
     "anthropic": "claude-opus-5-5",
     "openai": "gpt-6.1-sol",
 }
@@ -37,9 +38,9 @@ BEDROCK_LEGACY_API_VERSION = "bedrock-2023-05-31"
 class ModelInfo:
     """What MultiQC could work out from a model ID."""
 
-    vendor: Optional[str]  # "anthropic", "openai", or None if not recognised
+    vendor: str | None  # "anthropic", "openai", or None if not recognised
     tier: str  # Claude: "opus", "sonnet", "haiku", "fable", ...; OpenAI: "gpt" or "o"
-    version: Tuple[int, int]  # (major, minor); (0, 0) if unknown
+    version: tuple[int, int]  # (major, minor); (0, 0) if unknown
     variant: str = ""  # anything after the version, e.g. "-sol", "o" (for gpt-4o), "-mini"
 
     def at_least(self, major: int, minor: int = 0) -> bool:
@@ -60,7 +61,7 @@ _OPENAI_O_RE = re.compile(r"(?:^|/)o(?P<major>\d+)(?P<variant>(?:[-:@].*)?)$")
 _OPENAI_GPT_RE = re.compile(r"(?:^|/)gpt-(?P<major>\d+)(?:\.(?P<minor>\d+))?(?P<variant>.*)$")
 
 
-def parse_model(model: Optional[str]) -> ModelInfo:
+def parse_model(model: str | None) -> ModelInfo:
     """Work out the vendor, tier and version of a model from its ID."""
     if not model:
         return UNKNOWN_MODEL
@@ -81,7 +82,7 @@ def parse_model(model: Optional[str]) -> ModelInfo:
     return UNKNOWN_MODEL
 
 
-def rule_context_window(info: ModelInfo) -> Optional[int]:
+def rule_context_window(info: ModelInfo) -> int | None:
     """
     Input context window for a recognised model family, or None if MultiQC doesn't know.
     Used when the provider can't be asked. Too high is recovered from (the provider's error
@@ -108,7 +109,7 @@ def rule_context_window(info: ModelInfo) -> Optional[int]:
     return None
 
 
-def claude_thinking_style(info: ModelInfo) -> Optional[str]:
+def claude_thinking_style(info: ModelInfo) -> str | None:
     """How a Claude model takes extended thinking: "adaptive" (4.6+), "budget" (3.7 to 4.5), or None."""
     if info.vendor != "anthropic":
         return None
@@ -157,11 +158,11 @@ _CONTEXT_WINDOW_KEYS = (
 )
 
 
-def find_context_window(entry: Any) -> Optional[int]:
+def find_context_window(entry: Any) -> int | None:
     """Look for a context window field in a model description returned by a provider's models endpoint."""
     if not isinstance(entry, dict):
         return None
-    candidates: Iterable[Dict[str, Any]] = [entry] + [v for v in entry.values() if isinstance(v, dict)]
+    candidates: Iterable[dict[str, Any]] = [entry] + [v for v in entry.values() if isinstance(v, dict)]
     for key in _CONTEXT_WINDOW_KEYS:
         for candidate in candidates:
             value = candidate.get(key)
@@ -170,7 +171,7 @@ def find_context_window(entry: Any) -> Optional[int]:
     return None
 
 
-def find_model_entry(listing: Any, model: str) -> Optional[Dict[str, Any]]:
+def find_model_entry(listing: Any, model: str) -> dict[str, Any] | None:
     """Find a model in a models endpoint response: an OpenAI-style `{"data": [...]}` listing, or a single model."""
     if not isinstance(listing, dict):
         return None
@@ -198,8 +199,8 @@ def models_url_for_endpoint(endpoint: str) -> str:
 class ContextOverflow:
     """What a provider said when a prompt was too long for the model."""
 
-    limit: Optional[int]  # the model's input limit, if the error gave it
-    actual: Optional[int]  # the prompt's size in the provider's tokens, if the error gave it
+    limit: int | None  # the model's input limit, if the error gave it
+    actual: int | None  # the prompt's size in the provider's tokens, if the error gave it
 
 
 _OVERFLOW_PATTERNS = (
@@ -225,7 +226,7 @@ _OVERFLOW_HINTS = re.compile(
 )
 
 
-def parse_context_overflow(message: str) -> Optional[ContextOverflow]:
+def parse_context_overflow(message: str) -> ContextOverflow | None:
     """If an error message says the prompt was too long, return what it says about the limit."""
     if not _OVERFLOW_HINTS.search(message):
         return None

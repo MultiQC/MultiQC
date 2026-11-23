@@ -3,7 +3,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -31,8 +31,8 @@ class FakeApi:
 
     def __init__(self, *responses: FakeResponse, get_data: Any = None):
         self.responses = list(responses)
-        self.requests: List[Dict[str, Any]] = []
-        self.get_urls: List[str] = []
+        self.requests: list[dict[str, Any]] = []
+        self.get_urls: list[str] = []
         self.get_data = get_data
 
     def post(self, url, headers=None, json=None, timeout=None):
@@ -63,11 +63,11 @@ def quiet(monkeypatch):
     monkeypatch.setattr(config, "verbose", True)  # skip the progress spinner
 
 
-def claude_response(*blocks: Dict[str, Any], stop_reason="end_turn", model="claude-opus-5-5") -> FakeResponse:
+def claude_response(*blocks: dict[str, Any], stop_reason="end_turn", model="claude-opus-5-5") -> FakeResponse:
     return FakeResponse(200, {"model": model, "stop_reason": stop_reason, "content": list(blocks)})
 
 
-def openai_response(content: Optional[str], finish_reason="stop", model="gpt-6.1-sol") -> FakeResponse:
+def openai_response(content: str | None, finish_reason="stop", model="gpt-6.1-sol") -> FakeResponse:
     return FakeResponse(
         200, {"model": model, "choices": [{"message": {"content": content}, "finish_reason": finish_reason}]}
     )
@@ -460,7 +460,7 @@ def test_custom_client_class_must_subclass_client():
     config.ai_provider = "custom"
     config.ai_summary = True
     config.ai_custom_client = "tests.test_ai:FakeApi"
-    with pytest.raises(RuntimeError, match="subclass"):
+    with pytest.raises(TypeError, match="subclass"):
         ai.get_llm_client()
 
 
@@ -524,7 +524,7 @@ class CountingClient(EchoClient):
     """Counts one token per character, with a small context window."""
 
     window = 10_000
-    calls: List[str]
+    calls: list[str]
 
     def __init__(self):
         super().__init__()
@@ -540,7 +540,7 @@ class CountingClient(EchoClient):
         return 0
 
 
-def metadata_with_sections(sizes: Dict[str, int]) -> ai.AiReportMetadata:
+def metadata_with_sections(sizes: dict[str, int]) -> ai.AiReportMetadata:
     return ai.AiReportMetadata(
         tools={"tool": ai.AiToolMetadata(name="Tool")},
         sections={
@@ -574,7 +574,7 @@ def test_build_prompt_without_client_includes_everything():
 def test_summary_retries_with_less_data_on_overflow(monkeypatch):
     config.ai_summary = True
     client = CountingClient()
-    budgets: List[int] = []
+    budgets: list[int] = []
 
     def interpret(prompt: str):
         budgets.append(len(prompt))

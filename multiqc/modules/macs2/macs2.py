@@ -30,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Parse logs
-        self.macs_data = dict()
+        self.macs_data = {}
         for f in self.find_log_files("macs2", filehandles=True):
             self.parse_macs(f)
             self.add_data_source(f)
@@ -118,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def macs_filtered_reads_plot(self):
         """Plot of filtered reads for control and treatment samples"""
-        data = dict()
+        data = {}
         req_cats = [
             "control_fragments_total",
             "control_fragments_after_filtering",
@@ -126,9 +126,9 @@ class MultiqcModule(BaseMultiqcModule):
             "treatment_fragments_after_filtering",
         ]
         for s_name, d in self.macs_data.items():
-            if all([c in d for c in req_cats]):
-                data[f"{s_name}: Control"] = dict()
-                data[f"{s_name}: Treatment"] = dict()
+            if all(c in d for c in req_cats):
+                data[f"{s_name}: Control"] = {}
+                data[f"{s_name}: Treatment"] = {}
                 data[f"{s_name}: Control"]["fragments_filtered"] = (
                     d["control_fragments_total"] - d["control_fragments_after_filtering"]
                 )

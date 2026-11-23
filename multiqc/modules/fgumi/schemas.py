@@ -2,26 +2,19 @@
 
 ``FgumiMetric`` mirrors the API of fgmetric (https://github.com/fg-labs/fgmetric): one pydantic model per
 row of a delimited metric file. fgmetric is not a dependency because it requires Python >= 3.12 and
-pydantic >= 2.11, while MultiQC supports Python >= 3.9 and pydantic >= 2.7. Keeping the same shape makes a
+pydantic >= 2.11, while MultiQC supports Python >= 3.10 and pydantic >= 2.7. Keeping the same shape makes a
 later switch mechanical.
 
 Column names and order follow fgumi's published contract, ``crates/fgumi-metrics/metric_columns.json``.
 """
 
-from typing import (
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Type,
-    TypeVar,
-    Union,
-    get_args,
-    get_origin,
-)
+from collections.abc import Iterable, Iterator
+from typing import TypeVar, get_args
 
 from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
+from typing_extensions import Self
+
+from multiqc.utils.util_functions import is_union
 
 M = TypeVar("M", bound="FgumiMetric")
 
@@ -31,7 +24,7 @@ class MetricFormatError(ValueError):
 
 
 def _allows_none(annotation: object) -> bool:
-    return get_origin(annotation) is Union and type(None) in get_args(annotation)
+    return is_union(annotation) and type(None) in get_args(annotation)
 
 
 class FgumiMetric(BaseModel):
@@ -60,7 +53,7 @@ class FgumiMetric(BaseModel):
         return data
 
     @classmethod
-    def columns(cls) -> List[str]:
+    def columns(cls) -> list[str]:
         """The column names this schema reads, in declaration order."""
         return [field.alias or name for name, field in cls.model_fields.items()]
 
@@ -70,7 +63,7 @@ class FgumiMetric(BaseModel):
         return set(cls.columns()) <= set(header)
 
     @classmethod
-    def validate_row(cls: Type[M], row: Dict[str, str], source: str, number: int) -> M:
+    def validate_row(cls, row: dict[str, str], source: str, number: int) -> Self:
         """Data row ``number`` of ``source`` validated as this schema; ``MetricFormatError`` if it does not fit."""
         try:
             return cls.model_validate(row)
@@ -78,13 +71,13 @@ class FgumiMetric(BaseModel):
             raise MetricFormatError(f"{source}: data row {number}: {error}") from error
 
     @classmethod
-    def iter_dicts(cls, lines: Iterable[str], source: str) -> Iterator[Dict[str, str]]:
+    def iter_dicts(cls, lines: Iterable[str], source: str) -> Iterator[dict[str, str]]:
         """Yields each data row as ``{column: cell}`` after checking the header has every schema column.
 
         Raises ``MetricFormatError`` naming ``source`` for an empty file, a missing column, or a row whose
         cell count differs from the header's.
         """
-        header: Optional[List[str]] = None
+        header: list[str] | None = None
         for number, raw in enumerate(lines, start=1):
             line = raw.rstrip("\r\n")
             if not line:
@@ -103,13 +96,13 @@ class FgumiMetric(BaseModel):
             raise MetricFormatError(f"{source}: empty file, expected a header row")
 
     @classmethod
-    def iter_rows(cls: Type[M], lines: Iterable[str], source: str) -> Iterator[M]:
+    def iter_rows(cls, lines: Iterable[str], source: str) -> Iterator[Self]:
         """Yields each data row validated as this schema."""
         for number, row in enumerate(cls.iter_dicts(lines, source), start=1):
             yield cls.validate_row(row, source, number)
 
     @classmethod
-    def read(cls: Type[M], text: str, source: str) -> List[M]:
+    def read(cls, text: str, source: str) -> list[Self]:
         """All rows of ``text`` (a whole metric file) validated as this schema."""
         return list(cls.iter_rows(text.splitlines(), source))
 
@@ -157,7 +150,7 @@ class DeduplicationMetric(FgumiMetric):
     duplicate_rate: float
     total_reads: int
     percent_duplication: float
-    estimated_library_size: Optional[int]
+    estimated_library_size: int | None
 
 
 class DuplicationLadderMetric(FgumiMetric):

@@ -1,4 +1,5 @@
 import base64
+import contextlib
 import importlib
 import json
 import logging
@@ -6,9 +7,10 @@ import math
 import os
 import re
 import time
-from functools import lru_cache
+from collections.abc import Callable, Collection
+from functools import cache, partial
 from textwrap import indent
-from typing import Any, Callable, Collection, Dict, List, NamedTuple, Optional, Set, Tuple
+from typing import Any, NamedTuple
 
 import requests
 import yaml
@@ -148,25 +150,25 @@ PROMPT_FULL = f"""\
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
-    detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
+    detailed_analysis: str | None = Field(description="Detailed analysis", default=None)
 
 
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    thread_id: Optional[str] = None
+    thread_id: str | None = None
 
 
 class LlmResponse(NamedTuple):
     content: str
     model: str
-    thread_id: Optional[str] = None
+    thread_id: str | None = None
 
 
 class ProviderError(Exception):
     """An error returned by an AI provider, in the same shape for HTTP APIs and boto3."""
 
-    def __init__(self, status: Optional[int], message: str, param: Optional[str] = None):
+    def __init__(self, status: int | None, message: str, param: str | None = None):
         super().__init__(f"HTTP {status}: {message}" if status else message)
         self.status = status
         self.message = message
@@ -195,7 +197,7 @@ _MODEL_UNAVAILABLE_RE = re.compile(
 _MAX_TOKENS_LIMIT_RE = re.compile(r"max_tokens\D*?\d+\s*>\s*(?P<limit>\d+)")
 
 
-@lru_cache(maxsize=None)
+@cache
 def _tiktoken_encoding():
     import tiktoken
 
@@ -204,7 +206,7 @@ def _tiktoken_encoding():
     return tiktoken.get_encoding("o200k_base")
 
 
-def _apply_extra_options(body: Dict[str, Any]) -> Dict[str, Any]:
+def _apply_extra_options(body: dict[str, Any]) -> dict[str, Any]:
     """Merge `ai_extra_query_options` into a request body. A null value removes that field."""
     for key, value in (config.ai_extra_query_options or {}).items():
         if key == "thinking_budget_tokens":
@@ -216,7 +218,7 @@ def _apply_extra_options(body: Dict[str, Any]) -> Dict[str, Any]:
     return body
 
 
-def _merge_headers(base: Dict[str, str], extra: Optional[Dict[str, Optional[str]]]) -> Dict[str, str]:
+def _merge_headers(base: dict[str, str], extra: dict[str, str | None] | None) -> dict[str, str]:
     """Override headers case-insensitively. A null value removes the header."""
     merged = dict(base)
     for key, value in (extra or {}).items():
@@ -254,11 +256,11 @@ def _get_path(data: Any, path: str) -> Any:
 def _text_at_path(response: Any, path: str) -> str:
     value = _get_path(response, path)
     if not isinstance(value, str):
-        raise ValueError(f"ai_custom_response_path '{path}' points to a {type(value).__name__}, not to text")
+        raise TypeError(f"ai_custom_response_path '{path}' points to a {type(value).__name__}, not to text")
     return value
 
 
-def _error_details(response: requests.Response) -> Tuple[str, Optional[str]]:
+def _error_details(response: requests.Response) -> tuple[str, str | None]:
     """The message and the named field (if any) from an error response."""
     try:
         data = response.json()
@@ -289,14 +291,14 @@ class Client:
     # Request fields that are never dropped when a provider rejects a request
     required_fields: Collection[str] = ("model", "messages")
 
-    def __init__(self, api_key: Optional[str] = None):
-        self.api_key: Optional[str] = api_key
+    def __init__(self, api_key: str | None = None):
+        self.api_key: str | None = api_key
         self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
         self.prompt_full = config.ai_prompt_full or PROMPT_FULL
-        self._context_window: Optional[int] = None
+        self._context_window: int | None = None
         self._token_warning_printed = False
         # Request fields the model has rejected, left out of later requests
-        self._rejected_fields: Set[str] = set()
+        self._rejected_fields: set[str] = set()
 
     @property
     def model_info(self) -> ModelInfo:
@@ -329,7 +331,7 @@ class Client:
                 model=response.model,
             )
 
-    def discover_context_window(self) -> Optional[int]:
+    def discover_context_window(self) -> int | None:
         """Ask the provider for the model's context window. Return None if it can't tell."""
         return None
 
@@ -372,7 +374,7 @@ class Client:
                 self._token_warning_printed = True
             return int(len(text) / 1.5)
 
-    def _post(self, url: str, headers: Dict[str, str], body: Dict[str, Any]) -> Dict[str, Any]:
+    def _post(self, url: str, headers: dict[str, str], body: dict[str, Any]) -> dict[str, Any]:
         """POST JSON, raising ProviderError for any failure."""
         try:
             response = requests.post(url, headers=headers, json=body, timeout=(30, 900))
@@ -383,7 +385,7 @@ class Client:
             raise ProviderError(response.status_code, message, param)
         return response.json()
 
-    def _get(self, url: str, headers: Dict[str, str]) -> Optional[Any]:
+    def _get(self, url: str, headers: dict[str, str]) -> Any | None:
         """GET JSON for optional lookups. Returns None on any failure."""
         try:
             response = requests.get(url, headers=headers, timeout=15)
@@ -394,7 +396,7 @@ class Client:
             logger.debug(f"GET {url} failed: {e}")
         return None
 
-    def _probe_context_window(self, url: str, headers: Dict[str, str]) -> Optional[int]:
+    def _probe_context_window(self, url: str, headers: dict[str, str]) -> int | None:
         """Read the model's context window from a models endpoint, if it reports one."""
         listing = self._get(url, headers)
         entry = ai_models.find_model_entry(listing, self.model)
@@ -403,7 +405,7 @@ class Client:
             logger.debug(f"{url} reports a context window of {window:,} tokens for {self.model}")
         return window
 
-    def _send(self, body: Dict[str, Any], send: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Dict[str, Any]:
+    def _send(self, body: dict[str, Any], send: Callable[[dict[str, Any]], dict[str, Any]]) -> dict[str, Any]:
         """
         Send a request and recover from what can be recovered from:
         - timeouts, rate limits and server errors are retried with backoff
@@ -418,7 +420,7 @@ class Client:
             try:
                 if config.verbose:
                     return send(body)
-                return run_with_spinner("ai", f"Summarizing report with {self.title}...", lambda: send(body))
+                return run_with_spinner("ai", f"Summarizing report with {self.title}...", partial(send, body))
             except ProviderError as e:
                 if e.status in (None, 400, 413, 422):
                     overflow = ai_models.parse_context_overflow(e.message)
@@ -445,7 +447,7 @@ class Client:
                     logger.debug(f"Request body: {json.dumps(_redact(body), indent=2)}")
                 raise
 
-    def _repair_rejected_field(self, body: Dict[str, Any], error: ProviderError) -> Optional[Dict[str, Any]]:
+    def _repair_rejected_field(self, body: dict[str, Any], error: ProviderError) -> dict[str, Any] | None:
         """
         If the provider rejected a field of the request, return the request without it (or with it
         fixed, for fields that are required). Returns None if no field can be blamed.
@@ -473,7 +475,7 @@ class Client:
         return None
 
 
-def _redact(body: Dict[str, Any]) -> Dict[str, Any]:
+def _redact(body: dict[str, Any]) -> dict[str, Any]:
     """A copy of a request body with the prompt removed, for logging."""
     redacted = json.loads(json.dumps(body))
     for m in redacted.get("messages", []):
@@ -493,7 +495,7 @@ def _thinking_budget_tokens() -> int:
     return config.ai_thinking_budget_tokens or (int(legacy) if legacy else 10_000)
 
 
-def _claude_thinking(info: ModelInfo) -> Optional[Dict[str, Any]]:
+def _claude_thinking(info: ModelInfo) -> dict[str, Any] | None:
     """The `thinking` field for a Claude model, if `ai_extended_thinking` is on and the model supports it."""
     if not config.ai_extended_thinking:
         return None
@@ -506,7 +508,7 @@ def _claude_thinking(info: ModelInfo) -> Optional[Dict[str, Any]]:
     return None
 
 
-def _claude_output_tokens(info: ModelInfo, model_max: Optional[int] = None) -> int:
+def _claude_output_tokens(info: ModelInfo, model_max: int | None = None) -> int:
     tokens = config.ai_max_completion_tokens or ai_models.claude_default_max_tokens(info)
     if config.ai_extended_thinking and ai_models.claude_thinking_style(info) == "budget":
         tokens = max(tokens, _thinking_budget_tokens() + 4096)  # the budget must be below max_tokens
@@ -515,12 +517,12 @@ def _claude_output_tokens(info: ModelInfo, model_max: Optional[int] = None) -> i
     return tokens
 
 
-def _anthropic_body(info: ModelInfo, content: Any, max_tokens: int) -> Dict[str, Any]:
+def _anthropic_body(info: ModelInfo, content: Any, max_tokens: int) -> dict[str, Any]:
     """
     A Claude Messages API request body. Only what was asked for is sent: no sampling parameters,
     and no thinking settings unless configured, so each model runs with its own defaults.
     """
-    body: Dict[str, Any] = {"max_tokens": max_tokens, "messages": [{"role": "user", "content": content}]}
+    body: dict[str, Any] = {"max_tokens": max_tokens, "messages": [{"role": "user", "content": content}]}
     if thinking := _claude_thinking(info):
         body["thinking"] = thinking
     if config.ai_reasoning_effort:
@@ -528,7 +530,7 @@ def _anthropic_body(info: ModelInfo, content: Any, max_tokens: int) -> Dict[str,
     return body
 
 
-def _parse_anthropic_response(response: Dict[str, Any], model: str) -> LlmResponse:
+def _parse_anthropic_response(response: dict[str, Any], model: str) -> LlmResponse:
     """Read the answer from a Claude response, which can contain thinking and fallback blocks besides text."""
     stop_reason = response.get("stop_reason")
     if stop_reason == "refusal":
@@ -551,7 +553,7 @@ def _parse_anthropic_response(response: Dict[str, Any], model: str) -> LlmRespon
     return LlmResponse(content=text, model=response.get("model", model))
 
 
-def _parse_openai_response(response: Dict[str, Any], model: str) -> LlmResponse:
+def _parse_openai_response(response: dict[str, Any], model: str) -> LlmResponse:
     choice = response["choices"][0]
     message = choice["message"]
     content = message.get("content")
@@ -577,10 +579,10 @@ class OpenAiClient(Client):
 
     def __init__(
         self,
-        api_key: Optional[str],
-        endpoint: Optional[str] = None,
-        headers: Optional[Dict[str, Optional[str]]] = None,
-        response_path: Optional[str] = None,
+        api_key: str | None,
+        endpoint: str | None = None,
+        headers: dict[str, str | None] | None = None,
+        response_path: str | None = None,
     ):
         super().__init__(api_key)
 
@@ -599,7 +601,7 @@ class OpenAiClient(Client):
         self.extra_headers = headers
         self.response_path = response_path
 
-    def _headers(self) -> Dict[str, str]:
+    def _headers(self) -> dict[str, str]:
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             if config.ai_auth_type == "api-key":
@@ -608,13 +610,13 @@ class OpenAiClient(Client):
                 headers["Authorization"] = f"Bearer {self.api_key}"
         return _merge_headers(headers, self.extra_headers)
 
-    def discover_context_window(self) -> Optional[int]:
+    def discover_context_window(self) -> int | None:
         if self.name != "custom":
             return None  # OpenAI's models endpoint doesn't report context windows
         return self._probe_context_window(ai_models.models_url_for_endpoint(self.endpoint), self._headers())
 
     def query(self, prompt: str) -> LlmResponse:
-        body: Dict[str, Any] = {"model": self.model, "messages": [{"role": "user", "content": prompt}]}
+        body: dict[str, Any] = {"model": self.model, "messages": [{"role": "user", "content": prompt}]}
         if config.ai_reasoning_effort:
             body["reasoning_effort"] = config.ai_reasoning_effort
         if config.ai_max_completion_tokens:
@@ -636,10 +638,10 @@ class AnthropicClient(Client):
 
     def __init__(
         self,
-        api_key: Optional[str],
-        endpoint: Optional[str] = None,
-        headers: Optional[Dict[str, Optional[str]]] = None,
-        response_path: Optional[str] = None,
+        api_key: str | None,
+        endpoint: str | None = None,
+        headers: dict[str, str | None] | None = None,
+        response_path: str | None = None,
     ):
         super().__init__(api_key)
         if endpoint:
@@ -663,10 +665,10 @@ class AnthropicClient(Client):
             self.title = "Anthropic"
         self.extra_headers = headers
         self.response_path = response_path
-        self._model_details: Optional[Dict[str, Any]] = None
+        self._model_details: dict[str, Any] | None = None
         self._model_details_fetched = False
 
-    def _headers(self, body: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+    def _headers(self, body: dict[str, Any] | None = None) -> dict[str, str]:
         headers = {"Content-Type": "application/json", "anthropic-version": ai_models.ANTHROPIC_API_VERSION}
         if self.api_key:
             headers["x-api-key"] = self.api_key
@@ -674,7 +676,7 @@ class AnthropicClient(Client):
             headers["anthropic-beta"] = ai_models.ANTHROPIC_FALLBACK_BETA
         return _merge_headers(headers, self.extra_headers)
 
-    def _model_details_from_api(self) -> Optional[Dict[str, Any]]:
+    def _model_details_from_api(self) -> dict[str, Any] | None:
         """The model's entry from the Claude models API (context window, max output), fetched once."""
         if not self._model_details_fetched:
             self._model_details_fetched = True
@@ -687,7 +689,7 @@ class AnthropicClient(Client):
                 self._model_details = ai_models.find_model_entry(self._get(models_url, self._headers()), self.model)
         return self._model_details
 
-    def discover_context_window(self) -> Optional[int]:
+    def discover_context_window(self) -> int | None:
         return ai_models.find_context_window(self._model_details_from_api())
 
     def output_tokens(self) -> int:
@@ -728,7 +730,7 @@ class AWSBedrockClient(Client):
     def output_tokens(self) -> int:
         return _claude_output_tokens(self.model_info)
 
-    def _invoke(self, body: Dict[str, Any]) -> Dict[str, Any]:
+    def _invoke(self, body: dict[str, Any]) -> dict[str, Any]:
         from botocore.exceptions import BotoCoreError, ClientError  # type: ignore
 
         try:
@@ -765,14 +767,14 @@ class SeqeraClient(Client):
         # Every field is needed by the Seqera endpoint, never drop any
         self.required_fields = ("message", "tags", "title", "response_schema")
 
-    def discover_context_window(self) -> Optional[int]:
+    def discover_context_window(self) -> int | None:
         return 200000
 
     def wrap_details(self, prompt) -> str:
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     def _send_request(
-        self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
+        self, prompt: str, report_content: str, extra_options: dict[str, Any] | None = None
     ) -> LlmResponse:
         body = {
             "message": self.wrap_details(prompt + "\n\n" + report_content),
@@ -833,7 +835,7 @@ class SeqeraClient(Client):
             raise
 
 
-def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+def check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Public function to check if AWS Bedrock is available and usable.
     Can be used for diagnostics.
@@ -844,7 +846,7 @@ def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
     return _check_bedrock_availability()
 
 
-def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+def _check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Check if AWS Bedrock is available and usable.
 
@@ -862,14 +864,12 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
 
         # Get the current region
         session = boto3.Session()
-        region: Optional[str] = session.region_name
+        region: str | None = session.region_name
 
         # If no region is set, try to get it from the client
         if not region:
-            try:
+            with contextlib.suppress(Exception):
                 region = client.meta.region_name
-            except Exception:
-                pass
 
         # If still no region, check environment variable
         if not region:
@@ -930,21 +930,19 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
         except Exception as e:
             if "AccessDenied" in str(e):
                 return False, f"Access denied to Bedrock: {e}"
-            elif "UnauthorizedOperation" in str(e):
+            if "UnauthorizedOperation" in str(e):
                 return False, f"Insufficient permissions for Bedrock: {e}"
-            else:
-                return False, f"Error checking Bedrock permissions: {e}"
+            return False, f"Error checking Bedrock permissions: {e}"
 
     except Exception as e:
         if "NoCredentialsError" in str(e):
             return False, "AWS credentials not configured"
-        elif "InvalidAccessKeyId" in str(e):
+        if "InvalidAccessKeyId" in str(e):
             return False, "Invalid AWS credentials"
-        else:
-            return False, f"Error creating Bedrock client: {e}"
+        return False, f"Error creating Bedrock client: {e}"
 
 
-def _auto_detect_provider() -> Optional[str]:
+def _auto_detect_provider() -> str | None:
     """
     Auto-detect AI provider based on available environment variables.
 
@@ -971,7 +969,7 @@ def _auto_detect_provider() -> Optional[str]:
     is_available, error_msg = _check_bedrock_availability()
     if is_available:
         return "aws_bedrock"
-    elif error_msg and config.verbose:
+    if error_msg and config.verbose:
         logger.debug(f"AWS Bedrock not available: {error_msg}")
 
     return None
@@ -985,7 +983,7 @@ def _load_client_class(spec: str) -> Client:
     except (ImportError, AttributeError) as e:
         raise RuntimeError(f"Could not load the AI provider '{spec}': {e}") from e
     if not (isinstance(client_class, type) and issubclass(client_class, Client)):
-        raise RuntimeError(f"The AI provider '{spec}' must be a subclass of multiqc.core.ai.Client")
+        raise TypeError(f"The AI provider '{spec}' must be a subclass of multiqc.core.ai.Client")
     return client_class()
 
 
@@ -1002,7 +1000,7 @@ def _custom_client() -> Client:
     api_style = config.ai_custom_api_style or "openai"
     key_variable = "ANTHROPIC_API_KEY" if api_style == "anthropic" else "OPENAI_API_KEY"
     api_key = os.environ.get(key_variable)
-    headers: Optional[Dict[str, Optional[str]]] = None
+    headers: dict[str, str | None] | None = None
     if config.ai_custom_headers is not None:
         headers = {
             key: _expand_env_vars(value) if isinstance(value, str) else value
@@ -1023,7 +1021,7 @@ def _custom_client() -> Client:
     )
 
 
-def get_llm_client() -> Optional[Client]:
+def get_llm_client() -> Client | None:
     if not config.ai_summary:
         return None
 
@@ -1053,7 +1051,7 @@ def get_llm_client() -> Optional[Client]:
             )
         return SeqeraClient(api_key)
 
-    elif provider == "anthropic":
+    if provider == "anthropic":
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             raise RuntimeError(
@@ -1063,7 +1061,7 @@ def get_llm_client() -> Optional[Client]:
         logger.debug("Using Anthropic API key from ANTHROPIC_API_KEY environment variable")
         return AnthropicClient(api_key)
 
-    elif provider == "openai":
+    if provider == "openai":
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError(
@@ -1073,7 +1071,7 @@ def get_llm_client() -> Optional[Client]:
         logger.debug("Using OpenAI API key from OPENAI_API_KEY environment variable")
         return OpenAiClient(api_key)
 
-    elif provider == "aws_bedrock":
+    if provider == "aws_bedrock":
         try:
             return AWSBedrockClient()
         except ModuleNotFoundError:
@@ -1099,25 +1097,25 @@ def _strip_html(text: str) -> str:
 
 class AiToolMetadata(BaseModel):
     name: str
-    info: Optional[str] = None
-    href: Optional[str] = None
-    comment: Optional[str] = None
+    info: str | None = None
+    href: str | None = None
+    comment: str | None = None
 
 
 class AiSectionMetadata(BaseModel):
     name: str
     module_anchor: Anchor
-    description: Optional[str] = None
-    comment: Optional[str] = None
-    helptext: Optional[str] = None
-    plot_anchor: Optional[Anchor] = None
-    content: Optional[str] = None
-    content_before_plot: Optional[str] = None
+    description: str | None = None
+    comment: str | None = None
+    helptext: str | None = None
+    plot_anchor: Anchor | None = None
+    content: str | None = None
+    content_before_plot: str | None = None
 
 
 class AiReportMetadata(BaseModel):
-    tools: Dict[Anchor, AiToolMetadata]
-    sections: Dict[Anchor, AiSectionMetadata]
+    tools: dict[Anchor, AiToolMetadata]
+    sections: dict[Anchor, AiSectionMetadata]
 
 
 def ai_section_metadata() -> AiReportMetadata:
@@ -1150,7 +1148,7 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[str, str]:
+def create_pseudonym_map(sample_names: list[SampleName]) -> dict[str, str]:
     """
     Find all sample names in the report and replace them with anonymised names
     """
@@ -1211,19 +1209,18 @@ def _section_context(section: AiSectionMetadata, tool: AiToolMetadata) -> str:
 
     if section.plot_anchor and section.plot_anchor in report.plot_by_id:
         plot = report.plot_by_id[section.plot_anchor]
-        if isinstance(plot, Plot):
-            if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
-                if plot.pconfig.title:
-                    context += f"Title: {plot.pconfig.title}\n"
-                context += "\n" + plot_content
+        if isinstance(plot, Plot) and (plot_content := plot.format_for_ai_prompt(keep_hidden=True)):
+            if plot.pconfig.title:
+                context += f"Title: {plot.pconfig.title}\n"
+            context += "\n" + plot_content
     return context
 
 
 def build_prompt(
     metadata: AiReportMetadata,
     system_prompt: str,
-    client: Optional[Client] = None,
-    budget: Optional[int] = None,
+    client: Client | None = None,
+    budget: int | None = None,
 ) -> PromptBuild:
     """
     Build the report part of the prompt, fitting as much of the report as possible into the budget
@@ -1290,7 +1287,7 @@ def build_prompt(
         return f"{_SEPARATOR}{n_skipped} report sections were left out to fit the model's context window.\n"
 
     sections_limit = limit - count(short_note(len(metadata.sections)))
-    skipped: List[str] = []
+    skipped: list[str] = []
     for section in metadata.sections.values():
         tool = metadata.tools[section.module_anchor]
         context = _section_context(section, tool)
@@ -1330,9 +1327,9 @@ def _save_prompt_to_file(system_prompt: str, prompt: str):
     logger.debug(f"Saved AI prompt to {path.parent.name}/{path.name}")
 
 
-def _ai_js_config(client: Optional[Client]) -> Dict[str, Any]:
+def _ai_js_config(client: Client | None) -> dict[str, Any]:
     """Settings the browser needs to make the same requests as Python does."""
-    js_config: Dict[str, Any] = {
+    js_config: dict[str, Any] = {
         "defaultModels": DEFAULT_MODELS,
         "reasoningEffort": config.ai_reasoning_effort,
         "maxCompletionTokens": config.ai_max_completion_tokens,
@@ -1412,7 +1409,7 @@ def add_ai_summary_to_report():
     # get_llm_client() will raise an exception if configuration is invalid when ai_summary=True
     try:
         client = get_llm_client()
-    except (RuntimeError, ValueError) as e:
+    except (RuntimeError, TypeError, ValueError) as e:
         logger.error(f"Failed to initialize AI client: {e}")
         if config.strict:
             raise
@@ -1425,7 +1422,7 @@ def add_ai_summary_to_report():
     report.ai_js_config = _ai_js_config(client)
 
     budget = client.prompt_budget()
-    response: Optional[InterpretationResponse] = None
+    response: InterpretationResponse | None = None
     for _ in range(_MAX_OVERFLOW_RETRIES + 1):
         build = build_prompt(metadata, system_prompt, client, budget)
         _save_prompt_to_file(system_prompt, build.prompt)
@@ -1449,16 +1446,16 @@ def add_ai_summary_to_report():
             logger.error(f"Failed to interpret report with {client.title}: {e}")
             if config.strict:
                 raise
-            return None
+            return
 
     if response is None:
         logger.error(f"The prompt was still too long for {client.model} after {_MAX_OVERFLOW_RETRIES} retries")
         if config.strict:
             raise RuntimeError(f"Could not fit the report into the context window of {client.model}")
-        return None
+        return
 
     if not response.interpretation:
-        return None
+        return
 
     if response.model:
         report.ai_model_resolved = response.model
