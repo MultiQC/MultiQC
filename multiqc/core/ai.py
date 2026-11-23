@@ -1409,13 +1409,10 @@ def add_ai_summary_to_report():
     report.ai_extra_query_options_base64 = base64.b64encode(
         json.dumps(config.ai_extra_query_options or {}).encode()
     ).decode()
+    # Only custom prompts: the default full prompt asks for YAML, which only Python parses,
+    # so the browser uses its own Markdown defaults
     report.ai_prompts_base64 = base64.b64encode(
-        json.dumps(
-            {
-                "short": config.ai_prompt_short or PROMPT_SHORT,
-                "full": config.ai_prompt_full or PROMPT_FULL,
-            }
-        ).encode()
+        json.dumps({"short": config.ai_prompt_short, "full": config.ai_prompt_full}).encode()
     ).decode()
     report.ai_js_config = _ai_js_config(None)
     uses_custom_client = config.ai_provider == "custom" and bool(config.ai_custom_client)

@@ -1,3 +1,4 @@
+import base64
 import io
 import json
 import shutil
@@ -636,6 +637,15 @@ def test_js_config(monkeypatch):
     assert report.ai_js_config["defaultModels"] == ai_models.DEFAULT_MODELS
     assert report.ai_js_config["contextWindows"] == {"echo-1": 10_000}
     assert report.ai_js_config["anthropicApiVersion"] == ai_models.ANTHROPIC_API_VERSION
+
+
+def test_browser_gets_only_custom_prompts(monkeypatch):
+    config.ai_summary = True
+    monkeypatch.setattr(ai, "get_llm_client", lambda: CountingClient())
+    monkeypatch.setattr(config, "ai_prompt_full", "Use me full!")
+    ai.add_ai_summary_to_report()
+    prompts = json.loads(base64.b64decode(report.ai_prompts_base64))
+    assert prompts == {"short": None, "full": "Use me full!"}
 
 
 def test_rejected_field_is_not_sent_again(fake_api):
