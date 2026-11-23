@@ -1,7 +1,5 @@
 """`review`: the `<output>.txt` detail file of consensus reads supporting each reviewed variant, summarized."""
 
-from typing import Dict, Set
-
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
 
@@ -9,8 +7,8 @@ from .schemas import MetricFormatError, ReviewDetailMetric
 from .util import register, skip_unreadable, stream_dicts
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, int]] = {}
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int]] = {}
     for f in module.find_log_files("fgumi/review", filehandles=True):
         if f["f"] is None:
             continue

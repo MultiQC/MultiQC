@@ -79,7 +79,7 @@ def test_heatmap_axes_are_contiguous_and_capped(run_fgumi):
     dataset = report.plot_by_id["fgumi_duplex_ab_ba_B"].datasets[0]
     # As fgbio draws it: AB size on x, BA size on y.
     assert dataset.xcats == [str(i) for i in range(1, 20)] + ["20+"]
-    assert dataset.ycats == [str(i) for i in range(0, 20)] + ["20+"]
+    assert dataset.ycats == [str(i) for i in range(20)] + ["20+"]
     assert dataset.rows[-1][-1] == pytest.approx(math.log10(30))
 
 

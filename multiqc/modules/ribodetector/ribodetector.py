@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -34,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and parse log files
-        self.ribodetector: Dict[str, Dict] = {}
+        self.ribodetector: dict[str, dict] = {}
         for f in self.find_log_files("ribodetector", filehandles=True):
             parsed = self.parse_ribodetector_log(f)
             if parsed:
@@ -69,9 +68,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed data to file
         self.write_data_file(self.ribodetector, "multiqc_ribodetector")
 
-    def parse_ribodetector_log(self, f) -> Optional[Dict]:
+    def parse_ribodetector_log(self, f) -> dict | None:
         """Parse a RiboDetector log file."""
-        data: Dict = {}
+        data: dict = {}
 
         # Regex to strip ANSI escape codes
         ansi_escape = re.compile(r"\x1b\[[0-9;]*m")

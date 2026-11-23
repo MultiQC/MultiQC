@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/friendsofstrandseq/mosaicatcher/blob/master/LICENSE.md",
         )
 
-        data_by_sample = dict()
+        data_by_sample = {}
         for f in list(self.find_log_files("mosaicatcher", filehandles=False)):
             data_by_sample = self._parse_samples(f, data_by_sample)
             self.add_data_source(f)

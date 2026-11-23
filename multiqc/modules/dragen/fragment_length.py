@@ -23,7 +23,7 @@ class DragenFragmentLength(BaseMultiqcModule):
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, section="fragment_length_hist")
 
-            for rg, data in data_by_rg.items():
+            for rg in data_by_rg:
                 if any(rg in d_rg for sn, d_rg in data_by_rg_by_sample.items()):
                     log.debug(f"Duplicate read group name {rg} found for {s_name}! Overwriting")
             data_by_rg_by_sample[s_name].update(data_by_rg)
@@ -56,11 +56,11 @@ class DragenFragmentLength(BaseMultiqcModule):
         self.add_section(
             name="Fragment length hist",
             anchor="dragen-fragment-length-histogram",
-            description="""
+            description=f"""
             Distribution of estimated fragment lengths of mapped reads per read group.
-            Only points supported by at least {} reads are shown to prevent long flat tail.
+            Only points supported by at least {MIN_CNT_TO_SHOW_ON_PLOT} reads are shown to prevent long flat tail.
             The plot is also smoothed down to showing 300 points on the X axis to reduce noise.
-            """.format(MIN_CNT_TO_SHOW_ON_PLOT),
+            """,
             plot=linegraph.plot(
                 data_by_rg,
                 {

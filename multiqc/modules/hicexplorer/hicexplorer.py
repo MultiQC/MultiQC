@@ -24,7 +24,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/deeptools/HiCExplorer/blob/master/LICENSE",
         )
 
-        self.hicexplorer_data = dict()
+        self.hicexplorer_data = {}
         for f in self.find_log_files("hicexplorer"):
             if f["fn"] != "QC_table.txt":
                 # Parse the log file
@@ -324,7 +324,7 @@ class MultiqcModule(BaseMultiqcModule):
     def hicexplorer_create_plot(self, pKeyList, pTitle, pId):
         """Create the graphics containing information about the read quality."""
 
-        keys = dict()
+        keys = {}
         for i, key_ in enumerate(pKeyList):
             keys[key_] = {"color": self.colors[i]}
 
