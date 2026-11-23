@@ -1,6 +1,5 @@
 import logging
 import os.path
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -31,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any HiC-Pro summary reports
-        self.hicpro_data: Dict = dict()
+        self.hicpro_data: dict = {}
         for k in ["mmapstat", "mpairstat", "mergestat", "mRSstat", "assplit"]:
             for f in self.find_log_files(f"hicpro/{k}"):
                 self.parse_hicpro_stats(f, k)
@@ -168,7 +167,7 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_hicpro_stats(self, f, rsection):
         """Parse a HiC-Pro stat file"""
         s_name = self.clean_s_name(os.path.basename(f["root"]), f, root=os.path.dirname(f["root"]))
-        if s_name not in self.hicpro_data.keys():
+        if s_name not in self.hicpro_data:
             self.hicpro_data[s_name] = {}
 
         self.add_data_source(f, s_name, section=rsection)
@@ -242,9 +241,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "paired_reads": {
                 "title": "Reported Read Pairs",
-                "description": "Total number of read pairs ({}) passing the mapping filters".format(
-                    config.read_count_desc
-                ),
+                "description": f"Total number of read pairs ({config.read_count_desc}) passing the mapping filters",
                 "min": 0,
                 "scale": "RdYlBu",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -315,7 +312,7 @@ class MultiqcModule(BaseMultiqcModule):
                 n_local = self.hicpro_data[s_name].get(f"local_R{r}")
                 n_mapped = self.hicpro_data[s_name].get(f"mapped_R{r}")
                 n_total = self.hicpro_data[s_name].get(f"total_R{r}")
-                d = dict()
+                d = {}
                 if n_global is not None:
                     d["Full_Alignments_Read"] = n_global
                 if n_local is not None:
@@ -363,7 +360,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Reads",
         }
 
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+        if not any(k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys):
             # No data found to build this plot
             return
 
@@ -393,7 +390,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Read Pairs",
         }
 
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+        if not any(k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys):
             # No data found to build this plot
             return
 
@@ -418,7 +415,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+        if not any(k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys):
             # No data found to build this plot
             return
 
@@ -457,7 +454,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+        if not any(k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys):
             # No data found to build this plot
             return
 
@@ -480,7 +477,7 @@ class MultiqcModule(BaseMultiqcModule):
             "cpswitch_counts_label": "Number of Pairs",
         }
 
-        if not any([k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys]):
+        if not any(k in self.hicpro_data[s_name] for s_name in self.hicpro_data for k in keys):
             # No data found to build this plot
             return
 

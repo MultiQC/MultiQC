@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from multiqc import report, BaseMultiqcModule, write_report
+from multiqc import BaseMultiqcModule, report, write_report
 
 
 @pytest.fixture()

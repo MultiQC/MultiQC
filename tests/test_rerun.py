@@ -1,4 +1,3 @@
-import difflib
 import json
 from datetime import datetime, timedelta
 
@@ -333,7 +332,7 @@ def test_grouped_samples_survive_df_roundtrip():
     """
     original = _make_grouped_violin_data()
 
-    section = list(original.dt.section_by_id.values())[0]
+    section = next(iter(original.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     assert len(section.rows_by_sgroup[SampleGroup("SampleA")]) == 3
     assert section.rows_by_sgroup[SampleGroup("SampleA")][0].sample == SampleName("SampleA")
@@ -347,7 +346,7 @@ def test_grouped_samples_survive_df_roundtrip():
     assert row_samples == ["SampleA", "SampleA R1", "SampleA R2"]
 
     reconstructed = ViolinPlotInputData.from_df(df, original.pconfig, original.anchor)
-    section_r = list(reconstructed.dt.section_by_id.values())[0]
+    section_r = next(iter(reconstructed.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section_r.rows_by_sgroup
     group_a = section_r.rows_by_sgroup[SampleGroup("SampleA")]
@@ -412,7 +411,7 @@ def test_grouped_samples_survive_merge():
 
     merged = ViolinPlotInputData.merge(data1, data2)
 
-    section = list(merged.dt.section_by_id.values())[0]
+    section = next(iter(merged.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
@@ -447,9 +446,37 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     loaded = create_plot_input_data_only(plot_input_json)
     assert isinstance(loaded, ViolinPlotInputData)
 
-    section = list(loaded.dt.section_by_id.values())[0]
+    section = next(iter(loaded.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
     assert len(group_a) == 3
     agg = next(r for r in group_a if str(r.sample) == "SampleA")
     assert agg.data[ColumnKey("reads")].raw == 20000
+
+
+def test_wide_tables_merge_keeps_samples_missing_from_earlier_tables():
+    from multiqc.core.plot_data_store import wide_table_to_parquet
+
+    def wide_df(samples, metric):
+        return pl.DataFrame(
+            {
+                "anchor": [""] * len(samples),
+                "type": ["table_row"] * len(samples),
+                "creation_date": [datetime(2024, 1, 1)] * len(samples),
+                "plot_type": [None] * len(samples),
+                "plot_input_data": [None] * len(samples),
+                "sample": samples,
+                metric: [1.0] * len(samples),
+            },
+            schema_overrides={"plot_type": pl.Utf8, "plot_input_data": pl.Utf8},
+        )
+
+    wide_table_to_parquet(wide_df(["s1", "s2"], "t1 / x"), {ColumnKey("t1 / x")})
+    wide_table_to_parquet(wide_df(["s2", "s3"], "t2 / y"), {ColumnKey("t2 / y")})
+    flush_to_parquet()
+
+    rows = pl.read_parquet(tmp_dir.parquet_file()).filter(pl.col("type") == "table_row").sort("sample")
+    assert rows.get_column("sample").to_list() == ["s1", "s2", "s3"]
+    assert rows.get_column("creation_date").null_count() == 0
+    assert rows.get_column("t1 / x").to_list() == [1.0, 1.0, None]
+    assert rows.get_column("t2 / y").to_list() == [None, 1.0, 1.0]
