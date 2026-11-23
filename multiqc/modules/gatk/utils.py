@@ -24,11 +24,11 @@ def parse_report(lines, table_names):
         }
     """
 
-    report = dict()
+    report = {}
     lines = (line for line in lines)
     for line in lines:
         line = line.rstrip()
-        if line in table_names.keys():
+        if line in table_names:
             report[table_names[line]] = parse_gatk_report_table(lines)
     return report
 

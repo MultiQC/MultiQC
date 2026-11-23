@@ -1,7 +1,5 @@
 """`group --grouping-metrics` / `<prefix>.grouping_metrics.txt` and `<prefix>.position_group_sizes.txt`."""
 
-from typing import Dict, Set
-
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
 
@@ -17,15 +15,15 @@ _CATEGORIES = {
 }
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
-    grouping: Dict[str, Dict[str, int]] = {
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
+    grouping: dict[str, dict[str, int]] = {
         s_name: rows[0].model_dump()
         for s_name, rows in iter_samples(module, "fgumi/grouping_metrics", UmiGroupingMetric)
         if rows
     }
 
-    positions: Dict[str, Dict[int, float]] = {}
-    positions_cumulative: Dict[str, Dict[int, float]] = {}
+    positions: dict[str, dict[int, float]] = {}
+    positions_cumulative: dict[str, dict[int, float]] = {}
     for s_name, position_rows in iter_samples(module, "fgumi/position_group_sizes", PositionGroupSizeMetric):
         positions[s_name] = {r.position_group_size: r.count for r in position_rows}
         positions_cumulative[s_name] = drop_none(

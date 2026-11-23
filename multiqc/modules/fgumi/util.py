@@ -2,8 +2,9 @@
 
 import logging
 import math
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import PurePath
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, TypeVar
+from typing import Any, TypeVar
 
 from multiqc import config, report
 from multiqc.base_module import BaseMultiqcModule
@@ -47,7 +48,7 @@ def sample_name(module: BaseMultiqcModule, f: Any) -> str:
     return module.clean_s_name(fn, f)
 
 
-def register(module: BaseMultiqcModule, f: Any, s_name: Optional[str] = None, section: Optional[str] = None) -> str:
+def register(module: BaseMultiqcModule, f: Any, s_name: str | None = None, section: str | None = None) -> str:
     """Records ``f`` as a source for its sample (``s_name``, else derived from the file name) and returns the name.
 
     The data source is keyed by ``section`` (default: the file's search pattern), so a sample's several fgumi files
@@ -63,15 +64,15 @@ def register(module: BaseMultiqcModule, f: Any, s_name: Optional[str] = None, se
     return s_name
 
 
-def flatten(data: Mapping[str, Mapping[str, Any]]) -> Dict[str, Dict[str, Any]]:
+def flatten(data: Mapping[str, Mapping[str, Any]]) -> dict[str, dict[str, Any]]:
     """``data`` as the two-level ``{sample: {column: value}}`` table MultiQC's data files expect.
 
     A nested ``{tab: {x: value}}`` cell becomes ``{"<tab>_<x>": value}`` columns, and ``None`` values are left
     out so they are written as empty cells rather than the text "None".
     """
-    table: Dict[str, Dict[str, Any]] = {}
+    table: dict[str, dict[str, Any]] = {}
     for s_name, row in data.items():
-        flat: Dict[str, Any] = {}
+        flat: dict[str, Any] = {}
         for column, value in row.items():
             if isinstance(value, Mapping):
                 flat.update({f"{column}_{x}": v for x, v in value.items() if v is not None})
@@ -97,14 +98,14 @@ FGBIO_ONLY_PATTERNS = ("fgbio/errorratebyreadposition",)
 FAMILY_SIZE_MODULES = ("fgumi", "fgbio")
 
 
-def _directory_and_ancestors(root: str) -> List[str]:
+def _directory_and_ancestors(root: str) -> list[str]:
     path = PurePath(root)
     return [str(path)] + [str(parent) for parent in path.parents]
 
 
-def family_sizes_evidence() -> Dict[str, Tuple[bool, bool]]:
+def family_sizes_evidence() -> dict[str, tuple[bool, bool]]:
     """For every directory holding (at any depth) fgumi-only or fgbio-only files: whether it has each kind."""
-    evidence: Dict[str, Tuple[bool, bool]] = {}
+    evidence: dict[str, tuple[bool, bool]] = {}
     for keys, is_fgumi in [(FGUMI_ONLY_PATTERNS, True), (FGBIO_ONLY_PATTERNS, False)]:
         for key in keys:
             for g in report.files.get(ModuleId(key), []):
@@ -114,7 +115,7 @@ def family_sizes_evidence() -> Dict[str, Tuple[bool, bool]]:
     return evidence
 
 
-def family_sizes_module(f: Any, evidence: Dict[str, Tuple[bool, bool]]) -> str:
+def family_sizes_module(f: Any, evidence: dict[str, tuple[bool, bool]]) -> str:
     """The module ("fgumi" or "fgbio") that reports family-size histogram ``f`` when both modules find it.
 
     fgumi and fgbio GroupReadsByUmi write byte-identical histograms, so the choice comes from the files around it.
@@ -140,12 +141,12 @@ def found_by(f: Any, sp_key: str) -> bool:
     return any(g["root"] == f["root"] and g["fn"] == f["fn"] for g in report.files.get(ModuleId(sp_key), []))
 
 
-def finite(value: Optional[float]) -> Optional[float]:
+def finite(value: float | None) -> float | None:
     """``value``, or ``None`` when it is missing or non-finite (MultiQC plots cannot show NaN/Infinity)."""
     return value if value is not None and math.isfinite(value) else None
 
 
-def pct(fraction: Optional[float]) -> Optional[float]:
+def pct(fraction: float | None) -> float | None:
     """A fraction as a finite percentage, or ``None``."""
     value = finite(fraction)
     return None if value is None else value * 100.0
@@ -155,18 +156,18 @@ K = TypeVar("K")
 V = TypeVar("V")
 
 
-def drop_none(mapping: Mapping[K, Optional[V]]) -> Dict[K, V]:
+def drop_none(mapping: Mapping[K, V | None]) -> dict[K, V]:
     """``mapping`` without its ``None`` values: a missing point or cell, rather than a ``None`` MultiQC would
     have to interpret."""
     return {key: value for key, value in mapping.items() if value is not None}
 
 
-def header_columns(f: Any) -> List[str]:
+def header_columns(f: Any) -> list[str]:
     """The column names on the first line of MultiQC file ``f`` (loaded as text)."""
     return f["f"].split("\n", 1)[0].rstrip("\r").split("\t")
 
 
-def load_rows(f: Any, schema: Type[M]) -> Optional[List[M]]:
+def load_rows(f: Any, schema: type[M]) -> list[M] | None:
     """All rows of MultiQC file ``f`` validated as ``schema``; ``None`` (with a warning) if malformed."""
     if f["f"] is None:
         return None
@@ -178,8 +179,8 @@ def load_rows(f: Any, schema: Type[M]) -> Optional[List[M]]:
 
 
 def iter_samples(
-    module: BaseMultiqcModule, sp_key: str, schema: Type[M], skip: Optional[Callable[[Any], bool]] = None
-) -> Iterator[Tuple[str, List[M]]]:
+    module: BaseMultiqcModule, sp_key: str, schema: type[M], skip: Callable[[Any], bool] | None = None
+) -> Iterator[tuple[str, list[M]]]:
     """``(sample name, rows)`` for each well-formed file found by ``sp_key`` whose sample is not ignored.
 
     Each file yielded is registered as a data source. Files for which ``skip`` returns true are passed over
@@ -202,7 +203,7 @@ def iter_samples(
 STREAM_VALIDATE_ROWS = 100
 
 
-def stream_dicts(lines: Iterable[str], source: str, schema: Type[FgumiMetric]) -> Iterator[Dict[str, str]]:
+def stream_dicts(lines: Iterable[str], source: str, schema: type[FgumiMetric]) -> Iterator[dict[str, str]]:
     """Raw ``{column: cell}`` rows of a large file (found with ``filehandles=True``) named ``source``.
 
     Only the header and the first ``STREAM_VALIDATE_ROWS`` rows are validated as ``schema``, so a file with a

@@ -26,7 +26,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any leeHom reports
-        self.leehom_data = dict()
+        self.leehom_data = {}
 
         for f in self.find_log_files("leehom", filehandles=True):
             parsed_data = self.parse_leehom_logs(f)
@@ -63,7 +63,7 @@ class MultiqcModule(BaseMultiqcModule):
             "adapter_dimers_chimeras": r"Adapter dimers/chimeras\s+(\d+)",
             "failed_key": r"Failed Key\s+(\d+)",
         }
-        parsed_data = dict()
+        parsed_data = {}
         for line in f["f"]:
             # Search regexes for overview stats
             for k, r in regexes.items():

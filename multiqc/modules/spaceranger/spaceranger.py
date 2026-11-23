@@ -36,7 +36,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/10XGenomics/spaceranger/blob/main/LICENSE",
         )
 
-        n = dict()
+        n = {}
         # Call submodule functions
         n["count"] = parse_count_html(module=self)
         if n["count"] > 0:

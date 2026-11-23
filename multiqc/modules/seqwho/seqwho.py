@@ -27,10 +27,10 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any SeqWho reports
-        self.seqwho_data = dict()
-        self.seqwho_qualdis = dict()
-        self.seqwho_qualscore = dict()
-        self.seqwho_readdist = dict()
+        self.seqwho_data = {}
+        self.seqwho_qualdis = {}
+        self.seqwho_qualscore = {}
+        self.seqwho_readdist = {}
 
         for f in self.find_log_files("seqwho", filehandles=True):
             self.parse_json(f)
