@@ -19,6 +19,15 @@ class MultiqcModule(BaseMultiqcModule):
     sortmerna:
       tab_header: "My database hits"
     ```
+
+    For paired-end runs, the sample name is taken from the first `Reads file` entry in the log, so it may still carry
+    a mate suffix (for example `sample_1_val_1` for Trim Galore output). To strip it so that the name matches other
+    modules, add the suffix to `extra_fn_clean_exts`:
+
+    ```yaml
+    extra_fn_clean_exts:
+      - "_1_val_1"
+    ```
     """
 
     def __init__(self):
@@ -82,7 +91,7 @@ class MultiqcModule(BaseMultiqcModule):
         err = False
 
         for line in f["f"]:
-            if "Reads file" in line:
+            if "Reads file" in line and s_name is None:  # paired-end logs list one line per mate; use the first
                 parts = re.split(r"[:=]", line)
                 s_name = self.clean_s_name(parts[-1], f)
                 self.sortmerna[s_name] = {}
