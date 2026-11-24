@@ -53,25 +53,23 @@ class MultiqcModule(BaseMultiqcModule):
         # Find and parse methurator summary files
         for f in self.find_log_files("methurator"):
             try:
-                parsed = yaml.load(f["f"], Loader=yaml.SafeLoader)
-                metadata = parsed["methurator_summary"]["metadata"]
+                summary = yaml.safe_load(f["f"])["methurator_summary"]
+                metadata = summary["metadata"]
                 command = metadata["command"]
-                version = str(metadata["methurator_version"])
             except (yaml.YAMLError, KeyError, TypeError) as e:
-                log.warning(f"Could not parse methurator YAML file '{f['fn']}': {e!r}")
+                log.warning(f"Could not parse methurator summary '{f['fn']}': {e!r}")
                 continue
 
             # Only the gt_estimator command is supported
             if command != "methurator gt_estimator":
                 log.warning(
                     f"Skipping '{f['fn']}': this module only supports output from the "
-                    "`methurator gt_estimator` command (methurator >= 2.1.0), "
-                    f"found command: {command!r}"
+                    f"`methurator gt_estimator` command (methurator >= 2.1.0), found command: {command!r}"
                 )
                 continue
 
             # Extract sample data from the parsed YAML
-            samples_data = self._extract_sample_data(parsed, f["fn"])
+            samples_data = self._parse_gt_summary(summary["gt_summary"], f["fn"])
             if not samples_data:
                 log.warning(f"No sample data found in {f['fn']}")
                 continue
@@ -84,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_data_source(f, s_name=s_name)
 
                 # Add software version if available
-                self.add_software_version(version, s_name)
+                self.add_software_version(str(metadata["methurator_version"]), s_name)
 
         # Filter ignored samples
         self.methurator_data = self.ignore_samples(self.methurator_data)
@@ -104,41 +102,33 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data file (must be last)
         self.write_data_file(self.methurator_data, "methurator")
 
-    def _extract_sample_data(self, parsed: dict, fn: str) -> dict[str, dict[str, Any]]:
-        """Extract per-sample data from the parsed `gt_estimator` YAML structure."""
+    @staticmethod
+    def _parse_gt_summary(gt_summary: list[dict], fn: str) -> dict[str, dict[str, Any]]:
+        """Extract per-sample data from the `gt_summary` list of a gt_estimator summary."""
         samples_data: dict[str, dict[str, Any]] = {}
-        # Parse gt summary
-        gt_summary = parsed["methurator_summary"]["gt_summary"]
-
-        saturation_by_sample: dict[str, dict[int, dict[str, Any]]] = {}
         for item in gt_summary:
-            for sample_name, sat_data in item.items():
-                saturation_by_sample[sample_name] = {sat_entry["minimum_coverage"]: sat_entry for sat_entry in sat_data}
-        # Combine all data for each sample
-        all_samples = set(saturation_by_sample.keys())
-
-        for sample_name in all_samples:
-            sample_data: dict[str, Any] = {
-                "saturation_analysis": saturation_by_sample[sample_name],
-            }
-
-            # Extract key metrics for general stats from the lowest minimum coverage
-            # Get total CpGs at t = 1
-            min_cov = min(sample_data["saturation_analysis"])
-            predictions = sample_data["saturation_analysis"][min_cov]
-            sample_data["minimum_coverage"] = min_cov
-            sample_data["total_reads"] = predictions["reads"]
-            sample_data["asymptote"] = predictions["asymptote(1000t)"]
-            for prediction in predictions["data"]:
-                # The t grid comes from np.arange, so some t_step values never hit t = 1 exactly
-                if math.isclose(prediction[0], 1.0):
-                    # prediction -> [t, saturation, CpGs, CI lower, CI higher]
-                    sample_data["total_cpgs"] = prediction[2]
-                    sample_data["saturation_pct"] = prediction[1] * 100
-                    break
-            else:
-                log.warning(f"'{fn}': no t = 1 row for sample '{sample_name}', so CpGs and saturation are not reported")
-            samples_data[sample_name] = sample_data
+            for sample_name, entries in item.items():
+                by_cov = {entry["minimum_coverage"]: entry for entry in entries}
+                min_cov = min(by_cov)
+                lowest = by_cov[min_cov]
+                sample_data: dict[str, Any] = {
+                    "saturation_analysis": by_cov,
+                    "minimum_coverage": min_cov,
+                    "total_reads": lowest["reads"],
+                    "asymptote": lowest["asymptote(1000t)"],
+                }
+                # Rows are [t, saturation, CpGs, CI lower, CI upper]; t = 1 is the observed depth.
+                # The t grid is np.arange(0, t_max, t_step), so some t_step values skip t = 1.
+                observed = next((row for row in lowest["data"] if math.isclose(row[0], 1.0)), None)
+                if observed is None:
+                    log.warning(
+                        f"'{fn}': no t = 1 row for sample '{sample_name}', "
+                        "so observed CpGs and saturation are not reported"
+                    )
+                else:
+                    sample_data["total_cpgs"] = observed[2]
+                    sample_data["saturation_pct"] = observed[1] * 100
+                samples_data[sample_name] = sample_data
         return samples_data
 
     def _add_general_stats(self):
@@ -146,40 +136,10 @@ class MultiqcModule(BaseMultiqcModule):
         general_stats_data: dict[str, dict[str, Any]] = {}
         for s_name, data in self.methurator_data.items():
             general_stats_data[s_name] = {
-                "minimum_coverage": data.get("minimum_coverage"),
-                "total_cpgs": data.get("total_cpgs"),
-                "total_reads": data.get("total_reads"),
-                "asymptote": data.get("asymptote"),
-                "saturation_pct": data.get("saturation_pct"),
+                k: data.get(k) for k in ("saturation_pct", "asymptote", "total_cpgs", "total_reads", "minimum_coverage")
             }
 
         headers = {
-            "minimum_coverage": {
-                "title": "Minimum coverage",
-                "description": "Minimum CpGs coverage",
-                "format": "{:,.0f}",
-                "scale": "Greens",
-                "hidden": True,
-            },
-            "total_cpgs": {
-                "title": "CpGs",
-                "description": "Total number of observed CpGs at full sequencing depth (t=1)",
-                "format": "{:,.0f}",
-                "scale": "Blues",
-            },
-            "total_reads": {
-                "title": "Reads",
-                "description": "Total number of reads in the BAM file",
-                "format": "{:,.0f}",
-                "scale": "Purples",
-                "hidden": True,
-            },
-            "asymptote": {
-                "title": "Asymptote",
-                "description": "Theoretical maximum number of CpGs at t = 1000",
-                "format": "{:,.0f}",
-                "scale": "BuPu",
-            },
             "saturation_pct": {
                 "title": "Saturation",
                 "description": "CpG sequencing saturation (percentage of theoretical maximum CpGs detected)",
@@ -187,6 +147,31 @@ class MultiqcModule(BaseMultiqcModule):
                 "max": 100,
                 "min": 0,
                 "scale": "RdYlGn",
+            },
+            "asymptote": {
+                "title": "Asymptote",
+                "description": "Theoretical maximum number of CpGs at t = 1000",
+                "format": "{:,.0f}",
+                "scale": "BuPu",
+            },
+            "total_cpgs": {
+                "title": "CpGs",
+                "description": "Total number of observed CpGs at full sequencing depth (t = 1)",
+                "format": "{:,.0f}",
+                "scale": "Greens",
+            },
+            "total_reads": {
+                "title": "Reads",
+                "description": "Total number of reads in the BAM file",
+                "format": "{:,.0f}",
+                "scale": "Blues",
+                "hidden": True,
+            },
+            "minimum_coverage": {
+                "title": "Min. coverage",
+                "description": "Minimum CpG coverage threshold used for the CpGs, Asymptote and Saturation columns",
+                "format": "{:,.0f}",
+                "hidden": True,
             },
         }
 
@@ -201,20 +186,12 @@ class MultiqcModule(BaseMultiqcModule):
         plot_data_by_coverage: dict[int, dict[str, dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
-            saturation_analysis = data.get("saturation_analysis", {})
-
-            for min_cov, sat_data in saturation_analysis.items():
+            for min_cov, sat_data in data["saturation_analysis"].items():
                 if min_cov not in plot_data_by_coverage:
                     plot_data_by_coverage[min_cov] = {}
 
                 # Extract GT data points: [t, saturation, total_cpgs, ci_low, ci_high]
-                sat_points = sat_data.get("data", [])
-                sample_curve: dict[float, float] = {}
-                for point in sat_points:
-                    if len(point) >= 3:
-                        t_val = point[0]  # t-value as x-axis
-                        cpgs = point[2]  # total_cpgs as y-axis
-                        sample_curve[float(t_val)] = float(cpgs)
+                sample_curve = {float(point[0]): float(point[2]) for point in sat_data["data"]}
 
                 if sample_curve:
                     plot_data_by_coverage[min_cov][s_name] = sample_curve
