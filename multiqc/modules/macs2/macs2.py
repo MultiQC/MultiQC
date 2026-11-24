@@ -25,10 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
             factor binding sites. MACS captures the influence of genome complexity to
             evaluate the significance of enriched ChIP regions.""",
             doi=["10.1101/496521", "10.1186/gb-2008-9-9-r137"],
+            license="BSD 3-Clause License",
+            license_url="https://github.com/macs3-project/MACS/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.macs_data = dict()
+        self.macs_data = {}
         for f in self.find_log_files("macs2", filehandles=True):
             self.parse_macs(f)
             self.add_data_source(f)
@@ -116,7 +118,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def macs_filtered_reads_plot(self):
         """Plot of filtered reads for control and treatment samples"""
-        data = dict()
+        data = {}
         req_cats = [
             "control_fragments_total",
             "control_fragments_after_filtering",
@@ -124,9 +126,9 @@ class MultiqcModule(BaseMultiqcModule):
             "treatment_fragments_after_filtering",
         ]
         for s_name, d in self.macs_data.items():
-            if all([c in d for c in req_cats]):
-                data[f"{s_name}: Control"] = dict()
-                data[f"{s_name}: Treatment"] = dict()
+            if all(c in d for c in req_cats):
+                data[f"{s_name}: Control"] = {}
+                data[f"{s_name}: Treatment"] = {}
                 data[f"{s_name}: Control"]["fragments_filtered"] = (
                     d["control_fragments_total"] - d["control_fragments_after_filtering"]
                 )

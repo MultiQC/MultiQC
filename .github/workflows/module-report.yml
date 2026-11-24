@@ -1,0 +1,54 @@
+name: Module preview report
+
+# Posts results of module-report-build.yml via scripts/post_preview_reports.py. Never runs PR code: it holds the bot token.
+on:
+  # workflow_run is intentional: the build runs PR code unprivileged, this run only reads its artifacts
+  workflow_run: # zizmor: ignore[dangerous-triggers]
+    workflows: ["Module preview report build"]
+    types: [completed]
+  issue_comment:
+    types: [created]
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  comment:
+    # Keep the /review match in sync with claude-code-review-trigger.yml.
+    # Commands only count at line start; fromJSON is the only way to write a newline in an expression.
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.path == '.github/workflows/module-report-build.yml' &&
+       contains(fromJSON('["success", "failure"]'), github.event.workflow_run.conclusion)) ||
+      (github.event.issue.pull_request &&
+       (contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/report', fromJSON('"\n"'))) ||
+        contains(format('{0}{1}', fromJSON('"\n"'), github.event.comment.body), format('{0}/review', fromJSON('"\n"')))))
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      pull-requests: read
+    steps:
+      # Default branch only (the event's ref for all triggers here), never PR code
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/post_preview_reports.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+
+      - name: Post preview comments
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # gh --attach rejects the Actions token; it needs a PAT
+          BOT_TOKEN: ${{ secrets.MQC_BOT_GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT: ${{ github.event_name }}
+          WR_ID: ${{ github.event.workflow_run.id }}
+          ISSUE: ${{ github.event.issue.number }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+        run: uv run scripts/post_preview_reports.py

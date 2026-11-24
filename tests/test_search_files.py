@@ -2,12 +2,11 @@
 Tests for discovering and excluding files
 """
 
+from importlib.metadata import EntryPoint
 from pathlib import Path
-from typing import Dict, Set, Union
 
 import pytest
 import yaml
-from importlib_metadata import EntryPoint
 
 from multiqc import config, report
 from multiqc.core.exceptions import RunError
@@ -32,10 +31,10 @@ def reset_config():
 
 
 def _test_search_files(
-    search_patterns: Dict,
+    search_patterns: dict,
     analysis_dir: Path,
-    extra_config: Dict,
-    expected_paths_by_module: Dict[str, Set[Union[Path, str]]],
+    extra_config: dict,
+    expected_paths_by_module: dict[str, set[Path | str]],
 ):
     config.sp = search_patterns
     config.run_modules = list(config.sp.keys())
@@ -47,8 +46,8 @@ def _test_search_files(
 
     file_search()
 
-    expected = {m: set(str(p) for p in paths) for m, paths in expected_paths_by_module.items()}
-    found = {m: set(f["fn"] for f in files) for m, files in report.files.items()}
+    expected = {m: {str(p) for p in paths} for m, paths in expected_paths_by_module.items()}
+    found = {m: {f["fn"] for f in files} for m, files in report.files.items()}
     assert found == expected
 
 
@@ -188,28 +187,35 @@ def test_contents_multi_line(tmp_path):
     Test that multi-line contents are correctly matched
     """
     tool1_1 = tmp_path / "tool1-1.txt"
-    tool1_1.write_text("""\
+    tool1_1.write_text(
+        """\
 metric1: 321
 both_tool1_and_tool2_look_for_this_metric: 123
 metric3: 321
 tool1_also_requires_this_metric: 132
 metric5: 321
-""")
+"""
+    )
 
     tool1_2 = tmp_path / "tool1-2.txt"
-    tool1_2.write_text("""\
+    tool1_2.write_text(
+        """\
 metric1: 321
 tool1_can_alternatively_take_this_metric: 222
-""")
+"""
+    )
 
     tool2 = tmp_path / "tool2.txt"
-    tool2.write_text("""\
+    tool2.write_text(
+        """\
 metric1: 321
 both_tool1_and_tool2_look_for_this_metric: 444
 metric3: 321
-""")
+"""
+    )
 
-    sp_patterns: Dict = yaml.safe_load("""
+    sp_patterns: dict = yaml.safe_load(
+        """
 tool1:
   - contents:
     - "both_tool1_and_tool2_look_for_this_metric"
@@ -217,7 +223,8 @@ tool1:
   - contents: "tool1_can_alternatively_take_this_metric"
 tool2:
    contents: "both_tool1_and_tool2_look_for_this_metric"
-""")
+"""
+    )
 
     _test_search_files(
         search_patterns=sp_patterns,

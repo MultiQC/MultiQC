@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
@@ -23,12 +22,14 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/pezmaster31/bamtools",
             info="Provides both a programmer's API and an end-user's toolkit for handling BAM files.",
             doi="10.1093/bioinformatics/btr174",
+            license="MIT License",
+            license_url="https://github.com/pezmaster31/bamtools/blob/master/LICENSE",
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers: Dict = dict()
-        self.general_stats_data: Dict = dict()
-        n = dict()
+        self.general_stats_headers: dict = {}
+        self.general_stats_data: dict = {}
+        n = {}
 
         # Call submodule functions
         n["stats"] = stats.parse_reports(self)

@@ -36,10 +36,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.vicbioinformatics.com/software.prokka.shtml",
             info="Rapid annotation of prokaryotic genomes.",
             doi="10.1093/bioinformatics/btu153",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/tseemann/prokka/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.prokka = dict()
+        self.prokka = {}
         for f in self.find_log_files("prokka", filehandles=True):
             self.parse_prokka(f)
 
@@ -155,7 +157,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         if s_name in self.prokka:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.prokka[s_name] = dict()
+        self.prokka[s_name] = {}
         self.prokka[s_name]["organism"] = organism
         self.prokka[s_name]["contigs"] = int(contigs_line.split(":")[1])
         self.prokka[s_name]["bases"] = int(bases_line.split(":")[1])

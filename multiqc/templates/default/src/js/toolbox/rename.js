@@ -158,9 +158,9 @@ window.mqc_renamesamples_idx = 300;
 window.make_renamesamples_filter = function (ft, tt) {
   let row = `
   <li class="d-flex justify-content-between align-items-center">
-    <input class="f_text from_text flex-grow-1" value="${ft}" tabindex="${mqc_renamesamples_idx}"  />
+    <input class="f_text from_text flex-grow-1" value="${escapeHtml(ft)}" tabindex="${mqc_renamesamples_idx}"  />
     <span>&raquo;</span>
-    <input class="f_text to_text flex-grow-1" value="${tt}" tabindex="${mqc_renamesamples_idx + 1}"  />
+    <input class="f_text to_text flex-grow-1" value="${escapeHtml(tt)}" tabindex="${mqc_renamesamples_idx + 1}"  />
     <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
   </li>`;
   window.mqc_renamesamples_idx += 2;

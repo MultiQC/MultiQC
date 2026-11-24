@@ -1,7 +1,7 @@
 # https://github.com/fastqe/fastqe
 # https://github.com/fastqe/fastqe/issues/11
 import logging
-from typing import Dict, Optional
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -35,9 +35,11 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/fastqe/fastqe",
             info="Uses emoji to represent FASTQ sequence quality scores.",
             # doi="",  # No DOI
+            license="BSD 3-Clause License",
+            license_url="https://github.com/fastqe/fastqe/blob/master/LICENSE.txt",
         )
 
-        fastqe_data: Dict[str, Dict[str, str]] = {}
+        fastqe_data: dict[str, dict[str, str]] = {}
         for f in self.find_log_files("fastqe", filehandles=True):
             parsed = self._parse_fastqe_log(f)
             if parsed:
@@ -60,13 +62,13 @@ class MultiqcModule(BaseMultiqcModule):
         # Collect all stat types across samples for column headers
         stat_types = sorted({stat for data in fastqe_data.values() for stat in data})
 
-        headers: Dict[str, ColumnDict] = {}
+        headers: dict[str, ColumnDict] = {}
         for stat in stat_types:
             headers[stat] = {
                 "title": stat.capitalize(),
                 "description": f"Per-base {stat} quality scores as emoji",
                 "scale": False,
-                "format": lambda x: f'<span style="font-size: 1.5em; letter-spacing: 2px;">{x}</span>',
+                "format": lambda x: f'<span style="font-size: 1.5em; letter-spacing: 2px;">{escape(str(x))}</span>',
             }
 
         self.add_section(
@@ -100,16 +102,16 @@ Each will appear as a separate column in the table.
 
         self.write_data_file(fastqe_data, "multiqc_fastqe")
 
-    def _parse_fastqe_log(self, f) -> Optional[Dict[str, Dict[str, str]]]:
+    def _parse_fastqe_log(self, f) -> dict[str, dict[str, str]] | None:
         """Parse FastQE TSV: Filename\\tStatistic\\tQualities -> {sample: {stat: emoji}}"""
-        data: Dict[str, Dict[str, str]] = {}
+        data: dict[str, dict[str, str]] = {}
 
         for line in f["f"]:
             line = line.strip()
             if not line:
                 continue
 
-            if line.startswith("Filename") or line.startswith("Sample Name"):
+            if line.startswith(("Filename", "Sample Name")):
                 continue
 
             fields = line.split("\t")
@@ -122,4 +124,4 @@ Each will appear as a separate column in the table.
                         data[sample_name] = {}
                     data[sample_name][qual_type] = emoji_quals
 
-        return data if data else None
+        return data or None

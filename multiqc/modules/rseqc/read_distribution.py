@@ -1,6 +1,7 @@
 """MultiQC submodule to parse output from RSeQC read_distribution.py
 http://rseqc.sourceforge.net/#read-distribution-py"""
 
+import itertools
 import logging
 import re
 
@@ -13,7 +14,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find RSeQC read_distribution reports and parse their data"""
 
-    read_dist = dict()
+    read_dist = {}
     first_regexes = {
         "total_reads": r"Total Reads\s+(\d+)\s*",
         "total_tags": r"Total Tags\s+(\d+)\s*",
@@ -34,7 +35,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Go through files and parse data using regexes
     for f in module.find_log_files("rseqc/read_distribution"):
-        d = dict()
+        d = {}
         for k, r in first_regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:
@@ -51,12 +52,12 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         # Calculate some percentages for parsed file
         if "total_tags" in d:
             t = float(d["total_tags"])
-            pcts = dict()
-            for k in d:
+            pcts = {}
+            for k, v in d.items():
                 if k.endswith("_tag_count"):
                     pk = f"{k[:-10]}_tag_pct"
                     try:
-                        pcts[pk] = (float(d[k]) / t) * 100.0
+                        pcts[pk] = (float(v) / t) * 100.0
                     except ZeroDivisionError:
                         pcts[pk] = 0
             d.update(pcts)
@@ -85,7 +86,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
         (prefix, big, small, suffix)
         for prefix in prefixes
         for suffix in suffixes
-        for big, small in zip(sizes, sizes[1:])
+        for big, small in itertools.pairwise(sizes)
     ]
 
     for sample_name, sample in read_dist.items():

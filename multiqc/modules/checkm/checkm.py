@@ -25,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Ecogenomics/CheckM",
             info="Estimates genome completeness and contamination based on the presence or absence of marker genes.",
             doi=["10.1101/gr.186072.114"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/Ecogenomics/CheckM/blob/master/LICENSE",
         )
 
         data_by_sample = {}
@@ -129,7 +131,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         header = lines[0].strip()
-        if not header.startswith(("Bin Id")):
+        if not header.startswith("Bin Id"):
             log.warning(f"Unrecognized header in {f['fn']}: {header}")
             return
 
@@ -153,7 +155,7 @@ class MultiqcModule(BaseMultiqcModule):
             data_by_sample[sname] = {k: v for k, v in zip(column_names[1:], row[1:]) if v is not None}
 
     def mag_quality_table(self, data_by_sample):
-        lineages = list(set(d.get("Marker lineage") for d in data_by_sample.values()))
+        lineages = list({d.get("Marker lineage") for d in data_by_sample.values()})
         scale = mqc_colour.mqc_colour_scale("Dark2")
         lineages_colors = [{v: scale.get_colour(i, lighten=0.5)} for i, v in enumerate(lineages)]
         headers = {

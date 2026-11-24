@@ -1,6 +1,4 @@
-import sys
 import tempfile
-from typing import Dict, List, Union
 from unittest.mock import patch
 
 import pytest
@@ -10,7 +8,7 @@ from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
 from multiqc.plots.plot import Plot, process_batch_exports
-from multiqc.plots.table_object import ColumnDict
+from multiqc.plots.table_object import ColumnDict, render_html
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
 
@@ -95,6 +93,25 @@ def test_table():
             pconfig=table.TableConfig(id="table", title="Table"),
         )
     )
+
+
+def test_table_escapes_sample_names_and_values():
+    """Sample names and cell values come from tool output, so must not inject HTML."""
+    payload = "<img src=x onerror=alert(1)>"
+    plot = table.plot(
+        data={f"{payload}.fastq.gz": {"x": payload}},
+        headers={"x": {"title": "Metric X"}},
+        pconfig=table.TableConfig(id="table_xss", title="Table"),
+    )
+    assert isinstance(plot, Plot)
+    html, _ = render_html(
+        plot.datasets[0].dt,
+        violin_anchor=Anchor("violin_xss"),
+        module_anchor=Anchor("test"),
+        section_anchor=Anchor("test"),
+    )
+    assert payload not in html
+    assert "&lt;img src=x onerror=alert(1)&gt;" in html
 
 
 def test_violin():
@@ -347,7 +364,7 @@ def test_boxplot_dynamic_boxpoints():
     config.box_min_threshold_no_points = 10
     config.box_min_threshold_outliers = 5
 
-    data_few: Dict[str, List[Union[int, float]]] = {
+    data_few: dict[str, list[int | float]] = {
         "Sample1": [1.0, 2.0, 3.0, 4.0, 5.0],
         "Sample2": [2.0, 3.0, 4.0, 5.0, 6.0],
     }
@@ -366,7 +383,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with many samples (should show only outliers)
-    data_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
+    data_many: dict[str, list[int | float]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(10)}
 
     plot_many = _verify_rendered(
         box.plot(
@@ -382,7 +399,7 @@ def test_boxplot_dynamic_boxpoints():
     report.reset()
 
     # Test with very many samples (should show no points)
-    data_very_many: Dict[str, List[Union[int, float]]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
+    data_very_many: dict[str, list[int | float]] = {f"Sample{i}": [1.0, 2.0, 3.0, 4.0, 5.0] for i in range(15)}
 
     plot_very_many = _verify_rendered(
         box.plot(
@@ -412,6 +429,20 @@ def test_bar_plot_no_matching_cats():
         {"id": plot_id, "title": "Test: Bar Graph"},
     )
     # Will return a warning message html instead of a plot:
+    assert plot is None
+
+
+def test_bar_plot_all_zero_cats():
+    """
+    All categories are zero for all samples. With hide_zero_cats=True (default),
+    all categories get filtered, so the plot should return None gracefully
+    instead of raising ValueError. Regression test for #3481.
+    """
+    plot = bargraph.plot(
+        {"Sample1": {"Cat1": 0, "Cat2": 0}, "Sample2": {"Cat1": 0, "Cat2": 0}},
+        ["Cat1", "Cat2"],
+        {"id": "test_bar_plot_all_zero_cats", "title": "Test: Bar Graph"},
+    )
     assert plot is None
 
 
@@ -718,7 +749,7 @@ def test_linegraph_axis_controlled_by_switches_string_instead_of_list():
         assert config.axis_controlled_by_switches is None
         errs = "\n".join(call.args[0] for call in err.mock_calls if call.args)
         assert "'axis_controlled_by_switches'" in errs
-        assert "List" in errs
+        assert "expected type 'list[Literal['xaxis', 'yaxis']]'" in errs
 
 
 def test_linegraph_axis_controlled_by_switches_in_plot():
@@ -829,7 +860,7 @@ def test_missing_pconfig(reset):
     ]
 
     _verify_rendered(linegraph.plot({"Sample1": {0: 1, 1: 1}}))
-    plot_id = list(report.plot_data.keys())[0]
+    plot_id = next(iter(report.plot_data.keys()))
     assert plot_id.startswith("lineplot-")
 
 
@@ -874,7 +905,7 @@ def test_missing_id_and_title(strict, reset):
             errs = "\n".join(call.args[0] for call in log.mock_calls if call.args)
             assert "• 'id': missing required field" in errs
             assert "• 'title': missing required field" in errs
-        plot_id = list(report.plot_data.keys())[0]
+        plot_id = next(iter(report.plot_data.keys()))
         assert plot_id.startswith("lineplot-")
 
 
@@ -1028,7 +1059,7 @@ def test_dash_styles():
 def test_table_default_sort():
     from multiqc.plots.table_object import _get_sortlist_js
 
-    headers: Dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
+    headers: dict[str, ColumnDict] = {"x": {"title": "Metric X"}, "y": {"title": "Metric Y"}}
     p = table.plot(
         data={
             "sample1": {"x": 1, "y": 2},
@@ -1063,7 +1094,7 @@ def test_table_custom_plot_config_hidden(reset):
         }
     }
 
-    headers: Dict[str, ColumnDict] = {
+    headers: dict[str, ColumnDict] = {
         "x": {"title": "Metric X"},
         "y": {"title": "Metric Y"},
         "z": {"title": "Metric Z"},
@@ -1101,7 +1132,7 @@ def test_table_custom_plot_config_scale(reset):
         }
     }
 
-    headers: Dict[str, ColumnDict] = {
+    headers: dict[str, ColumnDict] = {
         "x": {"title": "Metric X", "scale": "Blues"},  # This should be overridden
         "y": {"title": "Metric Y", "scale": "Reds"},  # This should be overridden
         "z": {"title": "Metric Z"},  # This should get RdYlGn
@@ -1140,7 +1171,7 @@ def test_table_custom_plot_config_multiple_properties(reset):
         }
     }
 
-    headers: Dict[str, ColumnDict] = {
+    headers: dict[str, ColumnDict] = {
         "x": {"title": "Metric X", "hidden": True},  # Should be overridden to False
         "y": {"title": "Metric Y"},
     }
@@ -1180,7 +1211,7 @@ def test_table_custom_plot_config_invalid_field(reset):
         }
     }
 
-    headers: Dict[str, ColumnDict] = {
+    headers: dict[str, ColumnDict] = {
         "x": {"title": "Metric X"},
         "y": {"title": "Metric Y"},
     }
@@ -1251,7 +1282,7 @@ def test_linegraph_custom_plot_config_y_bands(reset):
     shapes = plot.datasets[0].layout.get("shapes", [])
     y_band_shapes = [s for s in shapes if s["type"] == "rect" and s["xref"] == "paper"]
     assert len(y_band_shapes) == 3
-    band_y_values = sorted(set((s["y0"], s["y1"]) for s in y_band_shapes))
+    band_y_values = sorted({(s["y0"], s["y1"]) for s in y_band_shapes})
     assert (0, 40) in band_y_values
     assert (40, 80) in band_y_values
     assert (80, 100) in band_y_values

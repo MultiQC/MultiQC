@@ -17,6 +17,9 @@ must_be_present_after = [
     ("self.add_data_source", "self.find_log_files"),
     ("self.write_data_file", "self.find_log_files"),
     ("doi=", SUPER_INIT_TERMS),
+    # license/license_url are required constructor args (use None with a comment if unknown)
+    ("license=", SUPER_INIT_TERMS),
+    ("license_url=", SUPER_INIT_TERMS),
     ("self.add_software_version", "self.find_log_files"),
 ]
 
@@ -87,7 +90,7 @@ for forbidden, suggestion, exempt in must_be_avoided_globally:
     print(f"[bold black on yellow]  Checking that '{forbidden}' is not found anywhere in multiqc/  [/]")
     found_files = []
     for fn in glob.glob(os.path.join(PACKAGE_DIR, "**", "*.py"), recursive=True):
-        relpath = os.path.relpath(fn, PACKAGE_DIR)
+        relpath = os.path.relpath(fn, PACKAGE_DIR).replace(os.sep, "/")
         if relpath in exempt:
             continue
         with open(fn, "r") as fh:

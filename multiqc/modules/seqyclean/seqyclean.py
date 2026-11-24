@@ -22,16 +22,18 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ibest/seqyclean",
             info="Filters adapters, vectors, and contaminants while quality trimming.",
             doi="10.1145/3107411.3107446",
+            license="MIT License",
+            license_url="https://github.com/ibest/seqyclean/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.seqyclean_data = dict()
+        self.seqyclean_data = {}
         for f in self.find_log_files("seqyclean"):
             rows = f["f"].splitlines()
             headers = rows[0].split("\t")
             cols = rows[1].split("\t")
 
-            self.seqyclean_data[f["s_name"]] = dict()
+            self.seqyclean_data[f["s_name"]] = {}
             for header, col in zip(headers, cols):
                 # Add verions info
                 if header == "Version":

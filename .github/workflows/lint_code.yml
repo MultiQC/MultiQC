@@ -11,22 +11,8 @@ jobs:
   prek:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: j178/prek-action@v1
-
-  code_checks:
-    name: "code_checks.py"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          python-version: "3.14" # NB: 3.14.1 has upstream bug
-          cache: "pip"
+          persist-credentials: false
 
-      - run: pip install rich
-
-      - name: "Run manual code style checks"
-        run: python ${GITHUB_WORKSPACE}/.github/workflows/code_checks.py
+      - uses: j178/prek-action@1382ad72dea72f9d53832f2bcb65b3e87a947204 # v3.0.1

@@ -50,10 +50,12 @@ class MultiqcModule(BaseMultiqcModule):
             href=["http://bowtie-bio.sourceforge.net/bowtie2/", "https://ccb.jhu.edu/software/hisat2/"],
             info="Results from both Bowtie 2 and HISAT2, tools for aligning reads against a reference genome.",
             doi=["10.1038/nmeth.1923", "10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/BenLangmead/bowtie2/blob/master/LICENSE",
         )
 
         # Find and load any Bowtie 2 reports
-        self.bowtie2_data = dict()
+        self.bowtie2_data = {}
         self.num_se = 0
         self.num_pe = 0
         for f in self.find_log_files("bowtie2", filehandles=True):

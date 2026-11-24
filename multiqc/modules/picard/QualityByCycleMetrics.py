@@ -1,7 +1,7 @@
 """MultiQC submodule to parse output from Picard MeanQualityByCycle"""
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from multiqc.plots import linegraph
 
@@ -59,7 +59,7 @@ def parse_reports(self):
         # Only overwrite if the extended data is actually extended (has MEAN_ORIGINAL_QUALITY)
         for s_name, s_data in all_data_extended.items():
             if s_data:  # Ensure sample has data
-                sample_data: Dict[str, Any] = next(iter(s_data.values()), {})
+                sample_data: dict[str, Any] = next(iter(s_data.values()), {})
                 if "MEAN_ORIGINAL_QUALITY" in sample_data:
                     all_data[s_name] = s_data
                     has_original_quality = True
@@ -141,9 +141,9 @@ def parse_reports(self):
 
         description = "Plot shows the mean base quality by cycle, comparing recalibrated quality scores with original quality scores."
         helptext_addition = """
-        
-        When Base Quality Score Recalibration (BQSR) has been applied, this plot shows both the 
-        recalibrated quality scores (Mean Quality) and the original quality scores (Mean Original Quality). 
+
+        When Base Quality Score Recalibration (BQSR) has been applied, this plot shows both the
+        recalibrated quality scores (Mean Quality) and the original quality scores (Mean Original Quality).
         This comparison helps assess the effectiveness of BQSR or other quality adjustments.
         """
     else:

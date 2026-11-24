@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/bismark/bismark.py
 Maps bisulfite converted sequence reads and determine cytosine methylation states.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/bismark/](http://www.bioinformatics.babraham.ac.uk/projects/bismark/)
+
+DOI: [10.1093/bioinformatics/btr167](https://doi.org/10.1093/bioinformatics/btr167)
+
+[GNU General Public License v3.0](https://github.com/FelixKrueger/Bismark/blob/master/license.txt)
 :::
 
 ### File search patterns
@@ -33,4 +37,3 @@ bismark/m_bias:
 bismark/meth_extract:
   fn: '*_splitting_report.txt'
 ```
-    

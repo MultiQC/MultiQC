@@ -22,13 +22,15 @@ class MultiqcModule(BaseMultiqcModule):
             info="Determines FASTQ(A) sequencing file source protocol and the species of origin, "
             "to check that the composition of the library is expected.",
             # doi=""
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DaehwanKimLab/Seqwho/blob/master/LICENSE",
         )
 
         # Find and load any SeqWho reports
-        self.seqwho_data = dict()
-        self.seqwho_qualdis = dict()
-        self.seqwho_qualscore = dict()
-        self.seqwho_readdist = dict()
+        self.seqwho_data = {}
+        self.seqwho_qualdis = {}
+        self.seqwho_qualscore = {}
+        self.seqwho_readdist = {}
 
         for f in self.find_log_files("seqwho", filehandles=True):
             self.parse_json(f)

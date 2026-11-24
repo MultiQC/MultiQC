@@ -24,6 +24,8 @@ For a description of all command line parameters, run `multiqc --help`.
 :::info
 Every command-line flag mentioned on this page has a corresponding configuration variable that can be set in a MultiQC config YAML file.
 This may be preferable if using a lot of options, or running in a pipeline.
+
+See [Configuration](config.md) for the search paths, or use the [Config Wizard](config_wizard.md) to build a config file in your browser.
 :::
 
 ## Choosing where to scan

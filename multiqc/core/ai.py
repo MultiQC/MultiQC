@@ -5,11 +5,10 @@ import math
 import os
 import re
 from textwrap import indent
-from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TypeVar, Union
+from typing import Any, NamedTuple, TypeVar
 
 import requests
 import yaml
-from markdown import markdown
 from pydantic import BaseModel, Field
 
 from multiqc import config, report
@@ -39,6 +38,11 @@ REASONING_MODELS = {
     "claude-opus-4-5",
     "claude-opus-4-0",
 }
+
+
+REFURSAL_STUB_CONTENT = """\
+AI summary could not be generated as the request was refused by the model
+"""
 
 
 def is_reasoning_model(model_name: str) -> bool:
@@ -163,46 +167,24 @@ PROMPT_FULL = f"""\
 
 class InterpretationOutput(BaseModel):
     summary: str = Field(description="A very short and concise overall summary")
-    detailed_analysis: Optional[str] = Field(description="Detailed analysis", default=None)
-
-    def markdown_to_html(self, text: str) -> str:
-        """
-        Convert markdown to HTML
-        """
-        # First convert pseudonyms back to original names if needed
-        text = deanonymize_sample_names(text)
-
-        html = markdown(text)
-        # Find and replace directives :span[1.23%]{.text-red} -> <span..., handle multiple matches in one string
-        html = re.sub(
-            r":span\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<span class='text-\2'>\1</span>",
-            html,
-        )
-        # similarly, find and replace directives :sample[A1001.2003]{.text-red} -> <sample...
-        html = re.sub(
-            r":sample\[([^\]]+?)\]\{\.text-(green|red|yellow)\}",
-            r"<sample data-bs-toggle='tooltip' title='Click to highlight in the report' class='text-\2'>\1</sample>",
-            html,
-        )
-        return html
+    detailed_analysis: str | None = Field(description="Detailed analysis", default=None)
 
 
 class InterpretationResponse(BaseModel):
     interpretation: InterpretationOutput
     model: str
-    thread_id: Optional[str] = None
+    thread_id: str | None = None
 
 
 ResponseT = TypeVar("ResponseT")
 
 
 class Client:
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None):
         self.name: str
         self.title: str
         self.model: str
-        self.api_key: Optional[str] = api_key
+        self.api_key: str | None = api_key
         self.prompt_short = config.ai_prompt_short or PROMPT_SHORT
         self.prompt_full = config.ai_prompt_full or PROMPT_FULL
 
@@ -255,8 +237,8 @@ class Client:
             return int(len(text) / 1.5)
 
     def _request_with_error_handling_and_retries(
-        self, url: str, headers: Dict[str, Any], body: Dict[str, Any], retries: Optional[int] = None
-    ) -> Dict[str, Any]:
+        self, url: str, headers: dict[str, Any], body: dict[str, Any], retries: int | None = None
+    ) -> dict[str, Any]:
         """Make a request with retries and exponential backoff.
 
         Args:
@@ -305,7 +287,7 @@ class Client:
 
 
 class OpenAiClient(Client):
-    def __init__(self, api_key: str, endpoint: Optional[str] = None):
+    def __init__(self, api_key: str, endpoint: str | None = None):
         super().__init__(api_key)
 
         if endpoint:
@@ -344,13 +326,13 @@ class OpenAiClient(Client):
         content: str
         model: str
 
-    def _query(self, prompt: str, extra_options: Optional[Dict[str, Any]] = None) -> ApiResponse:
+    def _query(self, prompt: str, extra_options: dict[str, Any] | None = None) -> ApiResponse:
         is_reasoning = is_reasoning_model(self.model)
 
         if is_reasoning:
             logger.debug(f"Using reasoning model: {self.model}")
 
-        body: Dict[str, Any] = {}
+        body: dict[str, Any] = {}
 
         # For reasoning models, don't include temperature and other unsupported parameters
         if not is_reasoning:
@@ -501,23 +483,39 @@ class AWSBedrockClient(Client):
 
     def _query(self, prompt: str) -> ApiResponse:
         # TODO consider error-handling/backoff
-        body = json.dumps(
-            {
-                # this is the only allowable value as of 2025/03/04
-                # if they ever add more, we can make it configurable
-                # or add smart logic to figure it out.
-                "anthropic_version": "bedrock-2023-05-31",
-                "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
-                "max_tokens": 4096,
-            }
-        )
+        body = {
+            # this is the only allowable value as of 2025/03/04
+            # if they ever add more, we can make it configurable
+            # or add smart logic to figure it out.
+            "anthropic_version": "bedrock-2023-05-31",
+            "messages": [{"role": "user", "content": [{"type": "text", "text": prompt}]}],
+            "max_tokens": 4096,
+        }
+
+        if config.ai_extended_thinking:
+            thinking_budget_tokens = config.ai_thinking_budget_tokens or 10000
+            if config.ai_extra_query_options and "thinking_budget_tokens" in config.ai_extra_query_options:
+                thinking_budget_tokens = config.ai_extra_query_options["thinking_budget_tokens"]
+
+            body["thinking"] = {"type": "enabled", "budget_tokens": thinking_budget_tokens, "display": "omitted"}
+        else:
+            body["thinking"] = {"type": "disabled"}
 
         response = self.client.invoke_model(
-            body=body, modelId=self.model, accept="application/json", contentType="application/json"
+            body=json.dumps(body), modelId=self.model, accept="application/json", contentType="application/json"
         )
 
         response_body = json.loads(response["body"].read())
-        content = response_body["content"][0]["text"]  # Extract the assistant's response
+        if response_body["stop_reason"] == "refusal":
+            return AWSBedrockClient.ApiResponse(content=REFURSAL_STUB_CONTENT, model=self.model)
+        if not response_body.get("content", []):
+            logger.error(f"bedrock response does not have 'content': {response_body}")
+            raise ValueError("Unexpected bedrock response body")
+        text_blocks = [b for b in response_body["content"] if b["type"] == "text"]
+        if len(text_blocks) != 1:
+            logger.error(f"bedrock response does not contain 1 text block: {response_body}")
+            raise ValueError("Unexpected bedrock response body")
+        content = text_blocks[0]["text"]  # Extract the assistant's response
         return AWSBedrockClient.ApiResponse(content=content, model=self.model)
 
 
@@ -539,15 +537,15 @@ class SeqeraClient(Client):
         return f"{self.chat_title}\n\n:::details\n\n{prompt}\n\n:::\n\n"
 
     class ApiResponse(NamedTuple):
-        content: Union[str, Dict[str, str]]
+        content: str | dict[str, str]
         model: str
-        thread_id: Optional[str] = None
+        thread_id: str | None = None
 
     def _send_request(
-        self, prompt: str, report_content: str, extra_options: Optional[Dict[str, Any]] = None
+        self, prompt: str, report_content: str, extra_options: dict[str, Any] | None = None
     ) -> ApiResponse:
         response = self._request_with_error_handling_and_retries(
-            f"{config.seqera_api_url}/internal-ai/query",
+            f"{config.seqera_api_url}/internal-ai/report-summary",
             headers={"Authorization": f"Bearer {self.api_key}"},
             body={
                 "message": self.wrap_details(prompt + "\n\n" + report_content),
@@ -607,7 +605,7 @@ class SeqeraClient(Client):
             raise
 
 
-def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+def check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Public function to check if AWS Bedrock is available and usable.
     Can be used for diagnostics.
@@ -618,7 +616,7 @@ def check_bedrock_availability() -> Tuple[bool, Optional[str]]:
     return _check_bedrock_availability()
 
 
-def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
+def _check_bedrock_availability() -> tuple[bool, str | None]:
     """
     Check if AWS Bedrock is available and usable.
 
@@ -636,7 +634,7 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
 
         # Get the current region
         session = boto3.Session()
-        region: Optional[str] = session.region_name
+        region: str | None = session.region_name
 
         # If no region is set, try to get it from the client
         if not region:
@@ -718,7 +716,7 @@ def _check_bedrock_availability() -> Tuple[bool, Optional[str]]:
             return False, f"Error creating Bedrock client: {e}"
 
 
-def _auto_detect_provider() -> Optional[str]:
+def _auto_detect_provider() -> str | None:
     """
     Auto-detect AI provider based on available environment variables.
 
@@ -751,7 +749,7 @@ def _auto_detect_provider() -> Optional[str]:
     return None
 
 
-def get_llm_client() -> Optional[Client]:
+def get_llm_client() -> Client | None:
     if not config.ai_summary:
         return None
 
@@ -851,25 +849,25 @@ def _strip_html(text: str) -> str:
 
 class AiToolMetadata(BaseModel):
     name: str
-    info: Optional[str] = None
-    href: Optional[str] = None
-    comment: Optional[str] = None
+    info: str | None = None
+    href: str | None = None
+    comment: str | None = None
 
 
 class AiSectionMetadata(BaseModel):
     name: str
     module_anchor: Anchor
-    description: Optional[str] = None
-    comment: Optional[str] = None
-    helptext: Optional[str] = None
-    plot_anchor: Optional[Anchor] = None
-    content: Optional[str] = None
-    content_before_plot: Optional[str] = None
+    description: str | None = None
+    comment: str | None = None
+    helptext: str | None = None
+    plot_anchor: Anchor | None = None
+    content: str | None = None
+    content_before_plot: str | None = None
 
 
 class AiReportMetadata(BaseModel):
-    tools: Dict[Anchor, AiToolMetadata]
-    sections: Dict[Anchor, AiSectionMetadata]
+    tools: dict[Anchor, AiToolMetadata]
+    sections: dict[Anchor, AiSectionMetadata]
 
 
 def ai_section_metadata() -> AiReportMetadata:
@@ -902,7 +900,7 @@ def ai_section_metadata() -> AiReportMetadata:
     )
 
 
-def create_pseudonym_map(sample_names: List[SampleName]) -> Dict[str, str]:
+def create_pseudonym_map(sample_names: list[SampleName]) -> dict[str, str]:
     """
     Find all sample names in the report and replace them with anonymised names
     """
@@ -936,7 +934,7 @@ def deanonymize_sample_names(text: str) -> str:
     return text
 
 
-def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Client] = None) -> Tuple[str, bool]:
+def build_prompt(metadata: AiReportMetadata, system_prompt, client: Client | None = None) -> tuple[str, bool]:
     # Account for system message, plus leave 10% buffer
     max_tokens = client.max_tokens() if client is not None else math.inf
 
@@ -1010,11 +1008,10 @@ def build_prompt(metadata: AiReportMetadata, system_prompt, client: Optional[Cli
 
         if section.plot_anchor and section.plot_anchor in report.plot_by_id:
             plot = report.plot_by_id[section.plot_anchor]
-            if isinstance(plot, Plot):
-                if plot_content := plot.format_for_ai_prompt(keep_hidden=True):
-                    if plot.pconfig.title:
-                        sec_context += f"Title: {plot.pconfig.title}\n"
-                    sec_context += "\n" + plot_content
+            if isinstance(plot, Plot) and (plot_content := plot.format_for_ai_prompt(keep_hidden=True)):
+                if plot.pconfig.title:
+                    sec_context += f"Title: {plot.pconfig.title}\n"
+                sec_context += "\n" + plot_content
 
         # Check if adding this section would exceed the limit
         # Using rough estimate of 4 chars per token
@@ -1045,6 +1042,14 @@ def add_ai_summary_to_report():
     report.ai_report_metadata_base64 = base64.b64encode(metadata.model_dump_json().encode()).decode()
     report.ai_extra_query_options_base64 = base64.b64encode(
         json.dumps(config.ai_extra_query_options or {}).encode()
+    ).decode()
+    report.ai_prompts_base64 = base64.b64encode(
+        json.dumps(
+            {
+                "short": config.ai_prompt_short or PROMPT_SHORT,
+                "full": config.ai_prompt_full or PROMPT_FULL,
+            }
+        ).encode()
     ).decode()
     # Create and save the map for format_dataset_for_ai_prompt or JS runtime
     report.ai_pseudonym_map = create_pseudonym_map(report.sample_names)
@@ -1111,10 +1116,10 @@ def add_ai_summary_to_report():
         logger.error(f"Failed to interpret report with {client.title}: {e}")
         if config.strict:
             raise
-        return None
+        return
 
     if not response.interpretation:
-        return None
+        return
 
     if response.model:
         report.ai_model_resolved = response.model
@@ -1122,10 +1127,12 @@ def add_ai_summary_to_report():
     if response.thread_id:
         report.ai_thread_id = response.thread_id
 
+    # Stored as markdown: the report renders it in the browser, through the same
+    # sanitiser as summaries generated there, so there is only one rendering path.
     interpretation: InterpretationOutput = response.interpretation
-    report.ai_global_summary = interpretation.markdown_to_html(interpretation.summary)
+    report.ai_global_summary = deanonymize_sample_names(interpretation.summary)
 
     if config.ai_summary_full and interpretation.detailed_analysis:
-        report.ai_global_detailed_analysis = interpretation.markdown_to_html(interpretation.detailed_analysis)
+        report.ai_global_detailed_analysis = deanonymize_sample_names(interpretation.detailed_analysis)
 
     logger.info(f"Summarised report with {report.ai_provider_title}")

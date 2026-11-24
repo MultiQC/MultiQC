@@ -9,6 +9,8 @@ MultiQC offers a few ways to customise reports to easily add your own
 branding and some additional report-level information. These features
 are primarily designed for core genomics facilities.
 
+Most of the settings on this page live in `multiqc_config.yaml`. The [Config Wizard](../getting_started/config_wizard.md) helps you to build one in the browser with validation as you type.
+
 Note that much more extensive customisation of reports is possible using
 [custom templates](../development/templates.md).
 
@@ -578,16 +580,22 @@ These overwrite the defaults that are hardcoded in the module code. `path_filter
 | [seq]   | matches any character in seq     |
 | [!seq]  | matches any character not in seq |
 
-Note that exclusion superseeds inclusion for the path filters.
+Note that exclusion supersedes inclusion for the path filters.
 
 The other available configuration options are:
 
 - `name`: Section name
 - `anchor`: Section report ID
-- `target`: Intro link text
-- `href`: Intro link URL
-- `info`: Intro text
-- `extra`: Additional HTML after intro.
+- `href`: Tool homepage URL (or list of URLs)
+- `doi`: DOI (or list of DOIs)
+- `license`: Software license name (shown in the Software Versions section)
+- `license_url`: URL to the software license text
+- `info`: Intro text, rendered as markdown
+- `comment`: Comment text, rendered as markdown
+- `extra`: Additional HTML after intro
+- `path_filters`: Glob patterns; only files matching these are used by this module run
+- `path_filters_exclude`: Glob patterns; files matching these are excluded
+- `generalstats`: Set to `false` to suppress this module's General Statistics columns
 - `custom_config`: Custom module-level settings. Translated into `config.moduleName`, but specifically for this section.
 
 For example, to run the FastQC module twice, before and after adapter trimming, you could
@@ -599,7 +607,6 @@ module_order:
       name: "FastQC (trimmed)"
       anchor: "fastqc_trimmed"
       info: "This section of the report shows FastQC results after adapter trimming."
-      target: ""
       path_filters:
         - "*_1_trimmed_fastqc.zip"
   - cutadapt
@@ -920,6 +927,8 @@ The following comparison operators are available:
 - `ne` - Value does not equal
 - `gt` - Value is greater than
 - `lt` - Value is less than
+- `ge` - Value is greater than or equal to
+- `le` - Value is less than or equal to
 
 To have matches for a specific table or column, use that ID instead of `all_columns`.
 

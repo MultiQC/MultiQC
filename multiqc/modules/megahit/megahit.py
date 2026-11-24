@@ -1,7 +1,6 @@
 import logging
 import re
 
-
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
@@ -22,9 +21,11 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/voutcn/megahit",
             info="NGS read assembler",
             doi="10.1093/bioinformatics/btv033",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/voutcn/megahit/blob/master/LICENSE",
         )
 
-        data = dict()
+        data = {}
         for f in self.find_log_files("megahit", filehandles=True):
             for line in f["f"]:
                 self.add_data_source(f, f["s_name"])

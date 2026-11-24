@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Any
 
 import yaml
 from packaging.version import InvalidVersion, Version
@@ -46,10 +46,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/VIBTOBIlab/methurator",
             info="Methurator is a Python package designed to estimate CpGs saturation for DNA methylation sequencing data.",
             # doi="",  # No DOI available
+            license="MIT License",
+            license_url="https://github.com/VIBTOBIlab/methurator/blob/main/LICENSE",
         )
 
         # Store parsed data
-        self.methurator_data: Dict[str, Dict[str, Any]] = {}
+        self.methurator_data: dict[str, dict[str, Any]] = {}
 
         # Find and parse methurator summary files
         for f in self.find_log_files("methurator"):
@@ -134,14 +136,14 @@ class MultiqcModule(BaseMultiqcModule):
 
         return True
 
-    def _extract_sample_data(self, parsed: Dict) -> Dict[str, Dict[str, Any]]:
+    def _extract_sample_data(self, parsed: dict) -> dict[str, dict[str, Any]]:
         """Extract per-sample data from the parsed `gt_estimator` YAML structure."""
-        samples_data: Dict[str, Dict[str, Any]] = {}
+        samples_data: dict[str, dict[str, Any]] = {}
         # Parse gt summary
         summary = parsed.get("methurator_summary", {})
         gt_summary = summary.get("gt_summary", {})
 
-        saturation_by_sample: Dict[str, Dict[int, Dict[str, Any]]] = {}
+        saturation_by_sample: dict[str, dict[int, dict[str, Any]]] = {}
         for item in gt_summary:
             if isinstance(item, dict):
                 for sample_name, sat_data in item.items():
@@ -156,7 +158,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_samples = set(saturation_by_sample.keys())
 
         for sample_name in all_samples:
-            sample_data: Dict[str, Any] = {
+            sample_data: dict[str, Any] = {
                 "saturation_analysis": saturation_by_sample.get(sample_name, {}),
             }
 
@@ -177,7 +179,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def _add_general_stats(self):
         """Add columns to the general statistics table."""
-        general_stats_data: Dict[str, Dict[str, Any]] = {}
+        general_stats_data: dict[str, dict[str, Any]] = {}
         for s_name, data in self.methurator_data.items():
             general_stats_data[s_name] = {
                 "minimum_coverage": data.get("minimum_coverage"),
@@ -223,7 +225,7 @@ class MultiqcModule(BaseMultiqcModule):
         GT data points are: [t, saturation, total_cpgs, ci_low, ci_high]
         """
         # Collect plot data for each sample, one dataset per minimum coverage level
-        plot_data_by_coverage: Dict[int, Dict[str, Dict[float, float]]] = {}
+        plot_data_by_coverage: dict[int, dict[str, dict[float, float]]] = {}
 
         for s_name, data in self.methurator_data.items():
             saturation_analysis = data.get("saturation_analysis", {})
@@ -234,7 +236,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 # Extract GT data points: [t, saturation, total_cpgs, ci_low, ci_high]
                 sat_points = sat_data.get("data", [])
-                sample_curve: Dict[float, float] = {}
+                sample_curve: dict[float, float] = {}
                 for point in sat_points:
                     if len(point) >= 3:
                         t_val = point[0]  # t-value as x-axis

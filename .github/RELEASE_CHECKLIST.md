@@ -59,13 +59,6 @@ This checklist is for my own reference, as I forget the steps every time.
 
    - Spot any previously unnoticed bugs and fix
    - Upload to the website and push change to Git
-   - Copy the freshly-regenerated configuration wizard into the website repo so `seqera.io/multiqc` serves the new version:
-
-     ```bash
-     cp docs/multiqc_config_wizard.html ../../seqera/web/services/website/public/
-     ```
-
-     Commit the file in the seqeralabs/web repo together with the demo report updates.
 
 8. Commit and push version updates
 9. Generate new rich-codex screenshots

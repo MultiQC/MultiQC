@@ -17,10 +17,13 @@ File path for the source of this content: multiqc/modules/fastqc/fastqc.py
 Quality control tool for high throughput sequencing data.
 
 [http://www.bioinformatics.babraham.ac.uk/projects/fastqc/](http://www.bioinformatics.babraham.ac.uk/projects/fastqc/)
+
+[GNU General Public License v3.0](https://github.com/s-andrews/FastQC/blob/master/LICENSE)
 :::
 
-FastQC generates an HTML report which is what most people use when
-they run the program. However, it also helpfully generates a file
+FastQC and [Falco](https://github.com/smithlabcode/falco) (a high-performance
+drop-in replacement) generate an HTML report which is what most people use when
+they run the program. However, they also helpfully generate a file
 called `fastqc_data.txt` which is relatively easy to parse.
 
 A typical run will produce the following files:
@@ -55,7 +58,7 @@ The below code shows the default file patterns:
 ```yaml
 sp:
   fastqc/data:
-    fn: "fastqc_data.txt"
+    fn: "*fastqc_data.txt"
   fastqc/zip:
     fn: "*_fastqc.zip"
 ```
@@ -92,10 +95,10 @@ column 2 = % of genome):
 
 ```bash
 # FastQC theoretical GC content curve: YOUR REFERENCE NAME
-0   0.005311768
-1   0.004108502
-2   0.004060371
-3   0.005066476
+0	0.005311768
+1	0.004108502
+2	0.004060371
+3	0.005066476
 [...]
 ```
 
@@ -172,10 +175,9 @@ fastqc_config:
 
 ```yaml
 fastqc/data:
-  fn: fastqc_data.txt
+  fn: '*fastqc_data.txt'
 fastqc/theoretical_gc:
   fn: '*fastqc_theoretical_gc*'
 fastqc/zip:
   fn: '*_fastqc.zip'
 ```
-    

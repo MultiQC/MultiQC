@@ -39,9 +39,11 @@ class MultiqcModule(BaseMultiqcModule, CompareMixin, GatherMixin):
             href="https://github.com/sourmash-bio/sourmash",
             info="Quickly searches, compares, and analyzes genomic and metagenomic data sets.",
             doi="10.21105/joss.00027",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/sourmash-bio/sourmash/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
         n["compare"] = self.parse_compare()
         if n["compare"] > 0:
             log.info(f"Found {n['compare']} compare results")

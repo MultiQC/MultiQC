@@ -1,9 +1,8 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import BaseMultiqcModule, config
-from multiqc.plots import bargraph, violin
+from multiqc.plots import bargraph, linegraph, violin
 
 log = logging.getLogger(__name__)
 
@@ -12,41 +11,72 @@ VERSION_REGEX = r"# This file was produced by samtools stats \(([\d\.]+)"
 HTSLIB_REGEX = r"\+htslib-([\d\.]+)"
 
 
+# Note: used by the hifi_trimmer module
+def parse_samtools_stats_lines(file_contents: str) -> tuple[dict, str | None, str | None]:
+    """Parse `SN` rows from samtools stats output into a normalized dict.
+    Also extract samtools and htslib versions if present on the header line.
+    Returns a tuple: (parsed_data, samtools_version, htslib_version)
+    """
+    parsed_data: dict = {}
+    samtools_version: str | None = None
+    htslib_version: str | None = None
+
+    for line in file_contents.splitlines():
+        # Version/header line
+        if line.startswith("# This file was produced by samtools stats"):
+            version_match = re.search(VERSION_REGEX, line)
+            if version_match:
+                samtools_version = version_match.group(1)
+
+            htslib_version_match = re.search(HTSLIB_REGEX, line)
+            if htslib_version_match:
+                htslib_version = htslib_version_match.group(1)
+
+        if not line.startswith("SN"):
+            continue
+
+        sections = line.split("\t")
+        if len(sections) < 3:
+            continue
+
+        field = sections[1].strip()[:-1].replace(" ", "_")
+        try:
+            value = float(sections[2].strip())
+        except ValueError:
+            continue
+        parsed_data[field] = value
+
+    return parsed_data, samtools_version, htslib_version
+
+
 def parse_samtools_stats(module: BaseMultiqcModule):
     """Find Samtools stats logs and parse their data"""
 
-    samtools_stats: Dict = dict()
+    samtools_stats: dict = {}
+    insert_size_hist: dict = {}
     for f in module.find_log_files("samtools/stats"):
-        parsed_data = dict()
+        parsed_data, samtools_version, htslib_version = parse_samtools_stats_lines(f["f"])
+        insert_sizes: dict[int, float] = {}
         for line in f["f"].splitlines():
-            # Get version number from file contents
-            if line.startswith("# This file was produced by samtools stats"):
-                # Look for Samtools version
-                version_match = re.search(VERSION_REGEX, line)
-                if version_match is None:
-                    continue
-
-                # Add Samtools version
-                samtools_version = version_match.group(1)
-                module.add_software_version(samtools_version, f["s_name"])
-
-                # Look for HTSlib version
-                htslib_version_match = re.search(HTSLIB_REGEX, line)
-                if htslib_version_match is None:
-                    continue
-
-                # Add HTSlib version if different from Samtools version
-                htslib_version = htslib_version_match.group(1)
-                if htslib_version != samtools_version:
-                    module.add_software_version(htslib_version, f["s_name"], "HTSlib")
-
-            if not line.startswith("SN"):
+            if not line.startswith("IS"):
                 continue
             sections = line.split("\t")
-            field = sections[1].strip()[:-1]
-            field = field.replace(" ", "_")
-            value = float(sections[2].strip())
-            parsed_data[field] = value
+            if len(sections) < 6:
+                continue
+            try:
+                insert_size = int(sections[1].strip())
+                pairs_total = float(sections[2].strip())
+            except ValueError:
+                continue
+            if insert_size == 0:
+                continue
+            insert_sizes[insert_size] = pairs_total
+
+        # Add Samtools and HTSlib versions if found
+        if samtools_version:
+            module.add_software_version(samtools_version, f["s_name"])
+        if htslib_version and htslib_version != samtools_version:
+            module.add_software_version(htslib_version, f["s_name"], "HTSlib")
 
         if len(parsed_data) > 0:
             # Work out some percentages
@@ -59,9 +89,12 @@ def parse_samtools_stats(module: BaseMultiqcModule):
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             module.add_data_source(f, section="stats")
             samtools_stats[f["s_name"]] = parsed_data
+            if len(insert_sizes) > 0:
+                insert_size_hist[f["s_name"]] = insert_sizes
 
     # Filter to strip out ignored sample names
     samtools_stats = module.ignore_samples(samtools_stats)
+    insert_size_hist = module.ignore_samples(insert_size_hist)
 
     if len(samtools_stats) == 0:
         return 0
@@ -104,7 +137,7 @@ def parse_samtools_stats(module: BaseMultiqcModule):
             "min": 0,
             "suffix": "%",
             "scale": "RdYlGn",
-            "hidden": True if (max([x["reads_mapped_and_paired"] for x in samtools_stats.values()]) == 0) else False,
+            "hidden": (max([x["reads_mapped_and_paired"] for x in samtools_stats.values()]) == 0),
         },
         "reads_MQ0_percent": {
             "title": "% MapQ 0 reads",
@@ -140,6 +173,9 @@ def parse_samtools_stats(module: BaseMultiqcModule):
     # Make bargraph plot of mapped/unmapped reads
     alignment_section(module, samtools_stats)
 
+    # Insert size distribution
+    insert_length_section(module, insert_size_hist)
+
     # Make dot plot of counts
     keys = {}
     reads = {
@@ -156,28 +192,27 @@ def parse_samtools_stats(module: BaseMultiqcModule):
         "tt_decimals": 2,
         "shared_key": "base_count",
     }
-    keys["raw_total_sequences"] = dict(reads, **{"title": "Total sequences"})
+    keys["raw_total_sequences"] = dict(reads, title="Total sequences")
     keys["reads_mapped_and_paired"] = dict(
         reads,
-        **{"title": "Mapped &amp; paired", "description": "Paired-end technology bit set + both mates mapped"},
+        title="Mapped &amp; paired",
+        description="Paired-end technology bit set + both mates mapped",
     )
-    keys["reads_properly_paired"] = dict(reads, **{"title": "Properly paired", "description": "Proper-pair bit set"})
-    keys["reads_duplicated"] = dict(reads, **{"title": "Duplicated", "description": "PCR or optical duplicate bit set"})
-    keys["reads_QC_failed"] = dict(reads, **{"title": "QC Failed"})
-    keys["reads_MQ0"] = dict(reads, **{"title": "Reads MQ0", "description": "Reads mapped and MQ=0"})
-    keys["bases_mapped_(cigar)"] = dict(
-        bases, **{"title": "Mapped bases (CIGAR)", "description": "Mapped bases (CIGAR)"}
-    )
-    keys["bases_trimmed"] = dict(bases, **{"title": "Bases Trimmed"})
-    keys["bases_duplicated"] = dict(bases, **{"title": "Duplicated bases"})
+    keys["reads_properly_paired"] = dict(reads, title="Properly paired", description="Proper-pair bit set")
+    keys["reads_duplicated"] = dict(reads, title="Duplicated", description="PCR or optical duplicate bit set")
+    keys["reads_QC_failed"] = dict(reads, title="QC Failed")
+    keys["reads_MQ0"] = dict(reads, title="Reads MQ0", description="Reads mapped and MQ=0")
+    keys["bases_mapped_(cigar)"] = dict(bases, title="Mapped bases (CIGAR)", description="Mapped bases (CIGAR)")
+    keys["bases_trimmed"] = dict(bases, title="Bases Trimmed")
+    keys["bases_duplicated"] = dict(bases, title="Duplicated bases")
     keys["pairs_on_different_chromosomes"] = dict(
-        reads, **{"title": "Diff chromosomes", "description": "Pairs on different chromosomes"}
+        reads, title="Diff chromosomes", description="Pairs on different chromosomes"
     )
     keys["pairs_with_other_orientation"] = dict(
-        reads, **{"title": "Other orientation", "description": "Pairs with other orientation"}
+        reads, title="Other orientation", description="Pairs with other orientation"
     )
-    keys["inward_oriented_pairs"] = dict(reads, **{"title": "Inward pairs", "description": "Inward oriented pairs"})
-    keys["outward_oriented_pairs"] = dict(reads, **{"title": "Outward pairs", "description": "Outward oriented pairs"})
+    keys["inward_oriented_pairs"] = dict(reads, title="Inward pairs", description="Inward oriented pairs")
+    keys["outward_oriented_pairs"] = dict(reads, title="Outward pairs", description="Outward oriented pairs")
 
     module.add_section(
         name="Alignment stats",
@@ -212,9 +247,7 @@ def alignment_section(module, samples_data):
             bedgraph_data[sample_id] = data
         else:
             log.warning(
-                "sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {}".format(
-                    sample_id
-                )
+                f"sum of mapped/unmapped/filtered reads not matching total, skipping samtools plot for: {sample_id}"
             )
     module.add_section(
         name="Percent mapped",
@@ -238,6 +271,28 @@ def alignment_section(module, samples_data):
         to be uniquely mapped. These reads are often filtered out in downstream analyses.
         """,
         plot=alignment_chart(bedgraph_data),
+    )
+
+
+def insert_length_section(module, insert_size_hist):
+    if len(insert_size_hist) == 0:
+        return
+
+    pconfig = {
+        "id": "samtools_insert_size",
+        "title": "Samtools: stats: Insert size distribution",
+        "ylab": "Read pairs",
+        "xlab": "Insert size (bp)",
+        "xmin": 0,
+        "ymin": 0,
+        "tt_label": "<b>{point.x} bp</b>: {point.y}",
+    }
+
+    module.add_section(
+        name="Insert size distribution",
+        anchor="samtools-stats-insert-size",
+        description="Insert size distribution from <code>samtools stats</code> (IS lines).",
+        plot=linegraph.plot(insert_size_hist, pconfig),
     )
 
 

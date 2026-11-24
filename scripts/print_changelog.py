@@ -10,9 +10,8 @@ import datetime
 import os
 import subprocess
 from pathlib import Path
-from typing import Dict, List
 
-from github import Github
+from github import Auth, Github
 from github.PullRequest import PullRequest
 
 REPO_ID = "MultiQC/MultiQC"
@@ -27,13 +26,13 @@ if not GITHUB_TOKEN:
 
 def run_cmd(cmd):
     print(cmd)
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise RuntimeError(f"Error executing command: {result.stderr}")
     return result
 
 
-def get_milestone_prs(repo, current_tag: str, limit=100) -> List[PullRequest]:
+def get_milestone_prs(repo, current_tag: str, limit=100) -> list[PullRequest]:
     """
     Get PRs for the current milestone using direct milestone filtering.
 
@@ -98,13 +97,13 @@ def main():
     previous_minor_tag = run_cmd(f"cd {WORKSPACE_PATH} && git describe --tags --abbrev=0").stdout.strip()
     if previous_minor_tag.count(".") == 2:  # 1.24.1 -> 1.24
         previous_minor_tag = previous_minor_tag.rsplit(".", 1)[0]
-    repo = Github(login_or_token=GITHUB_TOKEN).get_repo(REPO_ID)
+    repo = Github(auth=Auth.Token(GITHUB_TOKEN)).get_repo(REPO_ID)
     milestones = repo.get_milestones(state="all")
     assert_milestone_exists(milestones, current_tag)
     assert_milestone_exists(milestones, previous_minor_tag)
-    prs: List[PullRequest] = get_milestone_prs(repo, current_tag)
+    prs: list[PullRequest] = get_milestone_prs(repo, current_tag)
 
-    label_to_section: Dict[str, str] = {
+    label_to_section: dict[str, str] = {
         "module: new": "New modules",
         "bug: module": "Module fixes",
         "module: enhancement": "Module updates",
@@ -114,7 +113,7 @@ def main():
         "core: refactoring": "Optimization, refactoring and typing",
         "documentation": "Chores",
     }
-    sections_to_prs: Dict[str, List[PullRequest]] = {
+    sections_to_prs: dict[str, list[PullRequest]] = {
         "New modules": [],
         "Feature updates and improvements": [],
         "Module updates": [],
@@ -128,26 +127,27 @@ def main():
     for pr in prs:
         if skip_pr(pr.title):
             continue
-        if pr.labels:
-            for label in pr.labels:
-                section_name = label_to_section.get(label.name, "Feature updates and improvements")
-                sections_to_prs[section_name].append(pr)
-        else:
-            sections_to_prs["Feature updates and improvements"].append(pr)
+        pr_label_names = {label.name for label in pr.labels}
+        section_name = next(
+            (section for label, section in label_to_section.items() if label in pr_label_names),
+            "Feature updates and improvements",
+        )
+        sections_to_prs[section_name].append(pr)
 
-    print("")
-    print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {datetime.date.today().isoformat()}")
-    print("")
+    print()
+    today = datetime.date.today()
+    print(f"## [MultiQC {current_tag}]({REPO_URL}/releases/tag/{current_tag}) - {today.isoformat()}")
+    print()
 
     for section, prs in sections_to_prs.items():
         if section == "Chores":
             continue
         print(f"### {section}")
-        print("")
+        print()
         for pr in prs:
             link = f"([#{pr.number}]({REPO_URL}/pull/{pr.number}))"
             print(f"- {pr.title} {link}")
-        print("")
+        print()
 
 
 def skip_pr(message: str) -> bool:

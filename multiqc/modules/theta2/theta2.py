@@ -21,10 +21,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://compbio.cs.brown.edu/projects/theta/",
             info="Estimates tumour purity and clonal / subclonal copy number.",
             doi=["10.1093/bioinformatics/btu651", "10.1186/gb-2013-14-7-r80"],
+            license="Brown University non-commercial academic license",
+            license_url="https://github.com/raphael-group/THetA/blob/master/doc/LICENSE.txt",
         )
 
         # Find and load any THetA2 reports
-        self.theta2_data = dict()
+        self.theta2_data = {}
         for f in self.find_log_files("theta2", filehandles=True):
             parsed_data = self.parse_theta2_report(f["f"])
             if len(parsed_data) > 0:
