@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import pytest
 
 from multiqc.modules.cramino.cramino import (
@@ -162,7 +164,7 @@ class TestParseCraminoLines:
         assert karyotype == {}
 
     def test_estimated_identity_labels(self):
-        summary, karyotype = parse_cramino_lines(ESTIMATED_IDENTITY.splitlines())
+        summary, _karyotype = parse_cramino_lines(ESTIMATED_IDENTITY.splitlines())
         assert summary["Median est. identity"] == "97.00"
         assert "Median identity" not in summary
 
@@ -254,7 +256,7 @@ class TestBuildCraminoStats:
 
 
 class TestFilterKaryotypeContigs:
-    KARYOTYPE = {
+    KARYOTYPE: ClassVar[dict[str, float]] = {
         "chr1": 0.9,
         "chrX": 0.8,
         "chrM": 71.0,

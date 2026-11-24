@@ -2,7 +2,8 @@
 
 import fnmatch
 import logging
-from typing import Dict, Iterable, List, Tuple, Union, cast
+from collections.abc import Iterable
+from typing import cast
 
 from natsort import natsorted
 
@@ -50,8 +51,8 @@ SPLICE_KEYS = {
 DEFAULT_EXCLUDE_CONTIGS = ["*_alt", "*_decoy", "*_fix", "*_random", "chrUn*", "HLA*", "chrM", "chrEBV"]
 
 
-def read_config() -> Dict:
-    cfg = getattr(config, "cramino_config", dict())
+def read_config() -> dict:
+    cfg = getattr(config, "cramino_config", {})
     if not isinstance(cfg, dict):
         return {}
 
@@ -66,7 +67,7 @@ def read_config() -> Dict:
     return cfg
 
 
-def parse_cramino_lines(lines: Iterable[str]) -> Tuple[Dict[str, str], Dict[str, float]]:
+def parse_cramino_lines(lines: Iterable[str]) -> tuple[dict[str, str], dict[str, float]]:
     """
     Parse cramino's default text output into (summary, karyotype).
 
@@ -75,8 +76,8 @@ def parse_cramino_lines(lines: Iterable[str]) -> Tuple[Dict[str, str], Dict[str,
     lines (present only when cramino was run with `--karyotype`, and possibly followed by
     `# Warning - no contigs found in BAM file!` instead of data if none were found).
     """
-    summary: Dict[str, str] = {}
-    karyotype: Dict[str, float] = {}
+    summary: dict[str, str] = {}
+    karyotype: dict[str, float] = {}
     in_karyotype = False
 
     for raw_line in lines:
@@ -114,7 +115,7 @@ def parse_cramino_lines(lines: Iterable[str]) -> Tuple[Dict[str, str], Dict[str,
     return summary, karyotype
 
 
-def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]:
+def build_cramino_stats(summary: dict[str, str]) -> dict[str, int | float]:
     """
     Extract the fields cramino always emits, plus optional identity stats (absent for unaligned
     input in cramino v1; v2 estimates them from base qualities with `--ubam`, if there are any).
@@ -124,7 +125,7 @@ def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]
     if pct_from_total_key is None:
         raise KeyError(" or ".join(PCT_FROM_TOTAL_KEYS))
 
-    stats: Dict[str, Union[int, float]] = {
+    stats: dict[str, int | float] = {
         "num_alignments": int(summary["Number of alignments"]),
         "pct_from_total_alignments": float(summary[pct_from_total_key]),
         "num_reads": int(summary["Number of reads"]),
@@ -152,15 +153,15 @@ def build_cramino_stats(summary: Dict[str, str]) -> Dict[str, Union[int, float]]
 
 
 def filter_karyotype_contigs(
-    karyotype: Dict[str, float],
-    include_contigs: List[str],
-    exclude_contigs: List[str],
-) -> Dict[str, float]:
+    karyotype: dict[str, float],
+    include_contigs: list[str],
+    exclude_contigs: list[str],
+) -> dict[str, float]:
     """
     Apply glob include/exclude patterns to a sample's per-chromosome data, and sort the contigs
     naturally (chr1, chr2, ..., chr10), as cramino's own order differs between versions.
     """
-    filtered: Dict[str, float] = {}
+    filtered: dict[str, float] = {}
     for contig, value in natsorted(karyotype.items(), key=lambda item: item[0]):
         if exclude_contigs and any(fnmatch.fnmatch(contig, pattern) for pattern in exclude_contigs):
             continue
@@ -222,8 +223,8 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.cfg = read_config()
 
-        cramino_data: Dict[str, Dict[str, Union[int, float]]] = {}
-        karyotype_by_sample: Dict[str, Dict[str, float]] = {}
+        cramino_data: dict[str, dict[str, int | float]] = {}
+        karyotype_by_sample: dict[str, dict[str, float]] = {}
 
         for f in self.find_log_files("cramino", filehandles=True):
             s_name = self.clean_s_name(f["fn"], f)
@@ -259,8 +260,8 @@ class MultiqcModule(BaseMultiqcModule):
         if karyotype_by_sample:
             self.write_data_file(karyotype_by_sample, "multiqc_cramino_karyotype")
 
-    def add_general_stats(self, data: Dict[str, Dict[str, Union[int, float]]]) -> None:
-        headers: Dict[str, ColumnDict] = {
+    def add_general_stats(self, data: dict[str, dict[str, int | float]]) -> None:
+        headers: dict[str, ColumnDict] = {
             "yield_gb": {
                 "title": "Yield (Gb)",
                 "description": "Total sequencing yield in gigabases",
@@ -286,10 +287,10 @@ class MultiqcModule(BaseMultiqcModule):
         }
         resolved_headers = self.get_general_stats_headers(all_headers=headers)
         if resolved_headers:
-            self.general_stats_addcols(cast(Dict[str, Dict[str, ValueT]], data), resolved_headers)
+            self.general_stats_addcols(cast(dict[str, dict[str, ValueT]], data), resolved_headers)
 
-    def add_summary_table(self, data: Dict[str, Dict[str, Union[int, float]]]) -> None:
-        headers: Dict[str, ColumnDict] = {
+    def add_summary_table(self, data: dict[str, dict[str, int | float]]) -> None:
+        headers: dict[str, ColumnDict] = {
             "num_reads": {
                 "title": f"# Reads ({config.long_read_count_prefix})",
                 "description": f"Number of reads ({config.long_read_count_desc}), excluding supplementary alignments",
@@ -475,7 +476,7 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def add_karyotype_section(self, karyotype_by_sample: Dict[str, Dict[str, float]]) -> None:
+    def add_karyotype_section(self, karyotype_by_sample: dict[str, dict[str, float]]) -> None:
         filtered_by_sample = {
             s_name: filter_karyotype_contigs(karyotype, self.cfg["include_contigs"], self.cfg["exclude_contigs"])
             for s_name, karyotype in karyotype_by_sample.items()
