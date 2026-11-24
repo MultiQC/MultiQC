@@ -77,12 +77,14 @@ def cov_at_cum_fraction(cum_fraction_by_cov: dict[int, float], fraction: float) 
 
 
 def calc_iqr_coverage(cum_fraction_by_cov: dict[int, float]) -> int | None:
-    q3_cov = cov_at_cum_fraction(cum_fraction_by_cov, 0.25)
-    q1_cov = cov_at_cum_fraction(cum_fraction_by_cov, 0.75)
-    iqr = None
-    if q3_cov is not None and q1_cov is not None:
-        iqr = q3_cov - q1_cov
-    return iqr
+    """Interquartile range of coverage.
+
+    The fractions are cumulative ("at least X coverage"), so Q3 is where 25% of
+    bases remain covered and Q1 is where 75% remain.
+    """
+    q3 = cov_at_cum_fraction(cum_fraction_by_cov, 0.25)
+    q1 = cov_at_cum_fraction(cum_fraction_by_cov, 0.75)
+    return None if q1 is None or q3 is None else q3 - q1
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -567,7 +569,7 @@ class MultiqcModule(BaseMultiqcModule):
             genstats_by_sample[s_name]["median_coverage"] = median_coverage
             iqr_coverage = calc_iqr_coverage(cum_fraction_by_cov)
             if iqr_coverage is not None and median_coverage not in (None, 0):
-                genstats_by_sample[s_name]["coefficient_of_iqr_variance"] = iqr_coverage / median_coverage
+                genstats_by_sample[s_name]["coverage_iqr_cv"] = iqr_coverage / median_coverage
 
             # Downsampling the data to avoid carrying a lot for the line plot that would downsample anyway
             cum_fraction_by_cov = dict(smooth_array(list(cum_fraction_by_cov.items()), 500))
