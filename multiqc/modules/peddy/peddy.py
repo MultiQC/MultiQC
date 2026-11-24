@@ -1,7 +1,6 @@
 import json
 import logging
 import random
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import scatter
@@ -21,13 +20,15 @@ class MultiqcModule(BaseMultiqcModule):
             "the relatedness calculation and to make ancestry predictions.\n\n"
             "It does this very quickly by sampling, by using C for computationally intensive parts, and parallelization.",
             doi="10.1016/j.ajhg.2017.01.017",
+            license="MIT License",
+            license_url="https://github.com/brentp/peddy/blob/master/LICENSE",
         )
 
         # Find and load any Peddy reports
-        self.peddy_data = dict()
-        self.peddy_length_counts = dict()
-        self.peddy_length_exp = dict()
-        self.peddy_length_obsexp = dict()
+        self.peddy_data = {}
+        self.peddy_length_counts = {}
+        self.peddy_length_exp = {}
+        self.peddy_length_obsexp = {}
 
         # parse peddy summary file
         for f in self.find_log_files("peddy/summary_table"):
@@ -98,7 +99,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def parse_peddy_summary(f):
         """Go through log file looking for peddy output"""
-        parsed_data = dict()
+        parsed_data = {}
         headers = None
         for line in f["f"].splitlines():
             s = line.split("\t")
@@ -106,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s[0] = s[0].lstrip("#")
                 headers = s
             else:
-                parsed_data[s[1]] = dict()
+                parsed_data[s[1]] = {}
                 for i, v in enumerate(s):
                     if i != 1:
                         try:
@@ -119,7 +120,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_peddy_csv(self, f, pattern):
         """Parse csv output from peddy"""
-        parsed_data: Dict[str, Dict] = dict()
+        parsed_data: dict[str, dict] = {}
         headers = None
         s_name_idx = None
         for line in f["f"].splitlines():
@@ -137,7 +138,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
             assert s_name_idx is not None
             s_name = "-".join([self.clean_s_name(s[idx], f) for idx in s_name_idx])
-            parsed_data[s_name] = dict()
+            parsed_data[s_name] = {}
             for i, v in enumerate(s):
                 if i not in s_name_idx:
                     if headers[i] == "error" and pattern == "sex_check":
@@ -161,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "family_id": {
                 "title": "Family ID",
-                "hidden": True if all([v == family_ids[0] for v in family_ids]) else False,
+                "hidden": bool(all(v == family_ids[0] for v in family_ids)),
             },
             "ancestry-prediction": {
                 "title": "Ancestry",
@@ -242,7 +243,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def peddy_relatedness_plot(self):
-        data = dict()
+        data = {}
         for s_name, d in self.peddy_data.items():
             if "ibs0_ped_check" in d and "ibs2_ped_check" in d:
                 data[s_name] = {"x": d["ibs0_ped_check"], "y": d["ibs2_ped_check"]}
@@ -310,6 +311,7 @@ class MultiqcModule(BaseMultiqcModule):
     def peddy_sex_check_plot(self):
         data = {}
         sex_index = {"female": 0, "male": 1, "unknown": 2}
+        rng = random.Random(0)
 
         for s_name, d in self.peddy_data.items():
             if "sex_het_ratio" in d and "ped_sex_sex_check" in d:
@@ -318,7 +320,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "female": "#f15c80",
                 }.get(d.get("predicted_sex_sex_check"), "#434348")
                 data[s_name] = {
-                    "x": sex_index.get(d["ped_sex_sex_check"], 2) + (random.random() - 0.5) * 0.1,
+                    "x": sex_index.get(d["ped_sex_sex_check"], 2) + (rng.random() - 0.5) * 0.1,
                     "y": d["sex_het_ratio"],
                     "color": color,
                 }

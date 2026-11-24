@@ -6,12 +6,12 @@ from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from . import (
     AlignmentSummaryMetrics,
     BaseDistributionByCycleMetrics,
-    IlluminaBasecallingMetrics,
-    IlluminaLaneMetrics,
     CrosscheckFingerprints,
     ExtractIlluminaBarcodes,
     GcBiasMetrics,
     HsMetrics,
+    IlluminaBasecallingMetrics,
+    IlluminaLaneMetrics,
     InsertSizeMetrics,
     MarkDuplicates,
     MarkIlluminaAdapters,
@@ -289,12 +289,14 @@ class MultiqcModule(BaseMultiqcModule):
             anchor=anchor,
             href=href,
             info=info,
+            license="MIT License",
+            license_url="https://github.com/broadinstitute/picard/blob/master/LICENSE.txt",
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-        self.samples_parsed_by_tool = dict()
+        self.general_stats_headers = {}
+        self.general_stats_data = {}
+        self.samples_parsed_by_tool = {}
 
         for tool in tools:
             log.debug(f"Running picard tool {tool}")

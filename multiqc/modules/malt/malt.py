@@ -27,10 +27,12 @@ class MultiqcModule(BaseMultiqcModule):
             info="Aligns of metagenomic reads to a database of reference sequences "
             "(such as NR, GenBank or Silva) and outputs a MEGAN RMA file",
             doi="10.1101/050559 ",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/husonlab/malt/blob/master/LICENSE",
         )
 
         # Find and load Malt reports
-        self.malt_data = dict()
+        self.malt_data = {}
 
         for f in self.find_log_files("malt", filehandles=True):
             self.parse_logs(f)

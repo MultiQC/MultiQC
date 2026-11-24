@@ -328,6 +328,7 @@ fn_clean_exts:
   - ".markdup"
   - ".read_distribution"
   - ".junction_annotation"
+  - "_mgnifam_stats.json"
   - ".infer_experiment"
   - ".biotype"
   - ".ivar"
@@ -517,6 +518,7 @@ module_order:
   - bcftools
   - featurecounts
   - fgbio
+  - fgumi
   - dragen
   - dragen_fastqc
   - dedup
@@ -638,6 +640,7 @@ module_order:
   - telseq
   - ataqv
   - mgikit
+  - mgnifam
   - mosaicatcher
 
 # Preserves `saved_raw_data` section in modules - default for interactive runs

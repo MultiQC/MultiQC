@@ -21,10 +21,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.github.com/apeltzer/ClipAndMerge",
             info="Adapter clipping and read merging for ancient DNA data.",
             doi="10.1186/s13059-016-0918-z",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/apeltzer/ClipAndMerge/blob/master/LICENSE",
         )
 
         # Find and load any ClipAndMerge reports
-        self.clipandmerge_data = dict()
+        self.clipandmerge_data = {}
         for f in self.find_log_files("clipandmerge"):
             self.parse_clipandmerge_log(f)
 
@@ -58,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             "version": r"ClipAndMerge \(v. ([\d\.]+)\)",
         }
 
-        parsed_data = dict()
+        parsed_data = {}
         for k, r in regexes.items():
             r_search = re.search(r, f["f"], re.MULTILINE)
             if r_search:

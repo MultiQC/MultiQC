@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -26,10 +25,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/tseemann/snippy",
             info="Rapid haploid variant calling and core genome alignment.",
             # Can't find a DOI // doi=
+            license="GNU General Public License v2.0",
+            license_url="https://github.com/tseemann/snippy/blob/master/LICENSE",
         )
 
-        data_by_sample: Dict[str, Dict] = {}
-        core_data_by_sample: Dict[str, Dict] = {}
+        data_by_sample: dict[str, dict] = {}
+        core_data_by_sample: dict[str, dict] = {}
 
         self.snippy_col = [
             "Variant-COMPLEX",
@@ -145,11 +146,11 @@ class MultiqcModule(BaseMultiqcModule):
         Add the snippy-core data to the general stats.
         """
         # Parse the statistics
-        data: Dict = {}
+        data: dict = {}
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 data[sample] = {}
-                for i in range(0, len(self.snippy_core_col)):
+                for i in range(len(self.snippy_core_col)):
                     data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])
                 data[sample]["Percent_Aligned"] = (data[sample]["ALIGNED"] / data[sample]["LENGTH"]) * 100
                 data[sample]["Percent_Het"] = (data[sample]["HET"] / data[sample]["ALIGNED"]) * 100
@@ -161,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Create a report section for the snippy data.
         """
-        bargraph_data: Dict[str, Dict] = {}
+        bargraph_data: dict[str, dict] = {}
         for sample in data_by_sample:
             # Remove the VariantTotal stat
             bargraph_data[sample] = {}
@@ -188,11 +189,11 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Create a report section for the snippy-core data.
         """
-        bargraph_data: Dict[str, Dict] = {}
+        bargraph_data: dict[str, dict] = {}
         for file in data_by_sample:
             for sample in data_by_sample[file]:
                 bargraph_data[sample] = {}
-                for i in range(0, len(self.snippy_core_col)):
+                for i in range(len(self.snippy_core_col)):
                     if self.snippy_core_col[i] == "LENGTH":
                         continue
                     bargraph_data[sample][self.snippy_core_col[i]] = int(data_by_sample[file][sample][i])

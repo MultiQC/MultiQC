@@ -54,7 +54,7 @@ def main():
     for script in scripts:
         if get_hash(script) not in whitelist:
             snippet = script.replace("\n", "")[0:80]
-            print("  '{}' # {}".format(get_hash(script), snippet))
+            print(f"  '{get_hash(script)}' # {snippet}")
 
 
 if __name__ == "__main__":

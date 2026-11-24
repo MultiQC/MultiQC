@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Literal, Optional, Union, cast
+from typing import Literal, cast
 
 from pydantic import BaseModel
 
@@ -19,66 +19,66 @@ class ClConfig(BaseModel):
     Holds config updates from the command line or interactive functions.
     """
 
-    file_list: Optional[bool] = None
-    prepend_dirs: Optional[bool] = None
-    dirs_depth: Optional[int] = None
-    fn_clean_sample_names: Optional[bool] = None
-    title: Optional[str] = None
-    report_comment: Optional[str] = None
-    template: Optional[str] = None
-    require_logs: Optional[bool] = None
-    output_dir: Optional[Union[str, Path]] = None
-    use_filename_as_sample_name: Optional[Union[bool, List[str]]] = None
-    replace_names: Optional[str] = None
-    sample_names: Optional[str] = None
-    sample_filters: Optional[str] = None
-    filename: Optional[str] = None
-    make_data_dir: Optional[bool] = None
-    data_format: Optional[str] = None
-    zip_data_dir: Optional[bool] = None
-    force: Optional[bool] = None
-    ignore_symlinks: Optional[bool] = None
-    make_report: Optional[bool] = None
-    export_plots: Optional[bool] = None
-    plots_force_flat: Optional[bool] = None
-    plots_force_interactive: Optional[bool] = None
-    strict: Optional[bool] = None
-    development: Optional[bool] = None
-    make_pdf: Optional[bool] = None
-    no_megaqc_upload: Optional[bool] = None
-    quiet: Optional[bool] = None
-    verbose: Optional[bool] = None
-    no_ansi: Optional[bool] = None
-    profile_runtime: Optional[bool] = None
-    profile_memory: Optional[bool] = None
-    no_version_check: Optional[bool] = None
-    ignore: List[str] = []
-    ignore_samples: List[str] = []
-    only_samples: List[str] = []
-    run_modules: List[str] = []
-    exclude_modules: List[str] = []
-    config_files: List[Union[str, Path]] = []
-    cl_config: List[str] = []
-    custom_css_files: List[str] = []
-    module_order: List[Union[str, Dict]] = []
-    extra_fn_clean_exts: List = []
-    extra_fn_clean_trim: List = []
-    preserve_module_raw_data: Optional[bool] = None
-    data_dump_file_write_raw: Optional[bool] = None
-    ai_summary: Optional[bool] = None
-    ai_summary_full: Optional[bool] = None
-    ai_provider: Optional[AiProviderLiteral] = None
-    ai_model: Optional[str] = None
-    ai_custom_endpoint: Optional[str] = None
-    ai_custom_context_window: Optional[int] = None
-    ai_prompt_short: Optional[str] = None
-    ai_prompt_full: Optional[str] = None
-    no_ai: Optional[bool] = None
-    unknown_options: Optional[Dict] = None
-    check_config: Optional[bool] = None
+    file_list: bool | None = None
+    prepend_dirs: bool | None = None
+    dirs_depth: int | None = None
+    fn_clean_sample_names: bool | None = None
+    title: str | None = None
+    report_comment: str | None = None
+    template: str | None = None
+    require_logs: bool | None = None
+    output_dir: str | Path | None = None
+    use_filename_as_sample_name: bool | list[str] | None = None
+    replace_names: str | None = None
+    sample_names: str | None = None
+    sample_filters: str | None = None
+    filename: str | None = None
+    make_data_dir: bool | None = None
+    data_format: str | None = None
+    zip_data_dir: bool | None = None
+    force: bool | None = None
+    ignore_symlinks: bool | None = None
+    make_report: bool | None = None
+    export_plots: bool | None = None
+    plots_force_flat: bool | None = None
+    plots_force_interactive: bool | None = None
+    strict: bool | None = None
+    development: bool | None = None
+    make_pdf: bool | None = None
+    no_megaqc_upload: bool | None = None
+    quiet: bool | None = None
+    verbose: bool | None = None
+    no_ansi: bool | None = None
+    profile_runtime: bool | None = None
+    profile_memory: bool | None = None
+    no_version_check: bool | None = None
+    ignore: list[str] = []
+    ignore_samples: list[str] = []
+    only_samples: list[str] = []
+    run_modules: list[str] = []
+    exclude_modules: list[str] = []
+    config_files: list[str | Path] = []
+    cl_config: list[str] = []
+    custom_css_files: list[str] = []
+    module_order: list[str | dict] = []
+    extra_fn_clean_exts: list = []
+    extra_fn_clean_trim: list = []
+    preserve_module_raw_data: bool | None = None
+    data_dump_file_write_raw: bool | None = None
+    ai_summary: bool | None = None
+    ai_summary_full: bool | None = None
+    ai_provider: AiProviderLiteral | None = None
+    ai_model: str | None = None
+    ai_custom_endpoint: str | None = None
+    ai_custom_context_window: int | None = None
+    ai_prompt_short: str | None = None
+    ai_prompt_full: str | None = None
+    no_ai: bool | None = None
+    unknown_options: dict | None = None
+    check_config: bool | None = None
 
 
-def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=False, print_intro_fn=None):
+def update_config(*analysis_dir, cfg: ClConfig | None = None, log_to_file=False, print_intro_fn=None):
     """
     Update config and re-initialize logger.
 
@@ -116,7 +116,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
     config.find_user_files()
 
     # Re-loading explicit user configs
-    path: Union[Path, str]
+    path: Path | str
     for path in config.explicit_user_config_files:
         config.load_config_file(path)
 
@@ -245,7 +245,7 @@ def update_config(*analysis_dir, cfg: Optional[ClConfig] = None, log_to_file=Fal
 
     # Clean up analysis_dir if a string (interactive environment only)
     if analysis_dir:
-        config.analysis_dir = [p for p in analysis_dir]
+        config.analysis_dir = list(analysis_dir)
     if cfg.file_list is not None:
         if len(config.analysis_dir) > 1:
             raise RunError("If --file-list is given, analysis_dir should have only one plain text file.")

@@ -14,14 +14,16 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/FRED-2/OptiType",
             info="Precision HLA typing from next-generation sequencing data.",
             extra="""
-            Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit 
+            Novel HLA genotyping algorithm based on integer linear programming, capable of producing accurate 4-digit
             HLA genotyping predictions from NGS data by simultaneously selecting all major and minor HLA Class I alleles.
             """,
             doi="10.1093/bioinformatics/btu548",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/FRED-2/OptiType/blob/master/LICENSE",
         )
 
         # Find and load any optitype reports
-        self.optitype_data = dict()
+        self.optitype_data = {}
 
         for f in self.find_log_files("optitype"):
             rows = f["f"].splitlines()
@@ -31,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             if f["s_name"] in self.optitype_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
-            self.optitype_data[f["s_name"]] = dict()
+            self.optitype_data[f["s_name"]] = {}
             for header, col in zip(headers, cols):
                 self.optitype_data[f["s_name"]][header] = col
             self.add_data_source(f)

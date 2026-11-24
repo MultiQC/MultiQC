@@ -228,11 +228,13 @@ was generated and the button that launches the welcome tour.
   <div class="ai-summary-header">
     <b>Report AI Summary </b>
   </div>
-  <div id="global_ai_summary_response" class="ai-summary-response">{{ report.ai_global_summary }}</div>
+  <div id="global_ai_summary_response" class="ai-summary-response ai-summary-markdown">
+    {{ report.ai_global_summary | e }}
+  </div>
 
   {% if report.ai_global_detailed_analysis %}
-    <div style="display: block" id="global_ai_summary_detailed_analysis_response">
-      {{ report.ai_global_detailed_analysis }}
+    <div style="display: block" id="global_ai_summary_detailed_analysis_response" class="ai-summary-markdown">
+      {{ report.ai_global_detailed_analysis | e }}
     </div>
   {% else %}
     <div class="ai-local-content" id="global_ai_summary_detailed_analysis_response">

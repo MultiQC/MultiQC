@@ -2,7 +2,7 @@ import json
 import logging
 import textwrap
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any
 
 import multiqc
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -13,27 +13,27 @@ log = logging.getLogger(__name__)
 
 PHRED_SCORE_EXPLANATION = textwrap.dedent(
     """
-    As Phred scores are logarithmic, the means are calculated by 
-    calculating the probability for each base and then averaging that 
+    As Phred scores are logarithmic, the means are calculated by
+    calculating the probability for each base and then averaging that
     over the total number of bases. The probability is then converted
     back into a Phred score. Tools that average Phred scores naively
-    are prone to overestimate the average quality by orders of 
-    magnitude. As such Sequali might give a different plot here than 
+    are prone to overestimate the average quality by orders of
+    magnitude. As such Sequali might give a different plot here than
     other QC tools.
 """
 )
 
 DUPLICATION_EXPLANATION = textwrap.dedent(
     """
-    [The methodology to estimate duplication uses fingerprinting 
+    [The methodology to estimate duplication uses fingerprinting
     with subsampling based on the fingerprints themselves](
-    https://www.usenix.org/system/files/conference/atc13/atc13-xie.pdf). 
-    This mitigates biases that might occur in estimates that only 
+    https://www.usenix.org/system/files/conference/atc13/atc13-xie.pdf).
+    This mitigates biases that might occur in estimates that only
     look at the first reads.
-    
-    Sequali fingerprints by combining an 8 bp fragment at an offset 
+
+    Sequali fingerprints by combining an 8 bp fragment at an offset
     of 64 bp from the beginning with an 8 bp fragment offset at 64
-    bp from the end. The offsets were chosen to limit the chance 
+    bp from the end. The offsets were chosen to limit the chance
     of adapter sequences contaminating the fingerprint.
     """
 )
@@ -48,7 +48,7 @@ def avg_x_label(x_label: str) -> int:
     return min_x + ((max_x - min_x) // 2)
 
 
-def get_insert_size_estimate(insert_sizes: List[int]) -> int:
+def get_insert_size_estimate(insert_sizes: list[int]) -> int:
     """
     Given a list of counts, return the cell index with the median count
     :param insert_sizes: List of insert size counts where index represents insert size
@@ -73,7 +73,7 @@ def get_insert_size_estimate(insert_sizes: List[int]) -> int:
     return len(insert_sizes) - 1
 
 
-def prune_sample_dict(sample_dict: Dict[str, Any]):
+def prune_sample_dict(sample_dict: dict[str, Any]):
     """
     Function to remove unused keys from the parsed data. This prevents loading
     them into memory long-term wich reduces memory usage.
@@ -86,13 +86,14 @@ def prune_sample_dict(sample_dict: Dict[str, Any]):
         "per_position_quality_distribution_read2",
         "per_tile_quality",
         # Per tile quality is not analysed by multiqc and uses a lot of space
-        "per_tile_quality_read2"
-        # Nanopore metrics for pore data do not have modules yet
-        "nanopore_metrics",
+        (
+            "per_tile_quality_read2"
+            # Nanopore metrics for pore data do not have modules yet
+            "nanopore_metrics"
+        ),
     ]
     for key in keys_to_delete:
-        if key in sample_dict:
-            del sample_dict[key]
+        sample_dict.pop(key, None)
 
     for key in ("per_position_mean_quality_and_spread", "per_position_mean_quality_and_spread_read2"):
         if key in sample_dict:
@@ -117,6 +118,8 @@ class MultiqcModule(BaseMultiqcModule):
             FASTQ and uBAM inputs.
             """,
             doi="10.1093/bioadv/vbaf010",
+            license="GNU Affero General Public License v3.0",
+            license_url="https://github.com/rhpvorderman/sequali/blob/main/LICENSE",
         )
 
         versions = set()
@@ -166,9 +169,9 @@ class MultiqcModule(BaseMultiqcModule):
 
         if len(versions) != 1:
             log.warning(f"Multiple Sequali versions found: {','.join(versions)}")
-        max_length = sorted(max_lengths, reverse=True)[0]
+        max_length = max(max_lengths)
         self.max_length = max_length
-        min_length = sorted(min_lengths)[0]
+        min_length = min(min_lengths)
         self.lengths_differ = True
         self.use_xlog = False
         if len(min_lengths) == 1 and len(max_lengths) == 1 and min_length == max_length:
@@ -197,7 +200,7 @@ class MultiqcModule(BaseMultiqcModule):
             total_counts = sum(quality_counts)
             return prod / total_counts
 
-        general_stats = dict()
+        general_stats = {}
         for sample_name, sample_dict in data.items():
             summary = sample_dict["summary"]
             stats_entry = {
@@ -343,8 +346,8 @@ class MultiqcModule(BaseMultiqcModule):
             description="Sequence counts for each sample.  Duplicate read counts are an estimate.",
             helptext=textwrap.dedent(
                 """
-                This plots shows the total number of reads broken down into 
-                unique and duplicate reads. 
+                This plots shows the total number of reads broken down into
+                unique and duplicate reads.
                 """
                 + DUPLICATION_EXPLANATION
             ),
@@ -394,9 +397,9 @@ class MultiqcModule(BaseMultiqcModule):
                 helptext=textwrap.dedent(
                     """
                 Only mean scores are plotted. The means are approximated as Sequali
-                stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and 
-                higher. It does not store all 94 discrete phred score counts for 
-                each position. For context, Illumina FASTQ files only 
+                stores 12 phred categories per position: 0-3, 4-7, etc up to 44 and
+                higher. It does not store all 94 discrete phred score counts for
+                each position. For context, Illumina FASTQ files only
                 utilize four different phred scores.
                 """
                 )
@@ -586,7 +589,7 @@ class MultiqcModule(BaseMultiqcModule):
                 total_bases = sum(count * x_label for x_label, count in zip(x_labels, counts))
                 total_bases = max(total_bases, 1)
 
-                plot_data[1][sample_name] = {x_label: count for x_label, count in zip(x_labels, counts)}
+                plot_data[1][sample_name] = dict(zip(x_labels, counts))
                 # Calculate percentage of bases in each length category for the percentage plot. This is more
                 # informative than percentage of sequences as it takes into account the amount of data (bases).
                 plot_data[0][sample_name] = {
@@ -699,8 +702,8 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali_insert_size_distribution",
             description="Distribution of insert sizes for paired-end reads.",
             helptext="""
-            Insert size is calculated as the distance between the start of read 1 and 
-            the end of read 2 in properly paired reads. The median insert size is 
+            Insert size is calculated as the distance between the start of read 1 and
+            the end of read 2 in properly paired reads. The median insert size is
             included in the general statistics table.
             """,
             plot=linegraph.plot(plot_data, plot_config),
@@ -721,7 +724,7 @@ class MultiqcModule(BaseMultiqcModule):
             sequence_matches = {}
             sequence_counts = defaultdict(lambda: 0)
             sequence_fractions = defaultdict(lambda: 0.0)
-            for sample_data, sample_dict in data.items():
+            for sample_dict in data.values():
                 overrepr_dict = sample_dict.get(key)
                 if overrepr_dict is None:
                     continue
@@ -810,7 +813,7 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="sequali_adapter_content",
             description="The cumulative percentage count of the found adapter sequences",
             helptext="""
-            Note that only samples with >= 0.1% adapter contamination are shown. 
+            Note that only samples with >= 0.1% adapter contamination are shown.
             There may be several adapters detected per sample. For long read data there
             maybe more adapters per sample, this is a result of the false positive detection
             rate increasing with longer read length.

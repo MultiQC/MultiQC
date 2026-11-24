@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/snippy/snippy.py
 Rapid haploid variant calling and core genome alignment.
 
 [https://github.com/tseemann/snippy](https://github.com/tseemann/snippy)
+
+[GNU General Public License v2.0](https://github.com/tseemann/snippy/blob/master/LICENSE)
 :::
 
 The following commands are implemented:
@@ -38,4 +40,3 @@ snippy/snippy-core:
   contents_re: ID\tLENGTH\tALIGNED\tUNALIGNED\tVARIANT\tHET\tMASKED\tLOWCOV
   num_lines: 1
 ```
-    

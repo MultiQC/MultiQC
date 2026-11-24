@@ -54,6 +54,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://rseqc.sourceforge.net/",
             info="Evaluates high throughput RNA-seq data.",
             doi="10.1093/bioinformatics/bts356",
+            license="GNU General Public License v3.0",
+            license_url="https://rseqc.sourceforge.net/",
         )
 
         # Get the list of submodules (can be customised)
@@ -73,13 +75,13 @@ class MultiqcModule(BaseMultiqcModule):
             ]
 
         # Call submodule functions
-        n = dict()
+        n = {}
         for sm in rseqc_sections:
             try:
                 # Import the submodule and call parse_reports()
                 #   Function returns number of parsed logs
                 module = __import__(f"multiqc.modules.rseqc.{sm}", fromlist=[""])
-                n[sm] = getattr(module, "parse_reports")(self)
+                n[sm] = module.parse_reports(self)
                 if n[sm] > 0:
                     log.info(f"Found {n[sm]} {sm} reports")
             except (ImportError, AttributeError):

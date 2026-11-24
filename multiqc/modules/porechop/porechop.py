@@ -1,5 +1,6 @@
 import logging
 import re
+from html import escape
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -24,15 +25,17 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/rrwick/Porechop",
             info="Finds and removes adapters from Oxford Nanopore reads.",
             extra="""
-            Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle, 
-            it is treated as chimeric and chopped into separate reads. Porechop performs thorough alignments to 
+            Adapters on the ends of reads are trimmed off, and when a read has an adapter in its middle,
+            it is treated as chimeric and chopped into separate reads. Porechop performs thorough alignments to
             effectively find adapters, even at low sequence identity.
             """,
             # doi="",  # No DOI available
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/rrwick/Porechop/blob/master/LICENSE",
         )
 
         # Find and load reports
-        self.porechop_data = dict()
+        self.porechop_data = {}
 
         # Find all files for porechop
         for f in self.find_log_files("porechop", filehandles=True):
@@ -159,9 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "Start Trimmed": {
                 "title": f"Start Trimmed ({config.read_count_prefix})",
-                "description": "Number of reads that had adapters trimmed from the start ({})".format(
-                    config.read_count_prefix
-                ),
+                "description": f"Number of reads that had adapters trimmed from the start ({config.read_count_prefix})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -176,9 +177,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "End Trimmed": {
                 "title": f"End Trimmed ({config.read_count_prefix})",
-                "description": "Number of reads that had adapters trimmed from the end ({})".format(
-                    config.read_count_prefix
-                ),
+                "description": f"Number of reads that had adapters trimmed from the end ({config.read_count_prefix})",
                 "scale": "Purples",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,
@@ -277,7 +276,7 @@ class MultiqcModule(BaseMultiqcModule):
                 description="The following samples did not have any adapters found - output reads were unchanged from input reads:",
                 content=f"""
                     <ul>
-                        <li><code>{"</code></li><li><code>".join(no_adapters)}</code></li>
+                        {"".join(f"<li><code>{escape(s)}</code></li>" for s in no_adapters)}
                     </ul>
                 """,
             )

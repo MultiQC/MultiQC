@@ -72,6 +72,10 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://example.com/toolname",
             info="Brief description starting with capital letter.",
             doi="10.xxxx/journal.xxxxx",
+            # license/license_url: checked by CI (like doi). Use the tool's
+            # license, or None (with a comment) if unknown or proprietary.
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         self.toolname_data: Dict[str, Dict] = {}
@@ -79,7 +83,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("toolname"):
             parsed = self._parse_log(f)
             for s_name, data in parsed.items():
-                s_name = self.clean_s_name(s_name, f) # If needed
+                s_name = self.clean_s_name(s_name, f)  # If needed
                 if s_name in self.toolname_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 self.add_data_source(f, s_name=s_name)
@@ -197,6 +201,10 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://example.com/toolname",
             info="Toolkit for [description].",
             doi="10.xxxx/journal.xxxxx",
+            # license/license_url: checked by CI (like doi). Use the tool's
+            # license, or None (with a comment) if unknown or proprietary.
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         n = dict()

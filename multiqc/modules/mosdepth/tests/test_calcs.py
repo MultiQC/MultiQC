@@ -1,6 +1,6 @@
 import pytest
 
-from multiqc.modules.mosdepth.mosdepth import genstats_cov_thresholds, cov_at_cum_fraction, calc_iqr_coverage
+from multiqc.modules.mosdepth.mosdepth import calc_iqr_coverage, cov_at_cum_fraction, genstats_cov_thresholds
 
 
 def test_genstats_cov_thresholds():

@@ -2,11 +2,10 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.plots import linegraph
 
-from .util import read_tsv, to_int
+from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
 
@@ -18,9 +17,9 @@ def parse_reports(module):
     return parsed_samples
 
 
-def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
+def _parse_metrics(module) -> dict[str, dict[str, dict[str, float | None]]]:
     # data_by_sample[sample][orientation] = {col: value}
-    data_by_sample: Dict[str, Dict[str, Dict[str, float]]] = {}
+    data_by_sample: dict[str, dict[str, dict[str, float | None]]] = {}
 
     for f in module.find_log_files("riker/isize_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -30,7 +29,7 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
                 continue
             s_name = module.clean_s_name(sample, f)
             try:
-                parsed = {col: float(val) for col, val in row.items()}
+                parsed = {col: to_float(val) for col, val in row.items()}
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
@@ -45,7 +44,7 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
 
     # Pick the FR orientation when present (the typical Illumina library), else the
     # first available orientation; there is always at least one row per sample.
-    primary_data: Dict[str, Dict[str, float]] = {}
+    primary_data: dict[str, dict[str, float | None]] = {}
     for s_name, by_orient in data_by_sample.items():
         primary_data[s_name] = by_orient.get("FR", next(iter(by_orient.values())))
 
@@ -77,12 +76,12 @@ def _parse_metrics(module) -> Dict[str, Dict[str, Dict[str, float]]]:
 
 def _parse_histogram(module) -> set:
     # Per-orientation histogram. Keep the three orientations as separate datasets.
-    fr_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
-    rf_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
-    tandem_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
+    fr_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
+    rf_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
+    tandem_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
 
     for f in module.find_log_files("riker/isize_histogram", filehandles=True):
-        rows_by_sample: Dict[str, list] = defaultdict(list)
+        rows_by_sample: dict[str, list] = defaultdict(list)
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:

@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.modules.picard import util
 
@@ -14,7 +13,7 @@ def parse_reports(module):
     """Find Picard OxoGMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample: Dict = dict()
+    data_by_sample: dict = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/oxogmetrics", filehandles=True):
@@ -56,7 +55,7 @@ def parse_reports(module):
                     continue
 
                 context = vals[context_col]
-                data_by_sample[s_name][context] = dict()
+                data_by_sample[s_name][context] = {}
                 for i, k in enumerate(keys):
                     k = k.strip()
                     try:
@@ -75,13 +74,13 @@ def parse_reports(module):
 
     # Write parsed data to a file
     # Collapse into 2D structure with sample_context keys
-    print_data = {f"{s}_{c}": v for s in data_by_sample.keys() for c, v in data_by_sample[s].items()}
+    print_data = {f"{s}_{c}": v for s in data_by_sample for c, v in data_by_sample[s].items()}
     module.write_data_file(print_data, "multiqc_picard_OxoGMetrics")
 
     # Add to general stats table
-    general_stats_data: Dict = dict()
+    general_stats_data: dict = {}
     for s_name in data_by_sample:
-        general_stats_data[s_name] = dict()
+        general_stats_data[s_name] = {}
         try:
             val = data_by_sample[s_name]["CCG"]["OXIDATION_ERROR_RATE"]
             general_stats_data[s_name]["CCG_OXIDATION_ERROR_RATE"] = val

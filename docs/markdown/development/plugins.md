@@ -54,18 +54,18 @@ For an example of this in action, see the
 [MultiQC_NGI](https://github.com/MultiQC/MultiQC_NGI/blob/master/setup.py) setup file:
 
 ```python
-entry_points = {
-        'multiqc.templates.v1': [
-            'ngi = multiqc_ngi.templates.ngi',
-            'genstat = multiqc_ngi.templates.genstat',
+entry_points = (
+    {
+        "multiqc.templates.v1": [
+            "ngi = multiqc_ngi.templates.ngi",
+            "genstat = multiqc_ngi.templates.genstat",
         ],
-        'multiqc.cli_options.v1': [
-            'project = multiqc_ngi.cli:pid_option'
+        "multiqc.cli_options.v1": ["project = multiqc_ngi.cli:pid_option"],
+        "multiqc.hooks.v1": [
+            "after_modules = multiqc_ngi.hooks:ngi_metadata",
         ],
-        'multiqc.hooks.v1': [
-            'after_modules = multiqc_ngi.hooks:ngi_metadata',
-        ]
     },
+)
 ```
 
 Here, two new templates are added, a new command line option and a new code hook.
@@ -96,7 +96,8 @@ plugin uses the entry point above with the following code in `cli.py`:
 
 ```python
 import click
-pid_option = click.option('--project', type=str)
+
+pid_option = click.option("--project", type=str)
 ```
 
 The values given from additional command line arguments are parsed by
@@ -122,7 +123,7 @@ For example, you could tie into the `after_modules` hook to insert data
 processed by MultiQC modules into a database automatically.
 
 Here, the entry point names are the hook titles, described as commented out
-lines in the core MultiQC `setup.py`: `execution_start`, `config_loaded`,
+lines in the core MultiQC `pyproject.toml`: `execution_start`, `config_loaded`,
 `before_modules`, `after_modules` and `execution_finish`.
 
 These should point to a function in your code which will be executed when
@@ -138,11 +139,11 @@ core here to add in extra functionality.
 import logging
 from multiqc.utils import report
 
-log = logging.getLogger('multiqc')
+log = logging.getLogger("multiqc")
 
 
 def after_modules():
-    """ Plugin code to run when MultiQC modules have completed  """
+    """Plugin code to run when MultiQC modules have completed"""
     num_modules = len(report.modules)
     status_string = f"MultiQC hook - {num_modules} modules reported!"
     log.critical(status_string)

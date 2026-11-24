@@ -27,16 +27,18 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/gmarcais/Jellyfish",
             info="Counting k-mers in DNA.",
             extra="""
-            A k-mer is a substring of length k, and counting the occurrences of all such substrings 
-            is a central step in many analyses of DNA sequence. JELLYFISH can count k-mers using an order of 
-            magnitude less memory and an order of magnitude faster than other k-mer counting packages by using 
-            an efficient encoding of a hash table and by exploiting the "compare-and-swap" CPU instruction to 
+            A k-mer is a substring of length k, and counting the occurrences of all such substrings
+            is a central step in many analyses of DNA sequence. JELLYFISH can count k-mers using an order of
+            magnitude less memory and an order of magnitude faster than other k-mer counting packages by using
+            an efficient encoding of a hash table and by exploiting the "compare-and-swap" CPU instruction to
             increase parallelism.
             """,
             doi="10.1093/bioinformatics/btr011",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/gmarcais/Jellyfish/blob/master/LICENSE",
         )
 
-        self.jellyfish_data = dict()
+        self.jellyfish_data = {}
         self.jellyfish_max_x = 0
         for f in self.find_log_files("jellyfish", filehandles=True):
             self.parse_jellyfish_data(f)

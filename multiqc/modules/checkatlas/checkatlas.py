@@ -1,5 +1,6 @@
 import logging
-from typing import Union
+import re
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, table
@@ -19,7 +20,7 @@ QC_METRICS: dict[str, str] = {
 # makes the report sluggish without adding visual information.
 QC_PLOT_MAX_POINTS = 1000
 
-Coerced = Union[int, float, str]
+Coerced = int | float | str
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -45,6 +46,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/becavin-lab/checkatlas",
             info="A one-liner tool for quality control of your single-cell atlases.",
             # Can't find a DOI // doi=
+            license="BSD 3-Clause License",
+            license_url="https://github.com/becavin-lab/checkatlas/blob/main/LICENSE",
         )
 
         self.data_summary: dict[str, dict[str, Coerced]] = {}
@@ -224,18 +227,22 @@ class MultiqcModule(BaseMultiqcModule):
             "atlas_obs": {
                 "title": "Observations (obs)",
                 "description": "Per-cell annotation keys stored in adata.obs (e.g. cluster labels, QC metrics)",
+                "format": _format_key_list,
             },
             "obsm": {
                 "title": "Multi-dim Observations (obsm)",
                 "description": "Per-cell multi-dimensional arrays stored in adata.obsm (e.g. PCA, UMAP embeddings)",
+                "format": _format_key_list,
             },
             "var": {
                 "title": "Variables (var)",
                 "description": "Per-gene annotation keys stored in adata.var (e.g. gene IDs, feature types)",
+                "format": _format_key_list,
             },
             "varm": {
                 "title": "Multi-dim Variables (varm)",
                 "description": "Per-gene multi-dimensional arrays stored in adata.varm (e.g. PCA loadings)",
+                "format": _format_key_list,
             },
             "uns": {
                 "title": "Unstructured (uns)",
@@ -243,6 +250,7 @@ class MultiqcModule(BaseMultiqcModule):
                     "Unstructured annotation keys stored in adata.uns "
                     "(e.g. colour maps, clustering parameters, rank-genes results)"
                 ),
+                "format": _format_key_list,
             },
         }
         self.add_section(
@@ -528,10 +536,24 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
+def _strip_tool_markup(value: str) -> str:
+    """
+    CheckAtlas writes list-valued fields as HTML, e.g. "<code>a</code><br><code>b</code>".
+    Keep the names, drop the markup: rendering a tool's HTML verbatim is an injection risk.
+    """
+    return re.sub(r"</?code>", "", re.sub(r"<br\s*/?>", ", ", value))
+
+
+def _format_key_list(value: str) -> str:
+    """Render a comma-separated key list as one <code> chip per line."""
+    return "<code>" + escape(str(value)).replace(", ", "</code><br><code>") + "</code>"
+
+
 def _coerce(value: str) -> Coerced:
     """Convert a TSV field to int / float when possible, otherwise return the original string."""
     if value == "":
         return value
+    value = _strip_tool_markup(value)
     try:
         return int(value)
     except ValueError:

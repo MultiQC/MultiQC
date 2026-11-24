@@ -20,10 +20,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/TGAC/KAT",
             info="Analyses sequencing data via its k-mer spectra.",
             doi="10.1093/bioinformatics/btw663",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/TGAC/KAT/blob/master/COPYING",
         )
 
         # Find and load any KAT dist analysis reports
-        self.kat_data = dict()
+        self.kat_data = {}
         for f in self.find_log_files("kat"):
             s_name = self.clean_s_name(f["s_name"].replace(".dist_analysis", ""), f)
             content = json.loads(f["f"])

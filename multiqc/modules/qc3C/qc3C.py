@@ -4,7 +4,6 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Dict
 
 import numpy as np
 
@@ -136,21 +135,23 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://github.com/cerebis/qc3C",
             info="Reference-free and BAM based quality control for Hi-C data",
             extra="""
-            qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product 
-            of proximity ligation -- in effect the Hi-C signal strength. Using a k-mer based approach, signal strength 
-            is inferred directly from reads and therefore no reference is required. Reference based assessment is also 
+            qc3C allows researchers to assess the fraction of read-pairs within a Hi-C library that are a product
+            of proximity ligation -- in effect the Hi-C signal strength. Using a k-mer based approach, signal strength
+            is inferred directly from reads and therefore no reference is required. Reference based assessment is also
             available and can provide further details.
-        
-            With this information in hand, researchers are able to decide how much sequencing will be needed to achieve 
+
+            With this information in hand, researchers are able to decide how much sequencing will be needed to achieve
             their experimental aims.
             """,
             doi="10.1371/journal.pcbi.1008839",
+            license="GNU Affero General Public License v3.0",
+            license_url="https://github.com/cerebis/qc3C/blob/master/LICENSE",
         )
 
-        self.qc3c_data: Dict[str, Dict] = defaultdict(dict)
+        self.qc3c_data: dict[str, dict] = defaultdict(dict)
         # additional members for conditional plotting of per-genotype junction frequency
         self.do_digest_plot = False
-        self.digest_junctions: Dict[str, Dict] = defaultdict(dict)
+        self.digest_junctions: dict[str, dict] = defaultdict(dict)
 
         for f in self.find_log_files("qc3C", filehandles=True):
             self.parse_qc3c_log(f)
@@ -643,7 +644,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = dict()
+        categories = {}
         for v in self.digest_junctions["bam"].values():
             for vi in v:
                 categories[vi["name"]] = vi
@@ -822,7 +823,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = dict()
+        categories = {}
         for _cat in self.digest_junctions["kmer"].values():
             for vi in _cat:
                 categories[vi["name"]] = vi
@@ -831,9 +832,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qc3c_log(self, f):
         def _none_to(x, y):
-            return y if x is None else y
+            return y if x is None else x
 
-        parsed: Dict
+        parsed: dict
         try:
             parsed_list = [json.loads(_l) for _l in f["f"]]
             if len(parsed_list) > 1:

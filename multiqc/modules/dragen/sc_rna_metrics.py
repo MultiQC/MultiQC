@@ -30,7 +30,7 @@ METRICS = [
 
 class DragenScRnaMetrics(BaseMultiqcModule):
     def add_sc_rna_metrics(self):
-        data_by_sample = dict()
+        data_by_sample = {}
 
         for f in self.find_log_files("dragen/sc_rna_metrics"):
             data = parse_scrna_metrics_file(f)
@@ -94,10 +94,9 @@ def parse_scrna_metrics_file(f):
     for line in f["f"].splitlines():
         tokens = line.split(",")
         if len(tokens) == 4:
-            analysis, _, metric, stat = tokens
-            percentage = None
+            _analysis, _, metric, stat = tokens
         elif len(tokens) == 5:
-            analysis, _, metric, stat, percentage = tokens
+            _analysis, _, metric, stat, _percentage = tokens
         else:
             raise ValueError(f"Unexpected number of tokens in line {line}")
 

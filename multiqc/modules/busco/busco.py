@@ -12,8 +12,7 @@ VERSION_REGEX = r"# BUSCO version is: ([\d\.]+)"
 class MultiqcModule(BaseMultiqcModule):
     """
     The module parses the `short_summary_[samplename].txt` files and
-    plots the proportion of BUSCO types found. MultiQC has been tested with
-    output from BUSCO v1.22 - v2.
+    plots the proportion of BUSCO types found.
     """
 
     def __init__(self):
@@ -23,11 +22,13 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://busco.ezlab.org/",
             info="Assesses genome assembly and annotation completeness",
             extra="""
-            BUSCO v2 provides quantitative measures for the assessment of genome
+            BUSCO provides quantitative measures for the assessment of genome
             assembly, gene set, and transcriptome completeness, based on
             evolutionarily-informed expectations of gene content from near-universal
-            single-copy orthologs selected from OrthoDB v9.""",
+            single-copy orthologs selected from OrthoDB.""",
             doi="10.1093/bioinformatics/btv351",
+            license="MIT License",
+            license_url="https://gitlab.com/ezlab/busco/-/blob/master/LICENSE",
         )
 
         # Keys and strings, used for parsing and for plot
@@ -41,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Find and load any BUSCO reports
-        self.busco_data = dict()
+        self.busco_data = {}
         for f in self.find_log_files("busco"):
             self.parse_busco_log(f)
 
@@ -57,7 +58,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(self.busco_data, "multiqc_busco")
 
         # One Alignment Rate Plot per lineage
-        lineages = set([self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data.keys()])
+        lineages = {self.busco_data[s_name].get("lineage_dataset") for s_name in self.busco_data}
         for lin in lineages:
             self.add_section(
                 name="Lineage Assessment" if lin is None else f"Lineage: {lin}",
@@ -128,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         plot_keys = ["complete_single_copy", "fragmented", "complete_duplicated", "missing"]
         plot_cols = ["#31a354", "#fee8c8", "#fdbb84", "#e34a33"]
-        keys = dict()
+        keys = {}
         for k, col in zip(plot_keys, plot_cols):
             keys[k] = {"name": self.busco_keys[k], "color": col}
 
