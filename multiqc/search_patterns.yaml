@@ -906,6 +906,10 @@ picard/extractilluminabarcodes:
   contents: "ExtractIlluminaBarcodes"
 picard/markilluminaadapters:
   contents: "MarkIlluminaAdapters"
+pmdshodh:
+  fn: "*.json"
+  contents_re: '^\s*"command": ".*pmdshodh'
+  num_lines: 3
 porechop:
   contents: "Looking for known adapter sets"
   num_lines: 10
