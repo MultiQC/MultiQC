@@ -27,7 +27,7 @@ def parse_reports(module):
     """Find Picard QualityYieldMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample = dict()
+    data_by_sample = {}
     expected_header = list(DESC.keys())
 
     # Go through logs and find Metrics

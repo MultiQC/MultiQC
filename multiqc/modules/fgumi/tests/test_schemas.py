@@ -1,7 +1,6 @@
 """Tests for the fgmetric-shaped schema base class."""
 
 import math
-from typing import Optional
 
 import pytest
 
@@ -12,7 +11,7 @@ class _Probe(FgumiMetric):
     name: str
     count: int
     rate: float
-    size: Optional[int]
+    size: int | None
 
 
 def test_read_parses_rows_in_order():

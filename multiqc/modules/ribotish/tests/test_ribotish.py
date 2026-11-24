@@ -6,7 +6,6 @@ from multiqc import report
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.modules.ribotish import MultiqcModule
 
-
 # Valid qual file content - line 4 has the frame counts dict
 VALID_QUAL_BASIC = """\
 # comment line 1

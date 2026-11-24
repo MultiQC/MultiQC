@@ -4,7 +4,8 @@ The two tools write identical files, so the fgbio and fgumi modules share this p
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, Union
+from collections.abc import Callable
+from typing import Any, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule
@@ -56,12 +57,12 @@ BASES_DENOMINATOR_NOTE = (
     "of every base percentage here."
 )
 
-ClippingRow = Dict[str, Union[int, float]]
+ClippingRow = dict[str, int | float]
 
 
 def run_clip_bam(
-    module: BaseMultiqcModule, sp_key: str, skip: Optional[Callable[[Any], bool]] = None
-) -> Dict[str, Dict[str, ClippingRow]]:
+    module: BaseMultiqcModule, sp_key: str, skip: Callable[[Any], bool] | None = None
+) -> dict[str, dict[str, ClippingRow]]:
     """
     Parse the clipping metrics files found by search pattern `sp_key`, passing over files for which `skip`
     returns true, then add general stats columns, bar plots of clipped bases and reads by reason, and a
@@ -83,10 +84,10 @@ def run_clip_bam(
 
 
 def parse_clip_bam_metrics(
-    module: BaseMultiqcModule, sp_key: str, skip: Optional[Callable[[Any], bool]] = None
-) -> Dict[str, Dict[str, ClippingRow]]:
+    module: BaseMultiqcModule, sp_key: str, skip: Callable[[Any], bool] | None = None
+) -> dict[str, dict[str, ClippingRow]]:
     """Return `{sample: {read_type: metrics}}` for every clipping metrics file found."""
-    data_by_sample: Dict[str, Dict[str, ClippingRow]] = {}
+    data_by_sample: dict[str, dict[str, ClippingRow]] = {}
 
     for f in module.find_log_files(sp_key):
         if skip is not None and skip(f):
@@ -99,7 +100,7 @@ def parse_clip_bam_metrics(
             log.debug(f"Skipping {f['fn']}: not a clipping metrics header")
             continue
 
-        rows_by_read_type: Dict[str, ClippingRow] = {}
+        rows_by_read_type: dict[str, ClippingRow] = {}
         for line_num, line in enumerate(lines[1:], start=2):
             fields = line.split("\t")
             if len(fields) != len(header):
@@ -131,7 +132,7 @@ def parse_clip_bam_metrics(
     return module.ignore_samples(data_by_sample)
 
 
-def with_derived_metrics(counts: Dict[str, int]) -> ClippingRow:
+def with_derived_metrics(counts: dict[str, int]) -> ClippingRow:
     """
     Add the percentages the report shows to a row of raw counts.
 
@@ -151,7 +152,7 @@ def with_derived_metrics(counts: Dict[str, int]) -> ClippingRow:
     return row
 
 
-def flatten_by_read_type(data_by_sample: Dict[str, Dict[str, ClippingRow]]) -> Dict[str, ClippingRow]:
+def flatten_by_read_type(data_by_sample: dict[str, dict[str, ClippingRow]]) -> dict[str, ClippingRow]:
     """One row per sample for the data file, with columns named `<read_type>_<metric>`."""
     return {
         s_name: {
@@ -161,18 +162,18 @@ def flatten_by_read_type(data_by_sample: Dict[str, Dict[str, ClippingRow]]) -> D
     }
 
 
-def add_general_stats(module: BaseMultiqcModule, data_by_sample: Dict[str, Dict[str, ClippingRow]]) -> None:
+def add_general_stats(module: BaseMultiqcModule, data_by_sample: dict[str, dict[str, ClippingRow]]) -> None:
     gs_keys = ("pct_bases_clipped", "pct_reads_clipped")
-    gs_data: Dict[Union[SampleName, str], Dict[Union[ColumnKey, str], ValueT]] = {}
+    gs_data: dict[SampleName | str, dict[ColumnKey | str, ValueT]] = {}
     for s_name, by_read_type in data_by_sample.items():
         all_row = by_read_type[HEADLINE_READ_TYPE]
-        values: Dict[Union[ColumnKey, str], ValueT] = {key: all_row[key] for key in gs_keys if key in all_row}
+        values: dict[ColumnKey | str, ValueT] = {key: all_row[key] for key in gs_keys if key in all_row}
         if values:
             gs_data[s_name] = values
     if not gs_data:
         return
 
-    headers: Dict[str, ColumnDict] = {
+    headers: dict[str, ColumnDict] = {
         "pct_bases_clipped": {
             "title": "% Bases clipped",
             "description": (
@@ -204,11 +205,11 @@ def add_general_stats(module: BaseMultiqcModule, data_by_sample: Dict[str, Dict[
 
 
 def add_clipped_bases_plot(
-    module: BaseMultiqcModule, data_by_sample: Dict[str, Dict[str, ClippingRow]], key: str
+    module: BaseMultiqcModule, data_by_sample: dict[str, dict[str, ClippingRow]], key: str
 ) -> None:
     categories = {"bases": {"name": "Aligned, not clipped", "color": "#7cb5ec"}}
     categories.update({f"bases_clipped_{reason}": dict(category) for reason, category in CLIPPING_REASONS.items()})
-    plot_data: Dict[str, Dict[str, Union[int, float]]] = {}
+    plot_data: dict[str, dict[str, int | float]] = {}
     for s_name, by_read_type in data_by_sample.items():
         all_row = by_read_type[HEADLINE_READ_TYPE]
         if all_row["bases_pre_clip"] == 0:
@@ -247,10 +248,10 @@ def add_clipped_bases_plot(
 
 
 def add_clipped_reads_plot(
-    module: BaseMultiqcModule, data_by_sample: Dict[str, Dict[str, ClippingRow]], key: str
+    module: BaseMultiqcModule, data_by_sample: dict[str, dict[str, ClippingRow]], key: str
 ) -> None:
     categories = {f"pct_reads_clipped_{reason}": dict(category) for reason, category in CLIPPING_REASONS.items()}
-    plot_data: Dict[str, Dict[str, Union[int, float]]] = {}
+    plot_data: dict[str, dict[str, int | float]] = {}
     for s_name, by_read_type in data_by_sample.items():
         all_row = by_read_type[HEADLINE_READ_TYPE]
         if all_row["reads"] == 0:
@@ -288,12 +289,12 @@ def add_clipped_reads_plot(
     )
 
 
-def add_read_type_table(module: BaseMultiqcModule, data_by_sample: Dict[str, Dict[str, ClippingRow]], key: str) -> None:
+def add_read_type_table(module: BaseMultiqcModule, data_by_sample: dict[str, dict[str, ClippingRow]], key: str) -> None:
     # The first row of each group is the headline: `All`, labelled with the bare sample name.
     # The other read types nest under it and expand on click. Read types with no reads are
     # dropped, and a single remaining nested read type is dropped too, since fragment-only
     # data has `Fragment` equal to `All` and the row would only repeat the headline.
-    rows_by_sample: Dict[Union[str, SampleGroup], List[InputRow]] = {}
+    rows_by_sample: dict[str | SampleGroup, list[InputRow]] = {}
     for s_name, by_read_type in data_by_sample.items():
         headline = by_read_type[HEADLINE_READ_TYPE]
         if headline["reads"] == 0:
@@ -307,7 +308,7 @@ def add_read_type_table(module: BaseMultiqcModule, data_by_sample: Dict[str, Dic
     if not rows_by_sample:
         return
 
-    headers: Dict[Union[str, ColumnKey], ColumnDict] = {
+    headers: dict[str | ColumnKey, ColumnDict] = {
         "reads": {
             "title": f"{config.read_count_prefix} Reads",
             "description": f"Reads examined ({config.read_count_desc})",

@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 def parse_gatk_varianteval(module):
     """Find GATK varianteval logs and parse their data"""
 
-    data = dict()
+    data = {}
     for f in module.find_log_files("gatk/varianteval", filehandles=True):
         parsed_data = parse_single_report(f["f"])
         if len(parsed_data) > 1:
@@ -46,7 +46,7 @@ def parse_gatk_varianteval(module):
             break
 
     # General Stats Table
-    headers = dict()
+    headers = {}
     headers["known_titv"] = {
         "title": "TiTV ratio (known)",
         "description": f"TiTV ratio from variants found in '{titv_ref}'",
@@ -90,7 +90,7 @@ def parse_single_report(f):
     """Parse a gatk varianteval varianteval"""
     # Fixme: Separate GATKReport parsing and data subsetting. A GATKReport parser now available from the GATK MultiqcModel.
 
-    data = dict()
+    data = {}
     in_CompOverlap = False
     in_CountVariants = False
     in_TiTv = False
@@ -111,7 +111,7 @@ def parse_single_report(f):
                     if len(line) < len(headers):
                         in_CompOverlap = False
                         break
-                    d = dict()
+                    d = {}
                     for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "all" or d.get("Filter") == "raw":
@@ -138,7 +138,7 @@ def parse_single_report(f):
                     if len(line) < len(headers):
                         in_CountVariants = False
                         break
-                    d = dict()
+                    d = {}
                     for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "all" or d.get("Filter") == "raw":
@@ -166,7 +166,7 @@ def parse_single_report(f):
                     if len(line) < len(headers):
                         in_TiTv = False
                         break
-                    d = dict()
+                    d = {}
                     for i, s in enumerate(line.split()):
                         d[headers[i]] = s
                     if d.get("Novelty") == "known":

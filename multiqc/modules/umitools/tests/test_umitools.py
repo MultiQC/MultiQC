@@ -1,6 +1,6 @@
 import pytest
-from multiqc import report
-from multiqc import config
+
+from multiqc import config, report
 from multiqc.modules.umitools import MultiqcModule
 
 

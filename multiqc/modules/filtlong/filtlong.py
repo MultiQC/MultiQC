@@ -40,7 +40,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load reports
-        self.filtlong_data = dict()
+        self.filtlong_data = {}
 
         # Find all files for filtlong
         for f in self.find_log_files("filtlong", filehandles=True):
@@ -88,9 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Target bases": {
                 "title": f"Target bases ({config.read_count_prefix})",
-                "description": "Keep only the best reads up to this many total bases ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Keep only the best reads up to this many total bases ({config.read_count_desc})",
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard WgsMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -15,8 +14,8 @@ def parse_reports(module):
     """Find Picard WgsMetrics reports and parse their data"""
 
     # Set up vars
-    data_by_sample: Dict = dict()
-    histogram_by_sample: Dict = dict()
+    data_by_sample: dict = {}
+    histogram_by_sample: dict = {}
 
     picard_config = getattr(config, "picard_config", {})
     skip_histo = picard_config.get("wgsmetrics_skip_histogram", False)
@@ -59,7 +58,7 @@ def parse_reports(module):
                     log.debug(f"Duplicate sample name found in {f['fn']}! Overwriting: {s_name}")
 
                 module.add_data_source(f, s_name, section="WgsMetrics")
-                data_by_sample[s_name] = dict()
+                data_by_sample[s_name] = {}
 
                 for k, v in zip(keys, vals):
                     try:
@@ -72,13 +71,13 @@ def parse_reports(module):
                 keys = f["f"].readline().strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
-                histogram_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = {}
 
             elif line.startswith("coverage\thigh_quality_coverage_count"):
                 keys = line.strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
-                histogram_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = {}
 
     # Filter to strip out ignored sample names
     data_by_sample = module.ignore_samples(data_by_sample)
@@ -93,7 +92,7 @@ def parse_reports(module):
     module.write_data_file(data_by_sample, "multiqc_picard_wgsmetrics")
 
     # Add to general stats table
-    headers = dict()
+    headers = {}
     headers["MEDIAN_COVERAGE"] = {
         "title": "Median Coverage",
         "description": "The median coverage in bases of the genome territory, after all filters are applied.",
@@ -122,7 +121,7 @@ def parse_reports(module):
     covs = picard_config.get("general_stats_target_coverage", [])
     if isinstance(covs, list) and len(covs) > 0:
         covs = [str(i) for i in covs]
-        log.debug(f"Custom Picard coverage thresholds: {', '.join([i for i in covs])}")
+        log.debug(f"Custom Picard coverage thresholds: {', '.join(list(covs))}")
     else:
         covs = ["30"]
     for c in covs:
@@ -155,12 +154,12 @@ def parse_reports(module):
                         break
 
         # Cut histogram tail and make a normalised percentage version of the data plus dropoff
-        data: Dict = {}
-        data_percent: Dict = {}
+        data: dict = {}
+        data_percent: dict = {}
         maxval = 0
         for s_name, hist in histogram_by_sample.items():
-            data[s_name] = dict()
-            data_percent[s_name] = dict()
+            data[s_name] = {}
+            data_percent[s_name] = {}
             total = float(sum(hist.values()))
             cumulative = 0
             for k, v in hist.items():
@@ -201,9 +200,9 @@ def parse_reports(module):
         )
 
     # Bar plot of ignored bases
-    pdata: Dict = dict()
+    pdata: dict = {}
     for s_name, data in data_by_sample.items():
-        pdata[s_name] = dict()
+        pdata[s_name] = {}
         pdata[s_name]["PCT_EXC_MAPQ"] = data["PCT_EXC_MAPQ"] * 100.0
         pdata[s_name]["PCT_EXC_DUPE"] = data["PCT_EXC_DUPE"] * 100.0
         pdata[s_name]["PCT_EXC_UNPAIRED"] = data["PCT_EXC_UNPAIRED"] * 100.0
@@ -211,7 +210,7 @@ def parse_reports(module):
         pdata[s_name]["PCT_EXC_OVERLAP"] = data["PCT_EXC_OVERLAP"] * 100.0
         pdata[s_name]["PCT_EXC_CAPPED"] = data["PCT_EXC_CAPPED"] * 100.0
 
-    keys = dict()
+    keys = {}
     keys["PCT_EXC_MAPQ"] = {"name": "Low mapping quality"}
     keys["PCT_EXC_DUPE"] = {"name": "Duplicates reads"}
     keys["PCT_EXC_UNPAIRED"] = {"name": "No mapped mate pair"}
