@@ -43,3 +43,10 @@ def general_stats(sample: str) -> dict[str, Any]:
         for row in rows_by_sample.get(sample, []):
             values.update(row.data)
     return values
+
+
+FGBIO_ERROR_RATE = (
+    "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\ta_to_g_error_rate"
+    "\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate\n"
+    "1\t1\t1000\t0\t0.0\t0.001\t0.002\t0.003\t0.004\t0.005\t0.006\n"
+)
