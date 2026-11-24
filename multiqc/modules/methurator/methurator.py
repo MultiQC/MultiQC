@@ -11,11 +11,6 @@ from multiqc.plots.linegraph import LinePlotConfig
 log = logging.getLogger(__name__)
 
 
-def _make_alert(message: str, level: str = "info") -> str:
-    """Create an HTML alert div for empty state messages."""
-    return f'<div class="alert alert-{level}"><strong>{message}</strong></div>'
-
-
 class MultiqcModule(BaseMultiqcModule):
     """
     Methurator is a Python package designed to estimate CpG saturation
@@ -190,28 +185,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for s_name, data in self.methurator_data.items():
             for min_cov, sat_data in data["saturation_analysis"].items():
-                if min_cov not in plot_data_by_coverage:
-                    plot_data_by_coverage[min_cov] = {}
-
                 # Extract GT data points: [t, saturation, total_cpgs, ci_low, ci_high]
                 sample_curve = {float(point[0]): float(point[2]) for point in sat_data["data"]}
-
                 if sample_curve:
-                    plot_data_by_coverage[min_cov][s_name] = sample_curve
+                    plot_data_by_coverage.setdefault(min_cov, {})[s_name] = sample_curve
 
-        # Filter out coverage levels with no valid data and sort
-        coverage_levels = sorted([cov for cov, data in plot_data_by_coverage.items() if data])
-
+        coverage_levels = sorted(plot_data_by_coverage)
         if not coverage_levels:
-            self.add_section(
-                name="CpG Saturation Curve",
-                anchor="methurator_saturation",
-                description="Saturation curves showing the number of CpG sites detected at each sequencing depth.",
-                content=_make_alert(
-                    "No CpG saturation data available. "
-                    "No valid saturation analysis data was found for any coverage level."
-                ),
-            )
             return
 
         # Build datasets and labels (works for single or multiple coverage levels)
