@@ -1,6 +1,5 @@
 import logging
 import xml.etree.cElementTree
-from typing import Dict, Tuple, Union
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.modules.ngsbits.utils import parse_qcml_by
@@ -28,8 +27,8 @@ def check_paired_end(qcml_contents: str) -> bool:
 def parse_reports(module: BaseMultiqcModule) -> int:
     """Find ngs-bits ReadQC reports and parse their data"""
 
-    readqc: Dict[str, Dict[str, Union[int, float, str, bool]]] = dict()
-    readqc_keys: Dict[str, Tuple[str, str]] = dict()
+    readqc: dict[str, dict[str, int | float | str | bool]] = {}
+    readqc_keys: dict[str, tuple[str, str]] = {}
 
     for f in module.find_log_files("ngsbits/readqc"):
         values, params = parse_qcml_by(f["f"], "qualityParameter")
@@ -63,7 +62,7 @@ def parse_reports(module: BaseMultiqcModule) -> int:
 
     # Convert numbers given in megabases to bases
     readqc_keys["bases sequenced"] = ("Bases sequenced in total.", "")
-    for _, kv in readqc.items():
+    for kv in readqc.values():
         kv["bases sequenced"] = kv["bases sequenced (MB)"] * 1e6
         kv.pop("bases sequenced (MB)")
 

@@ -57,8 +57,8 @@ def run_group_reads_by_umi(module: BaseMultiqcModule) -> int:
 
 
 def parse_groupreadsbyumi_log(module: BaseMultiqcModule):
-    umi_data = dict()
-    umi_data_normed = dict()
+    umi_data = {}
+    umi_data_normed = {}
 
     # fgumi writes identical histograms; when the fgumi module also found a file, only one module reports it.
     evidence = family_sizes_evidence()

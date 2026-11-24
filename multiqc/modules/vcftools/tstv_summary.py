@@ -12,7 +12,7 @@ class TsTvSummaryMixin:
     def parse_tstv_summary(self):
         """Create the HTML for the TsTv summary plot."""
 
-        self.vcftools_tstv_summary = dict()
+        self.vcftools_tstv_summary = {}
         for f in self.find_log_files("vcftools/tstv_summary", filehandles=True):
             d = {}
             for line in f["f"].readlines()[1:]:  # don't add the header line (first row)

@@ -16,7 +16,6 @@ from multiqc.plots.box import BoxPlot
 from multiqc.plots.heatmap import HeatmapPlot
 from multiqc.plots.linegraph import LinePlot
 from multiqc.plots.scatter import ScatterPlot
-from multiqc.plots.table_object import Cell
 from multiqc.plots.violin import ViolinPlot
 from multiqc.types import Anchor, ColumnKey, SampleGroup, SectionKey
 from multiqc.validation import ModuleConfigValidationError
@@ -161,10 +160,7 @@ def test_wrong_fields(tmp_path, caplog, strict, monkeypatch):
 
     out = caplog.text
     assert "• 'y__lab': unrecognized field" in out
-    assert (
-        "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
-        or "• 'ymax': expected type 'Union[float, int, NoneType]', got 'list' [1, 2]" in out  # Python < 3.10
-    )
+    assert "• 'ymax': expected type '<class 'float'>', got 'list' [1, 2]" in out
 
     if not strict:
         # Still should produce output unless strict mode:

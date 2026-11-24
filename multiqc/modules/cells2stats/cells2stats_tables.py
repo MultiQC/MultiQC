@@ -3,18 +3,18 @@ from multiqc.plots import table
 from .queries import (
     get_batch_counts,
     get_batch_density,
+    get_batch_extracellularratio,
     get_cell_count,
     get_median_cell_diameter,
     get_percent_assigned,
+    get_percent_assigned_target_polony,
     get_percent_confluency,
     get_percent_mismatch,
+    get_percent_mismatch_target_polony,
     get_percent_nucleated_cells,
+    get_target_cell_metric_by_key,
     get_total_counts,
     get_total_density,
-    get_percent_assigned_target_polony,
-    get_percent_mismatch_target_polony,
-    get_target_cell_metric_by_key,
-    get_batch_extracellularratio,
 )
 
 

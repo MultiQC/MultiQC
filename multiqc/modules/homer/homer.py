@@ -40,9 +40,9 @@ class MultiqcModule(BaseMultiqcModule, FindPeaksReportMixin, TagDirReportMixin):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-        n = dict()
+        self.general_stats_headers = {}
+        self.general_stats_data = {}
+        n = {}
 
         # Set up data structures
         self.tagdir_data = {

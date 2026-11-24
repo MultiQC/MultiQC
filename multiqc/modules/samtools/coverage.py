@@ -1,7 +1,6 @@
 import copy
 import fnmatch
 import logging
-from typing import Dict, Union
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import linegraph, table
@@ -13,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_samtools_coverage(module: BaseMultiqcModule):
     """Find Samtools coverage logs and parse their data"""
 
-    data_by_sample = dict()
+    data_by_sample = {}
     for f in module.find_log_files("samtools/coverage"):
         metrics_by_chrom = parse_single_report(f)
         if len(metrics_by_chrom) > 0:
@@ -45,7 +44,7 @@ def parse_samtools_coverage(module: BaseMultiqcModule):
 
 
 def summary_table(module, data_by_sample):
-    table_data: Dict[str, Dict[str, float]] = {sname: {} for sname in data_by_sample}
+    table_data: dict[str, dict[str, float]] = {sname: {} for sname in data_by_sample}
     for sample, d_by_chrom in data_by_sample.items():
         vals = list(d_by_chrom.values())
         table_data[sample]["numreads"] = sum([m["numreads"] for m in vals])
@@ -130,8 +129,8 @@ def summary_table(module, data_by_sample):
         module.general_stats_addcols(table_data, general_stats_headers, namespace="coverage")
 
 
-def lineplot_per_region(module, data_by_sample: Dict):
-    tabs: Dict[str, Dict[str, Union[str, int]]] = {
+def lineplot_per_region(module, data_by_sample: dict):
+    tabs: dict[str, dict[str, str | int]] = {
         "numreads": {
             "title": "Mapped reads per region",
             "name": "Reads",
@@ -172,7 +171,7 @@ def lineplot_per_region(module, data_by_sample: Dict):
         },
     }
 
-    cfg = getattr(config, "samtools_coverage", dict())
+    cfg = getattr(config, "samtools_coverage", {})
     cfg["include_contigs"] = cfg.get("include_contigs", [])
     if not isinstance(cfg["include_contigs"], list):
         cfg["include_contigs"] = []
@@ -187,8 +186,8 @@ def lineplot_per_region(module, data_by_sample: Dict):
 
     excluded_contigs = set()
     included_contigs = set()
-    for sample in data_by_sample:
-        for contig in data_by_sample[sample].keys():
+    for data_by_contig in data_by_sample.values():
+        for contig in data_by_contig:
             if contig in excluded_contigs:
                 continue
             if contig not in included_contigs:
@@ -254,7 +253,7 @@ EXPECTED_COLUMNS = [
 ]
 
 
-def parse_single_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
+def parse_single_report(f) -> dict[str, dict[str, int | float]]:
     """
     Example:
     #rname	startpos	endpos	numreads	covbases	coverage	meandepth	meanbaseq	meanmapq
@@ -267,31 +266,31 @@ def parse_single_report(f) -> Dict[str, Dict[str, Union[int, float]]]:
     lines = f["f"].splitlines()
     expected_header = "#" + "\t".join(EXPECTED_COLUMNS)
     if lines[0] != expected_header:
-        logging.warning(f"Expected header for samtools coverage: {expected_header}, got: {lines[0]}")
+        log.warning(f"Expected header for samtools coverage: {expected_header}, got: {lines[0]}")
         return {}
 
     for idx in range(1, len(lines)):
         line = lines[idx]
         fields = line.strip().split("\t")
         if len(fields) != len(EXPECTED_COLUMNS):
-            logging.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
+            log.warning(f"Skipping line with {len(fields)} fields, expected {len(EXPECTED_COLUMNS)}: {line}")
             continue
         rname, startpos, endpos, numreads, covbases, coverage, meandepth, meanbaseq, meanmapq = fields
         if rname in parsed_data:
-            logging.warning(f"Duplicate region found in '{f['s_name']}': {rname}")
+            log.warning(f"Duplicate region found in '{f['s_name']}': {rname}")
             continue
         try:
-            parsed_data[rname] = dict(
-                startpos=int(startpos),
-                endpos=int(endpos),
-                numreads=int(numreads),
-                covbases=int(covbases),
-                coverage=float(coverage),
-                meandepth=float(meandepth),
-                meanbaseq=float(meanbaseq),
-                meanmapq=float(meanmapq),
-            )
+            parsed_data[rname] = {
+                "startpos": int(startpos),
+                "endpos": int(endpos),
+                "numreads": int(numreads),
+                "covbases": int(covbases),
+                "coverage": float(coverage),
+                "meandepth": float(meandepth),
+                "meanbaseq": float(meanbaseq),
+                "meanmapq": float(meanmapq),
+            }
         except ValueError:
-            logging.warning(f"Ignoring invalid line:{idx} for '{f['s_name']}', starting '{line[:6]}'")
+            log.warning(f"Ignoring invalid line:{idx} for '{f['s_name']}', starting '{line[:6]}'")
 
     return parsed_data

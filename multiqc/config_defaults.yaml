@@ -328,6 +328,7 @@ fn_clean_exts:
   - ".markdup"
   - ".read_distribution"
   - ".junction_annotation"
+  - "_mgnifam_stats.json"
   - ".infer_experiment"
   - ".biotype"
   - ".ivar"

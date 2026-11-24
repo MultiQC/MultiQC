@@ -21,7 +21,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any DeDup reports
-        self.sexdet_data = dict()
+        self.sexdet_data = {}
 
         # Find and load JSON file
         for f in self.find_log_files("sexdeterrmine", filehandles=True):
@@ -67,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f, s_clean)
             self.add_software_version(version, s_clean)
-            self.sexdet_data[s_clean] = dict()
+            self.sexdet_data[s_clean] = {}
 
             for k, v in data[s_name].items():
                 try:

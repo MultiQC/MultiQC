@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 class plotCoverageMixin:
     def parse_plotCoverage(self):
         """Find plotCoverage output. Both stdout and --outRawCounts"""
-        self.deeptools_plotCoverageStdout = dict()
+        self.deeptools_plotCoverageStdout = {}
         for f in self.find_log_files("deeptools/plotCoverageStdout"):
             parsed_data = self.parsePlotCoverageStdout(f)
             for k, v in parsed_data.items():
@@ -22,7 +22,7 @@ class plotCoverageMixin:
             if len(parsed_data) > 0:
                 self.add_data_source(f, section="plotCoverage")
 
-        self.deeptools_plotCoverageOutRawCounts = dict()
+        self.deeptools_plotCoverageOutRawCounts = {}
         for f in self.find_log_files("deeptools/plotCoverageOutRawCounts"):
             parsed_data = self.parsePlotCoverageOutRawCounts(f)
             for k, v in parsed_data.items():
@@ -117,12 +117,12 @@ class plotCoverageMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             s_name = self.clean_s_name(cols[0], f)
             if s_name in d:
                 log.warning(f"Replacing duplicate sample {s_name}.")
-            d[s_name] = dict()
+            d[s_name] = {}
 
             try:
                 d[s_name]["mean"] = float(cols[1])
@@ -138,7 +138,7 @@ class plotCoverageMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
         return d
 
     def parsePlotCoverageOutRawCounts(self, f):
@@ -157,14 +157,14 @@ class plotCoverageMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             if cols[0] == "#'chr'":
                 nCols = len(cols)
                 for col in cols[3:]:
                     s_name = self.clean_s_name(col.strip("'"), f)
                     samples.append(s_name)
-                    d[s_name] = dict()
+                    d[s_name] = {}
                 continue
 
             if len(cols) != nCols:
@@ -173,7 +173,7 @@ class plotCoverageMixin:
                         f["fn"]
                     )
                 )
-                return dict()
+                return {}
 
             for i, v in enumerate(cols[3:]):
                 v = float(v)
@@ -184,8 +184,8 @@ class plotCoverageMixin:
 
         # Convert values to a fraction
         nRows = float(nRows)
-        for k, v in d.items():
-            for k2, v2 in v.items():
+        for v in d.values():
+            for k2 in v:
                 v[k2] /= nRows
 
         return d

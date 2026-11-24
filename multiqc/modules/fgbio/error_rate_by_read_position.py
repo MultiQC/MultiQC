@@ -1,5 +1,3 @@
-from typing import Dict
-
 from multiqc import BaseMultiqcModule
 from multiqc.plots import linegraph
 from multiqc.utils.util_functions import strtobool
@@ -31,8 +29,8 @@ def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
     ]
 
     # slurp in all the data
-    all_data = dict()
-    error_rates = dict()
+    all_data = {}
+    error_rates = {}
     y_max = 0.01  # default to 1%
     collapse = True  # same as the `--collapse` option on `ErrorRateByReadPosition`
     is_new_format = False  # Test if this is new or old format
@@ -50,7 +48,7 @@ def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
 
         # slurp in the data for this sample
         s_name = f["s_name"]
-        s_data: Dict = dict()
+        s_data: dict = {}
         bases_total = 0
         errors = 0
         for line in fh:
@@ -70,7 +68,7 @@ def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
             read_number = row_data["read_number"]
             position = row_data["position"]
             if read_number not in s_data:
-                s_data[read_number] = dict()
+                s_data[read_number] = {}
             s_data[read_number][position] = row_data
 
             for key in linegraph_keys + (non_collapsed_keys if not collapse else []):
@@ -136,17 +134,15 @@ def error_rate_by_read_position(module: BaseMultiqcModule) -> int:
     linegraph_data = [{} for _ in keys]
     for s_name, s_data in all_data.items():
         for read_number, read_data in s_data.items():
-            s_name_with_read = "%s_R%d" % (s_name, int(read_number))
+            s_name_with_read = f"{s_name}_R{int(read_number)}"
             for index, lg in enumerate(linegraph_data):
-                lg[s_name_with_read] = dict((d["position"], d[keys[index]]) for d in read_data.values())
+                lg[s_name_with_read] = {d["position"]: d[keys[index]] for d in read_data.values()}
 
     # add a section for the plot
     module.add_section(
         name="Error Rate by Read Position",
         anchor="fgbio-error-rate-by-read-position",
-        description="Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={}`".format(
-            collapse
-        ),
+        description=f"Error rate by read position. Plot tabs show the error rates for specific substitution types. `--collapse={collapse}`",
         helptext="""
         The error rate by read position. If `collapsed` was `true`, then complementary
         substitutions were grouped together into the first 6 error rates.

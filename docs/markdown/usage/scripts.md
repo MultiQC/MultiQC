@@ -57,14 +57,14 @@ Parameters:
 Parse logs found in the `data` directory.
 
 ```python
-multiqc.parse_logs('data')
+multiqc.parse_logs("data")
 ```
 
 Parse logs found in the `data/fastp` directory, the `data/SAMPLE1.cutadapt.log` file,
 and a `data_mqc.tsv` MultiQC [custom content](../custom_content/index.md) file.
 
 ```python
-multiqc.parse_logs('data/fastp', 'data/SAMPLE1.cutadapt.log', "data_mqc.tsv")
+multiqc.parse_logs("data/fastp", "data/SAMPLE1.cutadapt.log", "data_mqc.tsv")
 ```
 
 Parse logs found in the `data` directory for only the specified modules, and use
@@ -72,7 +72,7 @@ and [additional pattern](../getting_started/config.md#cleaning-extensions) to cl
 
 ```python
 multiqc.parse_logs(
-    'data',
+    "data",
     run_modules=["fastp", "spades", "quast", "pangolin"],
     extra_fn_clean_exts=[".unclassified"],
 )
@@ -82,7 +82,7 @@ Parse logs found in the `data` directory and run FastQC module twice for two set
 
 ```python
 multiqc.parse_logs(
-    'data',
+    "data",
     module_order=[
         dict(
             fastqc=dict(
@@ -107,7 +107,7 @@ MultiQC v1.29 and higher generates `multiqc.parquet` file in `multiqc_data` outp
 Example:
 
 ```python
-multiqc.parse_logs('multiqc_data/multiqc.parquet')
+multiqc.parse_logs("multiqc_data/multiqc.parquet")
 ```
 
 ## List what's loaded
@@ -128,20 +128,36 @@ Example:
 
 ```python
 multiqc.list_plots()
-{'fastp': ['Filtered Reads',
-  'Insert Sizes',
-  {'Sequence Quality': ['Read 1: Before filtering',
-    'Read 1: After filtering',
-    'Read 2: Before filtering',
-    'Read 2: After filtering']},
-  {'GC Content': ['Read 1: Before filtering',
-    'Read 1: After filtering',
-    'Read 2: Before filtering',
-    'Read 2: After filtering']},
-  {'N content': ['Read 1: Before filtering',
-    'Read 1: After filtering',
-    'Read 2: Before filtering',
-    'Read 2: After filtering']}]}
+{
+    "fastp": [
+        "Filtered Reads",
+        "Insert Sizes",
+        {
+            "Sequence Quality": [
+                "Read 1: Before filtering",
+                "Read 1: After filtering",
+                "Read 2: Before filtering",
+                "Read 2: After filtering",
+            ]
+        },
+        {
+            "GC Content": [
+                "Read 1: Before filtering",
+                "Read 1: After filtering",
+                "Read 2: Before filtering",
+                "Read 2: After filtering",
+            ]
+        },
+        {
+            "N content": [
+                "Read 1: Before filtering",
+                "Read 1: After filtering",
+                "Read 2: Before filtering",
+                "Read 2: After filtering",
+            ]
+        },
+    ]
+}
 ```
 
 Return `list` of clean sample names that have loaded data:
@@ -154,7 +170,7 @@ Example:
 
 ```python
 multiqc.list_samples()
-['SAMPLE1_PE', 'SAMPLE2_PE']
+["SAMPLE1_PE", "SAMPLE2_PE"]
 ```
 
 Return `list` of found log files corresponding to the loaded data:
@@ -167,7 +183,7 @@ Example:
 
 ```python
 multiqc.list_data_sources()
-['data/SAMPLE1_PE.fastp.json', 'data/SAMPLE2_PE.fastp.json']
+["data/SAMPLE1_PE.fastp.json", "data/SAMPLE2_PE.fastp.json"]
 ```
 
 ## Access loaded data
@@ -284,6 +300,7 @@ Create a bar graph and show it in the notebook cell:
 
 ```python
 from multiqc.plots import bargraph
+
 plot = bargraph.plot(...)
 display(plot.show(violin=True))
 ```
