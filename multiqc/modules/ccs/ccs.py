@@ -39,11 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/PacificBiosciences/ccs/blob/master/LICENSE",
         )
 
+        # To store the mod data
         self.ccs_data: dict = {}
         self.parse_v4_log_files()
         self.parse_v5_log_files()
         self.ccs_data = self.ignore_samples(self.ccs_data)
 
+        # If we found no data
         if not self.ccs_data:
             raise ModuleNoSamplesFound
         log.info(f"Found {len(self.ccs_data)} reports")
