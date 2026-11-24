@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 1
 COMMANDS = ("generate_families", "update_families")
-STATS_SUFFIX = "_mgnifam_stats.json"
 # Retention is stored exactly; for display it is binned 0.05 wide.
 RETENTION_BIN_WIDTH = 0.05
 
@@ -69,8 +68,7 @@ class MultiqcModule(BaseMultiqcModule):
             if stats["command"] not in COMMANDS:
                 log.warning(f"Skipping {f['fn']}: unknown mgnifam command {stats['command']}")
                 continue
-            # Manually remove the suffix: every sample shares it, so it carries no information.
-            s_name = self.clean_s_name(f["fn"].removesuffix(STATS_SUFFIX), f)
+            s_name = self.clean_s_name(f["fn"], f)
             if s_name in self.mgnifam_data:
                 log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
             self.add_data_source(f, s_name=s_name)
