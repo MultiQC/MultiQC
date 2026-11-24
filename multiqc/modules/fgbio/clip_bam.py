@@ -51,9 +51,10 @@ CLIPPING_REASONS = {
     "extending": {"name": "Clipped past mate end", "color": "#f15c80"},
 }
 
+BASES_PRE_CLIP = "`bases + bases_clipped_post`"
 BASES_DENOMINATOR_NOTE = (
     "`bases` in the metrics file counts the aligned bases that remain after clipping, so the "
-    "bases present before clipping ran are `bases + bases_clipped_post`, which is the denominator "
+    f"bases present before clipping ran are {BASES_PRE_CLIP}, which is the denominator "
     "of every base percentage here."
 )
 
@@ -92,16 +93,17 @@ def parse_clip_bam_metrics(
     for f in module.find_log_files(sp_key):
         if skip is not None and skip(f):
             continue
-        lines = [line for line in f["f"].splitlines() if line.strip()]
-        if not lines:
+        numbered_lines = [(num, line) for num, line in enumerate(f["f"].splitlines(), start=1) if line.strip()]
+        if not numbered_lines:
             continue
-        header = lines[0].split("\t")
-        if header[0] != "read_type" or any(col not in header for col in COUNT_COLUMNS):
-            log.debug(f"Skipping {f['fn']}: not a clipping metrics header")
+        header = numbered_lines[0][1].split("\t")
+        missing = [col for col in COUNT_COLUMNS if col not in header]
+        if header[0] != "read_type" or missing:
+            log.warning(f"Skipping {f['fn']}: clipping metrics header is missing columns: {missing}")
             continue
 
         rows_by_read_type: dict[str, ClippingRow] = {}
-        for line_num, line in enumerate(lines[1:], start=2):
+        for line_num, line in numbered_lines[1:]:
             fields = line.split("\t")
             if len(fields) != len(header):
                 log.warning(
@@ -120,13 +122,14 @@ def parse_clip_bam_metrics(
         if HEADLINE_READ_TYPE not in rows_by_read_type:
             log.warning(f"Skipping {f['fn']}: clipping metrics have no '{HEADLINE_READ_TYPE}' row")
             continue
+        if rows_by_read_type[HEADLINE_READ_TYPE]["reads"] == 0:
+            log.debug(f"Skipping {f['fn']}: clipping metrics count no reads")
+            continue
         if f["s_name"] in data_by_sample:
             log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
         data_by_sample[f["s_name"]] = rows_by_read_type
         module.add_data_source(f, section="clipping")
-
-        # Superfluous function call to confirm that it is used in this module
-        # Replace None with actual version if it is available
+        # The metrics file carries no version, but the call is required.
         module.add_software_version(None, f["s_name"])
 
     return module.ignore_samples(data_by_sample)
@@ -226,7 +229,8 @@ def add_clipped_bases_plot(
             "bases clipped for each reason."
         ),
         helptext=f"""
-        Each bar totals the bases present before clipping ({BASES_DENOMINATOR_NOTE}).
+        Each bar totals the bases present before clipping, {BASES_PRE_CLIP}, since `bases` counts only
+        the aligned bases left after clipping.
         The clipped segments are the reasons fgbio ClipBam and `fgumi clip` record for a clipped base:
         clipping that was already in the input, the fixed number of bases requested from the 5' or 3'
         end of a read, the bases of a read that overlap its mate, and the bases that extend past the far

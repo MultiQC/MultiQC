@@ -1,7 +1,6 @@
 import pytest
 
-from .conftest import general_stats
-from .test_family_sizes import FGBIO_ERROR_RATE
+from .conftest import FGBIO_ERROR_RATE, general_stats
 
 CLIP = (
     "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post\treads_clipped_five_prime"

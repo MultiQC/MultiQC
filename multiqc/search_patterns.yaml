@@ -423,12 +423,12 @@ fgbio/errorratebyreadposition:
   num_lines: 3
 # fgumi/clip also finds these files; fgumi.util.shared_file_module picks which module reports them.
 fgbio/clipbam:
-  contents: "read_type	reads	reads_unmapped	reads_clipped_pre	reads_clipped_post"
-  num_lines: 3
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post"
+  num_lines: 1
   shared: true
 fgumi/clip:
-  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
-  num_lines: 2
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post"
+  num_lines: 1
   shared: true
 fgumi/consensus_stats:
   contents: "key\tvalue\tdescription"

@@ -150,14 +150,11 @@ def test_fragment_only_data_collapses_to_a_single_headline_row(run_fgbio_module)
     assert data[ColumnKey("pct_reads_clipped")] == pytest.approx(40.0)
 
 
-def test_all_zero_metrics_add_no_rows_but_do_not_fail(run_fgbio_module):
-    """An empty input BAM yields all-zero counts: nothing can be divided, so the sample gets
-    no percentages, no table row and no general stats entry, without raising."""
-    module = run_fgbio_module({"sampleC.txt": CLIPBAM_EMPTY_TSV})
-
-    assert "fgbio-clipbam" not in {section.anchor for section in module.sections}
-    assert _clipbam_table_rows("sampleC") is None
-    assert not any(SampleGroup("sampleC") in rows for rows in report.general_stats_data.values())
+def test_all_zero_metrics_are_not_counted_as_samples(run_fgbio_module):
+    """An empty input BAM yields all-zero counts, so the file adds nothing and an fgbio module
+    with no other input finds no samples rather than rendering empty."""
+    with pytest.raises(ModuleNoSamplesFound):
+        run_fgbio_module({"sampleC.txt": CLIPBAM_EMPTY_TSV})
 
 
 def test_data_file_flattens_read_types_and_keeps_derived_metrics(run_fgbio_module):
