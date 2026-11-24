@@ -132,6 +132,10 @@ class MultiqcModule(BaseMultiqcModule):
       - 200
     ```
 
+    A hidden `IQR/Median` General Stats column measures coverage uniformity: the interquartile
+    range of the coverage distribution divided by the median coverage. Lower values mean more
+    uniform coverage.
+
     For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
 
     For example, you could add the following to your MultiQC config file:
@@ -453,7 +457,7 @@ class MultiqcModule(BaseMultiqcModule):
                 },
                 "coverage_iqr_cv": {
                     "title": "IQR/Median",
-                    "description": "Coverage uniformity: interquartile range of the coverage distribution divided by median coverage. Lower is more uniform.",
+                    "description": "Coverage IQR / median coverage",
                     "min": 0,
                     "scale": "BuPu",
                     "format": "{:,.2f}",
