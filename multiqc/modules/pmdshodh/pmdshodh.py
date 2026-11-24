@@ -109,6 +109,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/dpatel511/pmdshodh",
             info="Scores and filters ancient DNA reads by post-mortem damage (PMD score).",
             doi="10.1073/pnas.1318934111",
+            license="MIT License",
+            license_url="https://github.com/dpatel511/pmdshodh/blob/main/LICENSE",
         )
 
         data: dict[str, dict] = {}
