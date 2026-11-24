@@ -99,6 +99,9 @@ class MultiqcModule(BaseMultiqcModule):
         # Add saturation curve plot (CpGs vs extrapolation factor)
         self._add_saturation_plot()
 
+        # Add saturation percentage plot (saturation vs extrapolation factor)
+        self._add_saturation_pct_plot()
+
         # Write data file (must be last)
         self.write_data_file(self.methurator_data, "methurator")
 
@@ -238,5 +241,55 @@ class MultiqcModule(BaseMultiqcModule):
             anchor="methurator_saturation",
             description="Saturation curves showing the number of CpG sites detected at each sequencing depth.",
             helptext="A flattening curve indicates saturation, where additional sequencing yields diminishing returns. t=1.0 represents the actual sequencing depth.",
+            plot=linegraph.plot(datasets, pconfig),
+        )
+
+    def _add_saturation_pct_plot(self):
+        """Add a plot showing saturation percentage vs t-values for GT estimator format."""
+        # Collect plot data for each sample, one dataset per minimum coverage level
+        plot_data_by_coverage: dict[int, dict[str, dict[float, float]]] = {}
+
+        for s_name, data in self.methurator_data.items():
+            for min_cov, sat_data in data["saturation_analysis"].items():
+                # Extract GT data points: [t, saturation, total_cpgs, ci_low, ci_high]
+                sample_curve = {float(point[0]): float(point[1]) * 100 for point in sat_data["data"]}
+                if sample_curve:
+                    plot_data_by_coverage.setdefault(min_cov, {})[s_name] = sample_curve
+
+        coverage_levels = sorted(plot_data_by_coverage)
+        if not coverage_levels:
+            return
+
+        # Build datasets and labels (works for single or multiple coverage levels)
+        datasets = [plot_data_by_coverage[cov] for cov in coverage_levels]
+        data_labels = [
+            {
+                "name": f"Min Coverage {cov}x",
+                "ylab": "CpG Saturation (%)",
+                "title": f"Methurator: Saturation Percentage (min. coverage {cov}x)",
+            }
+            for cov in coverage_levels
+        ]
+
+        pconfig = LinePlotConfig(
+            id="methurator_saturation_pct_plot",
+            title=f"Methurator: Saturation Percentage (min. coverage {coverage_levels[0]}x)",
+            xlab="Extrapolation factor (t = 1 means observed sequencing depth)",
+            ylab="CpG Saturation (%)",
+            xmin=0,
+            ymin=0,
+            ymax=100,
+            tt_label="t = <b>{point.x:.2f}</b>: {point.y:.1f}% saturation",
+            data_labels=data_labels,
+        )
+
+        self.add_section(
+            name="Saturation Percentage",
+            anchor="methurator_saturation_pct",
+            description="Saturation percentage curves showing the fraction of the theoretical maximum "
+            "number of CpG sites detected at each sequencing depth.",
+            helptext="t = 1.0 represents the actual sequencing depth, with extrapolation beyond. "
+            "The theoretical maximum is the Good-Toulmin estimate at t = 1000. "
+            "100% saturation would mean all detectable CpG sites have been found.",
             plot=linegraph.plot(datasets, pconfig),
         )
