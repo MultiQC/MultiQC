@@ -702,9 +702,7 @@ mgikit/mgi_sample_reads:
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
 mgnifam:
-  fn: "*_stats.json"
-  contents: '"tool": "mgnifam"'
-  num_lines: 3
+  fn: "*_mgnifam_stats.json"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
