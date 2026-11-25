@@ -352,6 +352,11 @@ deeptools/plotPCAData:
 deeptools/plotProfile:
   contents: "bin labels"
   num_lines: 1
+dexseq/counts:
+  # Sorted output: exon bin IDs (GENE:NNN, quoted by HTSeq 2) come before the "_" counters,
+  # unless the gene IDs start with a lower-case letter
+  contents_re: '^(_ambiguous|"?[^\t":]+"?:"?\d{3}"?)\t\d+$'
+  num_lines: 1
 diamond:
   fn: "diamond.log"
 disambiguate:

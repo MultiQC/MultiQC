@@ -515,6 +515,7 @@ module_order:
   - theta2
   - snpeff
   - gatk
+  - dexseq
   - htseq
   - bcftools
   - featurecounts
