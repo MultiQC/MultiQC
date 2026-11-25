@@ -3,6 +3,7 @@ import logging
 import re
 from html import escape
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
 
@@ -122,17 +123,21 @@ class MultiqcModule(BaseMultiqcModule):
                 "shared_key": f"{unit}_count",
             }
         headers["reads_pct_passed_yield"]["description"] += " (double- and single-strand reads, --hd-finder)"
+        for key in ("reads_passed_yield", "reads_input"):
+            del headers[key]["format"]
+            headers[key]["shared_key"] = "long_read_count"
+            headers[key]["description"] += f" ({config.long_read_count_desc})"
         headers["number_of_ccs_reads_q20"] = {
             "title": "HiFi reads",
-            "description": "Number of HiFi (Q20+) reads",
+            "description": f"Number of HiFi (Q20+) reads ({config.long_read_count_desc})",
             "scale": "Blues",
-            "format": "{:,d}",
+            "shared_key": "long_read_count",
         }
         headers["total_number_of_ccs_bases_q20"] = {
             "title": "HiFi yield",
-            "description": "HiFi (Q20+) yield (bp)",
+            "description": f"HiFi (Q20+) yield ({config.base_count_desc} of bases)",
             "scale": "Greens",
-            "format": "{:,d}",
+            "shared_key": "base_count",
             "hidden": True,
         }
         headers["median_qv_q20"] = {
@@ -210,19 +215,28 @@ class MultiqcModule(BaseMultiqcModule):
         headers: dict[str, dict] = {}
         for other in metrics.values():
             for key, attr in other.items():
+                if key in headers:
+                    continue
                 # Titles are rendered as HTML but also used as column names in the exported data file
                 title = attr["name"].replace("<Q20", "Below Q20").replace(">=Q30", "Q30+")
-                headers.setdefault(
-                    key,
-                    {
-                        "title": escape(title),
-                        "format": "{:,.0f}",
-                        "scale": scales[len(headers) % len(scales)],
-                        "hidden": key not in visible,
-                    },
-                )
-                if attr["name"].endswith("(%)"):
-                    headers[key].update({"suffix": "%", "min": 0, "max": 100, "format": "{:,.1f}"})
+                header = {
+                    "format": "{:,.0f}",
+                    "scale": scales[len(headers) % len(scales)],
+                    "hidden": key not in visible,
+                }
+                if title.endswith("(%)"):
+                    header.update({"suffix": "%", "min": 0, "max": 100, "format": "{:,.1f}"})
+                elif key.startswith("number_of_ccs_reads_"):
+                    del header["format"]
+                    header["shared_key"] = "long_read_count"
+                    header["description"] = escape(f"{title} ({config.long_read_count_desc})")
+                elif key.startswith("total_number_of_ccs_bases_") or key == "base_count_q30":
+                    del header["format"]
+                    title = title.removesuffix(" (bp)")
+                    header["shared_key"] = "base_count"
+                    header["description"] = escape(f"{title} ({config.base_count_desc} of bases)")
+                header["title"] = escape(title)
+                headers[key] = header
         self.add_section(
             name="Read metrics",
             anchor="ccs-read-metrics",
