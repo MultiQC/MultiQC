@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
@@ -137,6 +138,8 @@ class MultiqcModule(BaseMultiqcModule):
         headers["median_qv_q20"] = {
             "title": "HiFi QV",
             "description": "Median read quality of HiFi (Q20+) reads",
+            "min": 0,
+            "max": 40,
             "scale": "RdYlGn",
             "hidden": True,
         }
@@ -167,7 +170,7 @@ class MultiqcModule(BaseMultiqcModule):
             description="The number of ZMWs (or reads, with `--hd-finder`) that failed or passed all filters for each report.",
             helptext="""
                 The number that passed all filters is shown as **Pass filters**. All other categories that
-                are shown in the graph represent the number of ZMWs that were dropped for the specified reason.
+                are shown in the graph represent the number of ZMWs (or reads, with `--hd-finder`) that were dropped for the specified reason.
 
                 When CCS is run with `--hd-finder`, it reports double-strand and single-strand reads instead
                 of ZMWs. These are shown as separate datasets.
@@ -207,10 +210,12 @@ class MultiqcModule(BaseMultiqcModule):
         headers: dict[str, dict] = {}
         for other in metrics.values():
             for key, attr in other.items():
+                # Titles are rendered as HTML but also used as column names in the exported data file
+                title = attr["name"].replace("<Q20", "Below Q20").replace(">=Q30", "Q30+")
                 headers.setdefault(
                     key,
                     {
-                        "title": attr["name"],
+                        "title": escape(title),
                         "format": "{:,.0f}",
                         "scale": scales[len(headers) % len(scales)],
                         "hidden": key not in visible,
