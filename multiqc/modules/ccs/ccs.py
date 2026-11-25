@@ -67,12 +67,16 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("ccs/v4", filehandles=True):
             data = parse_PacBio_log(f["f"])
             v5_data = self.convert_to_v5(data)
+            if f["s_name"] in self.ccs_data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
             v5_data = json.load(f["f"])
+            if f["s_name"] in self.ccs_data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
