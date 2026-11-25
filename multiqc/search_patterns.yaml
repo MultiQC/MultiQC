@@ -1226,6 +1226,14 @@ supernova/kmers:
   fn: "histogram_kmer_count.json"
   num_lines: 10
   contents: '"description": "kmer_count",'
+suppa/psi:
+  fn: "*.psi"
+  contents_re: "^[^\t;]+;[^\t]+\t(nan|NA|-?[0-9.]+(e-?[0-9]+)?)(\t|$)"
+  num_lines: 2
+suppa/diffsplice:
+  fn: "*.dpsi"
+  contents_re: "^[^\t]+_dPSI\t[^\t]+_p-val"
+  num_lines: 1
 sylphtax:
   fn: "*.sylphmpa"
 telseq:
