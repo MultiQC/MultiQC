@@ -309,7 +309,6 @@ fn_clean_exts:
   - ".selfSM"
   - ".extendedFrags"
   - "_SummaryStatistics"
-  - ".rmats_summary"
   - ".purple.purity"
   - ".purple.qc"
   - ".trim"

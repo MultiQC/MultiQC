@@ -39,9 +39,8 @@ class MultiqcModule(BaseMultiqcModule):
     (`<prefix>_FDR_0.05_IncLevelDifference_0.1.txt`) and the module shows them.
 
     Summary files are found by their header, so they may have any name. Each file is
-    one comparison (one `--b1` versus `--b2` run), named after the file without the
-    `.rmats_summary` or `_summary` suffix, for example `PC3E-GS689.rmats_summary.txt`
-    becomes `PC3E-GS689`. A file named only `summary.txt` is named after its directory.
+    one comparison (one `--b1` versus `--b2` run), named after the file without a
+    `_summary` suffix, for example `PC3E-GS689_summary.txt` becomes `PC3E-GS689`. A file named only `summary.txt` is named after its directory.
     A cutoff suffix stays in the name, so that summaries of one comparison at several
     cutoffs stay apart.
 

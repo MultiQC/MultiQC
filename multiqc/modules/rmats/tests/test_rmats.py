@@ -164,7 +164,7 @@ class TestModule:
     def test_summary_only(self, tmp_path):
         m = run_module(
             tmp_path,
-            {"PC3E-GS689/summary.txt": SUMMARY_V42, "out/GS689-PC3E.rmats_summary.txt": SUMMARY_V41},
+            {"PC3E-GS689/summary.txt": SUMMARY_V42, "out/GS689-PC3E_summary.txt": SUMMARY_V41},
         )
         assert set(m.saved_raw_data["multiqc_rmats_summary"]) == {"PC3E-GS689", "GS689-PC3E"}
         assert report.general_stats_data == {}
