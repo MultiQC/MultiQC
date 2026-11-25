@@ -342,6 +342,8 @@ fn_clean_exts:
   - ".cutadapt"
   - ".qcML"
   - ".mosdepth"
+  - "_cluster_significance"
+  - ".junc"
   - ".cramino"
   - "_gopeaks"
   - ".readCounts"
@@ -518,6 +520,7 @@ module_order:
   - htseq
   - bcftools
   - featurecounts
+  - leafcutter
   - fgbio
   - fgumi
   - dragen

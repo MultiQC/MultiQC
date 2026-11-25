@@ -662,6 +662,12 @@ kraken:
   num_lines: 2
 librarian:
   fn: "librarian_heatmap.txt"
+leafcutter/clustering:
+  fn: "*_perind_numers.counts.gz"
+leafcutter/cluster_significance:
+  fn: "*_cluster_significance.txt"
+  contents_re: "^(cluster\tstatus\tloglr\tdf\tp\tp\\.adjust|status\tloglr\tdf\tp\tcluster\tp\\.adjust)"
+  num_lines: 1
 leehom:
   contents: "Adapter dimers/chimeras"
   num_lines: 100
