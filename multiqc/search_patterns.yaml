@@ -1047,6 +1047,13 @@ riker/wgs_coverage:
   fn: "*.wgs-coverage.txt"
   contents_re: "^sample\\b.*\\bbases_at_or_above\\b"
   num_lines: 1
+rmats/read_outcomes:
+  fn: "*read_outcomes_by_bam.txt"
+  contents_re: "^USED: \\d+$"
+  num_lines: 2
+rmats/summary:
+  contents_re: "^EventType\t(EventTypeDescription\t)?TotalEventsJC\tTotalEventsJCEC\tSignificantEventsJC\t"
+  num_lines: 1
 rockhopper:
   fn: "summary.txt"
   contents: "Number of gene-pairs predicted to be part of the same operon"
