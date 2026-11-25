@@ -343,7 +343,6 @@ fn_clean_exts:
   - ".qcML"
   - ".mosdepth"
   - "_cluster_significance"
-  - ".junc"
   - ".cramino"
   - "_gopeaks"
   - ".readCounts"
