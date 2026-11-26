@@ -5,7 +5,8 @@ from typing import ClassVar
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, heatmap
-from multiqc.plots.table_object import ColumnDict
+from multiqc.plots.table_object import ColumnDict, ValueT
+from multiqc.types import ColumnKey, SampleName
 
 log = logging.getLogger(__name__)
 
@@ -201,7 +202,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Get table data
-        table_pct_by_sample: dict[str, dict[str, float]] = {}
+        table_pct_by_sample: dict[SampleName | str, dict[ColumnKey | str, ValueT]] = {}
         for s_name, cnt_by_taxon_by_rank in cnt_by_taxon_by_rank_by_sample.items():
             _counts = {
                 "pct_top_one": cnt_by_taxon_by_rank[top_rank_code].get(top_taxa[0], 0),
@@ -337,7 +338,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Taxa rank {SPECIES_CODE} not found, skipping taxa duplication heatmap")
             return
 
-        dup_by_taxon_by_sample: dict[str, dict[str, int | None]] = defaultdict(lambda: defaultdict(int))
+        dup_by_taxon_by_sample: dict[str | int, dict[str | int, int | None]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
         # not all samples have minimizers data, and we want to find top 5 species across those that have
         _taxa_in_samples_with_minimizers = set()
@@ -458,8 +459,10 @@ def parse_logs(
 
         cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
         if minimizer_distinct is not None and minimizer is not None and rank_code == "S":
-            minimizer_duplication = int(minimizer) / int(minimizer_distinct) if minimizer_distinct != 0 else 0.0
-            min_dup_by_taxon[taxon] = minimizer_duplication
+            distinct_count = int(minimizer_distinct)
+            # --report-zero-counts can include species with no observed minimizers.
+            if distinct_count != 0:
+                min_dup_by_taxon[taxon] = int(minimizer) / distinct_count
 
     if "R" not in cnt_by_rank_by_taxon:
         # Can be missing in case if all reads are unassigned
