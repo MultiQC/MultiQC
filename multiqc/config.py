@@ -123,6 +123,10 @@ ai_provider: AiProviderLiteral
 ai_model: str
 ai_custom_endpoint: str | None
 ai_auth_type: Literal["bearer", "api-key"] | None
+ai_custom_api_style: Literal["openai", "anthropic"] | None
+ai_custom_headers: dict[str, str | None] | None
+ai_custom_response_path: str | None
+ai_custom_client: str | None
 ai_retries: int
 ai_extra_query_options: dict[str, Any] | None
 ai_custom_context_window: int | None
@@ -130,7 +134,7 @@ ai_prompt_short: str | None
 ai_prompt_full: str | None
 no_ai: bool
 ai_anonymize_samples: bool
-ai_reasoning_effort: Literal["low", "medium", "high"] | None
+ai_reasoning_effort: str | None
 ai_max_completion_tokens: int | None
 ai_extended_thinking: bool
 ai_thinking_budget_tokens: int | None
@@ -624,7 +628,7 @@ def load_show_hide(show_hide_file: Path | None = None):
     global show_hide_buttons, show_hide_patterns, show_hide_mode, show_hide_regex  # noqa: PLW0602
     if show_hide_file:
         try:
-            with open(show_hide_file, "r") as f:
+            with open(show_hide_file) as f:
                 logger.debug(f"Loading sample renaming config settings from: {show_hide_file}")
                 for line in f:
                     s = line.strip().split("\t")
@@ -636,14 +640,14 @@ def load_show_hide(show_hide_file: Path | None = None):
         except AttributeError as e:
             logger.error(f"Error loading show patterns file: {e}")
 
-    # Normalize show_hide_patterns to be List[List[str]]
+    # Normalize show_hide_patterns to be list[list[str]]
     # When loaded from YAML config, patterns may be strings instead of lists
     for i in range(len(show_hide_patterns)):
         pattern = show_hide_patterns[i]
         if isinstance(pattern, str):
             show_hide_patterns[i] = [pattern]
 
-    # Normalize show_hide_regex to be List[bool]
+    # Normalize show_hide_regex to be list[bool]
     # When loaded from YAML config, regex flags may be missing or incorrect types
     for i in range(len(show_hide_regex)):
         regex_flag = show_hide_regex[i]

@@ -942,18 +942,57 @@ class MultiQCConfig(BaseModel):
                 "AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, custom.",
             )
             ai_model: str | None = cfg(
-                "Model name. Provider-specific.",
-                examples=["gpt-4o", "claude-sonnet-4-5."],
+                (
+                    "Model name. Defaults to claude-opus-5-5 for Anthropic and gpt-6.1-sol for OpenAI. "
+                    "Required for aws_bedrock and custom."
+                ),
+                examples=["claude-opus-5-5", "gpt-6.1-sol"],
             )
             ai_custom_endpoint: str | None = cfg(
-                "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
-                examples=["http://localhost:11434/v1", "https://api.example.com/v1"],
+                (
+                    "Full URL of the chat endpoint for the 'custom' provider: an OpenAI-compatible "
+                    "chat completions endpoint, or a Claude-compatible messages endpoint with "
+                    "ai_custom_api_style: anthropic."
+                ),
+                examples=["http://localhost:8000/v1/chat/completions", "https://llm-gateway.example.com/v1/messages"],
+            )
+            ai_custom_api_style: Literal["openai", "anthropic"] | None = cfg(
+                (
+                    "Request format of the custom endpoint: 'openai' (chat completions, the default) "
+                    "or 'anthropic' (Claude messages API)."
+                ),
             )
             ai_auth_type: Literal["bearer", "api-key"] | None = cfg(
                 (
                     "Authentication scheme used by the custom endpoint. "
-                    "'bearer' sends an Authorization header, 'api-key' sends an api-key header."
+                    "'bearer' sends an Authorization header, 'api-key' sends an api-key header. "
+                    "By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints "
+                    "an x-api-key header."
                 ),
+            )
+            ai_custom_headers: dict[str, str | None] | None = cfg(
+                (
+                    "Extra HTTP headers for the custom endpoint. Write ${VAR} to insert an environment variable, "
+                    "so secrets stay out of config files. A null value removes a header MultiQC would send. "
+                    "When set, the API key environment variable is optional."
+                ),
+                examples=[{"x-api-key": "${MY_GATEWAY_TOKEN}", "Authorization": None}],
+            )
+            ai_custom_response_path: str | None = cfg(
+                (
+                    "Dotted path to the answer text in the custom endpoint's JSON response, "
+                    "for endpoints that don't use the standard OpenAI or Claude response format."
+                ),
+                examples=["completion.content", "choices.0.message.content"],
+            )
+            ai_custom_client: str | None = cfg(
+                (
+                    "Python class that sends prompts to your own AI service, given as 'package.module:ClassName'. "
+                    "Used with ai_provider: custom instead of ai_custom_endpoint. "
+                    "The class must subclass multiqc.core.ai.Client."
+                ),
+                pattern=r"^[\w.]+:\w+$",
+                examples=["my_lab.llm:GatewayClient"],
             )
             seqera_website: str | None = cfg(
                 "Base URL used for Seqera Platform links in the report.",
@@ -967,25 +1006,42 @@ class MultiQCConfig(BaseModel):
                 gt=0,
             )
             ai_extra_query_options: dict[str, Any] | None = cfg(
-                "Extra request-body fields merged into the AI request payload (provider-specific).",
-                examples=[{"temperature": 0.3, "top_p": 0.9}],
+                (
+                    "Extra request-body fields merged into the AI request payload (provider-specific). "
+                    "A null value removes a field MultiQC would otherwise send."
+                ),
+                examples=[{"seed": 42}, {"model": None}],
             )
             ai_custom_context_window: int | None = cfg(
-                "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+                (
+                    "Override the model's context window in tokens. By default MultiQC asks the provider, "
+                    "then uses what it knows about the model family, then assumes 128,000 tokens."
+                ),
                 gt=0,
             )
             ai_max_completion_tokens: int | None = cfg(
-                "Maximum completion tokens for OpenAI reasoning models.",
+                (
+                    "Maximum output tokens for the AI response, including reasoning or thinking tokens. "
+                    "Defaults to 16,000 for Claude; other providers use the model's own maximum."
+                ),
                 gt=0,
             )
-            ai_reasoning_effort: Literal["low", "medium", "high"] | None = cfg(
-                "Reasoning effort for OpenAI reasoning models.",
+            ai_reasoning_effort: str | None = cfg(
+                (
+                    "Reasoning effort, passed to the provider as given (OpenAI reasoning_effort, "
+                    "Claude output_config.effort). The levels depend on the model, eg. low, medium, high, xhigh, max. "
+                    "If the model rejects it, the request is sent without it."
+                ),
+                examples=["low", "high"],
             )
             ai_extended_thinking: bool | None = cfg(
-                "Enable extended thinking on Anthropic Claude models that support it.",
+                (
+                    "Turn on extended thinking for Claude models: adaptive thinking on Claude 4.6 and later, "
+                    "a token budget on older models. When off, each model uses its own default."
+                ),
             )
             ai_thinking_budget_tokens: int | None = cfg(
-                "Token budget for Anthropic extended thinking when enabled.",
+                "Token budget for extended thinking on Claude models older than 4.6.",
                 gt=0,
             )
 
