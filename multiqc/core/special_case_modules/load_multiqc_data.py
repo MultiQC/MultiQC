@@ -242,7 +242,9 @@ class LoadMultiqcData(BaseMultiqcModule):
                         new_sections = {s.anchor: s for s in mod.sections}
 
                         merged_sections = []
-                        all_section_anchors = set(existing_sections.keys()) | set(new_sections.keys())
+                        all_section_anchors = list(existing_sections) + [
+                            anchor for anchor in new_sections if anchor not in existing_sections
+                        ]
 
                         for section_anchor in all_section_anchors:
                             if section_anchor in existing_sections and section_anchor in new_sections:
