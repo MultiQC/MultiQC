@@ -346,6 +346,7 @@ fn_clean_exts:
   - ".cutadapt"
   - ".qcML"
   - ".mosdepth"
+  - { type: "truncate", pattern: ".thresholds.bed", module: "mosdepth" }
   - ".cramino"
   - "_gopeaks"
   - ".readCounts"

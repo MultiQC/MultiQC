@@ -1,6 +1,10 @@
 import fnmatch
+import gzip
 import logging
+import os
+import zlib
 from collections import defaultdict
+from collections.abc import Iterable
 from typing import cast
 
 from multiqc import Plot, config
@@ -53,7 +57,64 @@ def read_config():
         log.debug(f"Setting mosdepth coverage cutoff to display the contigs to {cutoff * 100.0}%")
     cfg["perchrom_fraction_cutoff"] = cutoff
 
+    pass_pct = cfg.get("region_pass_pct", DEFAULT_REGION_PASS_PCT)
+    try:
+        pass_pct = float(pass_pct)
+    except (TypeError, ValueError):
+        pass_pct = -1.0
+    if not 0 < pass_pct <= 100:
+        log.warning(
+            f"mosdepth_config.region_pass_pct must be a percentage above 0 and at most 100, "
+            f"got {cfg['region_pass_pct']!r}. Using {DEFAULT_REGION_PASS_PCT}."
+        )
+        pass_pct = DEFAULT_REGION_PASS_PCT
+    cfg["region_pass_pct"] = pass_pct
+
     return cfg
+
+
+DEFAULT_REGION_PASS_PCT = 99.0
+
+# Errors from reading a file that matches *.thresholds.bed.gz but isn't usable mosdepth output:
+# bad content, not gzip, or truncated (UnicodeDecodeError is a ValueError, gzip.BadGzipFile an OSError)
+THRESHOLDS_PARSE_ERRORS = (ValueError, OSError, EOFError, zlib.error)
+
+
+def count_passing_regions(lines: Iterable[str], pass_pct: float) -> tuple[int, dict[int, int]]:
+    """
+    Count, for each threshold, the regions with at least `pass_pct` % of bases covered at that
+    threshold, from the lines of a decompressed {prefix}.thresholds.bed.gz:
+
+    #chrom  start  end  region  1X  10X  20X  30X  (threshold columns follow --thresholds)
+
+    Streams over the lines and keeps only counters, so memory does not grow with the number of
+    regions. Zero-length regions are left out. Returns the number of regions counted and the
+    number passing per threshold. Raises ValueError if the content is not mosdepth thresholds output.
+    """
+    lines_iter = iter(lines)
+    header_line = next(lines_iter, None)
+    if header_line is None:
+        raise ValueError("empty file")
+    header = header_line.rstrip("\r\n").lstrip("#").split("\t")
+    if header[:4] != ["chrom", "start", "end", "region"] or not all(c.endswith("X") for c in header[4:]):
+        raise ValueError(f"unexpected header: {header_line.strip()!r}")
+    thresholds = [int(c[:-1]) for c in header[4:]]
+
+    n_regions = 0
+    passing = dict.fromkeys(thresholds, 0)
+    for line_num, line in enumerate(lines_iter, start=2):
+        fields = line.rstrip("\r\n").split("\t")
+        if len(fields) != len(header):
+            raise ValueError(f"line {line_num} has {len(fields)} columns, expected {len(header)} from the header")
+        length = int(fields[2]) - int(fields[1])
+        if length <= 0:
+            continue
+        n_regions += 1
+        for t, count in zip(thresholds, fields[4:]):
+            # Same as count / length * 100 >= pass_pct, without dividing
+            if int(count) * 100 >= pass_pct * length:
+                passing[t] += 1
+    return n_regions, passing
 
 
 def genstats_cov_thresholds(cum_fraction_by_cov: dict[int, float], threshs: list[int]) -> dict[str, float]:
@@ -135,6 +196,26 @@ class MultiqcModule(BaseMultiqcModule):
     A hidden `IQR/Median` General Stats column measures coverage uniformity: the interquartile
     range of the coverage distribution divided by the median coverage. Lower values mean more
     uniform coverage.
+
+    If mosdepth was run with `--by` and `--thresholds`, the `{prefix}.thresholds.bed.gz` file is
+    used to add a pair of General Stats columns per threshold X: the % of regions with at least
+    99% of their bases covered at X or more, and the number of regions that miss this. The
+    `% bases ≥ X` columns are pooled over all target bases, so they look the same whether the
+    poorly covered bases are spread thinly over many regions or concentrated in one region with
+    no coverage at all; the failing-region count tells those two cases apart. Columns follow the
+    same visibility as the `% bases ≥ X` columns: only thresholds that are in `general_stats_coverage`
+    and not in `general_stats_coverage_hidden` are shown by default. The required % of bases can
+    be changed in the config:
+
+    ```yaml
+    mosdepth_config:
+      # Percentage of a region's bases that must reach the threshold for the region to pass
+      region_pass_pct: 95
+    ```
+
+    Note that `*.thresholds.bed.gz` is matched on the filename only, since MultiQC can't read
+    the contents of gzipped files during the file search. A file with this name that isn't
+    mosdepth output is skipped with a warning.
 
     For the per-contig coverage plot, you can include and exclude contigs based on name or pattern.
 
@@ -241,7 +322,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         samples_global = set.union(*(set(d.keys()) for d in data_dicts_global))
         samples_region = set.union(*(set(d.keys()) for d in data_dicts_region))
-        samples_found = samples_in_summary | samples_global | samples_region
+        regions_by_sample, region_threshs = self.parse_thresholds_bed()
+        regions_by_sample = self.ignore_samples(regions_by_sample)
+        update_dict(genstats_by_sample, regions_by_sample)
+
+        samples_found = samples_in_summary | samples_global | samples_region | set(regions_by_sample)
         if not samples_found:
             raise ModuleNoSamplesFound
         log.info(f"Found reports for {len(samples_found)} samples")
@@ -406,6 +491,26 @@ class MultiqcModule(BaseMultiqcModule):
                 "scale": "RdYlGn",
                 "hidden": t in hidden_threshs,
             }
+        pass_pct = self.cfg["region_pass_pct"]
+        for t in sorted(region_threshs):
+            hidden = t not in threshs or t in hidden_threshs
+            genstats_headers[f"{t}_x_regions_pc"] = {
+                "title": f"Regions ≥ {t}X",
+                "description": f"% of regions with ≥{pass_pct:g}% of bases covered at ≥{t}X",
+                "max": 100,
+                "min": 0,
+                "suffix": "%",
+                "scale": "RdYlGn",
+                "hidden": hidden,
+            }
+            genstats_headers[f"{t}_x_regions_failed"] = {
+                "title": f"Regions < {t}X",
+                "description": f"Number of regions with less than {pass_pct:g}% of bases covered at ≥{t}X",
+                "min": 0,
+                "scale": "OrRd",
+                "format": "{:,d}",
+                "hidden": hidden,
+            }
         # Add mosdepth summary to General Stats
         genstats_headers.update(
             {
@@ -455,6 +560,14 @@ class MultiqcModule(BaseMultiqcModule):
                     "format": "{:,d}",
                     "hidden": True,
                 },
+                "regions_total": {
+                    "title": "Regions",
+                    "description": "Number of regions in the thresholds.bed.gz file (zero-length regions excluded)",
+                    "min": 0,
+                    "scale": "Greys",
+                    "format": "{:,d}",
+                    "hidden": True,
+                },
                 "coverage_iqr_cv": {
                     "title": "IQR/Median",
                     "description": "Coverage IQR / median coverage",
@@ -466,6 +579,42 @@ class MultiqcModule(BaseMultiqcModule):
             },
         )
         self.general_stats_addcols(cast(dict[str, dict[str, ValueT]], genstats_by_sample), genstats_headers)
+
+    def parse_thresholds_bed(self) -> tuple[dict[str, dict[str, int | float]], set[int]]:
+        """
+        Summarise each {prefix}.thresholds.bed.gz (mosdepth `--by ... --thresholds ...`) into
+        per-sample General Stats values: per threshold, the % of regions passing and the number
+        of failing regions. Also returns the union of thresholds seen across samples.
+        """
+        pass_pct = self.cfg["region_pass_pct"]
+        stats_by_sample: dict[str, dict[str, int | float]] = {}
+        all_threshs: set[int] = set()
+        for f in self.find_log_files("mosdepth/thresholds_bed", filecontents=False, filehandles=False):
+            s_name = self.clean_s_name(f["fn"], f)
+            path = os.path.join(f["root"], f["fn"])
+            # The pattern can only match on the filename (file search can't look inside gzip),
+            # so a same-named file from another tool is skipped rather than crashing the module.
+            try:
+                with gzip.open(path, "rt") as fh:
+                    n_regions, passing = count_passing_regions(fh, pass_pct)
+            except THRESHOLDS_PARSE_ERRORS as e:
+                log.warning(f"Skipping {path}: not usable mosdepth thresholds.bed.gz output ({e})")
+                continue
+            if n_regions == 0:
+                log.warning(f"Skipping {path}: no regions with non-zero length")
+                continue
+
+            stats: dict[str, int | float] = {"regions_total": n_regions}
+            for t, n_pass in passing.items():
+                # >=0X always passes, so the column carries no information
+                if t == 0:
+                    continue
+                stats[f"{t}_x_regions_pc"] = 100.0 * n_pass / n_regions
+                stats[f"{t}_x_regions_failed"] = n_regions - n_pass
+                all_threshs.add(t)
+            stats_by_sample[s_name] = stats
+            self.add_data_source(f, s_name=s_name, section="thresholds")
+        return stats_by_sample, all_threshs
 
     def parse_cov_dist(
         self, scope: str
