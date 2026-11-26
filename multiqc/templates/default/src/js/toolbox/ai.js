@@ -8,6 +8,7 @@ function updatePanel(providerId) {
   // Add label dynamically
   let aiModelInfo = "";
   let aiApiKeyInfo = "";
+  $("#ai_seqera_endpoint_group").toggle(providerId === "seqera");
 
   // Update model field with stored or default value for new provider
   if (providerId === "seqera") {

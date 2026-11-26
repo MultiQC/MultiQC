@@ -93,7 +93,7 @@ ai_thinking_budget_tokens: null # Thinking budget for Claude models older than 4
 
 # Development settings:
 seqera_api_url: "https://ai-api.seqera.io/v1/web"
-seqera_website: "https://ai.seqera.io"
+seqera_website: null # Platform URL for "Chat with Seqera AI" links. Worked out from seqera_api_url when not set
 
 plots_force_flat: false
 plots_export_font_scale: 1.0 # set to 1.5 for bigger fonts

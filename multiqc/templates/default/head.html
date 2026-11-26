@@ -38,7 +38,7 @@ page contents, it's machine-readable tags for browsers and search engines.
 <script type="text/javascript">
 reportUuid = "{{ report.report_uuid }}";
 seqeraApiUrl = "{{ config.seqera_api_url }}";
-seqeraWebsite = "{{ config.seqera_website }}";
+seqeraWebsite = "{{ config.seqera_website or '' }}";
 
 aiConfigEnabled = "{{ config.ai_summary }}";
 aiConfigProviderId = "{{ report.ai_provider_id or config.ai_provider }}";

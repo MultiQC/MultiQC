@@ -34,6 +34,30 @@ logger = logging.getLogger()  # root logger
 DEBUG_TEMPLATE = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
 
 
+class _MultilineMixin:
+    """Formats each line of a multi-line message as its own log line, with the module left blank"""
+
+    def format(self, record: logging.LogRecord) -> str:
+        message = record.getMessage()
+        if "\n" not in message or record.exc_info:
+            return super().format(record)  # type: ignore[misc]
+        lines = []
+        for i, line in enumerate(message.split("\n")):
+            part = logging.makeLogRecord({**record.__dict__, "msg": line, "args": None})
+            if i:
+                part.module = ""
+            lines.append(super().format(part))  # type: ignore[misc]
+        return "\n".join(lines)
+
+
+class _InfoFormatter(_MultilineMixin, logging.Formatter):
+    pass
+
+
+class _ColoredInfoFormatter(_MultilineMixin, coloredlogs.ColoredFormatter):
+    pass
+
+
 def init_log(log_to_file: bool = False):
     """
     Initializes logging.
@@ -139,10 +163,10 @@ def _setup_coloredlogs(log_level, logger):
             )
     else:
         if config.no_ansi is True:
-            console.setFormatter(logging.Formatter(info_template))
+            console.setFormatter(_InfoFormatter(info_template))
         else:
             console.setFormatter(
-                coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
+                _ColoredInfoFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
             )
     logger.addHandler(console)
 

@@ -3383,9 +3383,9 @@ ai_custom_client: my_lab.llm:GatewayClient
 
 #### `seqera_website`
 
-**Type**: <code>str</code> (default: `"https://ai.seqera.io"`)
+**Type**: <code>str</code>
 
-Base URL used for Seqera Platform links in the report.
+Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.
 
 #### `seqera_api_url`
 

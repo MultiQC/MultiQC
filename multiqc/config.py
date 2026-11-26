@@ -140,7 +140,7 @@ ai_extended_thinking: bool
 ai_thinking_budget_tokens: int | None
 
 seqera_api_url: str
-seqera_website: str
+seqera_website: str | None
 
 plots_force_flat: bool
 plots_export_font_scale: float
