@@ -1,20 +1,34 @@
 import json
 import logging
 import re
-from typing import Dict
+from html import escape
 
+from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, table
 
 log = logging.getLogger(__name__)
 
+# Attribute ID prefixes for the ZMW counts (default) and for the double- and
+# single-strand read counts reported with `ccs --hd-finder`
+GROUPS = {"zmw": "ZMWs", "ds_reads": "Double-strand reads", "ss_reads": "Single-strand reads"}
+
 
 class MultiqcModule(BaseMultiqcModule):
+    """
+    Supports the `ccs` report from CCS v4 (text) and from v5 onwards (JSON, `--report-json`),
+    including v8. Reports from `ccs --hd-finder` count double-strand and single-strand reads
+    instead of ZMWs, and these are plotted separately.
+
+    CCS v8 reports also include HiFi (Q20+), <Q20 and Q30+ read metrics, which are shown in a
+    table and a stacked bar plot when present.
+    """
+
     def __init__(self):
         super().__init__(
             name="CCS",
             anchor="ccs",
-            href="https://github.com/PacificBiosciences/ccs",
+            href="https://ccs.how/",
             info="PacBio tool that generates highly accurate single-molecule consensus reads (HiFi Reads)",
             extra="""
             CCS takes multiple subreads of the same SMRTbell molecule and combines them
@@ -28,7 +42,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # To store the mod data
-        self.ccs_data: Dict = dict()
+        self.ccs_data: dict = {}
         self.parse_v4_log_files()
         self.parse_v5_log_files()
         self.ccs_data = self.ignore_samples(self.ccs_data)
@@ -42,138 +56,244 @@ class MultiqcModule(BaseMultiqcModule):
         # Replace None with actual version if it is available
         self.add_software_version(None)
 
-        self.write_data_file(self.ccs_data, "multiqc_ccs_report")
+        self.parsed = {s_name: split_attributes(d["attributes"]) for s_name, d in self.ccs_data.items()}
         self.add_general_stats()
-        self.add_sections()
+        self.add_filter_section()
+        self.add_hifi_sections()
+
+        self.write_data_file(self.ccs_data, "multiqc_ccs_report")
 
     def parse_v4_log_files(self):
         for f in self.find_log_files("ccs/v4", filehandles=True):
             data = parse_PacBio_log(f["f"])
             v5_data = self.convert_to_v5(data)
+            if f["s_name"] in self.ccs_data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
     def parse_v5_log_files(self):
         for f in self.find_log_files("ccs/v5", filehandles=True):
             v5_data = json.load(f["f"])
+            if f["s_name"] in self.ccs_data:
+                log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             self.ccs_data[f["s_name"]] = v5_data
             self.add_data_source(f)
 
     def add_general_stats(self):
         gstats_data = {}
-        for s_name, attrs in self.ccs_data.items():
+        for s_name, (groups, other) in self.parsed.items():
             gstats_data[s_name] = {}
-            for attr in attrs["attributes"]:
-                if "zmw_input" in attr["id"]:
-                    gstats_data[s_name]["zmw_input"] = attr["value"]
-                if "zmw_passed_yield" in attr["id"]:
-                    gstats_data[s_name]["zmw_passed_yield"] = attr["value"]
-            try:
-                gstats_data[s_name]["zmw_pct_passed_yield"] = (
-                    gstats_data[s_name]["zmw_passed_yield"] / gstats_data[s_name]["zmw_input"]
-                ) * 100.0
-            except (KeyError, ZeroDivisionError):
-                pass
+            if "zmw" in groups:
+                gstats_data[s_name]["zmw_input"] = groups["zmw"]["input"]["value"]
+                gstats_data[s_name]["zmw_passed_yield"] = groups["zmw"]["passed_yield"]["value"]
+            # --hd-finder: the two strand groups together make up all reads
+            strand_groups = [groups[g] for g in ("ds_reads", "ss_reads") if g in groups]
+            if strand_groups:
+                gstats_data[s_name]["reads_input"] = sum(g["input"]["value"] for g in strand_groups)
+                gstats_data[s_name]["reads_passed_yield"] = sum(g["passed_yield"]["value"] for g in strand_groups)
+            for unit in ("zmw", "reads"):
+                if gstats_data[s_name].get(f"{unit}_input"):
+                    gstats_data[s_name][f"{unit}_pct_passed_yield"] = (
+                        gstats_data[s_name][f"{unit}_passed_yield"] / gstats_data[s_name][f"{unit}_input"] * 100.0
+                    )
+            for key in ("number_of_ccs_reads_q20", "total_number_of_ccs_bases_q20", "median_qv_q20"):
+                if key in other:
+                    gstats_data[s_name][key] = other[key]["value"]
 
-        headers = {
-            "zmw_pct_passed_yield": {
-                "title": "ZMWs %PF",
-                "description": "Percent of ZMWs passing filters",
+        headers = {}
+        for unit, label in (("zmw", "ZMWs"), ("reads", "Reads")):
+            headers[f"{unit}_pct_passed_yield"] = {
+                "title": f"{label} %PF",
+                "description": f"Percent of {label.lower()} passing filters",
                 "max": 100,
                 "min": 0,
                 "scale": "RdYlGn",
                 "suffix": "%",
-            },
-            "zmw_passed_yield": {
-                "title": "ZMWs PF",
-                "description": "ZMWs pass filters",
+            }
+            headers[f"{unit}_passed_yield"] = {
+                "title": f"{label} PF",
+                "description": f"{label} pass filters",
                 "scale": "BuGn",
                 "format": "{:,d}",
-                "shared_key": "zmw_count",
+                "shared_key": f"{unit}_count",
                 "hidden": True,
-            },
-            "zmw_input": {
-                "title": "ZMWs input",
-                "description": "ZMWs input",
+            }
+            headers[f"{unit}_input"] = {
+                "title": f"{label} input",
+                "description": f"{label} input",
                 "scale": "Purples",
                 "format": "{:,d}",
-                "shared_key": "zmw_count",
-            },
+                "shared_key": f"{unit}_count",
+            }
+        headers["reads_pct_passed_yield"]["description"] += " (double- and single-strand reads, --hd-finder)"
+        for key in ("reads_passed_yield", "reads_input"):
+            del headers[key]["format"]
+            headers[key]["shared_key"] = "long_read_count"
+            headers[key]["description"] += f" ({config.long_read_count_desc})"
+        headers["number_of_ccs_reads_q20"] = {
+            "title": "HiFi reads",
+            "description": f"Number of HiFi (Q20+) reads ({config.long_read_count_desc})",
+            "scale": "Blues",
+            "shared_key": "long_read_count",
+        }
+        headers["total_number_of_ccs_bases_q20"] = {
+            "title": "HiFi yield",
+            "description": f"HiFi (Q20+) yield ({config.base_count_desc} of bases)",
+            "scale": "Greens",
+            "shared_key": "base_count",
+            "hidden": True,
+        }
+        headers["median_qv_q20"] = {
+            "title": "HiFi QV",
+            "description": "Median read quality of HiFi (Q20+) reads",
+            "min": 0,
+            "max": 40,
+            "scale": "RdYlGn",
+            "hidden": True,
         }
         self.general_stats_addcols(gstats_data, headers)
 
-    def add_sections(self):
-        # First we gather all the filters we encountered
-        all_filters = dict()
-        for s_name in self.ccs_data:
-            for filter_reason in self.filter_and_pass(self.ccs_data[s_name]):
-                all_filters[filter_reason] = 0
-
-        # Then we add the counts for each filter to the plot data
-        plot_data = dict()
-        for s_name, data in self.ccs_data.items():
-            plot_data[s_name] = dict()
-            for reason in all_filters:
-                for attribute in data["attributes"]:
-                    if attribute["name"] == reason:
-                        plot_data[s_name][reason] = attribute["value"]
-                        all_filters[reason] += attribute["value"]
-                        break
-                # If we didn't find it, set to zero
-                else:
-                    plot_data[s_name][reason] = 0
-
-        # Sort the categories based on the total counts
-        # Smallest first, for Log10 view
-        plot_cats = []
-        for reason, count in sorted(all_filters.items(), key=lambda item: item[1], reverse=True):
-            plot_cats.append(reason)
-
-        # Plot configuration
-        config = {
-            "id": "ccs-filter-graph",
-            "title": "CCS: ZMW results",
-            "ylab": "Number of ZMWs",
-            "xlab": "CCS report file",
-            "logswitch": True,
-        }
+    def add_filter_section(self):
+        plot_data: dict[str, dict] = {group: {} for group in GROUPS}
+        cats: dict[str, dict] = {}
+        totals: dict[str, int] = {}
+        for s_name, (groups, _) in self.parsed.items():
+            for group, attrs in groups.items():
+                for key, attr in attrs.items():
+                    if key != "passed_yield" and (not key.startswith("filtered_") or key == "filtered_yield"):
+                        continue
+                    plot_data[group].setdefault(s_name, {})[key] = attr["value"]
+                    # --hd-finder names are prefixed with "DS reads: " / "SS reads: "
+                    cats.setdefault(key, {"name": attr["name"].split(": ")[-1]})
+                    totals[key] = totals.get(key, 0) + attr["value"]
+        # Passed first, then filter reasons largest first
+        cats = {key: cats[key] for key in sorted(cats, key=lambda k: (k != "passed_yield", -totals[k]))}
+        if "passed_yield" in cats:
+            cats["passed_yield"].update({"name": "Pass filters", "color": "#2ca02c"})
+        present = [group for group in GROUPS if plot_data[group]]
 
         self.add_section(
             name="ZMWs filtered and passed",
             anchor="ccs-filter",
-            description="The number of ZMWs that failed or passed all filters for each of the subreads files.",
+            description="The number of ZMWs (or reads, with `--hd-finder`) that failed or passed all filters for each report.",
             helptext="""
-                The number of ZMWs that passed all filters is shown as **ZMWs pass filters**. All other categories that
-                are shown in the graph represent the number of ZMWs that were dropped for the specified reason.
+                The number that passed all filters is shown as **Pass filters**. All other categories that
+                are shown in the graph represent the number of ZMWs (or reads, with `--hd-finder`) that were dropped for the specified reason.
+
+                When CCS is run with `--hd-finder`, it reports double-strand and single-strand reads instead
+                of ZMWs. These are shown as separate datasets.
             """,
-            plot=bargraph.plot(plot_data, plot_cats, config),
+            plot=bargraph.plot(
+                [plot_data[group] for group in present],
+                cats,
+                {
+                    "id": "ccs-filter-graph",
+                    "title": "CCS: Filter results",
+                    "ylab": "Number of ZMWs",
+                    "xlab": "CCS report file",
+                    "logswitch": True,
+                    "data_labels": [
+                        {"name": GROUPS[g], "ylab": "Number of ZMWs" if g == "zmw" else "Number of reads"}
+                        for g in present
+                    ],
+                },
+            ),
         )
 
-    def filter_and_pass(self, data):
-        """Gather the reasons why ZMWs were failed or passed"""
-        reasons = dict()
+    def add_hifi_sections(self):
+        """Read metrics by quality bin, reported from CCS v8"""
+        metrics = {s_name: other for s_name, (_, other) in self.parsed.items() if "number_of_ccs_reads_q20" in other}
+        if not metrics:
+            return
 
-        # We only have to use the attributes
-        attributes = data["attributes"]
+        visible = {
+            "number_of_ccs_reads_q20",
+            "total_number_of_ccs_bases_q20",
+            "mean_ccs_readlength_q20",
+            "median_qv_q20",
+            "mean_npasses_q20",
+            "base_percentage_q30",
+        }
+        scales = ["Blues", "Greens", "Purples", "Oranges", "BuPu", "YlGn"]
+        headers: dict[str, dict] = {}
+        for other in metrics.values():
+            for key, attr in other.items():
+                if key in headers:
+                    continue
+                # Titles are rendered as HTML but also used as column names in the exported data file
+                title = attr["name"].replace("<Q20", "Below Q20").replace(">=Q30", "Q30+")
+                header = {
+                    "format": "{:,.0f}",
+                    "scale": scales[len(headers) % len(scales)],
+                    "hidden": key not in visible,
+                }
+                if title.endswith("(%)"):
+                    header.update({"suffix": "%", "min": 0, "max": 100, "format": "{:,.1f}"})
+                elif key.startswith("number_of_ccs_reads_"):
+                    del header["format"]
+                    header["shared_key"] = "long_read_count"
+                    header["description"] = escape(f"{title} ({config.long_read_count_desc})")
+                elif key.startswith("total_number_of_ccs_bases_") or key == "base_count_q30":
+                    del header["format"]
+                    title = title.removesuffix(" (bp)")
+                    header["shared_key"] = "base_count"
+                    header["description"] = escape(f"{title} ({config.base_count_desc} of bases)")
+                header["title"] = escape(title)
+                headers[key] = header
+        self.add_section(
+            name="Read metrics",
+            anchor="ccs-read-metrics",
+            description="Read count, yield, length and quality for HiFi (Q20+), <Q20 and Q30+ reads.",
+            plot=table.plot(
+                {s_name: {k: a["value"] for k, a in other.items()} for s_name, other in metrics.items()},
+                headers,
+                {"id": "ccs-read-metrics-table", "title": "CCS: Read metrics"},
+            ),
+        )
 
-        # Add filtere reasons (id starts with filtered_) and total passed
-        for entry in attributes:
-            if (
-                entry["id"].startswith("filtered")
-                or entry["id"] == "zmw_passed_yield"
-                or entry["id"].startswith("ccs_processing.filtered")
-                or entry["id"] == "ccs_processing.zmw_passed_yield"
-            ):
-                reasons[entry["name"]] = entry["value"]
-
-        return reasons
+        # Q30+ reads are a subset of HiFi (Q20+) reads
+        bins_data = []
+        for unit in ("number_of_ccs_reads", "total_number_of_ccs_bases"):
+            bins_data.append(
+                {
+                    s_name: {
+                        "q30": other[f"{unit}_q30"]["value"],
+                        "q20": other[f"{unit}_q20"]["value"] - other[f"{unit}_q30"]["value"],
+                        "lq": other[f"{unit}_lq"]["value"],
+                    }
+                    for s_name, other in metrics.items()
+                }
+            )
+        self.add_section(
+            name="Read quality",
+            anchor="ccs-read-quality",
+            description="Reads and bases in each read quality bin. HiFi reads are those of Q20 and above.",
+            plot=bargraph.plot(
+                bins_data,
+                {
+                    "q30": {"name": "Q30+", "color": "#2ca02c"},
+                    "q20": {"name": "Q20 to Q30", "color": "#98df8a"},
+                    "lq": {"name": "<Q20", "color": "#d62728"},
+                },
+                {
+                    "id": "ccs-read-quality-graph",
+                    "title": "CCS: Read quality",
+                    "cpswitch_c_active": False,
+                    "data_labels": [
+                        {"name": "Reads", "ylab": "Number of reads"},
+                        {"name": "Bases", "ylab": "Number of bases"},
+                    ],
+                },
+            ),
+        )
 
     def convert_to_v5(self, data):
         """Convert the v4 format to the new CCS v5 json format"""
         # Initialise the v5 format dictionary
-        v5 = dict()
+        v5 = {}
         v5["id"] = "ccs_processing"
-        attributes = list()
+        attributes = []
         v5["attributes"] = attributes
 
         # Update names for top level entries, they have been changed in v5
@@ -219,13 +339,34 @@ class MultiqcModule(BaseMultiqcModule):
         return {"name": name, "id": name_to_id[name], "value": count}
 
 
+def split_attributes(attributes):
+    """
+    Split report attributes into per-group counts (ZMWs, or DS/SS reads with --hd-finder),
+    keyed by ID without the group prefix, and the remaining (v8 read) metrics
+    """
+    groups: dict[str, dict] = {}
+    other: dict[str, dict] = {}
+    for attr in attributes:
+        key = attr["id"].removeprefix("ccs_processing.")
+        # CCS before v8 reports ZMW filter reasons without the zmw_ prefix
+        if key.startswith("filtered_"):
+            key = "zmw_" + key
+        for group in GROUPS:
+            if key.startswith(group + "_"):
+                groups.setdefault(group, {})[key.removeprefix(group + "_")] = attr
+                break
+        else:
+            other[key] = attr
+    return groups, other
+
+
 def parse_PacBio_log(file_content):
     """Parse ccs log file"""
-    data = dict()
+    data = {}
     # This is a local dictionary to store which annotations belong to which
     # result dictionary. This will be used to structure the output, but will
     # not be part of the output itself
-    annotations = dict()
+    annotations = {}
     current_annotation = None
 
     for line in file_content:
@@ -242,7 +383,7 @@ def parse_PacBio_log(file_content):
             name = line[:-9]
             # We make a new heading with the current name under the data that
             # matches the current annotation
-            current_annotation = dict()
+            current_annotation = {}
             # We keep the dictonary accessible under 'current_annotation',
             # so we can keep adding new data to it without having to keep track
             # of where it belongs
@@ -275,7 +416,7 @@ def parse_PacBio_log(file_content):
 
 def parse_line(line):
     """Parse a line from the ccs log file"""
-    data = dict()
+    data = {}
 
     # If we got an empty line to parse
     if not line.strip():

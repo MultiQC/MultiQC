@@ -55,7 +55,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any Bowtie 2 reports
-        self.bowtie2_data = dict()
+        self.bowtie2_data = {}
         self.num_se = 0
         self.num_pe = 0
         for f in self.find_log_files("bowtie2", filehandles=True):

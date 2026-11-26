@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict, List, Optional
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -56,8 +55,8 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="http://subread.sourceforge.net",
         )
 
-        data_by_sample: Dict[str, Dict[str, List[int]]] = dict()
-        data_keys: List[str] = []
+        data_by_sample: dict[str, dict[str, list[int]]] = {}
+        data_keys: list[str] = []
         for f in self.find_log_files("featurecounts"):
             self.parse_featurecounts_report(f, data_by_sample, data_keys)
 
@@ -86,11 +85,11 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_featurecounts_report(self, f, data_by_sample, data_keys):
         """Parse the featureCounts log file."""
-        file_names: List[str] = []
-        parsed_data: Dict[str, List[int]] = dict()
-        split_sep: Optional[str] = "\t"
+        file_names: list[str] = []
+        parsed_data: dict[str, list[int]] = {}
+        split_sep: str | None = "\t"
         for line in f["f"].splitlines():
-            this_row: List[int] = list()
+            this_row: list[int] = []
 
             # If this is from Rsubread then the formatting can be very variable
             # Default search pattern is quite generic, so f
@@ -99,15 +98,14 @@ class MultiqcModule(BaseMultiqcModule):
                 # NB: Will break if sample names have whitespace. Rsubread output is so variable that this is difficult to avoid
                 split_sep = None
 
-            tokens: List[str] = line.split(split_sep)
+            tokens: list[str] = line.split(split_sep)
             tokens = [token.strip('"') for token in tokens]
             if len(tokens) < 2:
                 continue
 
             key = tokens[0]
             if tokens[0] == "Status":
-                for f_name in tokens[1:]:
-                    file_names.append(f_name)
+                file_names.extend(tokens[1:])
             elif len(file_names) + 1 == len(tokens):
                 if key not in data_keys:
                     data_keys.append(key)
@@ -120,8 +118,8 @@ class MultiqcModule(BaseMultiqcModule):
                 parsed_data[key] = this_row
 
         # Check that this actually is a featureCounts file, as format and parsing is quite general
-        if "Assigned" not in parsed_data.keys():
-            return None
+        if "Assigned" not in parsed_data:
+            return
 
         for idx, f_name in enumerate(file_names):
             # Clean up sample name
@@ -129,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             # Reorganised parsed data for this sample
             # Collect total count number
-            data: Dict[str, float] = dict()
+            data: dict[str, float] = {}
             data["Total"] = 0
             for k in parsed_data:
                 data[k] = parsed_data[k][idx]

@@ -6,6 +6,8 @@ from multiqc import report
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.modules.fgumi import MultiqcModule
 
+from .conftest import FGBIO_ERROR_RATE
+
 FAMILY_SIZES_TSV = (
     "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size\n1\t60\t0.6\t1\n2\t30\t0.3\t0.4\n5\t10\t0.1\t0.1\n"
 )
@@ -73,11 +75,6 @@ def test_runall_outputs_share_one_sample(run_fgumi):
     assert {"family_sizes", "grouping_metrics"} <= sources
 
 
-FGBIO_ERROR_RATE = (
-    "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\ta_to_g_error_rate"
-    "\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate\n"
-    "1\t1\t1000\t0\t0.0\t0.001\t0.002\t0.003\t0.004\t0.005\t0.006\n"
-)
 POSITION_GROUP_SIZES = "position_group_size\tcount\tfraction\tfraction_gt_or_eq_position_group_size\n1\t10\t1\t1\n"
 
 
@@ -87,7 +84,7 @@ FGBIO_ONLY = FGBIO_ERROR_RATE  # a file only fgbio writes
 
 
 @pytest.mark.parametrize(
-    "layout, family_sizes_module, modules, expected",
+    "layout, shared_files_module, modules, expected",
     [
         pytest.param({"A.family_sizes.txt": HIST}, None, ["fgbio", "fgumi"], {"A": "fgbio"}, id="no-evidence-fgbio"),
         pytest.param(
@@ -153,14 +150,14 @@ FGBIO_ONLY = FGBIO_ERROR_RATE  # a file only fgbio writes
         pytest.param({"A.family_sizes.txt": HIST}, "fgumi", ["fgbio"], {"A": "fgbio"}, id="only-fgbio-running"),
     ],
 )
-def test_one_module_reports_each_family_size_histogram(tmp_path, layout, family_sizes_module, modules, expected):
+def test_one_module_reports_each_family_size_histogram(tmp_path, layout, shared_files_module, modules, expected):
     # fgumi and fgbio GroupReadsByUmi histograms are identical; exactly one module may report each file.
     from multiqc import config
     from multiqc.modules.fgbio import MultiqcModule as FgbioModule
 
     config.reset()
-    if family_sizes_module is not None:
-        config.fgumi_config = {"family_sizes_module": family_sizes_module}
+    if shared_files_module is not None:
+        config.fgumi_config = {"shared_files_module": shared_files_module}
     paths = []
     for name, content in layout.items():
         path = tmp_path / name

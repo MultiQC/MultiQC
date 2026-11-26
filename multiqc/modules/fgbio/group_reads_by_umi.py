@@ -1,7 +1,7 @@
 import logging
 
 from multiqc import BaseMultiqcModule
-from multiqc.modules.fgumi.util import family_sizes_evidence, family_sizes_module, found_by
+from multiqc.modules.fgumi.util import found_by, shared_file_evidence, shared_file_module
 from multiqc.plots import linegraph
 
 log = logging.getLogger(__name__)
@@ -57,13 +57,13 @@ def run_group_reads_by_umi(module: BaseMultiqcModule) -> int:
 
 
 def parse_groupreadsbyumi_log(module: BaseMultiqcModule):
-    umi_data = dict()
-    umi_data_normed = dict()
+    umi_data = {}
+    umi_data_normed = {}
 
     # fgumi writes identical histograms; when the fgumi module also found a file, only one module reports it.
-    evidence = family_sizes_evidence()
+    evidence = shared_file_evidence()
     for f in module.find_log_files("fgbio/groupreadsbyumi"):
-        if found_by(f, "fgumi/family_sizes") and family_sizes_module(f, evidence) == "fgumi":
+        if found_by(f, "fgumi/family_sizes") and shared_file_module(f, evidence) == "fgumi":
             continue
         # add file to data sources
         module.add_data_source(f)
