@@ -280,6 +280,7 @@ def get_module_data(
     if sample and sample not in list_samples():
         raise ValueError(f"Sample '{sample}' is not found. Use multiqc.list_samples() to list available samples")
 
+    mod = None
     if module:
         mod = next((m for m in report.modules if m.name.lower() == module.lower() or m.anchor == module), None)
         if not mod:
@@ -287,7 +288,7 @@ def get_module_data(
 
     data_by_module: dict[str, dict] = {}
     for m in report.modules:
-        if module and (m.name.lower() != module and m.anchor != module):
+        if mod is not None and m is not mod:
             continue
 
         if m.saved_raw_data is None:
@@ -301,15 +302,14 @@ def get_module_data(
         if key:
             if module and key not in m.saved_raw_data:
                 raise ValueError(f"Key '{key}' is not found in module '{module}'")
+            data_by_key = {k: v for k, v in data_by_key.items() if k == key}
         elif len(data_by_key) == 1:  # only one key, flatten
             data_by_key = data_by_key[next(iter(data_by_key.keys()))]
 
         data_by_module[m.anchor] = data_by_key
 
-    if module:
-        if not data_by_module:
-            return {}
-        return data_by_module[module.lower()]
+    if mod is not None:
+        return data_by_module[mod.anchor]
 
     return data_by_module
 
