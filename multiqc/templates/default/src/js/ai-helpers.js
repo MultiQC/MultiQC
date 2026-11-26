@@ -158,38 +158,37 @@ window.runStreamGeneration = function ({
     if (apiKey) {
       fetchOptions.headers.Authorization = `Bearer ${apiKey}`;
     }
-    // Not streamed: Seqera AI's streamed replies are empty while its model thinks before answering
     fetchOptions.body = JSON.stringify({
       message: title + "\n\n:::details\n\n" + systemPrompt + "\n\n" + userMessage + "\n\n:::\n\n",
+      stream: true,
       tags: ["multiqc", ...tags],
       title: title,
     });
 
-    fetch(`${seqeraApiUrl}/internal-ai/report-summary`, fetchOptions)
+    const seqeraUrl = ($("#ai-seqera-endpoint").val() || seqeraApiUrl).replace(/\/+$/, "");
+    fetch(`${seqeraUrl}/internal-ai/report-summary`, fetchOptions)
       .then((response) => {
         if (!response.ok) {
           return response.json().then((errorData) => {
             // Reported once, by the .catch() below
             throw new Error(
-              `HTTP ${response.status}: ${response.statusText} ${errorData.error?.message || "Unknown error"}`,
+              `HTTP ${response.status}: ${response.statusText} ${(typeof errorData.detail === "string" && errorData.detail) || errorData.error?.message || "Unknown error"}`,
             );
           });
         }
-        return response.json();
+        return response.body.getReader();
       })
-      .then((data) => {
-        // A list of content blocks when the model thinks before answering
-        const generation = data.generation;
-        const text = Array.isArray(generation)
-          ? generation
-              .filter((block) => block.type === "text")
-              .map((block) => block.text)
-              .join("")
-          : generation;
-        onStreamStart(data.model || modelName || "seqera");
-        if (text) onStreamNewToken(text);
-        onStreamComplete(data.thread_id);
-      })
+      .then((reader) =>
+        decodeStream(
+          providerId,
+          reader,
+          onStreamStart,
+          onStreamNewToken,
+          onStreamError,
+          onStreamComplete,
+          onStreamRestart,
+        ),
+      )
       .catch((error) => {
         onStreamError(handleStreamError(error));
       });

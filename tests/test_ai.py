@@ -737,14 +737,6 @@ def test_custom_client_is_not_offered_to_the_browser():
     assert report.ai_global_summary.endswith("characters")
 
 
-def test_seqera_answer_as_content_blocks(fake_api):
-    blocks = [{"type": "thinking", "thinking": "...", "signature": "x"}, {"type": "text", "text": "Summary"}]
-    fake_api(FakeResponse(200, {"generation": blocks, "thread_id": "t1"}))
-    response = ai.SeqeraClient("token").interpret_report_short("data")
-    assert response.interpretation.summary == "Summary"
-    assert response.thread_id == "t1"
-
-
 class HtmlResponse(FakeResponse):
     """What a moved endpoint returns: a web page, after a redirect."""
 
@@ -761,5 +753,12 @@ class HtmlResponse(FakeResponse):
 def test_non_json_response_names_the_redirect(fake_api):
     api = fake_api(HtmlResponse())
     with pytest.raises(ai.ProviderError, match="redirect to https://cloud.seqera.io"):
+        ai.SeqeraClient("token").interpret_report_short("data")
+    assert len(api.requests) == 1
+
+
+def test_seqera_out_of_credits_is_not_retried(fake_api):
+    api = fake_api(FakeResponse(429, {"detail": "You've reached your Co-Scientist usage limit (100% used)."}))
+    with pytest.raises(ai.ProviderError, match=r"^HTTP 429: You've reached your Co-Scientist usage limit"):
         ai.SeqeraClient("token").interpret_report_short("data")
     assert len(api.requests) == 1

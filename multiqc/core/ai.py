@@ -274,6 +274,8 @@ def _error_details(response: requests.Response) -> tuple[str, str | None]:
         data = response.json()
     except ValueError:
         return response.text, None
+    if isinstance(data, dict) and isinstance(data.get("detail"), str):  # FastAPI
+        return data["detail"], None
     error = data.get("error", data) if isinstance(data, dict) else data
     if isinstance(error, dict):
         message = error.get("message") or json.dumps(error)
@@ -298,6 +300,7 @@ class Client:
     model: str = ""
     # Request fields that are never dropped when a provider rejects a request
     required_fields: Collection[str] = ("model", "messages")
+    retryable_statuses: Collection[int] = _RETRYABLE_STATUSES
 
     def __init__(self, api_key: str | None = None):
         self.api_key: str | None = api_key
@@ -454,7 +457,7 @@ class Client:
                     and _MODEL_UNAVAILABLE_RE.search(e.message)
                 ):
                     raise ModelUnavailableError(f"Model '{self.model}' is not available from {self.title}: {e}") from e
-                if (e.status is None or e.status in _RETRYABLE_STATUSES or e.status >= 500) and attempt < retries:
+                if (e.status is None or e.status in self.retryable_statuses or e.status >= 500) and attempt < retries:
                     attempt += 1
                     backoff = 2 ** (attempt - 1)
                     logger.warning(
@@ -463,7 +466,6 @@ class Client:
                     )
                     time.sleep(backoff)
                     continue
-                logger.error(f"Failed to get a response from {self.title}. Error: {e}")
                 if config.verbose:
                     logger.debug(f"Request body: {json.dumps(_redact(body), indent=2)}")
                 raise
@@ -800,6 +802,8 @@ class SeqeraClient(Client):
         self.model = "seqera"
         # Every field is needed by the Seqera endpoint, never drop any
         self.required_fields = ("message", "tags", "title", "response_schema")
+        # Seqera AI only sends 429 for used-up credits or budgets, which retrying won't fix
+        self.retryable_statuses = (408, 409)
 
     def discover_context_window(self) -> int | None:
         return 200000
@@ -818,11 +822,8 @@ class SeqeraClient(Client):
         }
         url = f"{config.seqera_api_url}/internal-ai/report-summary"
         response = self._send(body, lambda b: self._post(url, {"Authorization": f"Bearer {self.api_key}"}, b))
-        content = response["generation"]
-        if isinstance(content, list):  # content blocks, when the model thinks before answering
-            content = "".join(block["text"] for block in content if block.get("type") == "text")
         return LlmResponse(
-            content=content,
+            content=response["generation"],
             model=response.get("model", self.model),
             thread_id=response.get("thread_id"),
         )

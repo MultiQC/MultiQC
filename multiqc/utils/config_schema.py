@@ -995,7 +995,8 @@ class MultiQCConfig(BaseModel):
                 examples=["my_lab.llm:GatewayClient"],
             )
             seqera_website: str | None = cfg(
-                "Base URL used for Seqera Platform links in the report.",
+                "Seqera Platform URL for 'Chat with Seqera AI' links in the report. "
+                "When not set, it is worked out from seqera_api_url.",
             )
             seqera_api_url: str | None = cfg(
                 "Base URL for the Seqera Platform API. Defaults to the public instance.",

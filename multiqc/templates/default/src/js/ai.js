@@ -11,18 +11,18 @@ import {
   shrinkBudget,
 } from "./ai-models.js";
 
-window.continueInSeqeraChatHandler = function (event) {
-  let el = $(event.currentTarget);
-  let seqeraWebsite = el.data("seqera-website");
-
-  // Either report uuid, or encoded system and chat messages
-  let threadId = el.data("thread-id");
-
-  let url = seqeraWebsite;
-  if (threadId) url += "/chat/" + threadId;
-
-  window.open(url, "_blank");
-};
+// Co-Scientist's API is at ai-api.<Platform domain>, except on Seqera Cloud
+function seqeraChatUrl(threadId) {
+  let base = seqeraWebsite;
+  if (!base) {
+    base = "https://cloud.seqera.io";
+    try {
+      const host = new URL($("#ai-seqera-endpoint").val() || seqeraApiUrl).host;
+      if (host.startsWith("ai-api.") && host !== "ai-api.seqera.io") base = `https://${host.slice("ai-api.".length)}`;
+    } catch {}
+  }
+  return `${base.replace(/\/+$/, "")}/?coScientistThread=${encodeURIComponent(threadId)}`;
+}
 
 // Fit as much of the report as possible into the token budget: tools and General Statistics first,
 // then every section that still fits, in report order. Sections that don't fit are listed by name.
@@ -334,7 +334,9 @@ async function summarizeWithAi(button) {
         }
       }
       showToast("Error generating summary", error, "error");
-      wrapUpResponse(disclaimerDiv, provider.name, modelName);
+      // A partial answer stays on the page, so it needs the clear button
+      if (receievedMarkdown) wrapUpResponse();
+      else button.html(button.data("original-html")).data("action", "generate").prop("disabled", false);
       if (!isMore && isGlobal) $("#global_ai_summary_more_button_and_disclaimer").hide();
       disclaimerDiv.hide();
     };
@@ -365,7 +367,7 @@ async function summarizeWithAi(button) {
         wrapUpResponse(disclaimerDiv, provider.name, modelName);
         // Update the "Chat with Seqera AI" button to point to new thread
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`).show();
+          continueInChatButton.attr("href", seqeraChatUrl(threadId)).show();
         }
         // Enable tooltips in the new content
         const tooltipTriggerList = responseDiv.find('[data-bs-toggle="tooltip"]');
@@ -477,6 +479,10 @@ $(function () {
     });
   });
 
+  const globalChatButton = $("#global_ai_summary_continue_in_chat");
+  if (globalChatButton.data("thread-id"))
+    globalChatButton.attr("href", seqeraChatUrl(globalChatButton.data("thread-id")));
+
   // Click handler for "AI Summary" button to dynamically generate plot summaries
   $("button.ai-generate-button").each(function () {
     const button = $(this);
@@ -515,7 +521,7 @@ $(function () {
 
         const threadId = cachedSummary.threadId;
         if (threadId) {
-          continueInChatButton.attr("href", `${seqeraWebsite}/chat/${threadId}`);
+          continueInChatButton.attr("href", seqeraChatUrl(threadId));
           continueInChatButton.show();
         }
       }

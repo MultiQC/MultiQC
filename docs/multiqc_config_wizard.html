@@ -6412,8 +6412,9 @@
               deprecated: false,
               multiline: false,
               type: "string",
-              description: "Base URL used for Seqera Platform links in the report.",
-              default: "https://ai.seqera.io",
+              description:
+                "Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.",
+              default: null,
               enum: null,
               items_enum: null,
               examples: [],
@@ -10286,7 +10287,8 @@
               },
             ],
             default: null,
-            description: "Base URL used for Seqera Platform links in the report.",
+            description:
+              "Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.",
             group: "Provider",
             section: "AI Summary",
             title: "Seqera Website",
