@@ -425,11 +425,13 @@ class MultiQCConfig(BaseModel):
                 "Override the file extension used when writing each data format, eg. {tsv: txt} to write TSV as .txt.",
                 examples=[{"tsv": "txt", "json": "json", "yaml": "yml"}],
             )
-            parquet_format: Literal["long", "wide"] | None = cfg(
+            parquet_format: Literal["long", "wide", "wide-per-table"] | None = cfg(
                 (
                     "Parquet table layout. 'long' has rows of (sample_name, metric_name, val_raw, val_raw_type, val_str), "
                     "easy to filter by metric. 'wide' uses one column per metric (prefixed with table name and namespace), "
-                    "easier for analytics but can hit column limits or mixed-type issues."
+                    "easier for analytics but can hit column limits or mixed-type issues. 'wide-per-table' writes each "
+                    "table to its own file under parquet_per_table/, with one row per sample and raw, modified and "
+                    "formatted columns for each metric."
                 ),
             )
         with group("Data dump"):

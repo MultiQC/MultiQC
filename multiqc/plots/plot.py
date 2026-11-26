@@ -503,6 +503,12 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
         """
         return pl.DataFrame(), set()
 
+    def to_wide_per_table_df(self) -> pl.DataFrame:
+        """
+        Used to save data to per-table parquet files (wide-per-table format).
+        """
+        return pl.DataFrame()
+
     @classmethod
     def from_df(cls, df: pl.DataFrame, pconfig: dict | PConfigT, anchor: Anchor) -> Self:
         """
@@ -619,6 +625,10 @@ class NormalizedPlotInputData(BaseModel, Generic[PConfigT]):
                 wide_df, metric_col_names = self.to_wide_df()
                 if not wide_df.is_empty():
                     plot_data_store.wide_table_to_parquet(wide_df, metric_col_names)
+            elif config.parquet_format == "wide-per-table":
+                wide_per_table_df = self.to_wide_per_table_df()
+                if not wide_per_table_df.is_empty():
+                    plot_data_store.buffer_wide_per_table(self.pconfig.id, str(self.anchor), wide_per_table_df)
             else:
                 df = self.to_df()
                 if not df.is_empty():

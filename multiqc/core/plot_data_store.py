@@ -28,6 +28,21 @@ _metric_col_names: set[ColumnKey] = set()
 _pending_dataframes: list[pl.DataFrame] = []
 # Buffer for wide table dataframes (need special merging by sample)
 _pending_wide_tables: list[pl.DataFrame] = []
+# Buffer for wide-per-table dataframes: (table_id, plot_anchor, df)
+# Written in flush_to_parquet() so section metadata can be injected after all modules finish.
+_pending_wide_per_tables: list[tuple[str, str, pl.DataFrame]] = []
+
+
+def buffer_wide_per_table(table_id: str, plot_anchor: str, df: pl.DataFrame) -> None:
+    """
+    Buffer a wide-per-table DataFrame for writing at flush time.
+
+    Section metadata (anchor, parent_id, parent_name, id, section_name) is not
+    available when plots are saved, because sections are registered after
+    save_to_parquet() returns. Buffering lets flush_to_parquet() inject that
+    metadata once all modules have finished.
+    """
+    _pending_wide_per_tables.append((table_id, plot_anchor, fix_creation_date(df)))
 
 
 def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: set[ColumnKey]) -> None:
@@ -62,6 +77,26 @@ def append_to_parquet(df: pl.DataFrame) -> None:
     _pending_dataframes.append(df)
 
 
+def _section_info_by_plot_anchor() -> dict[str, dict[str, str]]:
+    """
+    Build a mapping from plot_anchor to section metadata fields.
+
+    Used by flush_to_parquet() to inject module/section info into per-table
+    parquet files after all sections have been registered.
+    """
+    result: dict[str, dict[str, str]] = {}
+    for section in report.get_all_sections():
+        if section.plot_anchor:
+            result[str(section.plot_anchor)] = {
+                "anchor": str(section.anchor),
+                "parent_id": str(section.module_anchor),
+                "parent_name": section.module,
+                "id": str(section.id),
+                "section_name": section.name,
+            }
+    return result
+
+
 def flush_to_parquet() -> None:
     """
     Write all buffered dataframes to the parquet file at once.
@@ -69,9 +104,9 @@ def flush_to_parquet() -> None:
     This should be called at the end of report generation to efficiently
     write all accumulated plot data in a single operation.
     """
-    global _pending_dataframes, _pending_wide_tables
+    global _pending_dataframes, _pending_wide_tables, _pending_wide_per_tables
 
-    if not _pending_dataframes and not _pending_wide_tables:
+    if not _pending_dataframes and not _pending_wide_tables and not _pending_wide_per_tables:
         return
 
     # Read existing data from file (if any)
@@ -110,9 +145,26 @@ def flush_to_parquet() -> None:
         combined_df = pl.concat(all_dfs, how="diagonal")
         _write_parquet(combined_df)
 
+    # Write per-table wide parquet files, injecting section metadata
+    if _pending_wide_per_tables:
+        section_info = _section_info_by_plot_anchor()
+        for table_id, plot_anchor_str, df in _pending_wide_per_tables:
+            info = section_info.get(plot_anchor_str, {})
+            df = df.with_columns(
+                pl.lit(info.get("anchor", "")).alias("anchor"),
+                pl.lit(info.get("parent_id", "")).alias("parent_id"),
+                pl.lit(info.get("parent_name", "")).alias("parent_name"),
+                pl.lit(info.get("id", "")).alias("id"),
+                pl.lit(info.get("section_name", "")).alias("section_name"),
+            )
+            parquet_file = tmp_dir.per_table_parquet_file(table_id)
+            os.makedirs(parquet_file.parent, exist_ok=True)
+            df.write_parquet(parquet_file, compression="zstd")
+
     # Clear buffers
     _pending_dataframes = []
     _pending_wide_tables = []
+    _pending_wide_per_tables = []
 
 
 def get_report_metadata(df: pl.DataFrame) -> dict[str, Any] | None:
@@ -350,11 +402,12 @@ def reset():
     """
     Reset the module state.
     """
-    global _saved_anchors, _metric_col_names, _pending_dataframes, _pending_wide_tables
+    global _saved_anchors, _metric_col_names, _pending_dataframes, _pending_wide_tables, _pending_wide_per_tables
     _saved_anchors = set()
     _metric_col_names = set()
     _pending_dataframes = []
     _pending_wide_tables = []
+    _pending_wide_per_tables = []
 
 
 def parse_value(value: Any, value_type: str) -> Any:

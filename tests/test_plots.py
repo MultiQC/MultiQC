@@ -1,6 +1,7 @@
 import tempfile
 from unittest.mock import patch
 
+import polars as pl
 import pytest
 
 from multiqc import config, report
@@ -1078,6 +1079,19 @@ def test_table_default_sort():
     assert isinstance(p, Plot)
     sort_string = _get_sortlist_js(p.datasets[0].dt)
     assert sort_string == "[[2, 1], [1, 0]]"
+
+
+def test_table_wide_per_table_df_placeholder_after_inference_window():
+    """A numeric column with "N/A" beyond polars' 100-row inference window widens to String."""
+    data: dict[str, dict[str, int | str]] = {f"sample{i:03}": {"x": i} for i in range(150)}
+    data["sample999"] = {"x": "N/A"}
+    inputs = violin.ViolinPlotInputData.create_from_dataset(data, pconfig=table.TableConfig(id="table", title="Table"))
+
+    df = inputs.to_wide_per_table_df()
+
+    assert df.height == 151
+    assert df.schema["x_raw"] == pl.String
+    assert df.filter(pl.col("Sample Name") == "sample999")["x_raw"].item() == "N/A"
 
 
 def test_table_custom_plot_config_hidden(reset):

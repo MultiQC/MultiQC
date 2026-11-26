@@ -51,6 +51,13 @@ def parquet_file() -> Path:
     return data_tmp_dir() / "multiqc.parquet"
 
 
+def per_table_parquet_file(table_id: str) -> Path:
+    """
+    Returns the path to the per-table parquet file used by the wide-per-table format.
+    """
+    return data_tmp_dir() / "parquet_per_table" / f"multiqc_{table_id}.parquet"
+
+
 def new_tmp_dir():
     global _tmp_dir
     _tmp_dir = None

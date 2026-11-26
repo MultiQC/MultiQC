@@ -180,6 +180,74 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         )
         return df, metric_col_names
 
+    def to_wide_per_table_df(self) -> pl.DataFrame:
+        """
+        Build the DataFrame written to this table's per-table parquet file.
+
+        One row per sample, three columns per metric ({metric}_raw, {metric}_mod, {metric}_fmt),
+        plus column_meta (JSON dict of metric->ColumnMeta) and pconfig JSON columns.
+        The row identifier column uses col1_header rather than hardcoding "sample".
+        Only produced when rows_are_samples is True.
+        """
+        if self.is_empty() or not self.pconfig.rows_are_samples:
+            return pl.DataFrame()
+
+        ordered_headers = list(self.dt.get_headers_in_order())
+        col1 = self.pconfig.col1_header
+
+        samples_data: dict[str, dict[str, Any]] = {}
+        column_meta_dict: dict[str, Any] = {}
+
+        for section in self.dt.section_by_id.values():
+            for sample_name, group_rows in section.rows_by_sgroup.items():
+                for row in group_rows:
+                    sample_key = str(sample_name)
+                    if sample_key not in samples_data:
+                        samples_data[sample_key] = {
+                            col1: sample_key,
+                            "creation_date": self.creation_date,
+                        }
+
+                    for _, metric_name, dt_column in ordered_headers:
+                        if metric_name not in row.data:
+                            continue
+
+                        cell = row.data[metric_name]
+                        if cell is None or cell.raw is None or cell.fmt == "":
+                            continue
+
+                        metric_str = str(metric_name)
+                        samples_data[sample_key][f"{metric_str}_raw"] = cell.raw
+                        samples_data[sample_key][f"{metric_str}_mod"] = cell.mod
+                        samples_data[sample_key][f"{metric_str}_fmt"] = str(cell.fmt)
+
+                        if metric_str not in column_meta_dict:
+                            column_meta_dict[metric_str] = dt_column.model_dump_json()
+
+        if not samples_data:
+            return pl.DataFrame()
+
+        column_meta_json = json.dumps(column_meta_dict)
+        pconfig_json = self.pconfig.model_dump_json(exclude_none=True)
+
+        records = list(samples_data.values())
+        for record in records:
+            record["column_meta"] = column_meta_json
+            record["pconfig"] = pconfig_json
+            record["col1_header"] = col1
+
+        schema_overrides: dict[str, Any] = {
+            col1: pl.Utf8,
+            "creation_date": pl.Datetime(time_unit="us"),
+            "column_meta": pl.Utf8,
+            "pconfig": pl.Utf8,
+            "col1_header": pl.Utf8,
+        }
+        # Raw and mod values keep their own types, so a numeric column can hold a
+        # placeholder string such as "N/A" past the first 100 rows polars infers from.
+        # Infer from every row so such a column widens to String rather than failing.
+        return pl.DataFrame(records, schema_overrides=schema_overrides, infer_schema_length=None)
+
     @classmethod
     def from_df(
         cls,

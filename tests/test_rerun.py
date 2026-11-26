@@ -525,3 +525,26 @@ def test_wide_df_keeps_shared_column_keys_in_their_own_section():
     df = df.sort("sample")
     assert df.get_column("tbl / ns_a / x").to_list() == [5.0, 6.0]
     assert df.get_column("tbl / ns_b / x").to_list() == [7.0, None]
+
+
+def test_wide_per_table_parquet(tmp_path):
+    """Each table gets its own parquet file, with one row per sample and the table's section metadata."""
+    (tmp_path / "my_table_mqc.tsv").write_text(
+        '# id: "my_table"\n# plot_type: "table"\nSample\tx\ns1\t1\ns2\t2\n',
+    )
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text("parquet_format: wide-per-table\n")
+    out_dir = tmp_path / "out"
+
+    multiqc.run(
+        tmp_path / "my_table_mqc.tsv", cfg=ClConfig(output_dir=out_dir, config_files=[config_file], strict=True)
+    )
+
+    df = pl.read_parquet(out_dir / "multiqc_data" / "parquet_per_table" / "multiqc_my_table.parquet").sort("Sample")
+    assert df.get_column("Sample").to_list() == ["s1", "s2"]
+    assert df.get_column("x_raw").to_list() == [1, 2]
+    assert df.get_column("x_fmt").to_list() == ["1", "2"]
+    assert df.get_column("col1_header").unique().to_list() == ["Sample"]
+    assert df.get_column("parent_id").unique().to_list() == ["my_table"]
+    assert df.get_column("anchor").unique().to_list() == ["my_table-section"]
+    assert "x" in json.loads(df.get_column("column_meta")[0])
