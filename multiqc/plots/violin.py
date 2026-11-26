@@ -116,7 +116,8 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         metric_col_names = set()
 
         # Process each section and its rows to collect all metrics for each sample
-        for section_key, section in self.dt.section_by_id.items():
+        for section_idx, (section_key, section) in enumerate(self.dt.section_by_id.items()):
+            section_headers = [(key, col) for idx, key, col in ordered_headers if idx == section_idx]
             # Process each sample in this section
             for sample_name, group_rows in section.rows_by_sgroup.items():
                 for row in group_rows:
@@ -132,7 +133,7 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
                         }
 
                     # Process each metric/column in the order from get_headers_in_order()
-                    for _, metric_name, dt_column in ordered_headers:
+                    for metric_name, dt_column in section_headers:
                         if metric_name not in row.data:
                             continue
 
@@ -164,8 +165,10 @@ class ViolinPlotInputData(NormalizedPlotInputData[TableConfig]):
         wide_records = list(samples_data.values())
 
         # Create the wide format DataFrame
+        # polars' default of inferring from the first 100 rows drops columns that only appear later
         df = pl.DataFrame(
             wide_records,
+            infer_schema_length=None,
             schema_overrides={
                 "anchor": pl.Utf8,
                 "type": pl.Utf8,
