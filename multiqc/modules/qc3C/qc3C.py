@@ -4,7 +4,6 @@ import logging
 import os
 import re
 from collections import defaultdict
-from typing import Dict
 
 import numpy as np
 
@@ -149,10 +148,10 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/cerebis/qc3C/blob/master/LICENSE",
         )
 
-        self.qc3c_data: Dict[str, Dict] = defaultdict(dict)
+        self.qc3c_data: dict[str, dict] = defaultdict(dict)
         # additional members for conditional plotting of per-genotype junction frequency
         self.do_digest_plot = False
-        self.digest_junctions: Dict[str, Dict] = defaultdict(dict)
+        self.digest_junctions: dict[str, dict] = defaultdict(dict)
 
         for f in self.find_log_files("qc3C", filehandles=True):
             self.parse_qc3c_log(f)
@@ -645,7 +644,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = dict()
+        categories = {}
         for v in self.digest_junctions["bam"].values():
             for vi in v:
                 categories[vi["name"]] = vi
@@ -824,7 +823,7 @@ class MultiqcModule(BaseMultiqcModule):
             "use_legend": False,
         }
 
-        categories = dict()
+        categories = {}
         for _cat in self.digest_junctions["kmer"].values():
             for vi in _cat:
                 categories[vi["name"]] = vi
@@ -833,9 +832,9 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_qc3c_log(self, f):
         def _none_to(x, y):
-            return y if x is None else y
+            return y if x is None else x
 
-        parsed: Dict
+        parsed: dict
         try:
             parsed_list = [json.loads(_l) for _l in f["f"]]
             if len(parsed_list) > 1:

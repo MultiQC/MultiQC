@@ -1,6 +1,7 @@
 import glob
 
 import pytest
+
 from multiqc import config, report
 from multiqc.modules.cellranger_arc import MultiqcModule
 from multiqc.utils import testing

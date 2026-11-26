@@ -1,8 +1,8 @@
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.base_module import ModuleNoSamplesFound
+
 from .coverage_hist import DragenCoverageHist
 from .coverage_metrics import DragenCoverageMetrics
 from .coverage_per_contig import DragenCoveragePerContig
@@ -134,9 +134,9 @@ class MultiqcModule(
         ]
 
         # Populated by overall_mean_cov_data and used by add_coverage_hist
-        self.overall_mean_cov_data: Dict[str, Dict[str, Dict]] = defaultdict(lambda: defaultdict(dict))
+        self.overall_mean_cov_data: dict[str, dict[str, dict]] = defaultdict(lambda: defaultdict(dict))
 
-        self.samples_parsed_by_tool = dict()
+        self.samples_parsed_by_tool = {}
         for func in functions:
             tool = func.__name__
             self.samples_parsed_by_tool[tool] = func()

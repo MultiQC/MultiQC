@@ -548,8 +548,9 @@ function renderPlot(plotAnchor) {
       trace.colorbar = trace.colorbar || {};
       trace.colorbar.tickfont = trace.colorbar.tickfont || {};
       trace.colorbar.tickfont.color = colors.tickcolor;
-      trace.colorbar.titlefont = trace.colorbar.titlefont || {};
-      trace.colorbar.titlefont.color = colors.textcolor;
+      trace.colorbar.title = trace.colorbar.title || {};
+      trace.colorbar.title.font = trace.colorbar.title.font || {};
+      trace.colorbar.title.font.color = colors.textcolor;
     }
   });
 
@@ -723,7 +724,7 @@ function updatePlotlyTheme() {
             anchor,
             {
               "colorbar.tickfont.color": colors.tickcolor,
-              "colorbar.titlefont.color": colors.textcolor,
+              "colorbar.title.font.color": colors.textcolor,
             },
             [idx],
           );

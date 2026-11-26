@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any
 
 import pytest
 
@@ -30,16 +30,23 @@ def run_fgumi(tmp_path):
     config.reset()
 
 
-def line_points(plot_id: str, tab: int, sample: str) -> Dict[Any, Any]:
+def line_points(plot_id: str, tab: int, sample: str) -> dict[Any, Any]:
     """The ``{x: y}`` points drawn for ``sample`` on tab ``tab`` of line plot ``plot_id``."""
     lines = [line for line in report.plot_by_id[plot_id].datasets[tab].lines if line.name == sample]
     return dict(lines[0].pairs) if lines else {}
 
 
-def general_stats(sample: str) -> Dict[str, Any]:
+def general_stats(sample: str) -> dict[str, Any]:
     """Every General Statistics value the module added for ``sample``, across all its column groups."""
-    values: Dict[str, Any] = {}
+    values: dict[str, Any] = {}
     for rows_by_sample in report.general_stats_data.values():
         for row in rows_by_sample.get(sample, []):
             values.update(row.data)
     return values
+
+
+FGBIO_ERROR_RATE = (
+    "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\ta_to_g_error_rate"
+    "\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate\n"
+    "1\t1\t1000\t0\t0.0\t0.001\t0.002\t0.003\t0.004\t0.005\t0.006\n"
+)

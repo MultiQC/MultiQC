@@ -2,16 +2,15 @@
 
 import json
 from pathlib import Path
-from typing import Any, List
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from multiqc import report, config
+from multiqc import config, report
 from multiqc.base_module import ModuleNoSamplesFound
-from multiqc.types import LoadedFileDict
-
 from multiqc.modules.bases2fastq.bases2fastq import MultiqcModule, _get_min_polonies
+from multiqc.types import LoadedFileDict
 
 
 def _load_fixture(fixtures_dir: Path, *parts: str) -> dict:
@@ -279,7 +278,7 @@ class TestParseRunProjectDataEdgeCases:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         run_stats = _load_fixture(fixtures_dir, "PairedEndNoProject", "RunStats.json")
-        log_files: List[LoadedFileDict[Any]] = [
+        log_files: list[LoadedFileDict[Any]] = [
             {
                 "f": json.dumps(run_stats),
                 "root": str(run_dir),
@@ -431,7 +430,7 @@ class TestSelectDataBySummaryPath:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         m = MultiqcModule()
-        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = (
+        run_data, sample_data, _samples_to_projects, _manifest_data, _index_data, unassigned = (
             m._select_data_by_summary_path("project_level")
         )
         assert run_data is m.project_level_data
@@ -444,7 +443,7 @@ class TestSelectDataBySummaryPath:
         report.analysis_files = [str(run_dir)]
         report.search_files(["bases2fastq"])
         m = MultiqcModule()
-        run_data, sample_data, samples_to_projects, manifest_data, index_data, unassigned = (
+        run_data, sample_data, _samples_to_projects, _manifest_data, _index_data, unassigned = (
             m._select_data_by_summary_path("combined_level")
         )
         assert run_data is m.run_level_data
