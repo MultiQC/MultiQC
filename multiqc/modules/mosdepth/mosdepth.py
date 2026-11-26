@@ -504,7 +504,7 @@ class MultiqcModule(BaseMultiqcModule):
                 "hidden": hidden,
             }
             genstats_headers[f"{t}_x_regions_failed"] = {
-                "title": f"Failed ≥ {t}X",
+                "title": f"Regions < {t}X",
                 "description": f"Number of regions with less than {pass_pct:g}% of bases covered at ≥{t}X",
                 "min": 0,
                 "scale": "OrRd",
