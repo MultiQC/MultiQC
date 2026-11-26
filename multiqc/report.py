@@ -4,6 +4,7 @@ modules. Contains helper functions to generate markup for report.
 """
 
 import base64
+import contextlib
 import dataclasses
 import fnmatch
 import gzip
@@ -20,7 +21,7 @@ from collections import defaultdict
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from pathlib import Path, PosixPath
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 import yaml
 from dotenv import load_dotenv
@@ -106,6 +107,7 @@ ai_model_resolved: str = ""
 ai_report_metadata_base64: str = ""  # to copy/generate AI summaries from the report JS runtime
 ai_extra_query_options_base64: str = ""
 ai_prompts_base64: str = ""
+ai_js_config: dict[str, Any] = {}  # model settings for the AI requests made from the report
 sample_names: list[SampleName] = []  # all sample names in the report to construct ai_pseudonym_map
 ai_pseudonym_map: dict[str, str] = {}
 ai_pseudonym_map_base64: str = ""
@@ -176,6 +178,7 @@ def reset():
     global ai_report_metadata_base64
     global ai_extra_query_options_base64
     global ai_prompts_base64
+    global ai_js_config
     global sample_names
     global ai_pseudonym_map
     global ai_pseudonym_map_base64
@@ -211,6 +214,7 @@ def reset():
     ai_report_metadata_base64 = ""
     ai_extra_query_options_base64 = ""
     ai_prompts_base64 = ""
+    ai_js_config = {}
     sample_names = []
     ai_pseudonym_map = {}
     ai_pseudonym_map_base64 = ""
@@ -351,7 +355,7 @@ class SearchFile:
             yield count_and_block_tuple
         if self._filehandle is None:
             try:
-                self._filehandle = open(self.path, "rt", encoding="utf-8")  # noqa: SIM115 - closed in close()
+                self._filehandle = open(self.path, encoding="utf-8")  # noqa: SIM115 - closed in close()
             except Exception as e:
                 if config.report_readerrors:
                     logger.debug(f"Couldn't read file when looking for output: {self.path}, {e}")
@@ -380,7 +384,7 @@ class SearchFile:
                 logger.debug(f"No utf-8 lines were read from the file, skipping {self.path}")
             return  # No errors
         self._filehandle.close()
-        self._filehandle = open(self.path, "rt", encoding="utf-8", errors="ignore")  # noqa: SIM115 - closed in close()
+        self._filehandle = open(self.path, encoding="utf-8", errors="ignore")  # noqa: SIM115 - closed in close()
         self._iterator = file_line_block_iterator(self._filehandle)
         try:
             if self._blocks:
@@ -442,8 +446,7 @@ def is_searching_in_source_dir(path: Path) -> bool:
         logger.error(f"Error: MultiQC is running in source code directory! {path}")
         logger.warning("Please see the docs for how to use MultiQC: https://docs.seqera.io/multiqc/#running-multiqc")
         return True
-    else:
-        return False
+    return False
 
 
 class SearchPattern(BaseModel):
@@ -461,7 +464,7 @@ class SearchPattern(BaseModel):
     exclude_contents_re: set[re.Pattern] = Field(default_factory=set)
 
     @staticmethod
-    def parse(d: dict, key: str) -> Optional["SearchPattern"]:
+    def parse(d: dict, key: str) -> "SearchPattern | None":
         one_of_required = ["fn", "fn_re", "contents", "contents_re"]
         if not any(d.get(k) for k in one_of_required):
             msg = f"At least one of the keys must be specified in search pattern: {one_of_required}, got: '{key}': {d}"
@@ -509,7 +512,7 @@ def prep_ordered_search_files_list(
         if item.is_symlink() and config.ignore_symlinks:
             file_search_stats["skipped_symlinks"].add(item)
             return
-        elif item.is_file():
+        if item.is_file():
             searchfiles.append(item)
         elif item.is_dir():
             # Skip directory if it matches ignore patterns
@@ -881,9 +884,7 @@ def clean_htmlid(html_id: str) -> str:
         html_id_clean = f"mqc_{html_id_clean}"
 
     # Replace illegal characters
-    html_id_clean = re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
-
-    return html_id_clean
+    return re.sub("[^a-zA-Z0-9_-]+", "_", html_id_clean)
 
 
 def save_htmlid(html_id: str, skiplint: bool = False, scope: str | None = None) -> str:
@@ -1118,7 +1119,7 @@ def multiqc_dump_json(data_dir: Path):
                             val = creation_date.strftime("%Y-%m-%d, %H:%M")
                     d = {f"{pymod}_{name}": val}
                 if d:
-                    with open(os.devnull, "wt") as f:
+                    with open(os.devnull, "w") as f:
                         # Test that exporting to JSON works. Write to
                         # /dev/null so no memory is required.
                         dump_json(d, f, ensure_ascii=False)
@@ -1129,10 +1130,8 @@ def multiqc_dump_json(data_dir: Path):
     # Get the absolute paths of analysis directories
     config_analysis_dir_abs: list[str] = []
     for config_analysis_dir in exported_data.get("config_analysis_dir", []):
-        try:
+        with contextlib.suppress(Exception):
             config_analysis_dir_abs.append(str(os.path.abspath(config_analysis_dir)))
-        except Exception:
-            pass
     exported_data["config_analysis_dir_abs"] = config_analysis_dir_abs
 
     # Write to file
@@ -1168,7 +1167,7 @@ def multiqc_dump_json(data_dir: Path):
                     if (json_path := data_dir / f"{key}.json").exists():
                         fh.write(f'        "{key}": ')
                         # Stream the contents of the individual JSON file
-                        with open(json_path, "r", encoding="utf-8") as single_fh:
+                        with open(json_path, encoding="utf-8") as single_fh:
                             content = single_fh.read().strip()
                             # Indent the content
                             content = content.replace("\n", "\n        ")

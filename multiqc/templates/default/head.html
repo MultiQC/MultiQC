@@ -38,23 +38,24 @@ page contents, it's machine-readable tags for browsers and search engines.
 <script type="text/javascript">
 reportUuid = "{{ report.report_uuid }}";
 seqeraApiUrl = "{{ config.seqera_api_url }}";
-seqeraWebsite = "{{ config.seqera_website }}";
+seqeraWebsite = "{{ config.seqera_website or '' }}";
 
 aiConfigEnabled = "{{ config.ai_summary }}";
 aiConfigProviderId = "{{ report.ai_provider_id or config.ai_provider }}";
 aiConfigModel = "{{ report.ai_model or config.ai_model }}";
 
-aiConfigCustomEndpoint = "{{ config.ai_custom_endpoint }}";
+aiConfigCustomEndpoint = "{{ config.ai_custom_endpoint or '' }}";
 aiConfigExtraQueryOptions = JSON.parse(atob("{{ report.ai_extra_query_options_base64 }}"));
 aiPrompts = JSON.parse(atob("{{ report.ai_prompts_base64 }}"));
 
 aiConfigCustomContextWindow = "{{ config.ai_custom_context_window }}";
+aiModelConfig = {{ report.ai_js_config | tojson }};
 
 aiReportMetadataBase64 = "{{ report.ai_report_metadata_base64 }}";
-aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64));
+aiReportMetadata = JSON.parse(atob(aiReportMetadataBase64) || "null");
 
 aiAnonymizeSamples = "{{ config.ai_anonymize_samples }}";
-aiPseudonymMap = JSON.parse(atob("{{ report.ai_pseudonym_map_base64 }}"));
+aiPseudonymMap = JSON.parse(atob("{{ report.ai_pseudonym_map_base64 }}") || "null");
 
 configTitle = "{{ config.title }}";
 configCreationDate = "{{ report.creation_date.strftime('%d %b %Y, %H:%M %Z') }}";

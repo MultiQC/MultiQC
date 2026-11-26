@@ -2,6 +2,9 @@
 Helper functions to manipulate colours and colour scales
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["numpy", "spectra"]
+
 import functools
 import hashlib
 
@@ -565,7 +568,9 @@ def color_to_rgb_string(color: str | None) -> str:
 
     Args:
         color: Color string - can be RGB format (e.g., "rgb(255,0,0)"),
-               hex format (e.g., "#FF0000"), or named color (e.g., "red")
+               a bare "r,g,b" triplet (e.g., "255,0,0", as table column
+               colors are stored), hex format (e.g., "#FF0000"), or named
+               color (e.g., "red")
 
     Returns:
         String in format "r,g,b" ready for Plotly-JS (e.g., "rgb(255,0,0)")
@@ -575,11 +580,15 @@ def color_to_rgb_string(color: str | None) -> str:
     # Color is already in rgb format - extract the values
     if color.startswith("rgb"):
         return color
+    # Bare "r,g,b" triplet, the form table columns carry (SECTION_COLORS in
+    # plots/table_object.py). spectra would read it as "#r,g,b" and fail.
+    if re.fullmatch(r"\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*", color):
+        return "rgb(" + ",".join(c.strip() for c in color.split(",")) + ")"
     # Convert other formats to RGB using spectra
     else:
         try:
             spectra_color = spectra.html(color)
-            return "rgb(" + ",".join([f"{int(float(x) * 256)}" for x in spectra_color.rgb]) + ")"
+            return "rgb(" + ",".join([f"{round(float(x) * 255)}" for x in spectra_color.rgb]) + ")"
         except Exception as e:
             logger.warning(f"Error converting color '{color}' to RGB: {e}")
             return "rgb(0,0,0)"  # Default to black if conversion fails

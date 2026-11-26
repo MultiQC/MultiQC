@@ -4,6 +4,9 @@ It allows rerunning MultiQC when original data is gone, as well as extend
 existing reports with new data.
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars"]
+
 import json
 import logging
 from datetime import datetime
@@ -242,7 +245,9 @@ class LoadMultiqcData(BaseMultiqcModule):
                         new_sections = {s.anchor: s for s in mod.sections}
 
                         merged_sections = []
-                        all_section_anchors = set(existing_sections.keys()) | set(new_sections.keys())
+                        all_section_anchors = list(existing_sections) + [
+                            anchor for anchor in new_sections if anchor not in existing_sections
+                        ]
 
                         for section_anchor in all_section_anchors:
                             if section_anchor in existing_sections and section_anchor in new_sections:

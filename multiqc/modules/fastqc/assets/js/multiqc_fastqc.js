@@ -429,14 +429,14 @@ function fastqc_module(module_element, module_key) {
       };
     });
     let layout = {
-      title: s_name,
+      title: { text: s_name },
       colorway: ["#dc0000", "#0000dc", "#00dc00", "#404040"],
       xaxis: {
-        title: "Position",
+        title: { text: "Position" },
         ticksuffix: " bp",
       },
       yaxis: {
-        title: "% Reads",
+        title: { text: "% Reads" },
         range: [0, 100],
         ticksuffix: "%",
       },

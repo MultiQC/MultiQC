@@ -1,3 +1,6 @@
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["rich.panel", "rich.syntax"]
+
 import logging
 import sys
 import time
@@ -97,12 +100,13 @@ def exec_modules(mod_dicts_in_order: list[dict[str, dict]]) -> None:
             trace_memory("after cleaning up attributes")
 
             # Override duplicated outputs
+            new_anchors = {m.anchor for m in these_modules}
             for prev_mod in report.modules:
                 for new_mod in these_modules:
                     if prev_mod.anchor == new_mod.anchor:
                         new_mod.merge(prev_mod)
                         logger.info(f'Updating module "{prev_mod.name}"')
-                        report.modules.remove(prev_mod)
+            report.modules = [m for m in report.modules if m.anchor not in new_anchors]
             report.modules.extend(these_modules)
 
         except ModuleNoSamplesFound:

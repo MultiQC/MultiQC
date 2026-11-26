@@ -7,7 +7,7 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
-from multiqc.plots.plot import Plot, process_batch_exports
+from multiqc.plots.plot import BaseDataset, Plot, is_running_under_rosetta, process_batch_exports
 from multiqc.plots.table_object import ColumnDict, render_html
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
@@ -80,6 +80,39 @@ def test_linegraph():
 
     assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][0]["pairs"]) == 2
     assert len(report.plot_data[plot.anchor]["datasets"][0]["lines"][1]["pairs"]) == 3
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (12, "12"),
+        (12.0, "12"),
+        (1234.0, "1,234"),
+        (0.4492, "0.4492"),
+        (-0.7, "-0.7"),
+        (2.56, "2.56"),
+        (-0.0065, "-0.0065"),
+        (1234.5678, "1235"),
+        (12345.678, "12,346"),
+        (float("inf"), "inf"),
+        (float("-inf"), "-inf"),
+        (float("nan"), "nan"),
+        (None, "N/A"),
+        ("abc", "abc"),
+    ],
+)
+def test_fmt_value_for_llm(value, expected):
+    assert BaseDataset.fmt_value_for_llm(value) == expected
+
+
+def test_linegraph_ai_prompt_keeps_fractional_values():
+    plot = linegraph.plot(
+        {"Sample1": {0: 0.4492, 1: -0.7}},
+        linegraph.LinePlotConfig(id="linegraph_ai", title="Test: Line Graph AI"),
+    )
+    assert isinstance(plot, Plot)
+    prompt = plot.format_for_ai_prompt()
+    assert "0: 0.4492, 1: -0.7" in prompt
 
 
 def test_table():
@@ -1539,3 +1572,32 @@ def test_linegraph_custom_plot_config_per_tab_with_plot_level_bands(reset):
     assert line0 == []
     assert len(line1) == 1
     assert line1[0]["y0"] == 15
+
+
+@pytest.mark.parametrize(
+    "ps_lines, expected",
+    [
+        ([b"root 1 /run/rosetta/rosetta /usr/bin/python3"], True),
+        ([b"root 1 /usr/bin/python3"], False),
+    ],
+)
+def test_rosetta_check_with_non_ascii_process(ps_lines, expected):
+    """
+    Another process with UTF-8 in its command line must not break the check when the locale is ASCII
+    """
+    ps_output = b"\n".join(ps_lines + ["user 2 echo café – done".encode()])
+
+    def check_output(args, **kwargs):
+        if kwargs.get("universal_newlines") or kwargs.get("text"):
+            return ps_output.decode("ascii")  # what an ASCII locale does
+        return ps_output
+
+    is_running_under_rosetta.cache_clear()
+    try:
+        with (
+            patch("multiqc.plots.plot.platform.machine", return_value="x86_64"),
+            patch("multiqc.plots.plot.subprocess.check_output", side_effect=check_output),
+        ):
+            assert is_running_under_rosetta() is expected
+    finally:
+        is_running_under_rosetta.cache_clear()

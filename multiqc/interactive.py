@@ -233,6 +233,9 @@ def get_general_stats_data(sample: str | None = None) -> dict:
     Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
     return only data for that sample.
 
+    Grouped samples (e.g. from `table_sample_merge`) return both the merged group row and each
+    member row as separate top-level keys, so summing across all keys counts grouped values twice.
+
     @param sample: Sample name
     @return: Dict of general stats data indexed by sample and data key
     """
@@ -240,13 +243,13 @@ def get_general_stats_data(sample: str | None = None) -> dict:
     data: dict[str, dict] = defaultdict(dict)
     for section_key, rows_by_group in report.general_stats_data.items():
         header = report.general_stats_headers[section_key]
-        for s, rows in rows_by_group.items():
-            if sample and s != sample:
-                continue
+        for rows in rows_by_group.values():
             for row in rows:
+                if sample and row.sample != sample:
+                    continue
                 for key, val in row.data.items():
                     if key in header:
-                        data[s][f"{header[key].get('namespace', '')}.{key}"] = val
+                        data[row.sample][f"{header[key].get('namespace', '')}.{key}"] = val
     if sample:
         if not data:
             return {}

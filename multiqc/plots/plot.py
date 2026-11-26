@@ -1,3 +1,6 @@
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars"]
+
 import base64
 import io
 import json
@@ -452,12 +455,11 @@ class BaseDataset(BaseModel):
             return "N/A"
         if isinstance(value, int):
             return f"{value:,d}"
-        try:  # maybe float can be formatted as int?
-            value = int(value)
-            return f"{value:,d}"
-        except ValueError:
-            pass
-        return f"{value:.1f}"
+        if float(value).is_integer():  # False for nan and inf
+            return f"{int(value):,d}"
+        if abs(value) >= 10_000:  # avoid exp notation from 4 significant figures
+            return f"{value:,.0f}"
+        return f"{value:.4g}"
 
     def format_dataset_for_ai_prompt(self, pconfig: Any, keep_hidden: bool = True) -> str:
         return ""
@@ -2107,10 +2109,11 @@ def is_running_under_rosetta() -> bool:
     if platform.machine() != "x86_64":
         return False
 
-    # Check for Rosetta processes
+    # Check for Rosetta processes. Match on bytes: command lines of other processes can contain
+    # characters that the locale encoding cannot decode (e.g. UTF-8 under an ASCII locale)
     try:
-        output = subprocess.check_output(["ps", "aux"], universal_newlines=True)
-        if "/run/rosetta/rosetta" in output:
+        output = subprocess.check_output(["ps", "aux"])
+        if b"/run/rosetta/rosetta" in output:
             logger.warning(ROSETTA_WARNING)
             return True
     except subprocess.CalledProcessError:

@@ -53,6 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         lines = f["f"].splitlines()
         for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
             s = line.split("\t")
             parsed_data["Estimated_Fragment_Length_bp"] = int(s[2].split(",")[0])
             parsed_data["NSC"] = float(s[8])
