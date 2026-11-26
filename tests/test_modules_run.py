@@ -241,3 +241,49 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_d
     assert set(report.general_stats_data[SectionKey(anchors[1] or "adapterremoval-1")].keys()) == {
         Path(fn).name for fn in expected_pe_files
     }
+
+
+@pytest.mark.parametrize("repeat_module", [False, True])
+def test_top_modules_do_not_add_unfiltered_run(tmp_path, repeat_module):
+    """Top modules omitted from module_order must only run with their configured filters."""
+    import yaml
+
+    for name in ["raw", "trimmed", "unwanted"]:
+        (tmp_path / f"{name}.stderr").write_text(
+            f"TrimmomaticSE: Started with arguments: {name}.fastq.gz\n"
+            "Input Reads: 100 Surviving: 90 (90.00%) Dropped: 10 (10.00%)\n"
+            "TrimmomaticSE: Completed successfully\n"
+        )
+
+    names = ["raw", "trimmed"] if repeat_module else ["raw"]
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        yaml.safe_dump(
+            {
+                "module_order": ["cutadapt"],
+                "top_modules": [
+                    {
+                        "trimmomatic": {
+                            "name": f"Trimmomatic ({name})",
+                            "anchor": f"trimmomatic_{name}",
+                            "path_filters": [f"*/{name}.stderr"],
+                        }
+                    }
+                    for name in names
+                ],
+            }
+        )
+    )
+
+    parse_logs(
+        tmp_path,
+        config_files=[config_file],
+        run_modules=["trimmomatic"],
+        no_version_check=True,
+        strict=True,
+    )
+
+    assert [m.anchor for m in report.modules] == [f"trimmomatic_{name}" for name in names]
+    for module, name in zip(report.modules, names):
+        assert module.saved_raw_data is not None
+        assert set(module.saved_raw_data[f"multiqc_trimmomatic_trimmomatic_{name}"]) == {name}
