@@ -42,10 +42,12 @@ class MultiqcModule(BaseMultiqcModule):
             compositions are extracted and compared against previously published data sets from mouse and human.
             """,
             doi="10.12688/f1000research.125325.1",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DesmondWillowbrook/Librarian/blob/master/COPYING",
         )
 
         # To store the summary data
-        self.librarian_data = dict()
+        self.librarian_data = {}
 
         # Parse the output files
         self.parse_librarian_data()
@@ -95,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         hm_library_types = set()
         for d in self.librarian_data.values():
             hm_library_types.update(list(d.keys()))
-        hm_library_types = sorted(list(hm_library_types))
+        hm_library_types = sorted(hm_library_types)
         hm_data = []
         hm_sample_names = []
         for s_name in self.librarian_data:
@@ -148,7 +150,7 @@ class MultiqcModule(BaseMultiqcModule):
     def add_general_stats(self):
         """Add general stats column for most likely library type"""
         # Get most likely library type for each sample
-        data = dict()
+        data = {}
         lib_types = set()
         for s_name, d in self.librarian_data.items():
             lib_type = max(d, key=d.get)

@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict, Any, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import linegraph, scatter
@@ -17,10 +16,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/ParkerLab/ataqv/",
             info="Toolkit for quality control and visualization of ATAC-seq data",
             doi="10.1093/bioinformatics/btx865",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/ParkerLab/ataqv/blob/master/LICENSE",
         )
 
         # Find and parse JSON files
-        self.ataqv_data = dict()
+        self.ataqv_data = {}
 
         for f in self.find_log_files("ataqv"):
             parsed_data = self.parse_ataqv_json(f)
@@ -63,14 +64,14 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data to file
         self.write_data_file(self.ataqv_data, "multiqc_ataqv")
 
-    def parse_ataqv_json(self, f) -> Optional[Dict]:
+    def parse_ataqv_json(self, f) -> dict | None:
         """Parse ataqv JSON report"""
         try:
             content = json.loads(f["f"])
             if not isinstance(content, list) or len(content) == 0:
                 return None
 
-            parsed_data = dict()
+            parsed_data = {}
 
             # Get the metrics from the first record
             metrics = content[0]["metrics"]
@@ -277,7 +278,7 @@ class MultiqcModule(BaseMultiqcModule):
                 anchor="ataqv-peak-percentiles",
                 description="Cumulative distribution of reads in peaks and of genomic territory.",
                 helptext="""
-                This plot shows the cumulative fraction of high-quality autosomal alignments, 
+                This plot shows the cumulative fraction of high-quality autosomal alignments,
                 and the cumulative fraction of the genome territory covered by those peaks.
 
                 * A steeper curve indicates better enrichment

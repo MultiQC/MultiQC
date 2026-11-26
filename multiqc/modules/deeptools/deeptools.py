@@ -3,7 +3,6 @@ import logging
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
 from .bamPEFragmentSizeDistribution import bamPEFragmentSizeDistributionMixin
-
 from .bamPEFragmentSizeTable import bamPEFragmentSizeTableMixin
 from .estimateReadFiltering import EstimateReadFilteringMixin
 from .plotCorrelation import plotCorrelationMixin
@@ -60,12 +59,14 @@ class MultiqcModule(
             "Finally, using such normalized and standardized files, deepTools can create many publication-ready "
             "**visualizations** to identify enrichments and for functional annotations of the genome.",
             doi="10.1093/nar/gkw257",
+            license="MIT License",
+            license_url="https://github.com/deeptools/deepTools/blob/master/LICENSE.txt",
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers = dict()
-        self.general_stats_data = dict()
-        n = dict()
+        self.general_stats_headers = {}
+        self.general_stats_data = {}
+        n = {}
 
         # plotCorrelation
         n["plotCorrelation"] = self.parse_plotCorrelation()
@@ -144,4 +145,4 @@ class MultiqcModule(
         """Avoids Python3 error:
         ValueError: invalid literal for self._int() with base 10: '1.0'
         """
-        return int(round(float(val)))
+        return round(float(val))

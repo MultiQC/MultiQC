@@ -1,6 +1,6 @@
-from collections import defaultdict
 import logging
-from typing import Optional, Dict
+from collections import defaultdict
+from html import escape
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -42,10 +42,12 @@ class MultiqcModule(BaseMultiqcModule):
             info="Quickly estimate coverage from a whole-genome bam index, providing 16KB resolution",
             extra="This is useful as a quick QC to get coverage values across the genome.",
             doi="10.1093/gigascience/gix090",
+            license="MIT License",
+            license_url="https://github.com/brentp/goleft/blob/master/LICENSE",
         )
 
         # Parse ROC data
-        roc_plot_data: Dict[str, Dict[str, Dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
+        roc_plot_data: dict[str, dict[str, dict[float, float]]] = defaultdict(lambda: defaultdict(dict))
         for f in self.find_log_files("goleft_indexcov/roc", filehandles=True):
             header = f["f"].readline()
             sample_names = [self.clean_s_name(x, f) for x in header.strip().split()[2:]]
@@ -78,9 +80,10 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Filter to strip out ignored sample names
         num_roc_samples = 0
-        for chrom in roc_plot_data:
-            roc_plot_data[chrom] = self.ignore_samples(roc_plot_data[chrom])
-            num_roc_samples = max(len(roc_plot_data[chrom]), num_roc_samples)
+        for chrom, roc in roc_plot_data.items():
+            kept = self.ignore_samples(roc)
+            roc_plot_data[chrom] = kept
+            num_roc_samples = max(len(kept), num_roc_samples)
 
         # Write data to file
         self.write_data_file(roc_plot_data, "goleft_roc")
@@ -116,7 +119,7 @@ class MultiqcModule(BaseMultiqcModule):
             self.bin_plot(bin_plot_data, bin_plot_data_empty_samples)
 
     @staticmethod
-    def _short_chrom(chrom: str) -> Optional[str]:
+    def _short_chrom(chrom: str) -> str | None:
         """Plot standard chromosomes + X, sorted numerically.
 
         Allows specification from a list of chromosomes via config
@@ -147,8 +150,9 @@ class MultiqcModule(BaseMultiqcModule):
         def to_padded_str(x):
             short_chrom = self._short_chrom(x)
             try:
-                return "%06d" % short_chrom
-            except TypeError:
+                return f"{short_chrom:06d}"
+            except (TypeError, ValueError):
+                # Not an integer-like chromosome name, sort it by its own string
                 return x
 
         chroms = sorted(roc_plot_data.keys(), key=to_padded_str)
@@ -167,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             "ymax": 1.0,
             "xmin": 0,
             "xmax": 1.5,
-            "data_labels": [{"name": self._short_chrom(c) if self._short_chrom(c) else c} for c in chroms],
+            "data_labels": [{"name": self._short_chrom(c) or c} for c in chroms],
         }
         self.add_section(
             name="Scaled coverage ROC plot",
@@ -213,7 +217,7 @@ class MultiqcModule(BaseMultiqcModule):
                 {len(bin_plot_data_empty_samples)} sample{"s" if len(bin_plot_data_empty_samples) > 1 else ""} had zero bins and could not be plotted.
                 <a href="#goleft_empty_samples" onclick="$('#goleft_empty_samples').slideToggle();">Click to show missing sample names.</a>
                 <div id="goleft_empty_samples" style="display:none;">
-                    <ul><li><code>{"</code></li>, <li><code>".join(bin_plot_data_empty_samples)}</code></li></ul>
+                    <ul>{"".join(f"<li><code>{escape(s)}</code></li>" for s in bin_plot_data_empty_samples)}</ul>
                 </div>
             </div>"""
         self.add_section(

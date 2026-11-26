@@ -12,7 +12,7 @@ class TsTvByCountMixin:
     def parse_tstv_by_count(self):
         """Create the HTML for the TsTv by alternative allele count linegraph plot."""
 
-        self.vcftools_tstv_by_count = dict()
+        self.vcftools_tstv_by_count = {}
         for f in self.find_log_files("vcftools/tstv_by_count", filehandles=True):
             d = {}
             for line in f["f"].readlines()[1:]:  # don't add the header line (first row)

@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -35,6 +34,8 @@ class MultiqcModule(BaseMultiqcModule):
             "Additionally, the AdapterRemoval may be used to recover a consensus adapter sequence for "
             "paired-ended data, for which this information is not available.",
             doi=["10.1186/s13104-016-1900-2", "10.1186/1756-0500-5-337"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/mikkelschubert/adapterremoval/blob/main/LICENSE",
         )
 
         self.__read_type = None
@@ -44,14 +45,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.s_name = None
         self.adapter_removal_data = {}
 
-        self.len_dist_plot_data: Dict[str, Dict] = {
-            "mate1": dict(),
-            "mate2": dict(),
-            "singleton": dict(),
-            "collapsed": dict(),
-            "collapsed_truncated": dict(),
-            "discarded": dict(),
-            "all": dict(),
+        self.len_dist_plot_data: dict[str, dict] = {
+            "mate1": {},
+            "mate2": {},
+            "singleton": {},
+            "collapsed": {},
+            "collapsed_truncated": {},
+            "discarded": {},
+            "all": {},
         }
 
         parsed_data = None
@@ -135,11 +136,11 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.__read_type = "paired" if head_line[2] == "Mate2" else "single"
         if not self.__any_paired:
-            self.__any_paired = True if head_line[2] == "Mate2" else False
+            self.__any_paired = head_line[2] == "Mate2"
 
-        self.__collapsed = True if head_line[-3] == "CollapsedTruncated" else False
+        self.__collapsed = head_line[-3] == "CollapsedTruncated"
         if not self.__any_collapsed:
-            self.__any_collapsed = True if head_line[-3] == "CollapsedTruncated" else False
+            self.__any_collapsed = head_line[-3] == "CollapsedTruncated"
 
         # biological/technical relevance is not clear -> skip
         if self.__read_type == "single" and self.__collapsed:
@@ -239,13 +240,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             # initialize file name
             if self.s_name not in self.len_dist_plot_data["mate1"]:
-                self.len_dist_plot_data["mate1"][self.s_name] = dict()
-                self.len_dist_plot_data["mate2"][self.s_name] = dict()
-                self.len_dist_plot_data["singleton"][self.s_name] = dict()
-                self.len_dist_plot_data["collapsed"][self.s_name] = dict()
-                self.len_dist_plot_data["collapsed_truncated"][self.s_name] = dict()
-                self.len_dist_plot_data["discarded"][self.s_name] = dict()
-                self.len_dist_plot_data["all"][self.s_name] = dict()
+                self.len_dist_plot_data["mate1"][self.s_name] = {}
+                self.len_dist_plot_data["mate2"][self.s_name] = {}
+                self.len_dist_plot_data["singleton"][self.s_name] = {}
+                self.len_dist_plot_data["collapsed"][self.s_name] = {}
+                self.len_dist_plot_data["collapsed_truncated"][self.s_name] = {}
+                self.len_dist_plot_data["discarded"][self.s_name] = {}
+                self.len_dist_plot_data["all"][self.s_name] = {}
 
             if self.__read_type == "single":
                 if not self.__collapsed:

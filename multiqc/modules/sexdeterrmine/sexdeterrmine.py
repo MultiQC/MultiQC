@@ -16,10 +16,12 @@ class MultiqcModule(BaseMultiqcModule):
             info="Calculates relative coverage of X and Y chromosomes and their associated error bars from "
             "the depth of coverage at specified SNPs.",
             doi="10.1038/s41467-018-07483-5",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/TCLamnidis/Sex.DetERRmine/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports
-        self.sexdet_data = dict()
+        self.sexdet_data = {}
 
         # Find and load JSON file
         for f in self.find_log_files("sexdeterrmine", filehandles=True):
@@ -65,7 +67,7 @@ class MultiqcModule(BaseMultiqcModule):
 
             self.add_data_source(f, s_clean)
             self.add_software_version(version, s_clean)
-            self.sexdet_data[s_clean] = dict()
+            self.sexdet_data[s_clean] = {}
 
             for k, v in data[s_name].items():
                 try:

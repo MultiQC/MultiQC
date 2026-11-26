@@ -25,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/tleonardi/pycoQC",
             info="Computes metrics and generates interactive QC plots for Oxford Nanopore technologies sequencing data",
             doi="10.21105/joss.01236",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/tleonardi/pycoQC/blob/master/LICENSE",
         )
 
         self.pycoqc_data = {}
@@ -125,9 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
                 qual_plot_pass[sample] = dict(zip(qual_x_vals_pass, qual_y_vals_pass))
             except KeyError:
                 log.debug(
-                    "'{}': Could not find plot data. Please make sure you are using pycoQC v2.5.0.20 or newer.".format(
-                        sample
-                    )
+                    f"'{sample}': Could not find plot data. Please make sure you are using pycoQC v2.5.0.20 or newer."
                 )
 
         self.read_length_plot_data = [length_plot_pass, length_plot_all]

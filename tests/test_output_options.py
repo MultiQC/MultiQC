@@ -5,7 +5,7 @@ import polars as pl
 import pytest
 
 import multiqc
-from multiqc import config, report, BaseMultiqcModule, write_report
+from multiqc import BaseMultiqcModule, config, report, write_report
 from multiqc.core.update_config import ClConfig
 from multiqc.plots import table
 from multiqc.types import Anchor
@@ -153,7 +153,7 @@ def test_parquet_wide_merges_samples(tmp_path):
     assert (table_rows["myid / col2"] == 3.4).all()
     assert (table_rows["myid / col3"].is_nan()).all()
     assert (table_rows["myid / col4"] == "bar").all()
-    assert table_rows["myid / col5"].all()
+    assert (table_rows["myid / col5"] == 1).all()  # table formatting rounds bools to int
 
     # each table stores its pconfig in a per-table column to survive the outer join without renaming
     for table_id in ("myid", "myid2", "myid3"):

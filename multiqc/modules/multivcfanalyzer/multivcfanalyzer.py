@@ -17,10 +17,12 @@ class MultiqcModule(BaseMultiqcModule):
             extra="The downstream formats are useful for follow-up analyses such as phylogeny reconstruction, "
             "SNP effect analyses, population genetic analyses, etc.",
             doi="10.1038/nature13591",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/alexherbig/MultiVCFAnalyzer/blob/master/LICENSE",
         )
 
         # Find and load any MultiVCFAnalyzer reports
-        self.mvcf_data = dict()
+        self.mvcf_data = {}
 
         # Find and load JSON file
         for f in self.find_log_files("multivcfanalyzer", filehandles=True):
@@ -87,7 +89,7 @@ class MultiqcModule(BaseMultiqcModule):
                 self.add_software_version(version, s_clean)
 
             self.add_data_source(f, s_clean)
-            self.mvcf_data[s_clean] = dict()
+            self.mvcf_data[s_clean] = {}
             for snp_prop, value in metrics.items():
                 self.mvcf_data[s_clean][snp_prop] = value
 

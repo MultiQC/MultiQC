@@ -22,10 +22,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/najoshi/sickle",
             info="A windowed adaptive trimming tool for FASTQ files using quality.",
             # No DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/najoshi/sickle/blob/master/LICENSE",
         )
 
         # parse list of log files
-        self.sickle_data = dict()
+        self.sickle_data = {}
         for f in self.find_log_files("sickle"):
             parsed_data = self.parse_logs(f["f"])
             if len(parsed_data):

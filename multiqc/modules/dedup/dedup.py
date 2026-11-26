@@ -28,16 +28,18 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.github.com/apeltzer/DeDup",
             info="Improved Duplicate Removal for merged/collapsed reads in ancient DNA analysis",
             doi="10.1186/s13059-016-0918-z",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/apeltzer/DeDup/blob/master/LICENSE",
         )
 
         # Find and load any DeDup reports
-        self.dedup_data = dict()
+        self.dedup_data = {}
 
         for f in self.find_log_files("dedup", filehandles=True):
             try:
                 self.parseJSON(f)
             except KeyError:
-                logging.warning(f"Error loading file {f['fn']}")
+                log.warning(f"Error loading file {f['fn']}")
 
         # Filter to strip out ignored sample names
         self.dedup_data = self.ignore_samples(self.dedup_data)
@@ -67,11 +69,11 @@ class MultiqcModule(BaseMultiqcModule):
             # Check for Keys existing
             if "metrics" not in parsed_json or "metadata" not in parsed_json:
                 log.debug(f"DeDup JSON missing essential keys - skipping sample: '{f['fn']}'")
-                return None
+                return
         except JSONDecodeError as e:
             log.debug(f"Could not parse DeDup JSON: '{f['fn']}'")
             log.debug(e)
-            return None
+            return
 
         # Get sample name from JSON first
         s_name = self.clean_s_name(parsed_json["metadata"]["sample_name"], f)

@@ -17,10 +17,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/relipmoc/skewer",
             info="Adapter trimming tool for NGS paired-end sequences.",
             doi="10.1186/1471-2105-15-182",
+            license="MIT License",
+            license_url="https://github.com/relipmoc/skewer/blob/master/LICENSE",
         )
 
-        self.skewer_data = dict()
-        self.skewer_readlen_dist = dict()
+        self.skewer_data = {}
+        self.skewer_readlen_dist = {}
 
         for f in self.find_log_files("skewer", filehandles=True):
             self.parse_skewer_log(f)
@@ -51,8 +53,7 @@ class MultiqcModule(BaseMultiqcModule):
         # set the value 0 for every x where a given sample doens't have a value
         all_x_values = []
         for s_name in self.skewer_readlen_dist:
-            for xval in self.skewer_readlen_dist[s_name]:
-                all_x_values.append(xval)
+            all_x_values.extend(self.skewer_readlen_dist[s_name])
 
         for s_name in self.skewer_readlen_dist:
             for xval in all_x_values:
@@ -93,12 +94,12 @@ class MultiqcModule(BaseMultiqcModule):
         }
         regex_hist = r"\s?(\d+)\s+(\d+)\s+(\d+.\d+)%"
 
-        data = dict()
-        for k, v in regexes.items():
+        data = {}
+        for k in regexes:
             data[k] = 0
         data["fq1"] = None
         data["fq2"] = None
-        readlen_dist = dict()
+        readlen_dist = {}
 
         for line in fh:
             if line.startswith("skewer"):
