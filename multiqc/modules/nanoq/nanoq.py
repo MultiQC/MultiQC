@@ -1,12 +1,13 @@
+import itertools
 import logging
 import re
 from collections import defaultdict
+from collections.abc import Callable
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table
-from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table_object import TableConfig
 from multiqc.utils import mqc_colour
 
@@ -28,7 +29,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any nanoq reports
-        data_by_sample: Dict[str, Dict[str, float]] = {}
+        data_by_sample: dict[str, dict[str, float]] = {}
         for f in self.find_log_files("nanoq", filehandles=True):
             sample_data = parse_nanoq_log(f)
             if sample_data:
@@ -60,8 +61,8 @@ class MultiqcModule(BaseMultiqcModule):
         # Write parsed report data to a file
         self.write_data_file(data_by_sample, "multiqc_nanoq")
 
-    def add_table(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
-        headers: Dict[str, Dict] = {
+    def add_table(self, data_by_sample: dict[str, dict[str, float]]) -> None:
+        headers: dict[str, dict] = {
             "Number of reads": {
                 "title": "Reads",
                 "description": "Number of reads",
@@ -142,10 +143,10 @@ class MultiqcModule(BaseMultiqcModule):
         # Add columns to the general stats table
         self.general_stats_addcols(data_by_sample, general_stats_headers)
 
-    def reads_by_quality_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+    def reads_by_quality_plot(self, data_by_sample: dict[str, dict[str, float]]) -> None:
         # Get data for plot
-        barplot_data: Dict[str, Dict[str, float]] = defaultdict(dict)
-        keys: List[str] = []
+        barplot_data: dict[str, dict[str, float]] = defaultdict(dict)
+        keys: list[str] = []
         min_quality = 10
 
         for name, d in data_by_sample.items():
@@ -187,10 +188,10 @@ class MultiqcModule(BaseMultiqcModule):
             ),
         )
 
-    def reads_by_length_plot(self, data_by_sample: Dict[str, Dict[str, float]]) -> None:
+    def reads_by_length_plot(self, data_by_sample: dict[str, dict[str, float]]) -> None:
         # Get data for plot
-        barplot_data: Dict[str, Dict[int, float]] = defaultdict(dict)
-        keys: List[str] = []
+        barplot_data: dict[str, dict[int, float]] = defaultdict(dict)
+        keys: list[str] = []
 
         for name, d in data_by_sample.items():
             reads_by_l = {int(re.search(r"\d+", k).group(0)): v for k, v in d.items() if re.match(r"Reads > \d+bp", k)}
@@ -225,9 +226,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
 
-def parse_nanoq_log(f) -> Dict[str, float]:
+def parse_nanoq_log(f) -> dict[str, float]:
     """Parse output from nanoq"""
-    stats: Dict[str, float] = dict()
+    stats: dict[str, float] = {}
 
     # Parse the file content
     segment = None
@@ -260,8 +261,8 @@ def parse_nanoq_log(f) -> Dict[str, float]:
             stats[metric.strip()] = float(value.strip())
 
     # Helper function to parse thresholds part
-    def parse_thresholds(lines: List[str], threshold_type: str) -> Dict[str, List[Any]]:
-        _thresholds: Dict[str, List[Any]] = {
+    def parse_thresholds(lines: list[str], threshold_type: str) -> dict[str, list[Any]]:
+        _thresholds: dict[str, list[Any]] = {
             "Threshold": [],
             "Number of Reads": [],
             "Percentage": [],
@@ -288,12 +289,12 @@ def parse_nanoq_log(f) -> Dict[str, float]:
 
 
 def get_ranges_from_cumsum(
-    data: Dict[int, int], thresholds: List[int], total: int, formatter: Callable = lambda x: x
-) -> Tuple[Dict[str, int], List[str]]:
+    data: dict[int, int], thresholds: list[int], total: int, formatter: Callable = lambda x: x
+) -> tuple[dict[str, int], list[str]]:
     """Calculate ranges from cumulative sum data"""
     keys = [f"<{formatter(thresholds[0])}"]
     ranges = {keys[0]: total - data[thresholds[0]]}
-    for th, next_th in zip(thresholds[:-1], thresholds[1:]):
+    for th, next_th in itertools.pairwise(thresholds):
         key = formatter(f"{th}-{next_th}")
         keys.append(key)
         ranges[key] = data[th] - data[next_th]
@@ -305,7 +306,7 @@ def get_ranges_from_cumsum(
     return ranges, keys
 
 
-def bp_formatter(key: Union[int, str]) -> str:
+def bp_formatter(key: int | str) -> str:
     """Format bp values"""
     key = str(key)
     numbers = [int(x) for x in re.findall(r"\d+", key)]

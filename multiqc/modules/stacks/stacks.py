@@ -257,7 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     @staticmethod
     def parse_sumstats(file_contents, s_name):
-        out_dict = dict()
+        out_dict = {}
         # ["# Pop ID","Private","Num_Indv","P","Obs_Het","Obs_Hom","Exp_Het","Exp_Hom","Pi","Fis"]
         fields = [0, 1, 2, 5, 8, 11, 14, 17, 20, 23]
         fl = file_contents.splitlines()

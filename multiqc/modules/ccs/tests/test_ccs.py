@@ -98,3 +98,22 @@ def test_parse_pacbio_log_ccs(lines, data):
 
     result = parse_PacBio_log(lines)
     assert result == data
+
+
+def test_split_attributes():
+    from multiqc.modules.ccs.ccs import split_attributes
+
+    attributes = [
+        {"id": "filtered_poor_snr", "name": "Below SNR threshold", "value": 1},
+        {"id": "ccs_processing.zmw_filtered_too_few_passes", "name": "Lacking full passes", "value": 2},
+        {"id": "ccs_processing.ds_reads_passed_yield", "name": "DS reads: Passed", "value": 3},
+        {"id": "ccs_processing.ss_reads_input", "name": "SS reads: Inputs", "value": 4},
+        {"id": "ccs_processing.number_of_ccs_reads_q20", "name": "HiFi Reads", "value": 5},
+    ]
+    groups, other = split_attributes(attributes)
+    assert {g: {k: a["value"] for k, a in attrs.items()} for g, attrs in groups.items()} == {
+        "zmw": {"filtered_poor_snr": 1, "filtered_too_few_passes": 2},
+        "ds_reads": {"passed_yield": 3},
+        "ss_reads": {"input": 4},
+    }
+    assert {k: a["value"] for k, a in other.items()} == {"number_of_ccs_reads_q20": 5}

@@ -1,7 +1,6 @@
 """`dedup --metrics` (one row per library plus `All Reads`) and `dedup --duplication-ladder`."""
 
 import logging
-from typing import Dict, Optional, Set
 
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import bargraph, linegraph
@@ -14,12 +13,12 @@ ALL_READS = "All Reads"
 log = logging.getLogger(__name__)
 
 
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     return _metrics(module) | _ladder(module)
 
 
-def _metrics(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Optional[float]]] = {}
+def _metrics(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, float | None]] = {}
     for f in module.find_log_files("fgumi/dedup"):
         rows = load_rows(f, DeduplicationMetric)
         if not rows:
@@ -86,9 +85,9 @@ def _metrics(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _ladder(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Dict[int, Optional[float]]]] = {}
-    samples: Set[str] = set()
+def _ladder(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, dict[int, float | None]]] = {}
+    samples: set[str] = set()
     # Multi-library rows are keyed "<sample> (<library>)"; iter_samples applies sample filters to the bare name.
     for s_name, rows in iter_samples(module, "fgumi/dedup_ladder", DuplicationLadderMetric):
         samples.add(s_name)

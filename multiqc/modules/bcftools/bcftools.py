@@ -1,8 +1,6 @@
 import logging
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-
 from multiqc.modules.bcftools.stats import parse_bcftools_stats
 
 log = logging.getLogger(__name__)
@@ -42,9 +40,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Set up class objects to hold parsed data
-        self.general_stats_headers: Dict = dict()
-        self.general_stats_data: Dict = dict()
-        n = dict()
+        self.general_stats_headers: dict = {}
+        self.general_stats_data: dict = {}
+        n = {}
 
         # Call submodule functions
         n["stats"] = parse_bcftools_stats(self)

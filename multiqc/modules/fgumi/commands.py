@@ -3,70 +3,45 @@
 
 import itertools
 import logging
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any
 
 from pydantic import ValidationError
 
 from multiqc.base_module import BaseMultiqcModule
+from multiqc.modules.fgbio.clip_bam import run_clip_bam
 from multiqc.plots import bargraph, linegraph, table
 
-from .schemas import ClippingMetric, CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
-from .util import drop_none, flatten, iter_samples, load_rows, pct, register
+from .schemas import CopyUmiMetric, DownsampleHistogramMetric, FilterStatsMetric, RetagMetric
+from .util import (
+    drop_none,
+    flatten,
+    found_by,
+    iter_samples,
+    load_rows,
+    pct,
+    register,
+    shared_file_evidence,
+    shared_file_module,
+)
 
 log = logging.getLogger(__name__)
 
-_CLIP_REASONS = {
-    "five_prime": "5' end",
-    "three_prime": "3' end",
-    "overlapping": "Overlapping mate",
-    "extending": "Extending past mate",
-}
 
-
-def parse_reports(module: BaseMultiqcModule) -> Set[str]:
+def parse_reports(module: BaseMultiqcModule) -> set[str]:
     return _clip(module) | _filter(module) | _copy_umi(module) | _retag(module) | _downsample(module)
 
 
-def _clip(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Dict[str, int]]] = {}
-    for f in module.find_log_files("fgumi/clip"):
-        rows = load_rows(f, ClippingMetric)
-        if rows is None:
-            continue
-        total = next((r for r in rows if r.read_type == "All"), None)
-        if total is None:
-            log.warning(f"Skipping {f['fn']}: fgumi clip metrics have no 'All' row")
-            continue
-        data[register(module, f)] = {
-            f"{unit}_clipped": {reason: getattr(total, f"{unit}_clipped_{reason}") for reason in _CLIP_REASONS}
-            for unit in ("reads", "bases")
-        }
-    data = module.ignore_samples(data)
-    if not data:
-        return set()
-    module.add_section(
-        name="Clipping",
-        anchor="fgumi-clip",
-        description="Reads and bases clipped by `fgumi clip` (or fgbio ClipBam), by reason (all read types combined).",
-        helptext="Clipping reasons can overlap for a read, so the bars are shown side by side rather than stacked. "
-        "Overlapping-mate clipping removes bases a read shares with its mate; extending clipping removes bases past "
-        "the mate's end.",
-        plot=bargraph.plot(
-            [{s: v["reads_clipped"] for s, v in data.items()}, {s: v["bases_clipped"] for s, v in data.items()}],
-            [{k: {"name": n} for k, n in _CLIP_REASONS.items()}] * 2,
-            {
-                "id": "fgumi_clip",
-                "title": "fgumi: Clipping",
-                "stacking": "group",
-                "data_labels": [{"name": "Reads", "ylab": "Reads"}, {"name": "Bases", "ylab": "Bases"}],
-            },
-        ),
+def _clip(module: BaseMultiqcModule) -> set[str]:
+    evidence = shared_file_evidence()
+    clipped = run_clip_bam(
+        module,
+        "fgumi/clip",
+        skip=lambda f: found_by(f, "fgbio/clipbam") and shared_file_module(f, evidence) == "fgbio",
     )
-    module.write_data_file(flatten(data), "multiqc_fgumi_clip")
-    return set(data)
+    return set(clipped)
 
 
-def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:
+def _read_filter_stats(f: Any) -> FilterStatsMetric | None:
     """The single row of a `filter --stats` file, in either layout: the headered one-row TSV, or the headerless
     key/value rows that fgumi 0.7.0 and earlier write. ``None`` (with a warning) if neither parses."""
     if f["f"] is None:
@@ -87,8 +62,8 @@ def _read_filter_stats(f: Any) -> Optional[FilterStatsMetric]:
         return None
 
 
-def _filter(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Optional[float]]] = {}
+def _filter(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, float | None]] = {}
     for f in module.find_log_files("fgumi/filter_stats"):
         row = _read_filter_stats(f)
         if row is None:
@@ -132,8 +107,8 @@ def _filter(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, int]] = {
+def _copy_umi(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int]] = {
         s_name: rows[0].model_dump(include={"rx_written", "rx_overwritten", "names_trimmed"})
         for s_name, rows in iter_samples(module, "fgumi/copy_umi", CopyUmiMetric)
         if rows
@@ -160,9 +135,9 @@ def _copy_umi(module: BaseMultiqcModule) -> Set[str]:
     return set(data)
 
 
-def _retag(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[str, Union[int, str]]] = {}
-    samples: Set[str] = set()
+def _retag(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[str, int | str]] = {}
+    samples: set[str] = set()
     # Rows are keyed "<sample> (<operation>)"; iter_samples applies sample filters to the bare sample name.
     for s_name, rows in iter_samples(module, "fgumi/retag", RetagMetric):
         samples.add(s_name)
@@ -200,8 +175,8 @@ def _retag(module: BaseMultiqcModule) -> Set[str]:
     return samples
 
 
-def _downsample(module: BaseMultiqcModule) -> Set[str]:
-    data: Dict[str, Dict[int, int]] = {
+def _downsample(module: BaseMultiqcModule) -> set[str]:
+    data: dict[str, dict[int, int]] = {
         s_name: {r.family_size: r.count for r in rows}
         for s_name, rows in iter_samples(module, "fgumi/downsample_histogram", DownsampleHistogramMetric)
     }
