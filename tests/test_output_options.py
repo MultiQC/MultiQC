@@ -4,7 +4,7 @@ import re
 import pytest
 
 import multiqc
-from multiqc import report, BaseMultiqcModule, write_report
+from multiqc import BaseMultiqcModule, report, write_report
 from multiqc.core.update_config import ClConfig
 
 

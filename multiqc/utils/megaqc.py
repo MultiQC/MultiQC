@@ -1,5 +1,8 @@
 """MultiQC code to export data to MegaQC / flat JSON files"""
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["requests"]
+
 import gzip
 import io
 import json
@@ -43,7 +46,7 @@ def multiqc_api_post(out_path: Path):
             api_r = json.loads(r.text)
         except Exception:
             log.error(f"Error: JSON response could not be parsed (status code: {r.status_code})")
-            return None
+            return
         if r.status_code == 200:
             if api_r["success"]:
                 log.info(f"{api_r['message']}")

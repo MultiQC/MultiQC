@@ -2,7 +2,6 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.plots import linegraph
 
@@ -25,10 +24,10 @@ def _parse_base_distribution(module) -> set:
     # data_by_sample[sample] = {cycle: (frac_a, frac_c, frac_g, frac_t, frac_n)}
     # Split read1 / read2 into separate samples so the plot shows two lines per input
     # (matching the picard module's BaseDistributionByCycle behaviour).
-    data_by_sample: Dict[str, Dict[int, tuple]] = {}
+    data_by_sample: dict[str, dict[int, tuple]] = {}
 
     for f in module.find_log_files("riker/basic_base_dist", filehandles=True):
-        rows_by_sample: Dict[str, Dict[int, Dict[int, tuple]]] = defaultdict(lambda: defaultdict(dict))
+        rows_by_sample: dict[str, dict[int, dict[int, tuple]]] = defaultdict(lambda: defaultdict(dict))
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
@@ -94,23 +93,23 @@ def _parse_base_distribution(module) -> set:
         """,
         plot=linegraph.plot(series_data, pconfig),
     )
-    flat: Dict[str, Dict[str, float]] = {}
+    flat: dict[str, dict[str, float]] = {}
     for s, by_cycle in data_by_sample.items():
         flat[s] = {}
         for cycle, vals in by_cycle.items():
             for i, base in enumerate(_BASES):
                 flat[s][f"cycle_{cycle}_frac_{base}"] = vals[i] / 100.0
     module.write_data_file(flat, f"multiqc_{module.anchor}_basic_base_distribution")
-    return {s.removesuffix("_R1").removesuffix("_R2") for s in data_by_sample.keys()}
+    return {s.removesuffix("_R1").removesuffix("_R2") for s in data_by_sample}
 
 
 def _parse_mean_quality(module) -> set:
     # Riker emits mean quality with cycles 1..N concatenated across read 1 and read 2.
     # We plot it as-is; no read_end split available.
-    data_by_sample: Dict[str, Dict[int, float]] = {}
+    data_by_sample: dict[str, dict[int, float]] = {}
 
     for f in module.find_log_files("riker/basic_mean_quality", filehandles=True):
-        rows_by_sample: Dict[str, Dict[int, float]] = defaultdict(dict)
+        rows_by_sample: dict[str, dict[int, float]] = defaultdict(dict)
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
@@ -163,10 +162,10 @@ def _parse_mean_quality(module) -> set:
 
 
 def _parse_quality_distribution(module) -> set:
-    data_by_sample: Dict[str, Dict[int, int]] = {}
+    data_by_sample: dict[str, dict[int, int]] = {}
 
     for f in module.find_log_files("riker/basic_quality_dist", filehandles=True):
-        rows_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
+        rows_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:

@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard IlluminaBasecallingMetrics reports and parse their data"""
 
-    data_by_sample = dict()
+    data_by_sample = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/collectilluminabasecallingmetrics", filehandles=True):

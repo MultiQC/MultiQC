@@ -1,4 +1,3 @@
-import difflib
 import json
 from datetime import datetime, timedelta
 
@@ -333,7 +332,7 @@ def test_grouped_samples_survive_df_roundtrip():
     """
     original = _make_grouped_violin_data()
 
-    section = list(original.dt.section_by_id.values())[0]
+    section = next(iter(original.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     assert len(section.rows_by_sgroup[SampleGroup("SampleA")]) == 3
     assert section.rows_by_sgroup[SampleGroup("SampleA")][0].sample == SampleName("SampleA")
@@ -347,7 +346,7 @@ def test_grouped_samples_survive_df_roundtrip():
     assert row_samples == ["SampleA", "SampleA R1", "SampleA R2"]
 
     reconstructed = ViolinPlotInputData.from_df(df, original.pconfig, original.anchor)
-    section_r = list(reconstructed.dt.section_by_id.values())[0]
+    section_r = next(iter(reconstructed.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section_r.rows_by_sgroup
     group_a = section_r.rows_by_sgroup[SampleGroup("SampleA")]
@@ -412,7 +411,7 @@ def test_grouped_samples_survive_merge():
 
     merged = ViolinPlotInputData.merge(data1, data2)
 
-    section = list(merged.dt.section_by_id.values())[0]
+    section = next(iter(merged.dt.section_by_id.values()))
 
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
@@ -447,12 +446,30 @@ def test_grouped_samples_parquet_roundtrip(tmp_path):
     loaded = create_plot_input_data_only(plot_input_json)
     assert isinstance(loaded, ViolinPlotInputData)
 
-    section = list(loaded.dt.section_by_id.values())[0]
+    section = next(iter(loaded.dt.section_by_id.values()))
     assert SampleGroup("SampleA") in section.rows_by_sgroup
     group_a = section.rows_by_sgroup[SampleGroup("SampleA")]
     assert len(group_a) == 3
     agg = next(r for r in group_a if str(r.sample) == "SampleA")
     assert agg.data[ColumnKey("reads")].raw == 20000
+
+
+def test_rerun_in_same_dir_no_duplicate_modules(tmp_path, monkeypatch):
+    """Running twice in one directory picks up the first run's parquet.
+
+    Fresh custom content must replace, not duplicate, those modules.
+    """
+    for i in range(1, 6):
+        (tmp_path / f"plot{i}_mqc.png").touch()
+    # Run twice from the same directory, as in the original issue
+    monkeypatch.chdir(tmp_path)
+
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run1", force=True))
+    multiqc.run(tmp_path, cfg=ClConfig(output_dir=tmp_path, filename="run2", force=True))
+
+    html = (tmp_path / "run2.html").read_text()
+    for i in range(1, 6):
+        assert html.count(f'id="mqc-module-section-plot{i}"') == 1
 
 
 def test_wide_tables_merge_keeps_samples_missing_from_earlier_tables():
@@ -481,3 +498,30 @@ def test_wide_tables_merge_keeps_samples_missing_from_earlier_tables():
     assert rows.get_column("creation_date").null_count() == 0
     assert rows.get_column("t1 / x").to_list() == [1.0, 1.0, None]
     assert rows.get_column("t2 / y").to_list() == [None, 1.0, 1.0]
+
+
+def test_wide_df_infers_schema_from_all_rows():
+    section: dict = {f"s{i:03}": {"a": 1.0} for i in range(150)}
+    section["s999"] = {"a": 1.0, "late": 3.0}
+    inputs = ViolinPlotInputData.create_from_sections(
+        data={SectionKey("A"): section},
+        headers={SectionKey("A"): {ColumnKey("a"): {}, ColumnKey("late"): {}}},
+        pconfig={"id": "tbl", "title": "T"},
+    )
+    df, _ = inputs.to_wide_df()
+    assert df.filter(pl.col("sample") == "s999").get_column("tbl / late").to_list() == [3.0]
+
+
+def test_wide_df_keeps_shared_column_keys_in_their_own_section():
+    inputs = ViolinPlotInputData.create_from_sections(
+        data={SectionKey("A"): {"s1": {"x": 5.0}, "s2": {"x": 6.0}}, SectionKey("B"): {"s1": {"x": 7.0}}},
+        headers={
+            SectionKey("A"): {ColumnKey("x"): {"namespace": "ns_a"}},
+            SectionKey("B"): {ColumnKey("x"): {"namespace": "ns_b"}},
+        },
+        pconfig={"id": "tbl", "title": "T"},
+    )
+    df, _ = inputs.to_wide_df()
+    df = df.sort("sample")
+    assert df.get_column("tbl / ns_a / x").to_list() == [5.0, 6.0]
+    assert df.get_column("tbl / ns_b / x").to_list() == [7.0, None]

@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict, Union
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -36,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/Daniel-Liu-c0deb0t/UMICollapse/blob/master/LICENSE",
         )
 
-        data_by_sample = dict()
+        data_by_sample = {}
         for f in self.find_log_files("umicollapse"):
             # Parse the log file for sample name and statistics
             data = self.parse_logs(f)
@@ -77,7 +76,7 @@ class MultiqcModule(BaseMultiqcModule):
         return f["s_name"]
 
     @staticmethod
-    def parse_logs(f) -> Dict:
+    def parse_logs(f) -> dict:
         regexes = [
             (int, "input_reads", r"Number of input reads\t(\d+)"),
             (
@@ -91,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
             (int, "dedup_output_reads", r"Number of reads after deduplicating\t(\d+)"),
         ]
 
-        data: Dict[str, Union[str, int, float]] = {}
+        data: dict[str, str | int | float] = {}
         # Search for values using regular expressions
         for type_, key, regex in regexes:
             comp_regex = re.compile(regex)

@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import ClassVar
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
     The module also handles [Bracken](https://ccb.jhu.edu/software/bracken/) outputs, which uses Kraken internally.
     """
 
-    T_RANKS = {
+    T_RANKS: ClassVar = {
         "S": "Species",
         "G": "Genus",
         "F": "Family",
@@ -72,9 +72,9 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/DerrickWood/kraken/blob/master/LICENSE",
         )
 
-        total_cnt_by_sample: Dict[str, int] = dict()
-        cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]] = dict()
-        species_minimizer_dup_by_top_taxon_by_sample: Dict[str, Dict[str, float]] = dict()
+        total_cnt_by_sample: dict[str, int] = {}
+        cnt_by_top_taxon_by_rank_by_sample: dict[str, dict[str, dict[str, int]]] = {}
+        species_minimizer_dup_by_top_taxon_by_sample: dict[str, dict[str, float]] = {}
 
         for f in self.find_log_files(sp_key, filehandles=True):
             sample_cnt_by_taxon_by_rank, min_dup_by_by_rank = parse_logs(f)
@@ -111,7 +111,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.write_data_file(cnt_by_top_taxon_by_rank_by_sample, f"multiqc_{self.anchor}")
 
-        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        pct_by_top_taxon_by_rank: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
         for s_name, cnt_by_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
             for rank_code, cnt_by_taxon in cnt_by_taxon_by_rank.items():
                 for taxon, count in cnt_by_taxon.items():
@@ -122,11 +122,9 @@ class MultiqcModule(BaseMultiqcModule):
         if species_minimizer_dup_by_top_taxon_by_sample:
             self.top_taxa_duplication_heatmap(pct_by_top_taxon_by_rank, species_minimizer_dup_by_top_taxon_by_sample)
 
-    def sample_total_readcounts(
-        self, rows_by_sample: Dict[str, List[Dict[str, Union[str, int, float]]]]
-    ) -> Dict[str, int]:
+    def sample_total_readcounts(self, rows_by_sample: dict[str, list[dict[str, str | int | float]]]) -> dict[str, int]:
         """Compute the total read counts for each sample"""
-        total_cnt_by_sample: Dict[str, int] = dict()
+        total_cnt_by_sample: dict[str, int] = {}
 
         _total_all_samples = 0
         # Take the unassigned counts (line 1) and counts assigned to root (line 2) for each sample
@@ -147,16 +145,16 @@ class MultiqcModule(BaseMultiqcModule):
 
     def general_stats_cols(
         self,
-        cnt_by_sample: Dict[str, int],
-        pct_by_taxon_by_rank: Dict[str, Dict[str, float]],
-        cnt_by_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]],
+        cnt_by_sample: dict[str, int],
+        pct_by_taxon_by_rank: dict[str, dict[str, float]],
+        cnt_by_taxon_by_rank_by_sample: dict[str, dict[str, dict[str, int]]],
     ):
         """Add a couple of columns to the General Statistics table"""
 
         # Get top taxa in most specific taxa rank that we have
-        top_taxa: List[str] = []
-        top_rank_code: Optional[str] = None
-        top_rank_name: Optional[str] = None
+        top_taxa: list[str] = []
+        top_rank_code: str | None = None
+        top_rank_name: str | None = None
         for rank_code, rank_name in MultiqcModule.T_RANKS.items():
             if rank_code not in pct_by_taxon_by_rank:
                 continue
@@ -173,7 +171,7 @@ class MultiqcModule(BaseMultiqcModule):
             return
 
         # Column headers
-        headers: Dict[str, ColumnDict] = dict()
+        headers: dict[str, ColumnDict] = {}
 
         # don't include top-N % in general stats if all is unclassified.
         # unclassified is included separately, so also don't include twice
@@ -203,7 +201,7 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # Get table data
-        table_pct_by_sample: Dict[str, Dict[str, float]] = {}
+        table_pct_by_sample: dict[str, dict[str, float]] = {}
         for s_name, cnt_by_taxon_by_rank in cnt_by_taxon_by_rank_by_sample.items():
             _counts = {
                 "pct_top_one": cnt_by_taxon_by_rank[top_rank_code].get(top_taxa[0], 0),
@@ -219,25 +217,25 @@ class MultiqcModule(BaseMultiqcModule):
 
     def top_taxa_barplot(
         self,
-        total_cnt_by_sample: Dict[str, int],
-        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]],
-        cnt_by_top_taxon_by_rank_by_sample: Dict[str, Dict[str, Dict[str, int]]],
+        total_cnt_by_sample: dict[str, int],
+        pct_by_top_taxon_by_rank: dict[str, dict[str, float]],
+        cnt_by_top_taxon_by_rank_by_sample: dict[str, dict[str, dict[str, int]]],
     ):
         """Add a bar plot showing the top-N from each taxa rank"""
 
-        rank_datasets: List[Dict[str, Dict[str, int]]] = []
-        cats: List[Dict[str, Dict[str, str]]] = []
+        rank_datasets: list[dict[str, dict[str, int]]] = []
+        cats: list[dict[str, dict[str, str]]] = []
         # Keeping track of encountered codes to display only tabs with available data
-        found_rank_codes: Set[str] = set()
+        found_rank_codes: set[str] = set()
 
-        for rank_code in [r for r in MultiqcModule.T_RANKS if r not in ["R"]]:
+        for rank_code in [r for r in MultiqcModule.T_RANKS if r != "R"]:
             if rank_code not in pct_by_top_taxon_by_rank:
                 # Taxa rank not found in this dataset
                 continue
 
-            rank_cats: Dict[str, Dict[str, str]] = dict()
-            rank_cnt_data_by_taxon_by_sample: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
-            rank_counts_shown: Dict[str, int] = defaultdict(int)
+            rank_cats: dict[str, dict[str, str]] = {}
+            rank_cnt_data_by_taxon_by_sample: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+            rank_counts_shown: dict[str, int] = defaultdict(int)
             i = 0
             # Loop through the summed tax percentages to get the top-N across all samples
             for taxon, _ in sorted(pct_by_top_taxon_by_rank[rank_code].items(), key=lambda x: x[1], reverse=True):
@@ -259,13 +257,13 @@ class MultiqcModule(BaseMultiqcModule):
 
             if rank_code != "U":
                 # Add unclassified count to each rank-level dataset
-                for s_name, _ in cnt_by_top_taxon_by_rank_by_sample.items():
-                    cnt = cnt_by_top_taxon_by_rank_by_sample[s_name].get("U", {}).get("unclassified", 0)
+                for s_name, cnt_by_top_taxon_by_rank in cnt_by_top_taxon_by_rank_by_sample.items():
+                    cnt = cnt_by_top_taxon_by_rank.get("U", {}).get("unclassified", 0)
                     rank_cnt_data_by_taxon_by_sample[s_name]["unclassified"] = cnt
                     rank_counts_shown[s_name] += cnt
 
             # Add in unclassified reads and "other" - we presume from other species etc.
-            for s_name, _ in cnt_by_top_taxon_by_rank_by_sample.items():
+            for s_name in cnt_by_top_taxon_by_rank_by_sample:
                 rank_cnt_data_by_taxon_by_sample[s_name]["other"] = (
                     total_cnt_by_sample[s_name] - rank_counts_shown[s_name]
                 )
@@ -320,8 +318,8 @@ class MultiqcModule(BaseMultiqcModule):
 
     def top_taxa_duplication_heatmap(
         self,
-        pct_by_top_taxon_by_rank: Dict[str, Dict[str, float]],
-        species_minimizer_duplication_by_top_taxon_by_sample: Dict[str, Dict[str, float]],
+        pct_by_top_taxon_by_rank: dict[str, dict[str, float]],
+        species_minimizer_duplication_by_top_taxon_by_sample: dict[str, dict[str, float]],
     ):
         """Add a heatmap showing the minimizer duplication of the top taxa"""
 
@@ -339,11 +337,11 @@ class MultiqcModule(BaseMultiqcModule):
             log.debug(f"Taxa rank {SPECIES_CODE} not found, skipping taxa duplication heatmap")
             return
 
-        dup_by_taxon_by_sample: Dict[str, Dict[str, Union[int, None]]] = defaultdict(lambda: defaultdict(int))
+        dup_by_taxon_by_sample: dict[str, dict[str, int | None]] = defaultdict(lambda: defaultdict(int))
         pct_by_top_taxon = pct_by_top_taxon_by_rank[SPECIES_CODE]
         # not all samples have minimizers data, and we want to find top 5 species across those that have
         _taxa_in_samples_with_minimizers = set()
-        taxa_sorted_by_pct = list(sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True))
+        taxa_sorted_by_pct = sorted(pct_by_top_taxon.items(), key=lambda x: x[1], reverse=True)
         for taxon, pct_sum in taxa_sorted_by_pct:
             # Pull out counts for this rank + classif from each sample
             for s_name, dup_by_taxon in species_minimizer_duplication_by_top_taxon_by_sample.items():
@@ -382,9 +380,9 @@ class MultiqcModule(BaseMultiqcModule):
 
 def parse_logs(
     f,
-) -> Tuple[
-    Dict[str, Dict[str, int]],
-    Dict[str, float],
+) -> tuple[
+    dict[str, dict[str, int]],
+    dict[str, float],
 ]:
     """
     Parse a kraken report output file. Only take the top ranks.
@@ -415,8 +413,8 @@ def parse_logs(
     (optional, only in new version with minimizers) 8. Indented scientific name
     """
 
-    cnt_by_rank_by_taxon: Dict[str, Dict[str, int]] = defaultdict(dict)
-    min_dup_by_taxon: Dict[str, float] = dict()
+    cnt_by_rank_by_taxon: dict[str, dict[str, int]] = defaultdict(dict)
+    min_dup_by_taxon: dict[str, float] = {}
 
     for i, line in enumerate(f["f"]):
         fields = line.split("\t")
@@ -424,22 +422,22 @@ def parse_logs(
             log.error(f"Error parsing Kraken report: {f['fn']} line {i + 1} has less than 6 fields: {line}")
             return {}, {}
 
-        minimizer: Optional[str] = None
+        minimizer: str | None = None
         if len(fields) == 8:
             # if 8 fields, the new log experimental log (with distinct minimizer)
             (
-                percent,
+                _percent,
                 counts_rooted,
-                counts_direct,
+                _counts_direct,
                 minimizer,
                 minimizer_distinct,
                 rank_code,
-                tax_id,
+                _tax_id,
                 taxon,
             ) = fields
         else:
             # If 6 fields are used, it's the 'old' log (without distinct minimizer)
-            percent, counts_rooted, counts_direct, rank_code, tax_id, taxon = fields[:6]
+            _percent, counts_rooted, _counts_direct, rank_code, _tax_id, taxon = fields[:6]
             minimizer = None
             minimizer_distinct = None
 
