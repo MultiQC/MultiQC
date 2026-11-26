@@ -522,3 +522,30 @@ def test_wide_tables_merge_keeps_samples_missing_from_earlier_tables():
     assert rows.get_column("creation_date").null_count() == 0
     assert rows.get_column("t1 / x").to_list() == [1.0, 1.0, None]
     assert rows.get_column("t2 / y").to_list() == [None, 1.0, 1.0]
+
+
+def test_wide_df_infers_schema_from_all_rows():
+    section: dict = {f"s{i:03}": {"a": 1.0} for i in range(150)}
+    section["s999"] = {"a": 1.0, "late": 3.0}
+    inputs = ViolinPlotInputData.create_from_sections(
+        data={SectionKey("A"): section},
+        headers={SectionKey("A"): {ColumnKey("a"): {}, ColumnKey("late"): {}}},
+        pconfig={"id": "tbl", "title": "T"},
+    )
+    df, _ = inputs.to_wide_df()
+    assert df.filter(pl.col("sample") == "s999").get_column("tbl / late").to_list() == [3.0]
+
+
+def test_wide_df_keeps_shared_column_keys_in_their_own_section():
+    inputs = ViolinPlotInputData.create_from_sections(
+        data={SectionKey("A"): {"s1": {"x": 5.0}, "s2": {"x": 6.0}}, SectionKey("B"): {"s1": {"x": 7.0}}},
+        headers={
+            SectionKey("A"): {ColumnKey("x"): {"namespace": "ns_a"}},
+            SectionKey("B"): {ColumnKey("x"): {"namespace": "ns_b"}},
+        },
+        pconfig={"id": "tbl", "title": "T"},
+    )
+    df, _ = inputs.to_wide_df()
+    df = df.sort("sample")
+    assert df.get_column("tbl / ns_a / x").to_list() == [5.0, 6.0]
+    assert df.get_column("tbl / ns_b / x").to_list() == [7.0, None]
