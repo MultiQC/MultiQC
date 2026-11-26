@@ -6,6 +6,9 @@ On import, only loads defaults from config_defaults.yaml. To populate from
 custom parameters, call load_user_config() from the user_config module
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["jsonschema"]
+
 import itertools
 import logging
 import os

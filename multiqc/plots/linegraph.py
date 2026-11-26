@@ -1,5 +1,8 @@
 """MultiQC functions to plot a linegraph"""
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars", "natsort"]
+
 import json
 import logging
 import math

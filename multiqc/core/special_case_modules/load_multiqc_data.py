@@ -4,6 +4,9 @@ It allows rerunning MultiQC when original data is gone, as well as extend
 existing reports with new data.
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars"]
+
 import json
 import logging
 from datetime import datetime
