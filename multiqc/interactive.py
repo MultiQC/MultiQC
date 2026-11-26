@@ -233,6 +233,9 @@ def get_general_stats_data(sample: str | None = None) -> dict:
     Return parsed general stats data, indexed by sample, then by data key. If sample is specified,
     return only data for that sample.
 
+    Grouped samples (e.g. from `table_sample_merge`) return both the merged group row and each
+    member row as separate top-level keys, so summing across all keys counts grouped values twice.
+
     @param sample: Sample name
     @return: Dict of general stats data indexed by sample and data key
     """
