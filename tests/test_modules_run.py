@@ -8,7 +8,7 @@ from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import ClConfig, update_config
 from multiqc.plots.bargraph import BarPlot
-from multiqc.types import SectionKey
+from multiqc.types import Anchor, SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
 
@@ -126,6 +126,71 @@ PSC\t0\tS3\t15\t48\t3\t20\t10\t2\t25.0\t1\t0\t0\t0
     with caplog.at_level("WARNING", logger="multiqc.modules.bcftools.stats"):
         assert hom_het("invalid") == (52, 16)
     assert "Unrecognised bcftools.hom_het_aggregation value 'invalid'" in caplog.text
+
+
+def _run_bcftools_sites_plot(tmp_path: Path, filename: str, content: str) -> BarPlot:
+    stats_file = tmp_path / filename
+    stats_file.write_text(content)
+
+    config.strict = True
+    report.analysis_files = [str(stats_file)]
+    report.search_files(["bcftools"])
+
+    from multiqc.modules.bcftools.bcftools import MultiqcModule
+
+    MultiqcModule()
+
+    plot = report.plot_by_id[Anchor("bcftools-stats-sites")]
+    assert isinstance(plot, BarPlot)
+    return plot
+
+
+def test_bcftools_stats_missing_genotypes(tmp_path):
+    """Per-sample nMissing counts from PSC records should be plotted in Sites per sample."""
+    plot = _run_bcftools_sites_plot(
+        tmp_path,
+        "rotavirus.stats.txt",
+        "# This file was produced by bcftools stats (1.19+htslib-1.19.1) and can be plotted using plot-vcfstats.\n"
+        "ID\t0\trotavirus.vcf.gz\n"
+        "SN\t0\tnumber of records:\t100\n"
+        "SN\t0\tnumber of SNPs:\t80\n"
+        "ST\t0\tA>C\t10\n"
+        "PSC\t0\tS1\t50\t10\t10\t3\t10\t5\t7.4\t10\t0\t0\t20\n"
+        "PSC\t0\tS2\t60\t20\t20\t2\t39\t0\t7.6\t0\t0\t0\t0\n",
+    )
+    ds = plot.datasets[0]
+    by_cat = {cat.name: dict(zip(ds.samples, cat.data)) for cat in ds.cats}
+    pct_by_cat = {cat.name: dict(zip(ds.samples, cat.data_pct)) for cat in ds.cats}
+
+    assert by_cat == {
+        "nSNPs": {"S1": 70, "S2": 100},
+        "nIndels": {"S1": 5, "S2": 0},
+        "nOther": {"S1": 5, "S2": 0},
+        "nMissing": {"S1": 20, "S2": 0},
+    }
+    assert pct_by_cat["nMissing"] == {"S1": pytest.approx(20.0), "S2": pytest.approx(0.0)}
+
+
+@pytest.mark.parametrize(
+    "psc_row",
+    [
+        "PSC\t0\tS1\t4\t2\t4\t3\t1\t0\t12.0\t1",  # legacy 11-column PSC without nMissing
+        "PSC\t0\tS1\t4\t2\t4\t3\t1\t0\t12.0\t1\t0\t0\t0",  # 14-column PSC with zero nMissing
+    ],
+)
+def test_bcftools_stats_missing_genotypes_hidden_when_absent_or_zero(tmp_path, psc_row):
+    """nMissing should stay hidden when column 14 is absent or zero across all samples."""
+    plot = _run_bcftools_sites_plot(
+        tmp_path,
+        "no_missing.stats.txt",
+        "# This file was produced by bcftools stats (1.19+htslib-1.19.1) and can be plotted using plot-vcfstats.\n"
+        "ID\t0\tno_missing.vcf.gz\n"
+        "SN\t0\tnumber of records:\t10\n"
+        "SN\t0\tnumber of SNPs:\t10\n"
+        "ST\t0\tA>C\t10\n"
+        f"{psc_row}\n",
+    )
+    assert {cat.name for cat in plot.datasets[0].cats} == {"nSNPs"}
 
 
 @pytest.mark.parametrize(
