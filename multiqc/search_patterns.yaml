@@ -8,6 +8,9 @@ adapterremoval:
   fn: "*.settings"
   contents: "AdapterRemoval"
   num_lines: 1
+amrfinder:
+  contents: "Strand	Element symbol	Element name"
+  num_lines: 1
 xenium/metrics:
   fn: "metrics_summary.csv"
   contents: "num_cells_detected"
