@@ -16,9 +16,11 @@ class MultiqcModule(BaseMultiqcModule):
             extra="Useful for tumor-normal studies. Performs concordance verification (= samples coming from the same "
             "individual), and cross-individual contamination level estimation in WGS and WES sequencing experiments",
             doi="bioinformatics/btw389",
+            license="NYGC academic/non-profit license",
+            license_url="https://github.com/nygenome/Conpair/blob/master/LICENSE.txt",
         )
 
-        self.conpair_data = dict()
+        self.conpair_data = {}
 
         for f in self.find_log_files("conpair/concordance"):
             self.parse_conpair_logs(f)
@@ -80,7 +82,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if _cp_type(self.conpair_data[f["s_name"]]) == _cp_type(parsed_data):
                     log.debug(f"Duplicate sample name found! Overwriting: {f['s_name']}")
             else:
-                self.conpair_data[f["s_name"]] = dict()
+                self.conpair_data[f["s_name"]] = {}
             self.add_data_source(f, section=_cp_type(parsed_data))
             self.conpair_data[f["s_name"]].update(parsed_data)
 

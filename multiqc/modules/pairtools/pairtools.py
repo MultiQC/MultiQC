@@ -1,7 +1,6 @@
 import logging
 import os
 from itertools import zip_longest
-from typing import Dict
 
 import yaml
 
@@ -26,6 +25,8 @@ class MultiqcModule(BaseMultiqcModule):
             "alignments, extracts 3C-specific information, and perform common tasks such as sorting, filtering, "
             "and deduplication.",
             doi=["10.5281/zenodo.1490830", "10.1101/2023.02.13.528389"],
+            license="MIT License",
+            license_url="https://github.com/mirnylab/pairtools/blob/master/LICENSE",
         )
 
         # Superfluous function call to confirm that it is used in this module
@@ -139,7 +140,7 @@ class MultiqcModule(BaseMultiqcModule):
                 _observed_ptypes |= set(_sample_data_dict)
 
         # display common pairtypes first with pre-defined colors and order :
-        ptypes_annotated: Dict = {}
+        ptypes_annotated: dict = {}
         for _ptype, ptype_color in self.params["pairtypes_colors"].items():
             if any(t.lower() == _ptype.lower() for t in _observed_ptypes):
                 ptypes_annotated[_ptype] = {"color": ptype_color, "name": _ptype}
@@ -186,7 +187,7 @@ class MultiqcModule(BaseMultiqcModule):
         uniq_dist_categories = _dist_category_set
 
         # assign colors to distance ranges (as many as possible):
-        key_dict: Dict = {}
+        key_dict: dict = {}
         for color, _cat_names in zip_longest(self.params["cis_range_colors"], uniq_dist_categories):
             for _cat_name in _cat_names:
                 key_dict[_cat_name] = {"name": _cat_name}
@@ -227,7 +228,7 @@ class MultiqcModule(BaseMultiqcModule):
             desc = "No pairs_by_strand data to plot"
             return f'<div class="alert alert-info">{desc}</div>'
 
-        data_dict: Dict[str, Dict] = {_cat: {} for _cat in _dist_categories}
+        data_dict: dict[str, dict] = {_cat: {} for _cat in _dist_categories}
 
         # traverse sample_data again to reorder data for plotting
         for _sample_name, _sample_data in self.pairtools_stats.items():
@@ -262,7 +263,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         _strand_categories = ["all", "++", "+-", "--", "-+"]
         # initialize data_dict - with distance categories as the outter layer
-        data_dict: Dict[str, Dict] = {_cat: {} for _cat in _strand_categories}
+        data_dict: dict[str, dict] = {_cat: {} for _cat in _strand_categories}
 
         # traverse sample_data to extract dist_categories
         for _sample_name, _sample_data in self.pairtools_stats.items():

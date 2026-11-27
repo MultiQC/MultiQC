@@ -17,12 +17,15 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://methylqa.sourceforge.net/",
             info="Methylation sequencing data quality assessment tool.",
             doi="10.1016/j.ymeth.2014.10.032",
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Find and load any methylQA reports
-        self.methylqa_data = dict()
-        self.methylqa_coverage_counts = dict()
-        self.methylqa_coverage_percentages = dict()
+        self.methylqa_data = {}
+        self.methylqa_coverage_counts = {}
+        self.methylqa_coverage_percentages = {}
         for f in self.find_log_files("methylqa"):
             self.parse_methylqa_logs(f)
 
@@ -89,7 +92,7 @@ class MultiqcModule(BaseMultiqcModule):
                 except IndexError:
                     break
             if re.search(r"Times covered\s+Count\s+Percent\s+", line):
-                hist = {"counts": dict(), "percentages": dict()}
+                hist = {"counts": {}, "percentages": {}}
         if hist is not False and len(hist) > 0:
             self.methylqa_coverage_counts[s_name] = hist["counts"]
             self.methylqa_coverage_percentages[s_name] = hist["percentages"]

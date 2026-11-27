@@ -17,15 +17,17 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/seqan/flexbar",
             info="Barcode and adapter removal tool.",
             extra="""
-            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes 
+            Flexbar efficiently preprocesses high-throughput sequencing data. It demultiplexes
             barcoded runs and removes adapter sequences. Moreover, trimming and filtering features are provided.
             Flexbar increases read mapping rates and improves genome as well as transcriptome assemblies.
             """,
             doi="10.1093/bioinformatics/btx330",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/seqan/flexbar/blob/master/LICENSE.md",
         )
 
         # Parse logs
-        self.flexbar_data = dict()
+        self.flexbar_data = {}
         for f in self.find_log_files("flexbar", filehandles=True):
             self.parse_flexbar(f)
             self.add_data_source(f)
@@ -82,7 +84,7 @@ class MultiqcModule(BaseMultiqcModule):
             "remaining_bases": r"Remaining bases:?\s+(\d+)",
         }
         s_name = f["s_name"]
-        parsed_data = dict()
+        parsed_data = {}
         version = None
         for line in f["f"]:
             # The version appears in the before the sample name in the log so we
@@ -105,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
             if "Flexbar completed" in line:
                 _save_data(parsed_data)
                 s_name = f["s_name"]
-                parsed_data = dict()
+                parsed_data = {}
 
         # Pick up any partial logs
         _save_data(parsed_data)

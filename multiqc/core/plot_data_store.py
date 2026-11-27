@@ -4,11 +4,14 @@ This replaces the individual plot parquet files with a single file that contains
 It also stores all report metadata (modules, data sources, configs) to make reports fully reproducible.
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["polars"]
+
 import json
 import logging
 import os
 from re import Pattern
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
 
 import polars as pl
 from pydantic import ValidationError  # type: ignore
@@ -21,16 +24,16 @@ from multiqc.utils.config_schema import MultiQCConfig
 logger = logging.getLogger(__name__)
 
 # Set to keep track of which anchors have been saved
-_saved_anchors: Set[Anchor] = set()
+_saved_anchors: set[Anchor] = set()
 # Keep track of metric column names
-_metric_col_names: Set[ColumnKey] = set()
+_metric_col_names: set[ColumnKey] = set()
 # Buffer for batched parquet writes to avoid O(n²) read-concat-write behavior
-_pending_dataframes: List[pl.DataFrame] = []
+_pending_dataframes: list[pl.DataFrame] = []
 # Buffer for wide table dataframes (need special merging by sample)
-_pending_wide_tables: List[pl.DataFrame] = []
+_pending_wide_tables: list[pl.DataFrame] = []
 
 
-def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKey]) -> None:
+def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: set[ColumnKey]) -> None:
     """
     Buffer wide-format table data for later merging and writing.
 
@@ -38,7 +41,6 @@ def wide_table_to_parquet(table_df: pl.DataFrame, metric_col_names: Set[ColumnKe
     O(n²) read-concat-write behavior. The actual merging by sample happens
     in flush_to_parquet().
     """
-    global _pending_wide_tables
     table_df = fix_creation_date(table_df)
     _pending_wide_tables.append(table_df)
 
@@ -59,7 +61,6 @@ def append_to_parquet(df: pl.DataFrame) -> None:
     O(n²) read-concat-write behavior when many plots are saved.
     Call flush_to_parquet() to write all buffered data at once.
     """
-    global _pending_dataframes
     df = fix_creation_date(df)
     _pending_dataframes.append(df)
 
@@ -83,33 +84,21 @@ def flush_to_parquet() -> None:
     existing_other_rows = existing_df.filter(pl.col("type") != "table_row") if not existing_df.is_empty() else None
 
     # Process wide tables - merge all buffered wide tables by sample
-    merged_wide_tables: Optional[pl.DataFrame] = None
+    merged_wide_tables: pl.DataFrame | None = None
     if _pending_wide_tables:
-        # Get existing table rows
-        existing_table_rows = existing_df.filter(pl.col("type") == "table_row") if not existing_df.is_empty() else None
+        tables = list(_pending_wide_tables)
+        if not existing_df.is_empty():
+            tables.insert(0, existing_df.filter(pl.col("type") == "table_row"))
 
-        # Start with existing table rows or first pending table
-        if existing_table_rows is not None and not existing_table_rows.is_empty():
-            merged_wide_tables = existing_table_rows
-        else:
-            merged_wide_tables = None
-
-        # Merge all pending wide tables
-        for table_df in _pending_wide_tables:
-            if merged_wide_tables is None:
-                merged_wide_tables = table_df
-            elif table_df.height > 0:
-                # Merge by joining on sample and creation_date
-                merged_wide_tables = merged_wide_tables.join(table_df, on=["sample", "creation_date"], how="outer")
-                # Ensure all columns are present
-                all_cols = merged_wide_tables.columns
-                for col in table_df.columns:
-                    if col not in all_cols:
-                        all_cols.append(col)
-                merged_wide_tables = merged_wide_tables.select([c for c in all_cols if c in merged_wide_tables.columns])
+        # A join would leave non-key columns (e.g. "type") null for samples missing from the left table
+        merged_wide_tables = (
+            pl.concat(tables, how="diagonal_relaxed")
+            .group_by(["sample", "creation_date"], maintain_order=True)
+            .agg(pl.all().drop_nulls().first())
+        )
 
     # Build list of dataframes to concatenate
-    all_dfs: List[pl.DataFrame] = []
+    all_dfs: list[pl.DataFrame] = []
 
     if existing_other_rows is not None and not existing_other_rows.is_empty():
         all_dfs.append(existing_other_rows)
@@ -129,7 +118,7 @@ def flush_to_parquet() -> None:
     _pending_wide_tables = []
 
 
-def get_report_metadata(df: pl.DataFrame) -> Optional[Dict[str, Any]]:
+def get_report_metadata(df: pl.DataFrame) -> dict[str, Any] | None:
     """
     Extract all report metadata from the parquet file.
 
@@ -181,9 +170,9 @@ def save_report_metadata() -> None:
     This includes modules, data sources, creation date, config, and plot data.
     """
     # Prepare metadata row
-    modules_data: List[Dict[str, Any]] = []
+    modules_data: list[dict[str, Any]] = []
     for mod in report.modules:
-        module_dict: Dict[str, Any] = {
+        module_dict: dict[str, Any] = {
             "name": mod.name,
             "anchor": str(mod.anchor),
             "info": mod.info,
@@ -198,7 +187,7 @@ def save_report_metadata() -> None:
         modules_data.append(module_dict)
 
     # Prepare data sources
-    data_sources_dict: Dict[str, Dict[str, Dict[str, str]]] = {}
+    data_sources_dict: dict[str, dict[str, dict[str, str]]] = {}
     for mod_id, source_dict in report.data_sources.items():
         data_sources_dict[mod_id] = {}
         for section, sources in source_dict.items():
@@ -285,7 +274,7 @@ def _read_or_create_df() -> pl.DataFrame:
         except Exception as e:
             logger.error(f"Error reading parquet file: {e}")
             if config.strict:
-                raise e
+                raise
     elif csv_file.exists():
         try:
             # Read CSV and convert creation_date back to datetime
@@ -296,7 +285,7 @@ def _read_or_create_df() -> pl.DataFrame:
         except Exception as e:
             logger.error(f"Error reading CSV file: {e}")
             if config.strict:
-                raise e
+                raise
     else:
         # Create directory if needed
         os.makedirs(parquet_file.parent, exist_ok=True)

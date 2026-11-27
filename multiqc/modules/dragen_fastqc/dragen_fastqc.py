@@ -2,6 +2,7 @@ import logging
 import os
 
 from multiqc.base_module import ModuleNoSamplesFound
+
 from .base_metrics import DragenBaseMetrics
 from .content_metrics import DragenContentMetrics
 from .gc_metrics import DragenFastqcGcMetrics
@@ -57,6 +58,9 @@ class MultiqcModule(DragenBaseMetrics, DragenReadMetrics, DragenFastqcGcMetrics,
             href="https://www.illumina.com/products/by-type/informatics-products/dragen-bio-it-platform.html",
             info="Illumina Bio-IT Platform that uses FPGA for secondary analysis of sequencing data",
             # Can't find a DOI // doi=
+            # Proprietary (Illumina DRAGEN); license could not be determined
+            license=None,
+            license_url=None,
         )
 
         self.css = {

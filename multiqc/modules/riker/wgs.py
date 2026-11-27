@@ -2,14 +2,13 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, List
 
 from multiqc import config
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.bargraph import BarPlotConfig
 from multiqc.plots.table import TableConfig
 
-from .util import read_tsv, to_int
+from .util import read_tsv, to_float, to_int
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +23,7 @@ def parse_reports(module):
 
 
 def _parse_metrics(module) -> set:
-    data_by_sample: Dict[str, Dict[str, float]] = {}
+    data_by_sample: dict[str, dict[str, float | None]] = {}
 
     for f in module.find_log_files("riker/wgs_metrics", filehandles=True):
         for row in read_tsv(f["f"], source=f["fn"]):
@@ -33,7 +32,7 @@ def _parse_metrics(module) -> set:
                 continue
             s_name = module.clean_s_name(sample, f)
             try:
-                data_by_sample[s_name] = {col: float(val) for col, val in row.items()}
+                data_by_sample[s_name] = {col: to_float(val) for col, val in row.items()}
             except (TypeError, ValueError) as e:
                 log.warning(f"riker: skipping row in {f['fn']} for sample {sample}: {e}")
                 continue
@@ -48,7 +47,7 @@ def _parse_metrics(module) -> set:
     riker_config = getattr(config, "riker_config", {})
     user_covs = riker_config.get("general_stats_target_coverage", [])
     if isinstance(user_covs, list) and user_covs:
-        gs_covs: List[int] = [int(c) for c in user_covs if int(c) in WGS_COVERAGE_LEVELS]
+        gs_covs: list[int] = [int(c) for c in user_covs if int(c) in WGS_COVERAGE_LEVELS]
         skipped = [c for c in user_covs if int(c) not in WGS_COVERAGE_LEVELS]
         if skipped:
             log.warning(
@@ -64,7 +63,7 @@ def _parse_metrics(module) -> set:
     #     that the run is in trouble).
     #   - frac_bases_at_Nx: higher is better, gradient over 80-100% so a typical
     #     well-run sample doesn't paint the same shade as a marginal one.
-    headers: Dict[str, dict] = {
+    headers: dict[str, dict] = {
         "median_coverage": {
             "title": "Median cov.",
             "description": "Median coverage depth",
@@ -133,7 +132,7 @@ def _parse_metrics(module) -> set:
             "hidden": hidden,
         }
 
-    table_headers: Dict[str, dict] = {
+    table_headers: dict[str, dict] = {
         "mean_coverage": {
             "title": "Mean cov.",
             "description": "Mean coverage depth",
@@ -263,9 +262,12 @@ def _parse_metrics(module) -> set:
         ("frac_excluded_overlap", "Read-pair overlap"),
         ("frac_excluded_capped", "Coverage cap"),
     ]
-    excl_data: Dict[str, Dict[str, float]] = {}
+    excl_data: dict[str, dict[str, float]] = {}
     for s_name, row in data_by_sample.items():
-        excl_data[s_name] = {col: row.get(col, 0.0) * 100.0 for col, _ in excl_keys}
+        excl_data[s_name] = {}
+        for col, _ in excl_keys:
+            val = row.get(col)
+            excl_data[s_name][col] = val * 100.0 if val is not None else 0.0
     excl_cats = {col: {"name": label} for col, label in excl_keys}
     excl_config = BarPlotConfig(
         id=f"{module.anchor}_wgs_excluded_bases",
@@ -294,10 +296,10 @@ def _parse_metrics(module) -> set:
 
 def _parse_coverage_histogram(module) -> set:
     # data_by_sample[sample][depth] = bases (count at exactly that depth)
-    data_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
+    data_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
 
     for f in module.find_log_files("riker/wgs_coverage", filehandles=True):
-        rows_by_sample: Dict[str, Dict[int, int]] = defaultdict(dict)
+        rows_by_sample: dict[str, dict[int, int]] = defaultdict(dict)
         for row in read_tsv(f["f"], source=f["fn"]):
             sample = row.get("sample")
             if not sample:
@@ -337,7 +339,7 @@ def _parse_coverage_histogram(module) -> set:
                     max_cov = max(depth, max_cov)
                     break
 
-    trimmed: Dict[str, Dict[int, int]] = {}
+    trimmed: dict[str, dict[int, int]] = {}
     for s_name, hist in data_by_sample.items():
         trimmed[s_name] = {d: c for d, c in hist.items() if d <= max_cov}
 

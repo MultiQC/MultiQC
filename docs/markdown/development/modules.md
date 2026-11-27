@@ -314,16 +314,26 @@ you access to a number of functions on the `self` namespace. For example:
 ```python
 from multiqc.base_module import BaseMultiqcModule
 
+
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
         super().__init__(
-          name="My Module",
-          anchor="mymodule",
-          href="https://www.awesome_bioinfo.com/mymodule",
-          info="Example analysis module used for writing documentation.",
-          doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
+            name="My Module",
+            anchor="mymodule",
+            href="https://www.awesome_bioinfo.com/mymodule",
+            info="Example analysis module used for writing documentation.",
+            doi=["01.2345/journal/abc123", "01.2345/journal/abc124"],
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 ```
+
+Like `doi`, the `license` and `license_url` arguments are optional but expected
+for every module. The CI linter (`code_checks.py`) checks that both are present
+in each module, so declare the license of the tool the module wraps (see
+[Adding license and DOI information](#adding-license-and-doi-information)
+below). If the license is genuinely unknown or the tool is proprietary, pass
+`license=None` and `license_url=None` with a short code comment explaining why.
 
 The `__init__` variables are used to create the header, URL link,
 analysis module credits and description in the report.
@@ -344,6 +354,8 @@ super().__init__(
          "- *Fast* processing\n\n"
          "See the [documentation](https://www.awesome_bioinfo.com/docs) for more details.",
     doi="01.2345/journal/abc123",
+    license="MIT License",
+    license_url="https://opensource.org/license/mit",
 )
 
 The available arguments when initialising a module as follows:
@@ -353,6 +365,8 @@ The available arguments when initialising a module as follows:
 - `href` - Link(s) to the homepage for the tool
 - `info` - Very short description text about the tool. Supports markdown formatting when `autoformat=True` and `autoformat_type="markdown"` (default). Can include **bold** text, *italic* text, [links](https://example.com), lists, and other markdown features.
 - `doi` - One or more publication DOIs (can be a string or a list)
+- `license` - Human readable name of the tool's software license (e.g. `"MIT License"`), or `None` if unknown or proprietary. Checked by CI, like `doi`.
+- `license_url` - URL to the license text, or `None`.
 - `comment` - Additional comment text for module. Usually user-supplied in a config.
 - `extra` - Optional additional description. Will appear in the documentation and in the report, but not on the list of modules on the website.
 - `target` - Name of the module in the description (default: `name`)
@@ -436,6 +450,7 @@ Instead, use the `logger` module as follows:
 
 ```python
 import logging
+
 log = logging.getLogger(__name__)
 
 log.info("Hello World!")
@@ -634,6 +649,7 @@ for a basic example, based loosely on the preseq module:
 ```python
 from multiqc.base_module import BaseMultiqcModule
 from typing import Dict, Union
+
 
 class MultiqcModule(BaseMultiqcModule):
     def __init__(self):
@@ -848,6 +864,63 @@ for line in f.splitlines():
     ...  # rest of file parsing
 ```
 
+#### Adding license and DOI information
+
+To make reports more FAIR compliant, the module header shows the software
+license (a linked name, just after the DOI), and the _Software Versions_
+section shows the license and citation DOI(s) as extra columns. This
+information is hardcoded in the module, either in the module constructor (in
+which case it applies to the module's software) or per software in the
+`self.add_software_version()` call.
+
+Like `doi`, `license` and `license_url` are optional constructor arguments, but
+the CI linter (`code_checks.py`) checks that both are present in every module,
+so they should always be set. The DOI is taken from the `doi` argument that
+modules already pass to the constructor.
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://github.com/example/toolname",
+    info="Universal RNA-seq aligner.",
+    doi="10.1093/bioinformatics/bts635",
+    license="MIT License",
+    license_url="https://opensource.org/license/mit",
+)
+```
+
+If the license is genuinely unknown or the tool is proprietary, pass `None` for
+both and add a short code comment explaining why, rather than guessing:
+
+```python
+super().__init__(
+    name="toolname",
+    anchor="toolname",
+    href="https://example.com/toolname",
+    info="Proprietary sequencing analysis tool.",
+    # License could not be determined
+    license=None,
+    license_url=None,
+)
+```
+
+When a module reports versions for several tools, the license and DOI can be
+set separately for each of them:
+
+```python
+self.add_software_version(
+    version.group(1),
+    sample=f["s_name"],
+    software_name="htslib",
+    license="MIT License",
+    doi="10.1093/gigascience/giab007",
+)
+```
+
+The License and DOI columns are only shown when at least one software provides
+that information.
+
 Even if the logs does not contain any version information, you should still
 add a superfluous `self.add_software_version()` call to the module. This
 will help maintainers to check if new modules or submodules parse any version
@@ -896,6 +969,7 @@ data scales and colour schemes, you can supply an extra dict:
 
 ```python
 from multiqc.plots.table_object import ColumnMeta
+
 headers = {
     "first_col": ColumnMeta(
         title="First",
@@ -909,7 +983,7 @@ headers = {
         min=0,
         scale="Blues",
         suffix="%",
-    )
+    ),
 }
 self.general_stats_addcols(data_by_sample, headers)
 ```
@@ -918,18 +992,18 @@ Here are all options for headers, with defaults:
 
 ```python
 headers["name"] = TableColumn(
-    namespace="",                # Module name. Auto-generated for core modules in General Statistics.
-    title="[ dict key ]",        # Short title, table column title
+    namespace="",  # Module name. Auto-generated for core modules in General Statistics.
+    title="[ dict key ]",  # Short title, table column title
     description="[ dict key ]",  # Longer description, goes in mouse hover text
-    max=None,                    # Minimum value in range, for bar / colour coding
-    min=None,                    # Maximum value in range, for bar / colour coding
-    scale="GnBu",                # Colour scale for colour coding. Set to False to disable.
-    suffix=None,                 # Suffix for value (eg. '%')
-    format="{:,.1f}",            # Output format() string. Can also be a lambda function.
-    shared_key=None,             # See below for description
-    modify=None,                 # Lambda function to modify values
-    hidden=False,                # Set to True to hide the column on page load
-    placement=1000.0,            # Alter the default ordering of columns in the table
+    max=None,  # Minimum value in range, for bar / colour coding
+    min=None,  # Maximum value in range, for bar / colour coding
+    scale="GnBu",  # Colour scale for colour coding. Set to False to disable.
+    suffix=None,  # Suffix for value (eg. '%')
+    format="{:,.1f}",  # Output format() string. Can also be a lambda function.
+    shared_key=None,  # See below for description
+    modify=None,  # Lambda function to modify values
+    hidden=False,  # Set to True to hide the column on page load
+    placement=1000.0,  # Alter the default ordering of columns in the table
 )
 ```
 
@@ -1020,21 +1094,19 @@ For categorical metrics that can take a value from a predefined set, use one of 
 
 ### Grouping samples
 
-If you have a set of samples that should be grouped together in the report using the [sample grouping configuration option](../reports/customisation.md#sample-grouping), you can include the `group_samples_config` parameter to the `self.general_stats_addcols` function. For example, FastQC uses the following configuration:
+If you have a set of samples that should be grouped together in the report using the [sample grouping configuration option](../reports/customisation.md#sample-grouping), you can include the `group_samples_config` parameter to the `self.general_stats_addcols` function. For example:
 
 ```python
 self.general_stats_addcols(
     ...,
     group_samples_config=SampleGroupingConfig(
-        cols_to_sum=[ColumnKey("total_sequences")],
+        cols_to_sum=[ColumnKey("total_reads")],
         cols_to_weighted_average=[
-            (ColumnKey("percent_gc"), ColumnKey("total_sequences")),
-            (ColumnKey("avg_sequence_length"), ColumnKey("total_sequences")),
-            (ColumnKey("percent_duplicates"), ColumnKey("total_sequences")),
-            (ColumnKey("median_sequence_length"), ColumnKey("total_sequences")),
+            (ColumnKey("percent_gc"), ColumnKey("total_reads")),
+            (ColumnKey("percent_duplicates"), ColumnKey("total_reads")),
         ],
-        extra_functions=[_summarize_statues],
-    )
+        extra_functions=[_summarize_statuses],
+    ),
 )
 ```
 
@@ -1048,22 +1120,19 @@ In this configuration, you can specify how to merge data for each column:
 
 #### Extra functions
 
-The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, FastQC uses it to recalculate the `percent_fails` value:
+The `extra_functions` flag can be used when you need custom logic beyond summing or averaging numeric values. For example, a module could use it to recalculate a `percent_fails` value across all samples in a group:
 
 ```python
-def _summarize_statues(
-    merged_row: InputRow, group_s_names: List[Tuple[Optional[str], SampleName, SampleName]]
-):
-    # Add count of fail statuses
-    _num_statuses = 0
-    _num_fails = 0
+def _summarize_statuses(merged_row: InputRow, group_s_names: list[tuple[str | None, SampleName, SampleName]]):
+    num_statuses = 0
+    num_fails = 0
     for _, _, original_sn in group_s_names:
-        for st in self.fastqc_data[original_sn]["statuses"].values():
-            _num_statuses += 1
-            if st == "fail":
-                _num_fails += 1
-    if _num_statuses > 0:
-        merged_row.data[ColumnKey("percent_fails")] = (float(_num_fails) / float(_num_statuses)) * 100.0
+        for status in self.toolname_data[original_sn]["statuses"].values():
+            num_statuses += 1
+            if status == "fail":
+                num_fails += 1
+    if num_statuses > 0:
+        merged_row.data[ColumnKey("percent_fails")] = (num_fails / num_statuses) * 100.0
 ```
 
 #### Explicit groups
@@ -1074,18 +1143,16 @@ Use this when the tool output already tells you which samples are related. For e
 # Build the groups from tool metadata during parse.
 explicit_groups: Dict[str, List[str]] = {}
 for s_name, data in data_by_sample.items():
-    group_id = data["sample_id"] # This will depend on your data structure
+    group_id = data["sample_id"]  # This will depend on your data structure
     explicit_groups.setdefault(group_id, []).append(s_name)
 
 self.general_stats_addcols(
     data_by_sample,
     headers,
-    group_samples_config = SampleGroupingConfig(
-        explicit_groups = explicit_groups,
-        cols_to_sum = [ColumnKey("some_count_column")],
-        cols_to_weighted_average = [
-            (ColumnKey("some_percent"), ColumnKey("some_count_column"))
-        ],
+    group_samples_config=SampleGroupingConfig(
+        explicit_groups=explicit_groups,
+        cols_to_sum=[ColumnKey("some_count_column")],
+        cols_to_weighted_average=[(ColumnKey("some_percent"), ColumnKey("some_count_column"))],
     ),
 )
 ```
@@ -1166,11 +1233,7 @@ For example:
 
 ```python
 # Collect sample names by status for this section
-status_data = {
-    "pass": ["sample1", "sample2", "sample3"],
-    "warn": ["sample4"],
-    "fail": ["sample5"]
-}
+status_data = {"pass": ["sample1", "sample2", "sample3"], "warn": ["sample4"], "fail": ["sample5"]}
 
 # Add section with status bar
 self.add_section(
@@ -1178,7 +1241,7 @@ self.add_section(
     anchor="quality_check",
     description="Results from quality control analysis",
     plot=my_plot,
-    statuses=status_data
+    statuses=status_data,
 )
 ```
 
@@ -1243,10 +1306,9 @@ from multiqc.plots.bargraph import BarPlotConfig
 self.add_section(
     name="Second Module Section",
     anchor="mymodule-second",
-    plot=linegraph.plot(data_by_sample2, pconfig=LinePlotConfig(
-        id="mymodule-second",
-        title="My Module: Duplication Rate"
-    )),
+    plot=linegraph.plot(
+        data_by_sample2, pconfig=LinePlotConfig(id="mymodule-second", title="My Module: Duplication Rate")
+    ),
 )
 self.add_section(
     name="First Module Section",
@@ -1262,14 +1324,9 @@ self.add_section(
         * Are
         * `Great`
     """,
-    plot = bargraph.plot(data_by_sample, pconfig=BarPlotConfig(
-        id="mymodule-first",
-        title="My Module: Read Counts"
-    ))
+    plot=bargraph.plot(data_by_sample, pconfig=BarPlotConfig(id="mymodule-first", title="My Module: Read Counts")),
 )
-self.add_section(
-    content="<p>Some custom HTML.</p>"
-)
+self.add_section(content="<p>Some custom HTML.</p>")
 ```
 
 If a module has more than one section, these will automatically be labelled and linked
@@ -1297,8 +1354,8 @@ MultiQC `config` module and have sensible defaults. For example:
 ```python
 from multiqc import config
 
-mymod_config = getattr(config, 'mymod', {})
-my_custom_config_var = mymod_config.get('my_custom_config_var', 5)
+mymod_config = getattr(config, "mymod", {})
+my_custom_config_var = mymod_config.get("my_custom_config_var", 5)
 ```
 
 You now have a variable `my_custom_config_var` with a default value of 5, but that
@@ -1368,12 +1425,11 @@ the path to the desired file. For example, see how it's done in the FastQC modul
 
 ```python
 import os
+
 self.css = {
     "assets/css/multiqc_fastqc.css": os.path.join(os.path.dirname(__file__), "assets", "css", "multiqc_fastqc.css")
 }
-self.js = {
-    "assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")
-}
+self.js = {"assets/js/multiqc_fastqc.js": os.path.join(os.path.dirname(__file__), "assets", "js", "multiqc_fastqc.js")}
 ```
 
 ## Addendum - example module
@@ -1454,6 +1510,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/bioinformatics-centre/qualalyser/",
             info="Reports read quality and length from sequencing data",
             doi="10.21105/joss.02991",
+            license="MIT License",
+            license_url="https://opensource.org/license/mit",
         )
 
         # Find and load any Qualalyser reports
@@ -1461,7 +1519,7 @@ class MultiqcModule(BaseMultiqcModule):
         for f in self.find_log_files("qualalyser/quality", filehandles=True):
             sample_data = parse_qualalyser_log(f)
             if sample_data:
-                s_name = f['s_name']
+                s_name = f["s_name"]
                 if s_name in data_by_sample:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 data_by_sample[s_name] = sample_data

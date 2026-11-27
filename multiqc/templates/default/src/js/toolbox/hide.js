@@ -147,7 +147,7 @@ window.mqc_hidesamples_idx = 200;
 window.make_hidesamples_filter = function (f_text) {
   let row = `
   <li class="d-flex justify-content-between align-items-center">
-    <input class="f_text flex-grow-1" value="${f_text}" tabindex="${window.mqc_hidesamples_idx}" />
+    <input class="f_text flex-grow-1" value="${escapeHtml(f_text)}" tabindex="${window.mqc_hidesamples_idx}" />
     <button type="button" class="btn-close py-2 mt-1" aria-label="Remove"></button>
   </li>`;
   window.mqc_hidesamples_idx += 2;

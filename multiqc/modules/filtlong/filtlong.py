@@ -35,10 +35,12 @@ class MultiqcModule(BaseMultiqcModule):
             extra="It can take a set of long reads and produce a smaller, better subset. It uses both read length "
             "(longer is better) and read identity (higher is better) when choosing which reads pass the filter.",
             # doi="", # No DOI
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/rrwick/Filtlong/blob/main/LICENSE",
         )
 
         # Find and load reports
-        self.filtlong_data = dict()
+        self.filtlong_data = {}
 
         # Find all files for filtlong
         for f in self.find_log_files("filtlong", filehandles=True):
@@ -86,9 +88,7 @@ class MultiqcModule(BaseMultiqcModule):
         headers = {
             "Target bases": {
                 "title": f"Target bases ({config.read_count_prefix})",
-                "description": "Keep only the best reads up to this many total bases ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Keep only the best reads up to this many total bases ({config.read_count_desc})",
                 "scale": "Greens",
                 "shared_key": "read_count",
                 "modify": lambda x: x * config.read_count_multiplier,

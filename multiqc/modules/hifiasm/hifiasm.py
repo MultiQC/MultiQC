@@ -17,10 +17,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/chhylp123/hifiasm",
             info="Haplotype-resolved assembler for accurate Hifi reads",
             doi="10.1038/s41592-020-01056-5",
+            license="MIT License",
+            license_url="https://github.com/chhylp123/hifiasm/blob/master/LICENSE",
         )
 
         # To store the mod data
-        self.hifiasm_data = dict()
+        self.hifiasm_data = {}
         self.parse_hifiasm_log_files()
         self.hifiasm_data = self.ignore_samples(self.hifiasm_data)
 
@@ -83,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def extract_kmer_graph(self, fin):
         """Extract the kmer graph from file in"""
-        data = dict()
+        data = {}
 
         found_histogram = False
 

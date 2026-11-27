@@ -1,6 +1,5 @@
 import ast
 import logging
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -29,11 +28,13 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/zhpn1024/ribotish",
             info="Identifies translated ORFs from Ribo-seq data and reports reading frame quality metrics.",
             doi="10.1186/s13059-017-1316-1",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/zhpn1024/ribotish/blob/master/LICENSE",
         )
 
         # Store parsed data
-        self.ribotish_data: Dict[str, Dict] = {}
-        self.frame_proportions: Dict[str, Dict] = {}
+        self.ribotish_data: dict[str, dict] = {}
+        self.frame_proportions: dict[str, dict] = {}
 
         # Parse all *_qual.txt files
         for f in self.find_log_files("ribotish/qual"):
@@ -65,7 +66,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Write data file at the end
         self.write_data_file(self.ribotish_data, "multiqc_ribotish")
 
-    def parse_ribotish_qual(self, f) -> Dict:
+    def parse_ribotish_qual(self, f) -> dict:
         """
         Parse Ribo-TISH *_qual.txt file.
 
@@ -155,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
         all_lengths = sorted(all_lengths_set)
 
         plot_data = {}
-        sample_groups: Dict[str, list] = {}
+        sample_groups: dict[str, list] = {}
 
         for length in all_lengths:
             group_name = f"{length}nt"
@@ -245,7 +246,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Calculate sample totals once for efficiency
         sample_totals = {}
-        for sample_name in self.frame_proportions.keys():
+        for sample_name in self.frame_proportions:
             sample_totals[sample_name] = sum(props["total"] for props in self.frame_proportions[sample_name].values())
 
         if len(sample_totals) <= 30:

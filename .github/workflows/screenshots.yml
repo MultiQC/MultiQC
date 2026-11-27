@@ -32,7 +32,7 @@ jobs:
           mv test-data-main/ test-data/
 
       - name: Generate terminal images with rich-codex
-        uses: ewels/rich-codex@1af970c6b6850d5870fed9041ac7a6337940fdc3 # v1.3.1
+        uses: ewels/rich-codex@f6d8165f6ab813603db81a49def997104f4fcd5a # v1.4.0
         with:
           clean_img_paths: docs/images/screenshots/*.svg
           commit_changes: "true"

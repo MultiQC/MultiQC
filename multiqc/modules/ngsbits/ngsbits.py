@@ -24,10 +24,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/imgag/ngs-bits",
             info="Calculating statistics from FASTQ, BAM, and VCF",
             doi="10.1093/bioinformatics/btx032",
+            license="MIT License",
+            license_url="https://github.com/imgag/ngs-bits/blob/master/LICENSE",
         )
 
         # Call submodule functions
-        n = dict()
+        n = {}
         n["mappingqc"] = mappingqc_parse_reports(self)
         if n["mappingqc"] > 0:
             log.info(f"Found {n['mappingqc']} MappingQC reports")

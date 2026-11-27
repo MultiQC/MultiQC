@@ -17,6 +17,8 @@ File path for the source of this content: multiqc/modules/interop/interop.py
 Reading and writing InterOp metric files.
 
 [http://illumina.github.io/interop/index.html](http://illumina.github.io/interop/index.html)
+
+[PolyForm Strict License 1.0.0](https://github.com/Illumina/interop/blob/master/LICENSE)
 :::
 
 The Illumina InterOp libraries are a set of common routines used for reading and writing InterOp metric files.
@@ -40,4 +42,3 @@ interop/index-summary:
 interop/summary:
   contents: Level,Yield,Projected Yield,Aligned,Error Rate,Intensity C1,%>=Q30
 ```
-    

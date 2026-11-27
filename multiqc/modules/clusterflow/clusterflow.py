@@ -3,11 +3,24 @@ import logging
 import os
 import re
 import time
+from html import escape
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import table
 
 log = logging.getLogger(__name__)
+
+# Commands are parsed from Cluster Flow log files, so they are stored as plain text and
+# only turned into HTML here, after escaping. The placeholder marks chunks that varied
+# between otherwise identical commands.
+VARIABLE_PLACEHOLDER = "[variable]"
+
+
+def _format_command(cmd: str) -> str:
+    highlighted = escape(cmd).replace(
+        VARIABLE_PLACEHOLDER, f'<span style="background-color:#dedede; color:#999;">{VARIABLE_PLACEHOLDER}</span>'
+    )
+    return f'<code style="white-space:nowrap;">{highlighted}</code>'
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -26,11 +39,13 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://clusterflow.io",
             info="Simple and flexible bioinformatics pipeline tool.",
             doi="10.12688/f1000research.10335.2",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/ewels/clusterflow/blob/master/license.txt",
         )
 
         # Find and load any Cluster Flow reports
-        self.clusterflow_commands = dict()
-        self.clusterflow_runfiles = dict()
+        self.clusterflow_commands = {}
+        self.clusterflow_runfiles = {}
 
         for f in self.find_log_files("clusterflow/logs", filehandles=True):
             self.parse_clusterflow_logs(f)
@@ -55,7 +70,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Count pipelines
         num_log_pipelines = len(self.clusterflow_commands)
-        num_runfile_pipelines = len(set(d.get("pipeline_id", "unknown") for d in self.clusterflow_runfiles.values()))
+        num_runfile_pipelines = len({d.get("pipeline_id", "unknown") for d in self.clusterflow_runfiles.values()})
         log.info(f"Found {max(num_log_pipelines, num_runfile_pipelines)} pipelines")
         log.debug(f"Found {num_log_pipelines} log pipelines")
         log.debug(f"Found {num_runfile_pipelines} runfile pipelines")
@@ -96,8 +111,8 @@ class MultiqcModule(BaseMultiqcModule):
             if line.startswith("###CFCMD"):
                 if pipeline_id is None:
                     pipeline_id = "unknown"
-                if pipeline_id not in self.clusterflow_commands.keys():
-                    self.clusterflow_commands[pipeline_id] = list()
+                if pipeline_id not in self.clusterflow_commands:
+                    self.clusterflow_commands[pipeline_id] = []
                 self.clusterflow_commands[pipeline_id].append(line[8:])
 
     def clusterflow_commands_table(self):
@@ -112,38 +127,33 @@ class MultiqcModule(BaseMultiqcModule):
             <em>(typically input and ouput filenames)</em>. Each column is for one Cluster Flow run."""
 
         # Loop through pipelines
-        tool_cmds = dict()
-        headers = dict()
+        tool_cmds = {}
+        headers = {}
         for pipeline_id, commands in self.clusterflow_commands.items():
-            headers[pipeline_id] = {"scale": False}
-            self.var_html = '<span style="background-color:#dedede; color:#999;">[variable]</span>'
-            tool_cmd_parts = dict()
+            headers[pipeline_id] = {"scale": False, "format": _format_command}
+            tool_cmd_parts = {}
             for cmd in commands:
                 s = cmd.split()
                 tool = self._guess_cmd_name(s)
-                if tool not in tool_cmd_parts.keys():
-                    tool_cmd_parts[tool] = list()
+                if tool not in tool_cmd_parts:
+                    tool_cmd_parts[tool] = []
                 tool_cmd_parts[tool].append(s)
 
             for tool, cmds in tool_cmd_parts.items():
                 cons_cmd = self._replace_variable_chunks(cmds)
                 # Try again with first two blocks if all variable
-                variable_count = cons_cmd.count(self.var_html)
+                variable_count = cons_cmd.count(VARIABLE_PLACEHOLDER)
                 if variable_count == len(cmds[0]) - 1 and len(cmds[0]) > 2:
-                    for subcmd in set([x[1] for x in cmds]):
+                    for subcmd in {x[1] for x in cmds}:
                         sub_cons_cmd = self._replace_variable_chunks([cmd for cmd in cmds if cmd[1] == subcmd])
                         tool = f"{tool} {subcmd}"
                         if tool not in tool_cmds:
-                            tool_cmds[tool] = dict()
-                        tool_cmds[tool][pipeline_id] = '<code style="white-space:nowrap;">{}</code>'.format(
-                            " ".join(sub_cons_cmd)
-                        )
+                            tool_cmds[tool] = {}
+                        tool_cmds[tool][pipeline_id] = " ".join(sub_cons_cmd)
                 else:
                     if tool not in tool_cmds:
-                        tool_cmds[tool] = dict()
-                    tool_cmds[tool][pipeline_id] = '<code style="white-space:nowrap;">{}</code>'.format(
-                        " ".join(cons_cmd)
-                    )
+                        tool_cmds[tool] = {}
+                    tool_cmds[tool][pipeline_id] = " ".join(cons_cmd)
 
         table_config = {
             "namespace": "Cluster Flow",
@@ -172,7 +182,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     for idx, s in enumerate(cons_cmd):
                         if s not in cmd:
-                            cons_cmd[idx] = self.var_html
+                            cons_cmd[idx] = VARIABLE_PLACEHOLDER
         return cons_cmd
 
     def _guess_cmd_name(self, cmd):
@@ -195,7 +205,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Parse run files generated by Cluster Flow.
         Currently gets pipeline IDs and associated steps."""
 
-        data = dict()
+        data = {}
         in_comment = False
         seen_pipeline = False
         cf_file = False
@@ -239,7 +249,7 @@ class MultiqcModule(BaseMultiqcModule):
                 s = line.split("\t")
                 if len(s) > 1:
                     if "files" not in data:
-                        data["files"] = dict()
+                        data["files"] = {}
                     if s[0] not in data["files"]:
                         data["files"][s[0]] = []
                     data["files"][s[0]].append(s[1:])
@@ -247,6 +257,7 @@ class MultiqcModule(BaseMultiqcModule):
         dt = None
         if "pipeline_id" in data:
             s = data["pipeline_id"].split("_")
+
             dt = datetime.datetime.fromtimestamp(int(s[-1]))
         elif "pipeline_start" in data:
             dt_r = re.match(r"(\d{2}):(\d{2}), (\d{2})-(\d{2})-(\d{4})", data["pipeline_start"])
@@ -277,20 +288,19 @@ class MultiqcModule(BaseMultiqcModule):
         # Cluster Flow v0.4 and before did not print the pipeline ID in run files
         # Try to guess - will be wrong as no microsecond info, but hopefully unique
         # and reproducible for other run files
-        if "pipeline_id" not in data:
-            if "pipeline_name" in data and "pipeline_start_dateparts" in data:
-                log.debug(f'Trying to guess pipeline ID for file "{f["fn"]}"')
-                data["pipeline_id"] = "cf_{}_{}".format(
-                    data["pipeline_name"], data["pipeline_start_dateparts"]["timestamp"]
-                )
+        if "pipeline_id" not in data and "pipeline_name" in data and "pipeline_start_dateparts" in data:
+            log.debug(f'Trying to guess pipeline ID for file "{f["fn"]}"')
+            data["pipeline_id"] = "cf_{}_{}".format(
+                data["pipeline_name"], data["pipeline_start_dateparts"]["timestamp"]
+            )
         return data
 
     def clusterflow_pipelines_section(self):
         """Generate HTML for section about pipelines, generated from
         information parsed from run files."""
-        data = dict()
+        data = {}
         pids_guessed = ""
-        for f, d in self.clusterflow_runfiles.items():
+        for d in self.clusterflow_runfiles.values():
             pid = d.get("pipeline_id", "unknown")
             if d.get("pipeline_id_guess", False) is True:
                 pid += "*"
@@ -348,16 +358,16 @@ class MultiqcModule(BaseMultiqcModule):
 
     def clusterflow_pipelines_printout(self):
         """Print the steps used in each Cluster Flow pipeline"""
-        data = dict()
+        data = {}
         html = ""
-        for f, d in self.clusterflow_runfiles.items():
+        for d in self.clusterflow_runfiles.values():
             pid = d.get("pipeline_id", "unknown")
             data[pid] = [d.get("pipeline_name"), "\n".join(d.get("pipeline_steps", []))]
         for pid, d in data.items():
-            html += """
+            html += f"""
                 <div class="panel panel-default">
-                    <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {} (<code>{}</code>)</h3></div>
-                    <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{}</pre>
+                    <div class="panel-heading"><h3 class="panel-title">Pipeline Steps: {escape(pid)} (<code>{escape(str(d[0]))}</code>)</h3></div>
+                    <pre class="panel-body" style="border:0; background-color:transparent; padding:0 15px; margin:0; color:#666; font-size:90%;">{escape(d[1])}</pre>
                 </div>
-                """.format(pid, d[0], d[1])
+                """
         return html

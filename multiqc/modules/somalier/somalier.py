@@ -31,15 +31,17 @@ class MultiqcModule(BaseMultiqcModule):
             to be used for general QC.
             """,
             doi="10.1186/s13073-020-00761-2",
+            license="MIT License",
+            license_url="https://github.com/brentp/somalier/blob/master/LICENSE",
         )
 
         # Find and load any somalier reports
-        self.somalier_data = dict()
-        self.somalier_background_pcs = dict()
-        self.somalier_ancestry_cats = list()
-        self.somalier_length_counts = dict()
-        self.somalier_length_exp = dict()
-        self.somalier_length_obsexp = dict()
+        self.somalier_data = {}
+        self.somalier_background_pcs = {}
+        self.somalier_ancestry_cats = []
+        self.somalier_length_counts = {}
+        self.somalier_length_exp = {}
+        self.somalier_length_obsexp = {}
 
         # parse somalier sample file
         for f in self.find_log_files("somalier/samples"):
@@ -47,7 +49,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 for s_name_raw in parsed_data:
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
-                    if s_name in self.somalier_data.keys():
+                    if s_name in self.somalier_data:
                         log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
@@ -58,7 +60,7 @@ class MultiqcModule(BaseMultiqcModule):
             if parsed_data is not None:
                 for s_name_raw in parsed_data:
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
-                    if s_name in self.somalier_data.keys():
+                    if s_name in self.somalier_data:
                         log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                     self.add_data_source(f, s_name)
                     self.somalier_data[s_name] = parsed_data[s_name_raw]
@@ -103,7 +105,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def parse_somalier_samples(f):
         """Go through log file looking for somalier output"""
-        parsed_data = dict()
+        parsed_data = {}
         headers = None
         sample_i = -100
         for line in f["f"].splitlines():
@@ -113,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
                 headers = s
                 sample_i = headers.index("sample_id")
             else:
-                parsed_data[s[sample_i]] = dict()
+                parsed_data[s[sample_i]] = {}
                 for i, v in enumerate(s):
                     if i != sample_i:
                         try:
@@ -127,7 +129,7 @@ class MultiqcModule(BaseMultiqcModule):
     @staticmethod
     def parse_somalier_pairs_tsv(f):
         """Parse csv output from somalier"""
-        parsed_data = dict()
+        parsed_data = {}
         headers = None
         s_name_idx = None
         for line in f["f"].splitlines():
@@ -143,7 +145,7 @@ class MultiqcModule(BaseMultiqcModule):
                 if s_name_idx is None:
                     continue
                 s_name = "*".join([s[idx] for idx in s_name_idx])  # not safe to hard code, but works
-                parsed_data[s_name] = dict()
+                parsed_data[s_name] = {}
                 for i, v in enumerate(s):
                     if i not in s_name_idx:  # Skip if (i == 0 or 1); i.e. sample_a, sample_b
                         if isnan(float(v)) or isinf(float(v)):
@@ -160,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_somalier_ancestry(self, f):
         # dict for parsed data, ancestry prediction probabilities and PCs
-        parsed_data = dict()
+        parsed_data = {}
 
         # list for background principal components and associated ancestry
         bg_pc1 = []
@@ -213,17 +215,17 @@ class MultiqcModule(BaseMultiqcModule):
                 # cycle over keys, i.e. sample names
                 # safely add new data to object data
                 # warn when overwriting
-                for s_name_raw in parsed_data:
+                for s_name_raw, sample_data in parsed_data.items():
                     s_name = "*".join([self.clean_s_name(s, f) for s in s_name_raw.split("*")])
-                    if s_name in self.somalier_data.keys():
-                        intersect_keys = parsed_data[s_name_raw].keys() & self.somalier_data.keys()
+                    if s_name in self.somalier_data:
+                        intersect_keys = sample_data.keys() & self.somalier_data.keys()
                         if len(intersect_keys) > 0:
                             log.debug(f"Duplicate sample name found! Overwriting: {s_name} : {intersect_keys}")
                     self.add_data_source(f, s_name)
                     try:
-                        self.somalier_data[s_name].update(parsed_data[s_name_raw])
+                        self.somalier_data[s_name].update(sample_data)
                     except KeyError:
-                        self.somalier_data[s_name] = parsed_data[s_name_raw]
+                        self.somalier_data[s_name] = sample_data
         else:
             log.warning(f"Detected empty file: {f['fn']}")
 
@@ -427,7 +429,7 @@ class MultiqcModule(BaseMultiqcModule):
         extra_colours = cscale.get_colours("Dark2")
         extra_colours = _make_col_alpha(extra_colours, alpha)
         extra_colour_idx = 0
-        data = dict()
+        data = {}
         for pair, d in self.somalier_data.items():
             if "expected_relatedness" not in d:
                 continue
@@ -558,6 +560,7 @@ class MultiqcModule(BaseMultiqcModule):
     def somalier_sex_check_plot(self):
         data = {}
         sex_index = {"female": 0, "male": 1, "unknown": 2}
+        rng = random.Random(0)
 
         for s_name, d in self.somalier_data.items():
             if "X_depth_mean" in d and "original_pedigree_sex" in d:
@@ -566,7 +569,7 @@ class MultiqcModule(BaseMultiqcModule):
                 else:
                     y = 2 * d["X_depth_mean"] / d["gt_depth_mean"]
                 data[s_name] = {
-                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (random.random() - 0.5) * 0.1,
+                    "x": sex_index.get(d["original_pedigree_sex"], 2) + (rng.random() - 0.5) * 0.1,
                     "y": y,
                 }
 
@@ -588,9 +591,9 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def somalier_ancestry_barplot(self):
-        data = dict()
+        data = {}
         c_scale = mqc_colour.mqc_colour_scale(name="Paired").colours
-        cats = dict()
+        cats = {}
         anc_cats = self.somalier_ancestry_cats
 
         # use Paired color scale, unless number of categories exceed colors
@@ -637,7 +640,7 @@ class MultiqcModule(BaseMultiqcModule):
             )
 
     def somalier_ancestry_pca_plot(self):
-        data = dict()
+        data = {}
 
         # add background
         # N.B. this must be done after samples to have samples on top

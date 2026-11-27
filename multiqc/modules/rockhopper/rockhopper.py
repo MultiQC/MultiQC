@@ -18,10 +18,13 @@ class MultiqcModule(BaseMultiqcModule):
             extra="It can align on both the sense and anti-sense strand, assemble transcripts, identify transcript "
             "boundaries, discover novel transcripts such as small RNAs",
             doi=["10.1016/j.ymeth.2019.03.026", "10.1186/s13059-014-0572-2", "10.1093/nar/gkt444"],
+            # License could not be determined
+            license=None,
+            license_url=None,
         )
 
         # Set up vars
-        self.rh_data = dict()
+        self.rh_data = {}
 
         # Parse summary file
         for f in self.find_log_files("rockhopper"):
@@ -77,7 +80,7 @@ class MultiqcModule(BaseMultiqcModule):
             "unannotated",
         ]
 
-        results = {name: 0 for name in stats_index}
+        results = dict.fromkeys(stats_index, 0)
         # Files can have more than one sample in them. Store results for
         # each sample in a dictionary
         results_by_s_name = {}
@@ -92,7 +95,7 @@ class MultiqcModule(BaseMultiqcModule):
                 # Then reset the results dictionary for the new sample
                 if s_name and s_name not in results_by_s_name:
                     results_by_s_name[s_name] = results
-                    results = {name: 0 for name in stats_index}
+                    results = dict.fromkeys(stats_index, 0)
 
                 s_name = line.split(":", 1)[1].strip()
                 s_name = self.clean_s_name(s_name, f)
@@ -100,7 +103,7 @@ class MultiqcModule(BaseMultiqcModule):
             elif line.startswith("Aligning sequencing reads from files:"):
                 if s_name and s_name not in results_by_s_name:
                     results_by_s_name[s_name] = results
-                    results = {name: 0 for name in stats_index}
+                    results = dict.fromkeys(stats_index, 0)
                 s_name = lines[i + 1].strip()
                 s_name = self.clean_s_name(s_name, f)
 
@@ -117,15 +120,15 @@ class MultiqcModule(BaseMultiqcModule):
                 stats = [int(re.search(r"(\d+)\%", subline).group(1)) for subline in lines[i + 1 : i + 10]]
                 for name, val in zip(stats_index, stats):
                     # Convert percentages to true number of reads in each category
-                    results[name] += int(round(val * genome_reads / 100))
+                    results[name] += round(val * genome_reads / 100)
 
         # Make sure the last sample name is added to the results dictionary
         if s_name and s_name not in results_by_s_name:
             results_by_s_name[s_name] = results
 
         # loop through all samples found and add them to rhdata
-        for s_name in results_by_s_name:
-            self.add_results_to_rhdata(f, s_name, results_by_s_name[s_name])
+        for s_name, results in results_by_s_name.items():
+            self.add_results_to_rhdata(f, s_name, results)
 
     def rockhopper_general_stats_table(self):
         """Take the parsed stats from the Rockhopper summary and add it to the

@@ -47,10 +47,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://pypi.org/project/jcvi/",
             info="Computes statistics on genome annotation.",
             doi="10.5281/zenodo.31631",
+            license="BSD 2-Clause License",
+            license_url="https://github.com/tanghaibao/jcvi/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.jcvi = dict()
+        self.jcvi = {}
         for f in self.find_log_files("jcvi", filehandles=True):
             self.parse_jcvi(f)
 
@@ -138,16 +140,20 @@ class MultiqcModule(BaseMultiqcModule):
 
     def parse_jcvi(self, f):
         # Look at the first three lines, they are always the same
-        first_line = f["f"].readline()
-        second_line = f["f"].readline()
-        third_line = f["f"].readline()
+        first_line = f["f"].readline().strip()
+        second_line = f["f"].readline().strip()
+        third_line = f["f"].readline().strip()
 
-        # If any of these fail, it's probably not a jcvi summary file
+        # Validate JCVI genestats table header structure.
+        # The exact width varies across JCVI versions because the upstream
+        # table formatter (jcvi.utils.table.banner) dynamically sizes the
+        # border to match the widest data row. We therefore match the
+        # structural pattern rather than exact character counts.
         if not all(
             (
-                first_line.startswith("==================================================================="),
-                second_line.startswith("                                                   o            all"),
-                third_line.startswith("-------------------------------------------------------------------"),
+                re.fullmatch(r"={50,}", first_line),
+                second_line.split() == ["o", "all"],
+                re.fullmatch(r"-{50,}", third_line),
             )
         ):
             return
@@ -156,7 +162,7 @@ class MultiqcModule(BaseMultiqcModule):
         s_name = f["s_name"]
         if s_name in self.jcvi:
             log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-        self.jcvi[s_name] = dict()
+        self.jcvi[s_name] = {}
 
         # Define parsing regexes
         regexes = {
