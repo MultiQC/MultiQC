@@ -140,20 +140,13 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 count = int(s[3].strip())
                 bcftools_stats_indels[s_name][length] = count
 
-            # Per-sample counts. A "set" (one MultiQC sample) can contain several samples,
-            # each producing one PSC row. Collect the per-sample values here and aggregate
-            # them after parsing, rather than letting the last row overwrite the rest.
-            # variations_hom = nNonRefHom (column 4): homozygous non-reference genotypes.
-            # nRefHom (column 3) is excluded, as hom-ref genotypes match the reference and
-            # are not variants. variations_het = nHets (column 5).
-            if s[0] == "PSC" and len(s_names) > 0:
-                s_name = s_names[int(s[1])]
-                bcftools_stats_hom_het[s_name]["variations_hom"].append(int(s[4].strip()))
-                bcftools_stats_hom_het[s_name]["variations_het"].append(int(s[5].strip()))
-
             # Per-sample variant stats
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
+                # A set can hold several samples (one PSC row each); aggregated after parsing.
+                # Hom is nNonRefHom only: hom-ref genotypes are not variants.
+                bcftools_stats_hom_het[s_name]["variations_hom"].append(int(s[4].strip()))
+                bcftools_stats_hom_het[s_name]["variations_het"].append(int(s[5].strip()))
                 sample = module.clean_s_name(s[2].strip(), f)
                 bcftools_stats_sample_variants[s_name][sample] = {}
                 bcftools_stats_sample_variants[s_name][sample]["nSNPs"] = (
@@ -462,9 +455,9 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
 def bcftools_stats_genstats_headers(hom_het_aggregation: str = "mean"):
     """Add key statistics to the General Stats table"""
     agg_desc = {
-        "mean": "rounded mean across samples",
-        "median": "rounded median across samples",
-        "sum": "total across samples",
+        "mean": "rounded mean across samples if multi-sample",
+        "median": "rounded median across samples if multi-sample",
+        "sum": "total across samples if multi-sample",
     }[hom_het_aggregation]
     stats_headers = {
         "number_of_records": {

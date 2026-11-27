@@ -77,7 +77,7 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
     assert "bcftools-stats-sequencing-depth" in report.plot_by_id
 
 
-def test_bcftools_stats_multi_sample_hom_het_aggregation(tmp_path, caplog):
+def test_bcftools_stats_multi_sample_hom_het_aggregation(tmp_path, caplog, monkeypatch):
     """
     For a multi-sample VCF (one 'set' with several PSC rows), the General Stats hom/het
     values must aggregate across samples rather than keeping only the last PSC row.
@@ -100,7 +100,7 @@ PSC\t0\tS3\t15\t48\t3\t20\t10\t2\t25.0\t1\t0\t0\t0
     def hom_het(method):
         report.reset()
         config.reset()
-        config.bcftools = {"hom_het_aggregation": method} if method else {}
+        monkeypatch.setattr(config, "bcftools", {"hom_het_aggregation": method} if method else {}, raising=False)
         stats_file = tmp_path / f"multi_{method or 'default'}.stats.txt"
         stats_file.write_text(content)
         report.analysis_files = [stats_file]
