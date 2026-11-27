@@ -35,7 +35,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/Molmed/checkQC/blob/master/LICENSE",
         )
 
-        self.checkqc_data = dict()
+        self.checkqc_data = {}
         self.runs = set()
 
         self.log_files = list(self.find_log_files("checkqc"))
@@ -144,7 +144,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = dict()
+        cats = {}
         cats["read_num"] = {
             "name": "Reads",
         }
@@ -215,7 +215,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = dict()
+        cats = {}
         cats["lane_pf"] = {
             "name": "Clusters passing filters",
         }
@@ -286,7 +286,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = dict()
+        cats = {}
         cats["percent_q30"] = {
             "name": "%Q30",
         }
@@ -355,7 +355,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         warning, error = self._get_warning_error(data)
 
-        cats = dict()
+        cats = {}
         cats["threshold"] = {
             "name": "Error rate part until threshold",
         }
@@ -435,7 +435,7 @@ class MultiqcModule(BaseMultiqcModule):
         data = {f"Lane {k}": v for k, v in data.items()}
 
         warning, error = self._get_warning_error(data)
-        cats = dict()
+        cats = {}
         cats["phix"] = {"name": r"% PhiX", "color": "#88a680"}
         cats["threshold"] = {
             "name": r"% undetermined indexes until threshold",
@@ -564,7 +564,7 @@ class MultiqcModule(BaseMultiqcModule):
             for lane in data[sample]:
                 lanes.add(lane)
 
-        cats = dict()
+        cats = {}
         for lane in sorted(lanes):
             cats[lane] = {"name": f"Lane {lane}"}
 

@@ -38,7 +38,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/gmarcais/Jellyfish/blob/master/LICENSE",
         )
 
-        self.jellyfish_data = dict()
+        self.jellyfish_data = {}
         self.jellyfish_max_x = 0
         for f in self.find_log_files("jellyfish", filehandles=True):
             self.parse_jellyfish_data(f)

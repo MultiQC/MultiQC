@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-from typing import Dict, Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.modules.cellranger.utils import parse_bcknee_data, set_hidden_cols, transform_data, update_dict
@@ -17,19 +16,19 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
     Cell Ranger count report parser
     """
 
-    data_by_sample: Dict[str, Dict] = dict()
-    antibody_data_by_sample: Dict[str, Dict] = dict()
-    general_data_by_sample: Dict[str, Dict] = dict()
-    warnings_by_sample: Dict[str, Dict] = dict()
-    all_plots_params_by_id: Dict[str, Dict] = {"bc": dict(), "genes": dict()}
-    all_plots_data_by_sname_by_id: Dict[str, Dict] = {"bc": dict(), "genes": dict()}
-    general_data_headers: Dict[str, Dict] = dict()
-    count_data_headers: Dict[str, Dict] = dict()
-    antibody_data_headers: Dict[str, Dict] = dict()
-    count_warnings_headers: Dict[str, Dict] = dict()
+    data_by_sample: dict[str, dict] = {}
+    antibody_data_by_sample: dict[str, dict] = {}
+    general_data_by_sample: dict[str, dict] = {}
+    warnings_by_sample: dict[str, dict] = {}
+    all_plots_params_by_id: dict[str, dict] = {"bc": {}, "genes": {}}
+    all_plots_data_by_sname_by_id: dict[str, dict] = {"bc": {}, "genes": {}}
+    general_data_headers: dict[str, dict] = {}
+    count_data_headers: dict[str, dict] = {}
+    antibody_data_headers: dict[str, dict] = {}
+    count_warnings_headers: dict[str, dict] = {}
 
     for f in module.find_log_files("cellranger/count_html", filehandles=True):
-        summary: Optional[Dict] = None
+        summary: dict | None = None
         for line in f["f"]:
             line = line.strip()
             if line.startswith("const data"):
@@ -51,7 +50,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
         except (KeyError, AssertionError):
             log.debug(f"Unable to parse version for sample {s_name}")
 
-        data_general_stats: Dict[str, Dict] = dict()
+        data_general_stats: dict[str, dict] = {}
 
         # Store general stats from cells
         col_dict = {
@@ -149,7 +148,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
             continue
 
         # Extract warnings if any
-        warnings = dict()
+        warnings = {}
         alarms_list = summary["alarms"].get("alarms", [])
         for alarm in alarms_list:
             # "Intron mode used" alarm added in Cell Ranger 7.0 lacks id
@@ -225,7 +224,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
                 }
 
         # Store full data for ANTIBODY capture
-        antibody_data: Dict[str, Dict] = dict()
+        antibody_data: dict[str, dict] = {}
         if "ANTIBODY_sequencing" in summary["summary_tab"]:
             data_rows = (
                 summary["summary_tab"]["ANTIBODY_sequencing"]["table"]["rows"]
@@ -293,7 +292,7 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
                         combined_label[label_value] = label_value + ": " + cells
 
                 # Use the label from `combined_label` for the plot
-                keys = dict()
+                keys = {}
                 for key, value in combined_label.items():
                     keys[key] = {"name": value}
 
@@ -324,18 +323,18 @@ def parse_count_html(module: BaseMultiqcModule) -> int:
         if len(warnings) > 0:
             warnings_by_sample[s_name] = warnings
         all_plots_params_by_id.update(plots_params_by_id)
-        for k in plots_data_by_sname_by_id.keys():
-            if k not in all_plots_data_by_sname_by_id.keys():
-                all_plots_data_by_sname_by_id[k] = dict()
-            all_plots_data_by_sname_by_id[k].update(plots_data_by_sname_by_id[k])
+        for k, sname_data in plots_data_by_sname_by_id.items():
+            if k not in all_plots_data_by_sname_by_id:
+                all_plots_data_by_sname_by_id[k] = {}
+            all_plots_data_by_sname_by_id[k].update(sname_data)
 
     data_by_sample = module.ignore_samples(data_by_sample)
     if antibody_data_by_sample:
         antibody_data_by_sample = module.ignore_samples(antibody_data_by_sample)
     general_data_by_sample = module.ignore_samples(general_data_by_sample)
     warnings_by_sample = module.ignore_samples(warnings_by_sample)
-    for k in all_plots_data_by_sname_by_id.keys():
-        all_plots_data_by_sname_by_id[k] = module.ignore_samples(all_plots_data_by_sname_by_id[k])
+    for k, sname_data in all_plots_data_by_sname_by_id.items():
+        all_plots_data_by_sname_by_id[k] = module.ignore_samples(sname_data)
 
     general_data_headers["reads"] = {
         "rid": "count_genstats_reads",

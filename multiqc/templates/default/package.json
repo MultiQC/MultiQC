@@ -11,10 +11,10 @@
   },
   "devDependencies": {
     "@popperjs/core": "^2.11.8",
-    "bootstrap": "^5.3.8",
-    "dompurify": "^3.4.15",
-    "sass": "^1.103.1",
+    "bootstrap": "^5.3.9",
+    "dompurify": "^3.4.17",
+    "sass": "^1.108.2",
     "terser": "^5.51.2",
-    "vite": "^8.2.2"
+    "vite": "^8.3.8"
   }
 }

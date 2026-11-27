@@ -24,14 +24,14 @@ def plot_idhist(samples, file_type, **plot_args):
     }
 
     plot_data = []
-    for column_type in columns_to_plot:
+    for columns in columns_to_plot.values():
         plot_data.append(
             {
                 sample + "." + column_name: {
                     x: samples[sample]["data"][x][column] if x in samples[sample]["data"] else 0 for x in all_x
                 }
                 for sample in samples
-                for column, column_name in columns_to_plot[column_type].items()
+                for column, column_name in columns.items()
             }
         )
 

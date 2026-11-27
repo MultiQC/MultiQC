@@ -1,5 +1,8 @@
 """MultiQC Utility functions, used in a variety of places."""
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["numpy"]
+
 import array
 import json
 import logging
@@ -7,8 +10,10 @@ import math
 import shutil
 import sys
 import time
+import types
+import typing
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel
@@ -16,9 +21,15 @@ from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 
 
+def is_union(annotation: Any) -> bool:
+    """True for ``Union[...]``, ``Optional[...]`` and PEP 604 ``X | Y`` annotations."""
+    # `X | Y` has origin types.UnionType, not typing.Union, before Python 3.14
+    return typing.get_origin(annotation) in (typing.Union, types.UnionType)
+
+
 def rmtree_with_retries(
-    path: Union[str, Path, None],
-    _logger: Optional[logging.Logger] = None,
+    path: str | Path | None,
+    _logger: logging.Logger | None = None,
     max_retries: int = 10,
 ):
     """
@@ -224,8 +235,8 @@ def compress_number_lists_for_json(obj):
 
 
 def update_dict(
-    target: Dict[Any, Any],
-    source: Dict[Any, Any],
+    target: dict[Any, Any],
+    source: dict[Any, Any],
     none_only: bool = False,
     add_in_the_beginning: bool = False,
 ):
@@ -267,7 +278,7 @@ def scipy_pdist(X: np.ndarray) -> np.ndarray:
     Returns:
         Array of shape ((m * (m-1)) // 2,) containing condensed distance matrix
     """
-    m, n = X.shape
+    m, _n = X.shape
     # Initialize output array of correct size for condensed distance matrix
     out = np.zeros((m * (m - 1)) // 2)
     k = 0
@@ -364,7 +375,7 @@ def scipy_hierarchy_linkage(distances: np.ndarray, method: str = "complete") -> 
     return linkage_matrix
 
 
-def scipy_hierarchy_leaves_list(Z: np.ndarray) -> List[int]:
+def scipy_hierarchy_leaves_list(Z: np.ndarray) -> list[int]:
     """Return the leaf nodes in the order they appear in the dendrogram.
 
     Reimplements scipy.hierarchy.leaves_list to avoid heavy scipy dependency.
