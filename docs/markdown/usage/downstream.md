@@ -471,14 +471,24 @@ This approach enables more sophisticated analysis workflows, better reproducibil
 
 ### Parquet Format Options
 
-Currently MultiQC offers two format options for the parquet output, but we might settle with only one format in the future.
+Currently MultiQC offers three format options for the parquet output, but we might settle with fewer formats in the future.
 
 1. **Long format** (default): Data is stored with columns 'sample_name', 'metric_name', 'val_raw', 'val_raw_type', and 'val_str'. This format is very flexible and ensures all data types can be preserved.
 
 2. **Wide format**: Data is stored with each metric as a separate column, prefixed with the table name and optional namespace. While more intuitive for analytics, it may hit limits on the maximum number of columns in certain edge cases, and can have issues with mixed types (since Parquet requires columns to have consistent types).
 
+3. **Wide per-table format**: Each table is written to its own file, `multiqc_data/parquet_per_table/multiqc_<table_id>.parquet`, so columns from different tables never collide and one table can be loaded without reading the others. Each file has one row per sample, keyed by a column named after the table's first column header (`col1_header`, `Sample Name` by default). Every metric gets three columns: `<metric>_raw` (the parsed value), `<metric>_mod` (the value after any `modify` function is applied) and `<metric>_fmt` (the formatted string shown in the report). The remaining columns are the same on every row:
+   - `column_meta`: a JSON object mapping each metric to its column configuration (title, description, scale, etc.)
+   - `pconfig`: the table's plot configuration as JSON
+   - `col1_header`: the name of the sample column
+   - `creation_date`
+   - `anchor`, `id`, `section_name`: the report section that contains the table
+   - `parent_id`, `parent_name`: the anchor and name of the module that produced the table
+
+   Only tables whose rows are samples are written, which is the default (tables with the `rows_are_samples: false` plot config option are skipped). The main `multiqc.parquet` file still holds run metadata and the plot inputs, but not the table rows.
+
 You can configure the format in your MultiQC configuration file:
 
 ```yaml
-parquet_format: "long" # or "wide"
+parquet_format: "long" # or "wide", "wide-per-table"
 ```

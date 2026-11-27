@@ -652,4 +652,4 @@ module_order:
 # Preserves `saved_raw_data` section in modules - default for interactive runs
 preserve_module_raw_data: false
 
-parquet_format: "long" # or wide
+parquet_format: "long" # or wide, wide-per-table
