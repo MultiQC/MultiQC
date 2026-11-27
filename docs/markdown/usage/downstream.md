@@ -24,11 +24,7 @@ MultiQC provides clean programmatic access to HTML report content, making it eas
 import multiqc
 from multiqc.core.update_config import ClConfig
 
-result = multiqc.run(
-    "./analysis_data",
-    cfg=ClConfig(quiet=True, no_data_dir=True),
-    return_html=True
-)
+result = multiqc.run("./analysis_data", cfg=ClConfig(quiet=True, no_data_dir=True), return_html=True)
 
 if result.sys_exit_code == 0 and result.html_content:
     html_content = result.html_content
@@ -47,11 +43,7 @@ import multiqc
 multiqc.parse_logs("./analysis_data", quiet=True)
 
 # Generate HTML report
-html_content = multiqc.write_report(
-    title="My Quality Control Report",
-    quiet=True,
-    return_html=True
-)
+html_content = multiqc.write_report(title="My Quality Control Report", quiet=True, return_html=True)
 
 if html_content:
     # Use html_content in Streamlit, Jupyter, Flask, etc.
@@ -104,7 +96,8 @@ import multiqc
 
 app = Flask(__name__)
 
-@app.route('/qc-report/<path:analysis_path>')
+
+@app.route("/qc-report/<path:analysis_path>")
 def generate_qc_report(analysis_path):
     result = multiqc.run(analysis_path, return_html=True)
     return result.html_content if result.html_content else "Error generating report"
@@ -141,6 +134,7 @@ from io import StringIO
 import multiqc
 from multiqc.core.update_config import ClConfig
 
+
 def get_multiqc_html(analysis_dir):
     """Capture MultiQC HTML report as a string variable"""
     # Save the original stdout
@@ -154,8 +148,8 @@ def get_multiqc_html(analysis_dir):
         # Configure MultiQC to output HTML to stdout
         cfg = ClConfig(
             filename="stdout",
-            quiet=True,          # Suppress log messages
-            no_data_dir=True     # Don't create data directory
+            quiet=True,  # Suppress log messages
+            no_data_dir=True,  # Don't create data directory
         )
 
         # Run MultiQC
@@ -170,6 +164,7 @@ def get_multiqc_html(analysis_dir):
         sys.stdout = original_stdout
         captured_output.close()
 
+
 # Usage example
 html_content = get_multiqc_html("./analysis_data")
 if html_content:
@@ -183,19 +178,19 @@ if html_content:
 import subprocess
 import sys
 
+
 def get_multiqc_html_cli(analysis_dir):
     """Capture MultiQC HTML using CLI interface"""
-    result = subprocess.run([
-        sys.executable, "-m", "multiqc",
-        analysis_dir,
-        "--filename", "stdout",
-        "--quiet",
-        "--no-data-dir"
-    ], capture_output=True, text=True)
+    result = subprocess.run(
+        [sys.executable, "-m", "multiqc", analysis_dir, "--filename", "stdout", "--quiet", "--no-data-dir"],
+        capture_output=True,
+        text=True,
+    )
 
     if result.returncode == 0:
         return result.stdout
     return None
+
 
 # Usage
 html_content = get_multiqc_html_cli("./data")
@@ -208,17 +203,16 @@ html_content = get_multiqc_html_cli("./data")
 ```python
 import streamlit as st
 
+
 def generate_multiqc_report(data_dir):
     # Use Method 1 from above
     return get_multiqc_html(data_dir)
 
+
 st.title("Quality Control Dashboard")
 
 # File uploader
-uploaded_files = st.file_uploader(
-    "Upload analysis files",
-    accept_multiple_files=True
-)
+uploaded_files = st.file_uploader("Upload analysis files", accept_multiple_files=True)
 
 if uploaded_files:
     # Process uploaded files and generate report
@@ -249,7 +243,8 @@ from flask import Flask, render_template_string
 
 app = Flask(__name__)
 
-@app.route('/qc/<path:analysis_path>')
+
+@app.route("/qc/<path:analysis_path>")
 def quality_control_report(analysis_path):
     """Serve MultiQC report dynamically"""
     html_content = get_multiqc_html(analysis_path)
@@ -259,7 +254,8 @@ def quality_control_report(analysis_path):
     else:
         return "Error generating report", 500
 
-@app.route('/dashboard/<path:analysis_path>')
+
+@app.route("/dashboard/<path:analysis_path>")
 def embedded_dashboard(analysis_path):
     """Embed MultiQC report in a larger dashboard"""
     html_content = get_multiqc_html(analysis_path)
@@ -282,10 +278,7 @@ def embedded_dashboard(analysis_path):
     </html>
     """
 
-    return render_template_string(
-        dashboard_template,
-        multiqc_html=html_content
-    )
+    return render_template_string(dashboard_template, multiqc_html=html_content)
 ```
 
 ### Notes
@@ -362,7 +355,9 @@ The schema is dynamically created based on the data, but here's a representative
 {
     "anchor": pl.Utf8,
     "type": pl.Utf8,
-    "creation_date": pl.Datetime(time_unit="us"),  # no timezone specifier, but assumed UTC (for compatibility with Iceberg)
+    "creation_date": pl.Datetime(
+        time_unit="us"
+    ),  # no timezone specifier, but assumed UTC (for compatibility with Iceberg)
     "plot_type": pl.Utf8,
     "plot_input_data": pl.Utf8,
     "sample_name": pl.Utf8,
@@ -395,10 +390,7 @@ metadata_rows = df.filter(pl.col("type") == "run_metadata")
 plot_inputs = df.filter(pl.col("type") == "plot_input")
 
 # Extract tabular data from a specific module
-module_data = df.filter(
-    (pl.col("type") == "table_row") &
-    (pl.col("module") == "fastqc")
-)
+module_data = df.filter((pl.col("type") == "table_row") & (pl.col("module") == "fastqc"))
 
 # Get all unique metrics available
 metrics = df.filter(pl.col("type") == "table_row").select("metric_name").unique()
@@ -446,7 +438,7 @@ For programmatic access to MultiQC data, you can use the Python API to load parq
 import multiqc
 
 # Load data from a parquet file
-multiqc.parse_logs('multiqc_data/multiqc.parquet')
+multiqc.parse_logs("multiqc_data/multiqc.parquet")
 
 # List loaded modules and access data
 modules = multiqc.list_modules()
@@ -466,13 +458,7 @@ from pyiceberg.catalog import load_catalog
 multiqc_df = pl.read_parquet("multiqc_data/multiqc.parquet")
 
 # Configure and load Iceberg catalog
-catalog = load_catalog(
-    "glue",
-    **{
-        "type": "glue",
-        "warehouse": "s3://your-bucket/iceberg-warehouse/"
-    }
-)
+catalog = load_catalog("glue", **{"type": "glue", "warehouse": "s3://your-bucket/iceberg-warehouse/"})
 
 # Create or load Iceberg table
 table = catalog.load_table("your_database.multiqc_data")

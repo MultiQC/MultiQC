@@ -15,7 +15,6 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 import requests
 from github import Auth, Github
@@ -59,7 +58,7 @@ def react(content: str) -> None:
         bot_repo.get_issue(int(os.environ["ISSUE"])).get_comment(int(os.environ["COMMENT_ID"])).create_reaction(content)
 
 
-def post(pr: PullRequest, body: str, attach: Optional[Path] = None) -> None:
+def post(pr: PullRequest, body: str, attach: Path | None = None) -> None:
     # gh, because the REST API can't upload images
     args = ["gh", "pr", "comment", str(pr.number), "--repo", REPO, "--body", body + HOW]
     if attach:
@@ -67,7 +66,7 @@ def post(pr: PullRequest, body: str, attach: Optional[Path] = None) -> None:
     subprocess.run(args, env=dict(os.environ, GH_TOKEN=os.environ["BOT_TOKEN"]), check=True)
 
 
-def get_targets() -> Tuple[List[PullRequest], str, Optional[WorkflowRun]]:
+def get_targets() -> tuple[list[PullRequest], str, WorkflowRun | None]:
     """
     Return the PRs to consider, the posting rule, and the build if known.
 
@@ -119,12 +118,12 @@ def console_details(artifact) -> str:
     return f"\n\n<details><summary>Console output</summary>\n\n{fence}console\n{text}\n{fence}\n\n</details>"
 
 
-def find_build(sha: str) -> Optional[WorkflowRun]:
+def find_build(sha: str) -> WorkflowRun | None:
     runs = repo.get_workflow("module-report-build.yml").get_runs(head_sha=sha, status="completed")
     return next((r for r in runs if r.conclusion in ("success", "failure")), None)
 
 
-def process(pr: PullRequest, rule: str, build: Optional[WorkflowRun]) -> None:
+def process(pr: PullRequest, rule: str, build: WorkflowRun | None) -> None:
     sha = pr.head.sha
     modules = sorted({m.group(1) for f in pr.get_files() if (m := MODULE_RE.match(f.filename))})
     if not modules:

@@ -8,6 +8,7 @@ function updatePanel(providerId) {
   // Add label dynamically
   let aiModelInfo = "";
   let aiApiKeyInfo = "";
+  $("#ai_seqera_endpoint_group").toggle(providerId === "seqera");
 
   // Update model field with stored or default value for new provider
   if (providerId === "seqera") {
@@ -171,7 +172,9 @@ window.initAI = function () {
   });
 
   // Set initial values from storage or values from Python
-  const providerId = getStoredProvider() || aiConfigProviderId || "seqera";
+  // A provider the browser doesn't know, such as a custom client class, falls back to the default
+  const configProviderId = window.AI_PROVIDERS[aiConfigProviderId] ? aiConfigProviderId : null;
+  const providerId = getStoredProvider() || configProviderId || "seqera";
   aiProviderSelect.val(providerId);
   const provider = window.AI_PROVIDERS[providerId];
   $("#ai-api-key").val(getStoredApiKey(providerId) || "");
@@ -195,8 +198,8 @@ window.initAI = function () {
       storedContextWindow = parseInt(aiConfigCustomContextWindow);
     } catch {}
   }
-  storedContextWindow = storedContextWindow ?? 128000;
-  $("#ai-context-window").val(storedContextWindow);
+  // Left empty unless set: the context window then comes from the model
+  if (storedContextWindow !== null && !isNaN(storedContextWindow)) $("#ai-context-window").val(storedContextWindow);
 
   updatePanel(providerId);
 

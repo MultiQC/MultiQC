@@ -1,8 +1,7 @@
+import logging
+
 from multiqc.base_module import BaseMultiqcModule
 from multiqc.plots import table
-from typing import Dict, Union
-
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -10,7 +9,7 @@ log = logging.getLogger(__name__)
 def parse_reports(self: BaseMultiqcModule) -> int:
     """Find and parse ngsbits SampleGender TSV output files."""
 
-    samplegender_data: Dict[str, Dict[str, Union[float, str]]] = dict()
+    samplegender_data: dict[str, dict[str, float | str]] = {}
     for f in self.find_log_files("ngsbits/samplegender"):
         self.add_data_source(f)
         s_name = f["s_name"]
@@ -87,20 +86,23 @@ def parse_reports(self: BaseMultiqcModule) -> int:
     return len(samplegender_data)
 
 
-def parse_file(f: str) -> Dict[str, Union[float, str]]:
-    """
-    Parses a single SampleGender TSV file content and returns a dictionary
-    with the relevant data from columns 2-5.
-    """
-    parsed_data: Dict[str, Union[float, str]] = {}
+def parse_file(f: str) -> dict[str, float | str]:
+    """Parse a single SampleGender TSV file, keyed by column header (excluding the file column)."""
+    parsed_data: dict[str, float | str] = {}
     lines = f.splitlines()
 
     if len(lines) < 2:
         # Not enough data, return an empty dictionary
         return parsed_data
 
-    headers = lines[0].strip().split("\t")[1:5]
-    values = lines[1].strip().split("\t")[1:5]
+    headers = lines[0].strip().split("\t")[1:]
+    values = lines[1].strip().split("\t")[1:]
+
+    # A multi-word gender such as "unknown (ratio in gray area)" is tab-separated like the columns
+    n_extra = len(values) - len(headers)
+    if n_extra < 0:
+        raise ValueError(f"SampleGender row has {len(values)} values but {len(headers)} columns")
+    values = [" ".join(values[: n_extra + 1])] + values[n_extra + 1 :]
 
     for key, value in zip(headers, values):
         try:

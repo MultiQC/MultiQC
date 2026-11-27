@@ -1,7 +1,6 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.core import plugin_hooks
@@ -108,7 +107,7 @@ class MultiqcModule(BaseMultiqcModule):
         # Add key metrics to general stats
         self.xenium_general_stats_table()
 
-    def parse_xenium_metrics(self, f) -> Dict:
+    def parse_xenium_metrics(self, f) -> dict:
         """Parse Xenium metrics_summary.csv file"""
         lines = f["f"].splitlines()
         if len(lines) < 2:
@@ -197,7 +196,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         return parsed_metrics
 
-    def parse_experiment_json(self, f) -> Dict:
+    def parse_experiment_json(self, f) -> dict:
         """Parse Xenium experiment.xenium JSON file for additional metrics"""
         try:
             experiment_data = json.loads(f["f"])

@@ -2,7 +2,6 @@ import json
 import logging
 import os
 import re
-from typing import List
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, scatter
@@ -31,7 +30,7 @@ class MultiqcModule(BaseMultiqcModule):
             license_url="https://github.com/ACEnglish/truvari/blob/master/LICENSE",
         )
 
-        n = dict()
+        n = {}
         n["bench"] = self.parse_bench_stats()
         if n["bench"] > 0:
             log.info(f"Found {n['bench']} truvari bench reports")
@@ -111,7 +110,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.write_data_file(data, "multiqc_truvari_bench")
 
         # General Stats Table
-        bench_headers = dict()
+        bench_headers = {}
         bench_headers["precision"] = {
             "title": "Precision",
             "description": "Precision of the SV calls. Definition: TP-comp / (TP-comp + FP)",
@@ -157,7 +156,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(data, bench_headers)
 
         # Make bar graph
-        bar_data: List = [{}, {}, {}, {}]
+        bar_data: list = [{}, {}, {}, {}]
         for sample, sample_data in data.items():
             # Comp
             bar_data[0][sample] = {

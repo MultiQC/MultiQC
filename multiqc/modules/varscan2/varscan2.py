@@ -37,7 +37,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load VarScan2 reports - there are 3 different ones, but all with identical content (differentiated by header)
-        self.varscan2_data = dict()
+        self.varscan2_data = {}
         for f in self.find_log_files("varscan2/mpileup2snp", filehandles=True):
             parsed_data = self.parse_varscan(f)
             s_name = self.clean_s_name(parsed_data["sample_name"], f)
@@ -92,9 +92,9 @@ class MultiqcModule(BaseMultiqcModule):
     # Total variants = SNPs + Indels
     def parse_varscan(self, f):
         """Parse a VarScan2 report"""
-        parsed = dict()
+        parsed = {}
         regexes = {
-            "sample_name": r"(?:Reading input from )(\w+.+)",
+            "sample_name": r"(?:Reading input from )(\S.*)",
             "min_coverage": r"(?:Min coverage:)\s(\d+)",
             "min_reads2": r"(?:Min reads2:)\s(\d+)",
             "min_var_freq": r"(?:Min var freq:)\s(\d+\.\d+)",
@@ -120,6 +120,11 @@ class MultiqcModule(BaseMultiqcModule):
                         parsed[k] = match.group(1)
                     if k in ["p_val_threshold", "min_var_freq"]:
                         parsed[k] = float(match.group(1))
+
+        # Input piped in from stdin or process substitution (e.g. /dev/fd/63) has no
+        # meaningful file name, so fall back to the name of the log file
+        if "sample_name" not in parsed or parsed["sample_name"].startswith("/dev/"):
+            parsed["sample_name"] = f["s_name"]
 
         # The failed_strand_filter combines the different classes, so recompute
         if "variant_total" in parsed and "variant_reported_total" in parsed:

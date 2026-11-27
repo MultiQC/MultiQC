@@ -277,8 +277,10 @@ checkm:
   - contents_re: ".*Bin Id(?:\t| {3,})Marker lineage(?:\t| {3,})# genomes(?:\t| {3,})# markers(?:\t| {3,})# marker sets.*"
     num_lines: 10
 checkm2:
-  contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used"
-  num_lines: 10
+  - contents: "Name	Completeness	Contamination	Completeness_Model_Used	Translation_Table_Used"
+    num_lines: 10
+  - contents: "Name	Completeness_General	Contamination	Completeness_Specific	Completeness_Model_Used"
+    num_lines: 10
 checkqc:
   contents: "instrument_and_reagent_type"
   fn: "*.json"
@@ -300,6 +302,9 @@ conpair/concordance:
 conpair/contamination:
   contents: "Tumor sample contamination level: "
   num_lines: 3
+cramino:
+  contents_re: "^Yield \\[Gb\\] \\(>25kb\\)\\t"
+  num_lines: 10
 cutadapt:
   - contents: "This is cutadapt"
     exclude_contents_re: 'Trim Galore version: (?:[2-9]|\d{2,})\.' # TG v2+ has custom JSON reports
@@ -411,16 +416,22 @@ fastqc/theoretical_gc:
 featurecounts:
   fn: "*.summary"
   shared: true
-# fgumi/family_sizes also finds these files; fgumi.util.family_sizes_module picks which module reports them.
+# fgumi/family_sizes also finds these files; fgumi.util.shared_file_module picks which module reports them.
 fgbio/groupreadsbyumi:
   contents: "fraction_gt_or_eq_family_size"
   num_lines: 3
 fgbio/errorratebyreadposition:
   contents: "read_number	position	bases_total	errors	error_rate	a_to_c_error_rate	a_to_g_error_rate	a_to_t_error_rate	c_to_a_error_rate	c_to_g_error_rate	c_to_t_error_rate"
   num_lines: 3
+# fgumi/clip also finds these files; fgumi.util.shared_file_module picks which module reports them.
+fgbio/clipbam:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post"
+  num_lines: 1
+  shared: true
 fgumi/clip:
-  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
-  num_lines: 2
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre\treads_clipped_post"
+  num_lines: 1
+  shared: true
 fgumi/consensus_stats:
   contents: "key\tvalue\tdescription"
   num_lines: 2
@@ -702,9 +713,7 @@ mgikit/mgi_sample_reads:
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
 mgnifam:
-  fn: "*_stats.json"
-  contents: '"tool": "mgnifam"'
-  num_lines: 3
+  fn: "*_mgnifam_stats.json"
 minionqc:
   fn: "summary.yaml"
   contents: "total.gigabases"
@@ -726,6 +735,8 @@ mosdepth/global_dist:
   fn: "*.mosdepth.global.dist.txt"
 mosdepth/region_dist:
   fn: "*.mosdepth.region.dist.txt"
+mosdepth/thresholds_bed:
+  fn: "*.thresholds.bed.gz"
 motus:
   contents: "Reads are aligned (by BWA) to marker gene sequences in the reference database"
   num_lines: 2
@@ -820,7 +831,7 @@ somalier/samples:
   num_lines: 5
 somalier/pairs:
   fn: "*.pairs.tsv"
-  contents: "hom_concordance"
+  contents_re: '^#sample_a\tsample_b\trelatedness\tibs0\tibs2\t'
   num_lines: 5
 sourmash/compare:
   fn: "*.labels.txt"

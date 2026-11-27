@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from Picard InsertSizeMetrics"""
 
 import logging
-from typing import Dict
 
 from multiqc import config
 from multiqc.modules.picard import util
@@ -14,9 +13,9 @@ log = logging.getLogger(__name__)
 def parse_reports(module):
     """Find Picard InsertSizeMetrics reports and parse their data"""
 
-    data_by_sample: Dict = dict()
-    histogram_by_sample: Dict = dict()
-    samplestats_by_sample: Dict = dict()
+    data_by_sample: dict = {}
+    histogram_by_sample: dict = {}
+    samplestats_by_sample: dict = {}
 
     # Go through logs and find Metrics
     for f in module.find_log_files("picard/insertsize", filehandles=True):
@@ -69,7 +68,7 @@ def parse_reports(module):
                 while len(vals) == len(keys):
                     pair_orientation = vals[orientation_idx]
                     rowkey = f"{s_name}_{pair_orientation}"
-                    data_by_sample[rowkey] = dict()
+                    data_by_sample[rowkey] = {}
                     data_by_sample[rowkey]["SAMPLE_NAME"] = s_name
                     for i, k in enumerate(keys):
                         try:
@@ -96,7 +95,7 @@ def parse_reports(module):
                 keys = line.strip("\n").split("\t")
                 assert len(keys) >= 2, (keys, f)
                 in_hist = True
-                histogram_by_sample[s_name] = dict()
+                histogram_by_sample[s_name] = {}
 
     # Calculate summed mean values for all read orientations
     for s_name, v in samplestats_by_sample.items():
@@ -107,9 +106,9 @@ def parse_reports(module):
             samplestats_by_sample[s_name]["summed_mean"] = 0
 
     # Calculate summed median values for all read orientations
-    for s_name in histogram_by_sample:
+    for s_name, histogram in histogram_by_sample.items():
         j = 0
-        for idx, c in histogram_by_sample[s_name].items():
+        for idx, c in histogram.items():
             j += c
             if j > (samplestats_by_sample[s_name]["total_count"] / 2):
                 samplestats_by_sample[s_name]["summed_median"] = idx
@@ -150,7 +149,7 @@ def parse_reports(module):
             "suffix": " bp",
             "format": "{:,.0f}",
             "scale": "GnBu",
-            "hidden": False if missing_medians else True,
+            "hidden": not missing_medians,
         },
     }
     module.general_stats_addcols(samplestats_by_sample, headers, namespace="InsertSizeMetrics")
@@ -158,9 +157,9 @@ def parse_reports(module):
     # Section with histogram plot
     if len(histogram_by_sample) > 0:
         # Make a normalised percentage version of the data
-        data_percent: Dict = {}
+        data_percent: dict = {}
         for s_name, data in histogram_by_sample.items():
-            data_percent[s_name] = dict()
+            data_percent[s_name] = {}
             total = float(sum(data.values()))
             for k, v in data.items():
                 data_percent[s_name][k] = (v / total) * 100

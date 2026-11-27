@@ -33,7 +33,7 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
         # Find and load any DIAMOND reports
-        self.diamond_data = dict()
+        self.diamond_data = {}
 
         for f in self.find_log_files("diamond", filehandles=True):
             self.parse_logs(f)

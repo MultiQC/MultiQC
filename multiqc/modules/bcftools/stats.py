@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Dict
+import statistics
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, linegraph, table
@@ -30,19 +30,30 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     else:
         types = ["A>C", "A>G", "A>T", "C>A", "C>G", "C>T", "G>A", "G>C", "G>T", "T>A", "T>C", "T>G"]
 
-    bcftools_stats: Dict = dict()
-    bcftools_stats_indels: Dict = dict()
-    bcftools_stats_vqc_snp: Dict = dict()
-    bcftools_stats_sample_variants: Dict = dict()
-    bcftools_stats_sample_tstv: Dict = dict()
-    bcftools_stats_sample_singletons: Dict = dict()
-    bcftools_stats_sample_depth: Dict = dict()
-    bcftools_stats_vqc_transi: Dict = dict()
-    bcftools_stats_vqc_transv: Dict = dict()
-    bcftools_stats_vqc_indels: Dict = dict()
-    bcftools_stats_depth_data: Dict = dict()
+    # How to aggregate per-sample hom/het counts for the set-level General Stats row
+    # when a stats file contains multiple PSC rows.
+    hom_het_aggregation = getattr(config, "bcftools", {}).get("hom_het_aggregation", "mean")
+    if hom_het_aggregation not in ("mean", "median", "sum"):
+        log.warning(
+            f"Unrecognised bcftools.hom_het_aggregation value '{hom_het_aggregation}', falling back to 'mean'. "
+            "Valid options: mean, median, sum."
+        )
+        hom_het_aggregation = "mean"
+
+    bcftools_stats: dict = {}
+    bcftools_stats_indels: dict = {}
+    bcftools_stats_vqc_snp: dict = {}
+    bcftools_stats_sample_variants: dict = {}
+    bcftools_stats_sample_tstv: dict = {}
+    bcftools_stats_sample_singletons: dict = {}
+    bcftools_stats_sample_depth: dict = {}
+    bcftools_stats_vqc_transi: dict = {}
+    bcftools_stats_vqc_transv: dict = {}
+    bcftools_stats_vqc_indels: dict = {}
+    bcftools_stats_depth_data: dict = {}
+    bcftools_stats_hom_het: dict = {}
     for f in module.find_log_files("bcftools/stats"):
-        s_names = list()
+        s_names = []
         for line in f["f"].splitlines():
             # Get version number from file contents
             if line.startswith("# This file was produced by bcftools stats"):
@@ -73,17 +84,18 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 if s_name in bcftools_stats:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
                 module.add_data_source(f, s_name, section="stats")
-                bcftools_stats[s_name] = dict()
-                bcftools_stats_indels[s_name] = dict()
-                bcftools_stats_sample_variants[s_name] = dict()
-                bcftools_stats_sample_tstv[s_name] = dict()
-                bcftools_stats_sample_singletons[s_name] = dict()
-                bcftools_stats_sample_depth[s_name] = dict()
-                bcftools_stats_vqc_snp[s_name] = dict()
-                bcftools_stats_vqc_transi[s_name] = dict()
-                bcftools_stats_vqc_transv[s_name] = dict()
-                bcftools_stats_vqc_indels[s_name] = dict()
+                bcftools_stats[s_name] = {}
+                bcftools_stats_indels[s_name] = {}
+                bcftools_stats_sample_variants[s_name] = {}
+                bcftools_stats_sample_tstv[s_name] = {}
+                bcftools_stats_sample_singletons[s_name] = {}
+                bcftools_stats_sample_depth[s_name] = {}
+                bcftools_stats_vqc_snp[s_name] = {}
+                bcftools_stats_vqc_transi[s_name] = {}
+                bcftools_stats_vqc_transv[s_name] = {}
+                bcftools_stats_vqc_indels[s_name] = {}
                 bcftools_stats_depth_data[s_name] = {}
+                bcftools_stats_hom_het[s_name] = {"variations_hom": [], "variations_het": []}
                 bcftools_stats_indels[s_name][0] = None  # Avoid joining line across missing 0
 
             # Parse key stats
@@ -128,18 +140,15 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 count = int(s[3].strip())
                 bcftools_stats_indels[s_name][length] = count
 
-            # Per-sample counts
-            if s[0] == "PSC" and len(s_names) > 0:
-                s_name = s_names[int(s[1])]
-                fields = ["variations_hom", "variations_het"]
-                for i, field in enumerate(fields):
-                    bcftools_stats[s_name][field] = int(s[i + 4].strip())
-
             # Per-sample variant stats
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
+                # A set can hold several samples (one PSC row each); aggregated after parsing.
+                # Hom is nNonRefHom only: hom-ref genotypes are not variants.
+                bcftools_stats_hom_het[s_name]["variations_hom"].append(int(s[4].strip()))
+                bcftools_stats_hom_het[s_name]["variations_het"].append(int(s[5].strip()))
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_variants[s_name][sample] = dict()
+                bcftools_stats_sample_variants[s_name][sample] = {}
                 bcftools_stats_sample_variants[s_name][sample]["nSNPs"] = (
                     int(s[3].strip()) + int(s[4].strip()) + int(s[5].strip())
                 )
@@ -159,7 +168,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_tstv[s_name][sample] = dict()
+                bcftools_stats_sample_tstv[s_name][sample] = {}
                 if int(s[7].strip()) != 0:
                     bcftools_stats_sample_tstv[s_name][sample]["tstv"] = float(int(s[6].strip()) / int(s[7].strip()))
                 else:
@@ -169,7 +178,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_singletons[s_name][sample] = dict()
+                bcftools_stats_sample_singletons[s_name][sample] = {}
                 bcftools_stats_sample_singletons[s_name][sample]["singletons"] = int(s[10].strip())
                 # Calculate total variants (SNPs + indels) - singletons
                 # s[3]=nRefHom, s[4]=nNonRefHom, s[5]=nHets (SNPs only), s[8]=nIndels
@@ -180,7 +189,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             if s[0] == "PSC" and len(s_names) > 0:
                 s_name = s_names[int(s[1])]
                 sample = module.clean_s_name(s[2].strip(), f)
-                bcftools_stats_sample_depth[s_name][sample] = dict()
+                bcftools_stats_sample_depth[s_name][sample] = {}
                 bcftools_stats_sample_depth[s_name][sample]["depth"] = float(s[9].strip())
 
             # Depth plots
@@ -201,6 +210,18 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                 bcftools_stats_vqc_transi[s_name][quality] = int(s[4].strip())
                 bcftools_stats_vqc_transv[s_name][quality] = int(s[5].strip())
                 bcftools_stats_vqc_indels[s_name][quality] = int(s[6].strip())
+
+    # Aggregate the per-sample hom/het counts into a single General Stats value per set
+    for s_name, counts_by_field in bcftools_stats_hom_het.items():
+        for field, values in counts_by_field.items():
+            if not values:
+                continue
+            if hom_het_aggregation == "sum":
+                bcftools_stats[s_name][field] = sum(values)
+            elif hom_het_aggregation == "median":
+                bcftools_stats[s_name][field] = round(statistics.median(values))
+            else:  # mean
+                bcftools_stats[s_name][field] = round(statistics.mean(values))
 
     # Remove empty samples
     bcftools_stats = {k: v for k, v in bcftools_stats.items() if len(v) > 0}
@@ -234,7 +255,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     module.write_data_file(bcftools_stats, "multiqc_bcftools_stats")
 
     # Stats Table
-    stats_headers = bcftools_stats_genstats_headers()
+    stats_headers = bcftools_stats_genstats_headers(hom_het_aggregation)
     if getattr(config, "bcftools", {}).get("write_general_stats", True):
         module.general_stats_addcols(bcftools_stats, stats_headers, "Stats")
     if getattr(config, "bcftools", {}).get("write_separate_table", False):
@@ -322,7 +343,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     if len(bcftools_stats_depth_data) > 0:
         # Get shared list of bins and order them numerically
         all_bins = []
-        for sname, val_by_bin in bcftools_stats_depth_data.items():
+        for val_by_bin in bcftools_stats_depth_data.values():
             all_bins.extend(list(val_by_bin.keys()))
         all_bins = sorted(all_bins, key=lambda x: int(re.sub(r"\D", "", x)))
         # Order bins in samples and fill missing bins:
@@ -431,8 +452,13 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
     return len(bcftools_stats)
 
 
-def bcftools_stats_genstats_headers():
+def bcftools_stats_genstats_headers(hom_het_aggregation: str = "mean"):
     """Add key statistics to the General Stats table"""
+    agg_desc = {
+        "mean": "rounded mean across samples if multi-sample",
+        "median": "rounded median across samples if multi-sample",
+        "sum": "total across samples if multi-sample",
+    }[hom_het_aggregation]
     stats_headers = {
         "number_of_records": {
             "title": "Vars",
@@ -442,13 +468,13 @@ def bcftools_stats_genstats_headers():
         },
         "variations_hom": {
             "title": "Hom",
-            "description": "Variations homozygous",
+            "description": f"Variations homozygous, non-reference ({agg_desc})",
             "min": 0,
             "format": "{:,.0f}",
         },
         "variations_het": {
             "title": "Het",
-            "description": "Variations heterozygous",
+            "description": f"Variations heterozygous ({agg_desc})",
             "min": 0,
             "format": "{:,.0f}",
         },

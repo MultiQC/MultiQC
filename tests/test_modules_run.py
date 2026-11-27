@@ -1,12 +1,13 @@
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Union
 
 import pytest
 
 from multiqc import BaseMultiqcModule, config, parse_logs, report, reset
 from multiqc.base_module import ModuleNoSamplesFound
 from multiqc.core.update_config import ClConfig, update_config
+from multiqc.plots.bargraph import BarPlot
 from multiqc.types import SectionKey
 
 modules = [(k, entry_point) for k, entry_point in config.avail_modules.items() if k != "custom_content"]
@@ -45,9 +46,9 @@ def test_all_modules(module_id, entry_point, data_dir):
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
 
-    module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
+    module_cls: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
     _module = module_cls()
-    for m in _module if isinstance(_module, List) else [_module]:
+    for m in _module if isinstance(_module, list) else [_module]:
         assert len(report.general_stats_data) > 0 or len(m.sections) > 0
 
 
@@ -76,6 +77,89 @@ PSC\t0\tS2\t0\t0\t1\t1\t1\t0\t0.0\t0\t0\t0\t0
     assert "bcftools-stats-sequencing-depth" in report.plot_by_id
 
 
+def test_bcftools_stats_multi_sample_hom_het_aggregation(tmp_path, caplog, monkeypatch):
+    """
+    For a multi-sample VCF (one 'set' with several PSC rows), the General Stats hom/het
+    values must aggregate across samples rather than keeping only the last PSC row.
+    """
+    # PSC columns: id sample nRefHom nNonRefHom nHets nTs nTv nIndels depth nSingletons ...
+    # nNonRefHom (Hom): 66, 41, 48 ; nHets (Het): 29, 16, 3 ; nRefHom (10/12/15) must be ignored.
+    content = """# This file was produced by bcftools stats (1.19+htslib-1.19.1) and can be plotted using plot-vcfstats.
+ID\t0\tmulti.vcf.gz
+SN\t0\tnumber of records:\t100
+SN\t0\tnumber of SNPs:\t90
+ST\t0\tA>C\t2
+PSC\t0\tS1\t10\t66\t29\t40\t26\t5\t30.0\t3\t0\t0\t0
+PSC\t0\tS2\t12\t41\t16\t25\t16\t4\t28.0\t2\t0\t0\t0
+PSC\t0\tS3\t15\t48\t3\t20\t10\t2\t25.0\t1\t0\t0\t0
+"""
+
+    from multiqc.modules.bcftools.bcftools import MultiqcModule
+    from multiqc.types import ColumnKey
+
+    def hom_het(method):
+        report.reset()
+        config.reset()
+        monkeypatch.setattr(config, "bcftools", {"hom_het_aggregation": method} if method else {}, raising=False)
+        stats_file = tmp_path / f"multi_{method or 'default'}.stats.txt"
+        stats_file.write_text(content)
+        report.analysis_files = [stats_file]
+        report.search_files(["bcftools"])
+        MultiqcModule()
+        for section in report.general_stats_data.values():
+            for rows in section.values():
+                data = rows[0].data
+                if ColumnKey("variations_hom") in data:
+                    return data[ColumnKey("variations_hom")], data[ColumnKey("variations_het")]
+        raise AssertionError("hom/het values not found in General Stats")
+
+    # Default is mean across samples, not the last PSC row (which was 48, 3)
+    hom, het = hom_het(None)
+    assert hom == 52
+    assert het == 16
+    assert (hom, het) != (48, 3)
+
+    assert hom_het("mean") == (52, 16)
+    assert hom_het("median") == (48, 16)
+    assert hom_het("sum") == (155, 48)
+
+    with caplog.at_level("WARNING", logger="multiqc.modules.bcftools.stats"):
+        assert hom_het("invalid") == (52, 16)
+    assert "Unrecognised bcftools.hom_het_aggregation value 'invalid'" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "reported,aligned,suppressed",
+    [(False, 80, 20), (True, 60, 20), (False, 80, 0), (True, 80, 0), (False, 80, 80), (True, 0, 80)],
+)
+@pytest.mark.parametrize("overall_time", [False, True])
+def test_bowtie1_suppressed_alignments(tmp_path, reported, aligned, suppressed, overall_time):
+    """Suppressed reads must not also be counted as aligned in the bar plot."""
+    log_file = tmp_path / "sample.bowtie.log"
+    log_file.write_text(
+        "# reads processed: 100\n"
+        f"# reads with at least one{' reported' if reported else ''} alignment: {aligned} ({aligned:.2f}%)\n"
+        "# reads that failed to align: 20 (20.00%)\n"
+        + (f"# reads with alignments suppressed due to -m: {suppressed} ({suppressed:.2f}%)\n" if suppressed else "")
+        + ("Overall time: 00:00:01\n" if overall_time else "")
+    )
+    config.strict = True
+    report.analysis_files = [log_file]
+    report.search_files(["bowtie1"])
+
+    module = config.avail_modules["bowtie1"].load()()
+    plot = next(iter(report.plot_by_id.values()))
+    assert isinstance(plot, BarPlot)
+    categories = {category.name: category.data[0] for category in plot.datasets[0].cats}
+
+    assert categories.get("Aligned", 0) == 80 - suppressed
+    assert categories["Not aligned"] == 20
+    assert categories.get("Multimapped", 0) == suppressed
+    assert sum(categories.values()) == 100
+    assert {category.name: category.data_pct[0] for category in plot.datasets[0].cats} == categories
+    assert next(iter(module.bowtie_data.values()))["reads_aligned"] == aligned
+
+
 @pytest.mark.parametrize("module_id,entry_point", modules)
 def test_ignore_samples(module_id, entry_point, data_dir):
     """
@@ -89,7 +173,7 @@ def test_ignore_samples(module_id, entry_point, data_dir):
     report.analysis_files = [mod_dir]
     report.search_files([module_id])
 
-    module_cls: Callable[[], Union[BaseMultiqcModule, List[BaseMultiqcModule]]] = entry_point.load()
+    module_cls: Callable[[], BaseMultiqcModule | list[BaseMultiqcModule]] = entry_point.load()
     with pytest.raises(ModuleNoSamplesFound):
         _module = module_cls()
 
@@ -97,7 +181,7 @@ def test_ignore_samples(module_id, entry_point, data_dir):
 @pytest.mark.parametrize(
     ["config_options", "expected_to_write"],
     [
-        (dict(), True),
+        ({}, True),
         ({"make_data_dir": False}, False),
         ({"filename": "stdout"}, False),
     ],
@@ -241,3 +325,49 @@ def test_path_filters(multiqc_reset, tmp_path, data_dir, anchors, expected_raw_d
     assert set(report.general_stats_data[SectionKey(anchors[1] or "adapterremoval-1")].keys()) == {
         Path(fn).name for fn in expected_pe_files
     }
+
+
+@pytest.mark.parametrize("repeat_module", [False, True])
+def test_top_modules_do_not_add_unfiltered_run(tmp_path, repeat_module):
+    """Top modules omitted from module_order must only run with their configured filters."""
+    import yaml
+
+    for name in ["raw", "trimmed", "unwanted"]:
+        (tmp_path / f"{name}.stderr").write_text(
+            f"TrimmomaticSE: Started with arguments: {name}.fastq.gz\n"
+            "Input Reads: 100 Surviving: 90 (90.00%) Dropped: 10 (10.00%)\n"
+            "TrimmomaticSE: Completed successfully\n"
+        )
+
+    names = ["raw", "trimmed"] if repeat_module else ["raw"]
+    config_file = tmp_path / "config.yaml"
+    config_file.write_text(
+        yaml.safe_dump(
+            {
+                "module_order": ["cutadapt"],
+                "top_modules": [
+                    {
+                        "trimmomatic": {
+                            "name": f"Trimmomatic ({name})",
+                            "anchor": f"trimmomatic_{name}",
+                            "path_filters": [f"*/{name}.stderr"],
+                        }
+                    }
+                    for name in names
+                ],
+            }
+        )
+    )
+
+    parse_logs(
+        tmp_path,
+        config_files=[config_file],
+        run_modules=["trimmomatic"],
+        no_version_check=True,
+        strict=True,
+    )
+
+    assert [m.anchor for m in report.modules] == [f"trimmomatic_{name}" for name in names]
+    for module, name in zip(report.modules, names):
+        assert module.saved_raw_data is not None
+        assert set(module.saved_raw_data[f"multiqc_trimmomatic_trimmomatic_{name}"]) == {name}

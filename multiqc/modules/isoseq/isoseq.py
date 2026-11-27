@@ -2,7 +2,6 @@ import csv
 import json
 import logging
 from collections import defaultdict
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, box, table
@@ -16,6 +15,13 @@ REFINE_CATEGORIES = {
     "insertlen": "Insert length",
     "polyAlen": "Poly(A) length",
 }
+
+
+def flatten_refine_json(data: Dict) -> Dict:
+    """Newer isoseq versions write a pbreports report with metrics in an `attributes` list of id/value entries."""
+    if "attributes" in data:
+        return {attr["id"]: attr["value"] for attr in data["attributes"]}
+    return data
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -59,10 +65,10 @@ class MultiqcModule(BaseMultiqcModule):
             self._add_refine_box_plots(refine_csv_data_by_sample)
 
     def _parse_refine(self):
-        refine_json_data_by_sample = dict()
-        refine_csv_data_by_sample = dict()
+        refine_json_data_by_sample = {}
+        refine_csv_data_by_sample = {}
         for f in self.find_log_files("isoseq/refine-json", filehandles=True):
-            refine_json_data_by_sample[f["s_name"]] = json.load(f["f"])
+            refine_json_data_by_sample[f["s_name"]] = flatten_refine_json(json.load(f["f"]))
             self.add_data_source(f, section="refine-json")
 
         for f in self.find_log_files("isoseq/refine-csv", filehandles=True):
@@ -96,9 +102,9 @@ class MultiqcModule(BaseMultiqcModule):
         return refine_json_data_by_sample, refine_csv_data_by_sample
 
     def _parse_cluster(self):
-        cnt_by_cluster_id_by_sample = dict()
+        cnt_by_cluster_id_by_sample = {}
         for f in self.find_log_files("isoseq/cluster-csv", filehandles=True):
-            cnt_by_cluster_id: Dict = defaultdict(int)
+            cnt_by_cluster_id: dict = defaultdict(int)
             reader: csv.DictReader = csv.DictReader(f["f"])
             for row in reader:
                 cluster_id = row.get("cluster_id", None)
@@ -116,7 +122,7 @@ class MultiqcModule(BaseMultiqcModule):
         return cnt_by_cluster_id_by_sample
 
     def _add_general_stats_cluster(self, size_by_cluster_id_by_sample):
-        gstats_data: Dict = {}
+        gstats_data: dict = {}
         for s_name, size_by_cluster_id in size_by_cluster_id_by_sample.items():
             gstats_data[s_name] = {}
             gstats_data[s_name]["n_cluster"] = len(size_by_cluster_id)
@@ -139,14 +145,14 @@ class MultiqcModule(BaseMultiqcModule):
         self.general_stats_addcols(gstats_data, headers)
 
     def _add_cluster_size_plot(self, cnt_by_cluster_id_by_sample):
-        plot_data = dict()
+        plot_data = {}
 
         for s_name, size_by_cluster_id in cnt_by_cluster_id_by_sample.items():
             plot_data[s_name] = {"=2": 0, "3-10": 0, "11-100": 0, ">100": 0}
-            value_counts: Dict = defaultdict(int)
+            value_counts: dict = defaultdict(int)
 
             # Calculating value counts similar to df.value_counts("n_CCS") in pandas
-            for key, size in size_by_cluster_id.items():
+            for size in size_by_cluster_id.values():
                 value_counts[size] += 1
 
             for n_CCS, size in value_counts.items():
@@ -235,9 +241,9 @@ class MultiqcModule(BaseMultiqcModule):
         )
 
     def _add_refine_box_plots(self, values_by_metric_by_sample):
-        data_by_sample_by_metric: Dict = {k: {} for k in REFINE_CATEGORIES.keys()}
+        data_by_sample_by_metric: dict = {k: {} for k in REFINE_CATEGORIES}
         for sname, values_by_metric in values_by_metric_by_sample.items():
-            for metric in REFINE_CATEGORIES.keys():
+            for metric in REFINE_CATEGORIES:
                 data_by_sample_by_metric[metric][sname] = values_by_metric[metric]
 
         for metric, data_by_sample in data_by_sample_by_metric.items():
