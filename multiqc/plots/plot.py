@@ -1476,7 +1476,12 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
         return html
 
 
-class ExportProcess(multiprocessing.Process):
+# Python 3.14 defaults to forkserver on Linux, whose temp dir cleanup at exit fails on NFS
+# and prints a traceback. fork keeps the pre-3.14 behaviour; macOS and Windows keep spawn.
+_export_mp_context = multiprocessing.get_context("fork" if platform.system() == "Linux" else None)
+
+
+class ExportProcess(_export_mp_context.Process):
     def __init__(self, fig, plot_path, write_kwargs):
         super().__init__()
         self.fig = fig
@@ -1491,7 +1496,7 @@ class ExportProcess(multiprocessing.Process):
             self.exception = e
 
 
-class BatchExportProcess(multiprocessing.Process):
+class BatchExportProcess(_export_mp_context.Process):
     def __init__(self, export_tasks):
         """
         Initialize a batch export process with multiple tasks
