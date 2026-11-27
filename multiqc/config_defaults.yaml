@@ -531,6 +531,7 @@ module_order:
   - pbmarkdup
   - damageprofiler
   - mapdamage
+  - pmdshodh
   - biobambam2
   - jcvi
   - mtnucratio
