@@ -538,6 +538,7 @@ module_order:
   - vep
   - bakta
   - prokka
+  - dnaapler
   - checkm2
   - qc3C
   - nanoq
