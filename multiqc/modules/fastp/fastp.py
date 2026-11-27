@@ -363,14 +363,15 @@ class MultiqcModule(BaseMultiqcModule):
         # Insert size plot data
         try:
             # First count the total read count in the insert size analysis
-            total_reads = 0
+            classified_reads = 0
             max_i = 0
             for i, v in enumerate(parsed_json["insert_size"]["histogram"]):
-                total_reads += v
+                classified_reads += v
                 if float(v) > 0:
                     max_i = i
-            if total_reads == 0:
+            if classified_reads == 0:
                 raise KeyError
+            total_reads = classified_reads + parsed_json["insert_size"]["unknown"]
             # Calculate percentages
             for i, v in enumerate(parsed_json["insert_size"]["histogram"]):
                 if i <= max_i:
@@ -445,12 +446,39 @@ class MultiqcModule(BaseMultiqcModule):
                     "suffix": "%",
                     "hidden": True,
                 },
+                "before_filtering_total_bases": {
+                    "title": f"{config.base_count_prefix} Bases Before Filtering",
+                    "description": f"Total bases before filtering ({config.base_count_desc})",
+                    "scale": "Purples",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "after_filtering_total_bases": {
+                    "title": f"{config.base_count_prefix} Bases After Filtering",
+                    "description": f"Total bases after filtering ({config.base_count_desc})",
+                    "scale": "Oranges",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
+                "before_filtering_q30_bases": {
+                    "title": f"{config.base_count_prefix} Q30 bases (before filtering)",
+                    "description": f"Bases > Q30 before filtering ({config.base_count_desc})",
+                    "scale": "YlGn",
+                    "shared_key": "base_count",
+                    "hidden": True,
+                },
                 "after_filtering_q30_bases": {
                     "title": f"{config.base_count_prefix} Q30 bases",
                     "description": f"Bases > Q30 after filtering ({config.base_count_desc})",
                     "scale": "GnBu",
                     "shared_key": "base_count",
                     "hidden": True,
+                },
+                "before_filtering_total_reads": {
+                    "title": "Reads Before Filtering",
+                    "description": f"Total reads before filtering ({config.read_count_desc})",
+                    "scale": "Purples",
+                    "shared_key": "read_count",
                 },
                 "filtering_result_passed_filter_reads": {
                     "title": "Reads After Filtering",

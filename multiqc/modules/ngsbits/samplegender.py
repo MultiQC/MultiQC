@@ -87,10 +87,7 @@ def parse_reports(self: BaseMultiqcModule) -> int:
 
 
 def parse_file(f: str) -> dict[str, float | str]:
-    """
-    Parses a single SampleGender TSV file content and returns a dictionary
-    with the relevant data from columns 2-5.
-    """
+    """Parse a single SampleGender TSV file, keyed by column header (excluding the file column)."""
     parsed_data: dict[str, float | str] = {}
     lines = f.splitlines()
 
@@ -98,8 +95,14 @@ def parse_file(f: str) -> dict[str, float | str]:
         # Not enough data, return an empty dictionary
         return parsed_data
 
-    headers = lines[0].strip().split("\t")[1:5]
-    values = lines[1].strip().split("\t")[1:5]
+    headers = lines[0].strip().split("\t")[1:]
+    values = lines[1].strip().split("\t")[1:]
+
+    # A multi-word gender such as "unknown (ratio in gray area)" is tab-separated like the columns
+    n_extra = len(values) - len(headers)
+    if n_extra < 0:
+        raise ValueError(f"SampleGender row has {len(values)} values but {len(headers)} columns")
+    values = [" ".join(values[: n_extra + 1])] + values[n_extra + 1 :]
 
     for key, value in zip(headers, values):
         try:
