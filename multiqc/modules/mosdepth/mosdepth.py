@@ -703,7 +703,14 @@ class MultiqcModule(BaseMultiqcModule):
 
                             included_contigs.add(contig)
 
-                        bases_fraction_sum_per_contig[contig] += float(bases_fraction)
+                        # Mosdepth reports cumulative coverage ("at least X reads"), so the mean
+                        # coverage is the sum of fractions for depth >= 1
+                        # (see https://github.com/brentp/mosdepth#distribution-output).
+                        # Still register the contig on the depth-0 row so 0X contigs are retained.
+                        if cutoff_reads == "0":
+                            bases_fraction_sum_per_contig.setdefault(contig, 0.0)
+                        else:
+                            bases_fraction_sum_per_contig[contig] += float(bases_fraction)
             except ValueError:
                 log.warning(
                     f"Skipping {f['root']}/{f['fn']}: could not parse line {line_num}. The file may be truncated or corrupted."
@@ -741,11 +748,12 @@ class MultiqcModule(BaseMultiqcModule):
                 total_cov += bases_fraction_sum
 
         # Now, collecting the contigs that passed the cutoff.
-        req_cov = float(total_cov) * self.cfg["perchrom_fraction_cutoff"]
+        cutoff = self.cfg["perchrom_fraction_cutoff"]
+        req_cov = float(total_cov) * cutoff
         passing_contigs = set()
         for s_name, bases_fraction_sum_per_contig in bases_fraction_sum_per_contig_per_sample.items():
             for contig, bases_fraction_sum in bases_fraction_sum_per_contig.items():
-                if float(total_cov_per_contig[contig]) > req_cov and contig not in passing_contigs:
+                if (cutoff == 0.0 or float(total_cov_per_contig[contig]) > req_cov) and contig not in passing_contigs:
                     passing_contigs.add(contig)
 
         rejected_contigs = set()
@@ -784,15 +792,8 @@ class MultiqcModule(BaseMultiqcModule):
                     if contig.lower() == "y" or contig.lower() == "chry":
                         y_cov = bases_fraction_sum
             # Only save these counts if we have both x and y
-            if x_cov and y_cov:
+            if x_cov is not None and y_cov is not None and (x_cov > 0 or y_cov > 0):
                 xy_cov_by_sample[s_name] = x_cov, y_cov
-
-        # Correct per-contig average, since mosdepth reports cumulative coverage for at least
-        # a certain value (see https://github.com/brentp/mosdepth#distribution-output).
-        # For that reason, the 0 category (which is always 1) should not be included.
-        for s_name in bases_fraction_sum_per_contig_per_sample:
-            for contig in bases_fraction_sum_per_contig_per_sample[s_name]:
-                bases_fraction_sum_per_contig_per_sample[s_name][contig] -= 1
 
         return (
             cumulative_pct_by_cov_by_sample,
