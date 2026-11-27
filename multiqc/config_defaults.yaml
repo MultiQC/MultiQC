@@ -545,6 +545,7 @@ module_order:
   - samblaster
   - samtools
   - bamtools
+  - bamutil
   - sambamba
   - ngsbits
   - pairtools
