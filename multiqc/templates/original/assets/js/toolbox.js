@@ -78,9 +78,9 @@ $(function () {
         $("#mqc_renamesamples_filters").append(
           '<li class="mqc_sname_switches_li"> \
           <input class="f_text from_text" value="' +
-            ft +
+            escapeHtml(ft) +
             '" /><small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-            tt +
+            escapeHtml(tt) +
             '" /> \
           <button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button> \
         </li>',
@@ -128,7 +128,7 @@ $(function () {
     $(pattern).each(function (idx, val) {
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
-          val +
+          escapeHtml(val) +
           '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     });
@@ -213,11 +213,11 @@ $(function () {
     let f_col = mqc_colour_filter_color.val().trim();
     $("#mqc_col_filters").append(
       '<li style="color:' +
-        f_col +
+        escapeHtml(f_col) +
         ';" id="' +
         hashCode(f_text + f_col) +
         '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
-        f_text +
+        escapeHtml(f_text) +
         '" tabindex="' +
         mqc_colours_idx +
         '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
@@ -253,10 +253,14 @@ $(function () {
     }
 
     let li =
-      '<li><input class="f_text from_text" value="' + from_text + '" tabindex="' + mqc_renamesamples_idx + '" />';
+      '<li><input class="f_text from_text" value="' +
+      escapeHtml(from_text) +
+      '" tabindex="' +
+      mqc_renamesamples_idx +
+      '" />';
     li +=
       '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-      to_text +
+      escapeHtml(to_text) +
       '" tabindex="' +
       (mqc_renamesamples_idx + 1) +
       '" />';
@@ -298,10 +302,14 @@ $(function () {
         return true;
       }
       var li =
-        '<li><input class="f_text from_text" value="' + from_text + '" tabindex="' + mqc_renamesamples_idx + '" />';
+        '<li><input class="f_text from_text" value="' +
+        escapeHtml(from_text) +
+        '" tabindex="' +
+        mqc_renamesamples_idx +
+        '" />';
       li +=
         '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-        to_text +
+        escapeHtml(to_text) +
         '" tabindex="' +
         (mqc_renamesamples_idx + 1) +
         '" />';
@@ -325,7 +333,7 @@ $(function () {
     }
     $("#mqc_hidesamples_filters").append(
       '<li><input class="f_text" value="' +
-        f_text +
+        escapeHtml(f_text) +
         '" tabindex="' +
         mqc_hidesamples_idx +
         '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
@@ -359,9 +367,9 @@ $(function () {
       var fname = $(this).attr("id");
       $("#mqc_export_selectplots").append(
         '<div class="checkbox"><label><input type="checkbox" value="' +
-          fname +
+          escapeHtml(fname) +
           '" checked> ' +
-          fname +
+          escapeHtml(fname) +
           "</label></div>",
       );
     });
@@ -744,9 +752,9 @@ $(function () {
       // Add to the filters list
       $("#mqc_col_filters").append(
         '<li style="color:' +
-          color +
+          escapeHtml(color) +
           '"><span class="hc_handle"><span></span><span></span><span></span></span><input class="f_text" value="' +
-          pattern +
+          escapeHtml(pattern) +
           '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
@@ -763,7 +771,7 @@ $(function () {
       const pattern = mqc_config.show_hide_patterns[i];
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
-          pattern +
+          escapeHtml(pattern) +
           '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
     }
@@ -816,12 +824,12 @@ $(function () {
       // Add to the filters list
       $("#mqc_renamesamples_filters").append(
         '<li><input class="f_text from_text" value="' +
-          from_text +
+          escapeHtml(from_text) +
           '" tabindex="' +
           mqc_renamesamples_idx +
           '" />' +
           '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-          to_text +
+          escapeHtml(to_text) +
           '" tabindex="' +
           (mqc_renamesamples_idx + 1) +
           '" />' +
@@ -839,6 +847,16 @@ $(function () {
 //////////////////////////////////////////////////////
 // UTILITY FUNCTIONS
 //////////////////////////////////////////////////////
+// Escape HTML meta-characters before interpolating text into markup
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function hashCode(str) {
   var hash = 0;
   if (str.length == 0) return hash;
@@ -1177,7 +1195,7 @@ function mqc_save_config(name, clear, as_default) {
       $("#mqc_loadconfig_form select option:contains('" + name + "')").remove();
       // Add new name to load select box and select it
       $("#mqc_loadconfig_form select")
-        .prepend("<option>" + name + (as_default ? " [default]" : "") + "</option>")
+        .prepend($("<option>").text(name + (as_default ? " [default]" : "")))
         .val(name + (as_default ? " [default]" : ""));
       // Success message
       $('<p class="text-success" id="mqc-save-success">Settings saved.</p>')
@@ -1223,9 +1241,7 @@ function mqc_clear_default_config() {
         var name = $('#mqc_loadconfig_form select option:contains("default")').text();
         $('#mqc_loadconfig_form select option:contains("default")').remove();
         name = name.replace(" [default]", "");
-        $("#mqc_loadconfig_form select")
-          .append("<option>" + name + "</option>")
-          .val(name);
+        $("#mqc_loadconfig_form select").append($("<option>").text(name)).val(name);
       });
   } catch (e) {
     console.log("Could not access localStorage");
@@ -1250,9 +1266,7 @@ function populate_mqc_saveselect() {
           name = name + " [default]";
           default_name = name;
         }
-        $("#mqc_loadconfig_form select")
-          .append("<option>" + name + "</option>")
-          .val(name);
+        $("#mqc_loadconfig_form select").append($("<option>").text(name)).val(name);
       }
       // Set the selected select option
       if (default_name !== false) {
@@ -1314,10 +1328,10 @@ function load_mqc_config(name, config_obj) {
       if (from_text.length === 0) {
         return true;
       }
-      var li = '<li><input class="f_text from_text" value="' + from_text + '" />';
+      var li = '<li><input class="f_text from_text" value="' + escapeHtml(from_text) + '" />';
       li +=
         '<small class="glyphicon glyphicon-chevron-right"></small><input class="f_text to_text" value="' +
-        to_text +
+        escapeHtml(to_text) +
         '" />';
       li +=
         '<button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>';
@@ -1347,11 +1361,11 @@ function load_mqc_config(name, config_obj) {
       $("#" + hashCode(f_text + f_col)).remove();
       $("#mqc_col_filters").append(
         '<li style="color:' +
-          f_col +
+          escapeHtml(f_col) +
           ';" id="' +
           hashCode(f_text + f_col) +
           '"><span class="hc_handle"><span></span><span></span></span><input class="f_text" value="' +
-          f_text +
+          escapeHtml(f_text) +
           '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_highlight_f_texts.push(f_text);
@@ -1388,7 +1402,7 @@ function load_mqc_config(name, config_obj) {
       }
       $("#mqc_hidesamples_filters").append(
         '<li><input class="f_text" value="' +
-          f_text +
+          escapeHtml(f_text) +
           '" /><button type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button></li>',
       );
       window.mqc_hide_f_texts.push(f_text);

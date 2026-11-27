@@ -2119,7 +2119,7 @@
     <main class="main">
       <header class="header">
         <div class="header-main">
-          <h1>MultiQC Configuration Wizard <span class="header-version">v1.35</span></h1>
+          <h1>MultiQC Configuration Wizard <span class="header-version">v1.36.dev0</span></h1>
           <p>Build your <code>multiqc_config.yaml</code></p>
         </div>
         <nav class="header-links" aria-label="External links">
@@ -2210,25 +2210,25 @@
       </div>
 
       <footer class="page-footer">
-        Generated on <time datetime="2026-05-19">2026-05-19</time> for MultiQC <code>1.35</code>.
+        Generated on <time datetime="2026-11-23">2026-11-23</time> for MultiQC <code>1.36.dev0</code>.
       </footer>
     </main>
 
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
-      integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q=="
+      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.1/js-yaml.min.js"
+      integrity="sha512-Ccva9tZjPfyRDMMosATBaEnAKvX+eBbDfHMnr+0LhTa+NMqKRxUAoDGPotb8biwzQ6xnf4IYuDaPiXw10DYaNA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"
-      integrity="sha384-GdEWAbCjn+ghjX0gLx7/N1hyTVmPAjdC2OvoAA0RyNcAOhqwtT8qnbCxWle2+uJX"
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.2/highlight.min.js"
+      integrity="sha512-VSPLUv/n1Bmn+4zoxBNwpuFAO3//79I0Aax/qHDx24R47vylPcc9PrHDCqlePwHnh3joiM7/YTQhcXyQAAxvPQ=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/yaml.min.js"
-      integrity="sha384-bMkvdnz+wPu1ro0fqO3BaDWztc7RzSvw05MQFP6bhJKDcwpkrFYTfTFI9ndkP11l"
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.2/languages/yaml.min.js"
+      integrity="sha512-IKEO35wkGSbPDYkG7sTszqPEfj7VSlRx3qvbmGs30NC0eSldEvfjse4wu+86oFVFQL0IwgKdXaVszPiyEECcnw=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
@@ -2241,8 +2241,8 @@
     <!-- Monaco's AMD loader. The editor + language chunks are fetched on
          init; the wizard's editor pane is always visible. -->
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
-      integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
+      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.56.0/min/vs/loader.min.js"
+      integrity="sha512-2DJ/UX0VmkE/Cq9bjrRet/01ETdenJ5zu2QVeI9PDN/n5s7kTSh9c1Rhr3E7ZQJOnm4N4ONBTXamiX7Ec9FQlA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
@@ -2574,6 +2574,7 @@
                 "bcftools",
                 "featurecounts",
                 "fgbio",
+                "fgumi",
                 "dragen",
                 "dragen_fastqc",
                 "dedup",
@@ -2693,6 +2694,7 @@
                 "telseq",
                 "ataqv",
                 "mgikit",
+                "mgnifam",
                 "mosaicatcher",
               ],
               enum: null,
@@ -4152,6 +4154,84 @@
                     "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\ta_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate",
                   num_lines: 3,
                 },
+                "fgumi/clip": {
+                  contents: "read_type\treads\treads_unmapped\treads_clipped_pre",
+                  num_lines: 2,
+                },
+                "fgumi/consensus_stats": {
+                  contents: "key\tvalue\tdescription",
+                  num_lines: 2,
+                  shared: true,
+                },
+                "fgumi/copy_umi": {
+                  contents: "total_records\trx_written\trx_overwritten",
+                  num_lines: 2,
+                },
+                "fgumi/correct": {
+                  contents: "umi\ttotal_matches\tperfect_matches",
+                  num_lines: 2,
+                },
+                "fgumi/dedup": {
+                  contents: "sample\tlibrary\tfiltered_templates",
+                  num_lines: 2,
+                },
+                "fgumi/dedup_ladder": {
+                  contents: "library\ttemplates_seen\tduplicate_fraction",
+                  num_lines: 2,
+                },
+                "fgumi/downsample_histogram": {
+                  contents_re: "^family_size\tcount$",
+                  num_lines: 2,
+                  shared: true,
+                },
+                "fgumi/duplex_family_sizes": {
+                  contents: "ab_size\tba_size\tcount\tfraction",
+                  num_lines: 2,
+                },
+                "fgumi/family_sizes": {
+                  contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size",
+                  num_lines: 2,
+                  shared: true,
+                },
+                "fgumi/filter_stats": [
+                  {
+                    contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate",
+                    num_lines: 2,
+                  },
+                  {
+                    contents_re: "^total_reads\t\\d+$",
+                    num_lines: 2,
+                    shared: true,
+                  },
+                ],
+                "fgumi/grouping_metrics": {
+                  contents: "accepted_sam_records\tdiscarded_non_pf",
+                  num_lines: 2,
+                },
+                "fgumi/position_group_sizes": {
+                  contents: "position_group_size\tcount\tfraction",
+                  num_lines: 2,
+                },
+                "fgumi/retag": {
+                  contents: "operation\tkind\trecords_applied",
+                  num_lines: 2,
+                },
+                "fgumi/review": {
+                  contents: "chrom\tpos\tref\tgenotype\tfilters",
+                  num_lines: 2,
+                },
+                "fgumi/strand_family_sizes": {
+                  contents: "family_size\tcs_count\tcs_fraction",
+                  num_lines: 2,
+                },
+                "fgumi/umi_counts": {
+                  contents: "umi\traw_observations\traw_observations_with_errors",
+                  num_lines: 2,
+                },
+                "fgumi/yield": {
+                  contents: "fraction\tread_pairs\tcs_families\tss_families",
+                  num_lines: 2,
+                },
                 filtlong: {
                   contents: "Scoring long reads",
                   contents_re: ".*Filtering long reads.*",
@@ -4470,6 +4550,11 @@
                 },
                 "mgikit/mgi_undetermined_barcode": {
                   fn: "*.mgikit.undetermined_barcode",
+                },
+                mgnifam: {
+                  fn: "*_stats.json",
+                  contents: '"tool": "mgnifam"',
+                  num_lines: 3,
                 },
                 minionqc: {
                   fn: "summary.yaml",
@@ -5106,7 +5191,7 @@
                   num_lines: 10,
                 },
                 "samtools/markdup_txt": {
-                  contents: ["^COMMAND:", "samtools markdup"],
+                  contents: ["COMMAND:", "samtools markdup"],
                   num_lines: 2,
                 },
                 "samtools/markdup_json": {
@@ -6245,39 +6330,91 @@
               deprecated: false,
               multiline: false,
               type: "string",
-              description: "Model name. Provider-specific.",
+              description:
+                "Model name. Defaults to claude-opus-5-5 for Anthropic and gpt-6.1-sol for OpenAI. Required for aws_bedrock and custom.",
               default: null,
               enum: null,
               items_enum: null,
-              examples: ["gpt-4o", "claude-sonnet-4-5."],
+              examples: ["claude-opus-5-5", "gpt-6.1-sol"],
             },
             ai_custom_endpoint: {
               deprecated: false,
               multiline: false,
               type: "string",
-              description: "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
+              description:
+                "Full URL of the chat endpoint for the 'custom' provider: an OpenAI-compatible chat completions endpoint, or a Claude-compatible messages endpoint with ai_custom_api_style: anthropic.",
               default: null,
               enum: null,
               items_enum: null,
-              examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
+              examples: ["http://localhost:8000/v1/chat/completions", "https://llm-gateway.example.com/v1/messages"],
+            },
+            ai_custom_api_style: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description:
+                "Request format of the custom endpoint: 'openai' (chat completions, the default) or 'anthropic' (Claude messages API).",
+              default: null,
+              enum: ["openai", "anthropic"],
+              items_enum: null,
+              examples: [],
             },
             ai_auth_type: {
               deprecated: false,
               multiline: false,
               type: "string",
               description:
-                "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+                "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header. By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints an x-api-key header.",
               default: null,
               enum: ["bearer", "api-key"],
               items_enum: null,
               examples: [],
             },
+            ai_custom_headers: {
+              deprecated: false,
+              multiline: false,
+              type: "object",
+              description:
+                "Extra HTTP headers for the custom endpoint. Write ${VAR} to insert an environment variable, so secrets stay out of config files. A null value removes a header MultiQC would send. When set, the API key environment variable is optional.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: [
+                {
+                  Authorization: null,
+                  "x-api-key": "${MY_GATEWAY_TOKEN}",
+                },
+              ],
+            },
+            ai_custom_response_path: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description:
+                "Dotted path to the answer text in the custom endpoint's JSON response, for endpoints that don't use the standard OpenAI or Claude response format.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["completion.content", "choices.0.message.content"],
+            },
+            ai_custom_client: {
+              deprecated: false,
+              multiline: false,
+              type: "string",
+              description:
+                "Python class that sends prompts to your own AI service, given as 'package.module:ClassName'. Used with ai_provider: custom instead of ai_custom_endpoint. The class must subclass multiqc.core.ai.Client.",
+              default: null,
+              enum: null,
+              items_enum: null,
+              examples: ["my_lab.llm:GatewayClient"],
+            },
             seqera_website: {
               deprecated: false,
               multiline: false,
               type: "string",
-              description: "Base URL used for Seqera Platform links in the report.",
-              default: "https://seqera.io",
+              description:
+                "Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.",
+              default: null,
               enum: null,
               items_enum: null,
               examples: [],
@@ -6287,7 +6424,7 @@
               multiline: false,
               type: "string",
               description: "Base URL for the Seqera Platform API. Defaults to the public instance.",
-              default: "https://intern.seqera.io",
+              default: "https://ai-api.seqera.io/v1/web",
               enum: null,
               items_enum: null,
               examples: [],
@@ -6308,14 +6445,17 @@
               deprecated: false,
               multiline: false,
               type: "object",
-              description: "Extra request-body fields merged into the AI request payload (provider-specific).",
+              description:
+                "Extra request-body fields merged into the AI request payload (provider-specific). A null value removes a field MultiQC would otherwise send.",
               default: null,
               enum: null,
               items_enum: null,
               examples: [
                 {
-                  temperature: 0.3,
-                  top_p: 0.9,
+                  seed: 42,
+                },
+                {
+                  model: null,
                 },
               ],
             },
@@ -6324,7 +6464,7 @@
               multiline: false,
               type: "integer",
               description:
-                "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+                "Override the model's context window in tokens. By default MultiQC asks the provider, then uses what it knows about the model family, then assumes 128,000 tokens.",
               default: null,
               enum: null,
               items_enum: null,
@@ -6334,7 +6474,8 @@
               deprecated: false,
               multiline: false,
               type: "integer",
-              description: "Maximum completion tokens for OpenAI reasoning models.",
+              description:
+                "Maximum output tokens for the AI response, including reasoning or thinking tokens. Defaults to 16,000 for Claude; other providers use the model's own maximum.",
               default: null,
               enum: null,
               items_enum: null,
@@ -6344,17 +6485,19 @@
               deprecated: false,
               multiline: false,
               type: "string",
-              description: "Reasoning effort for OpenAI reasoning models.",
+              description:
+                "Reasoning effort, passed to the provider as given (OpenAI reasoning_effort, Claude output_config.effort). The levels depend on the model, eg. low, medium, high, xhigh, max. If the model rejects it, the request is sent without it.",
               default: null,
-              enum: ["low", "medium", "high"],
+              enum: null,
               items_enum: null,
-              examples: [],
+              examples: ["low", "high"],
             },
             ai_extended_thinking: {
               deprecated: false,
               multiline: false,
               type: "boolean",
-              description: "Enable extended thinking on Anthropic Claude models that support it.",
+              description:
+                "Turn on extended thinking for Claude models: adaptive thinking on Claude 4.6 and later, a token budget on older models. When off, each model uses its own default.",
               default: false,
               enum: null,
               items_enum: null,
@@ -6364,7 +6507,7 @@
               deprecated: false,
               multiline: false,
               type: "integer",
-              description: "Token budget for Anthropic extended thinking when enabled.",
+              description: "Token budget for extended thinking on Claude models older than 4.6.",
               default: null,
               enum: null,
               items_enum: null,
@@ -10009,8 +10152,9 @@
               },
             ],
             default: null,
-            description: "Model name. Provider-specific.",
-            examples: ["gpt-4o", "claude-sonnet-4-5."],
+            description:
+              "Model name. Defaults to claude-opus-5-5 for Anthropic and gpt-6.1-sol for OpenAI. Required for aws_bedrock and custom.",
+            examples: ["claude-opus-5-5", "gpt-6.1-sol"],
             group: "Provider",
             section: "AI Summary",
             title: "Ai Model",
@@ -10025,11 +10169,29 @@
               },
             ],
             default: null,
-            description: "Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.",
-            examples: ["http://localhost:11434/v1", "https://api.example.com/v1"],
+            description:
+              "Full URL of the chat endpoint for the 'custom' provider: an OpenAI-compatible chat completions endpoint, or a Claude-compatible messages endpoint with ai_custom_api_style: anthropic.",
+            examples: ["http://localhost:8000/v1/chat/completions", "https://llm-gateway.example.com/v1/messages"],
             group: "Provider",
             section: "AI Summary",
             title: "Ai Custom Endpoint",
+          },
+          ai_custom_api_style: {
+            anyOf: [
+              {
+                enum: ["openai", "anthropic"],
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Request format of the custom endpoint: 'openai' (chat completions, the default) or 'anthropic' (Claude messages API).",
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Custom Api Style",
           },
           ai_auth_type: {
             anyOf: [
@@ -10043,10 +10205,77 @@
             ],
             default: null,
             description:
-              "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.",
+              "Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header. By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints an x-api-key header.",
             group: "Provider",
             section: "AI Summary",
             title: "Ai Auth Type",
+          },
+          ai_custom_headers: {
+            anyOf: [
+              {
+                additionalProperties: {
+                  anyOf: [
+                    {
+                      type: "string",
+                    },
+                    {
+                      type: "null",
+                    },
+                  ],
+                },
+                type: "object",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Extra HTTP headers for the custom endpoint. Write ${VAR} to insert an environment variable, so secrets stay out of config files. A null value removes a header MultiQC would send. When set, the API key environment variable is optional.",
+            examples: [
+              {
+                Authorization: null,
+                "x-api-key": "${MY_GATEWAY_TOKEN}",
+              },
+            ],
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Custom Headers",
+          },
+          ai_custom_response_path: {
+            anyOf: [
+              {
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Dotted path to the answer text in the custom endpoint's JSON response, for endpoints that don't use the standard OpenAI or Claude response format.",
+            examples: ["completion.content", "choices.0.message.content"],
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Custom Response Path",
+          },
+          ai_custom_client: {
+            anyOf: [
+              {
+                pattern: "^[\\w.]+:\\w+$",
+                type: "string",
+              },
+              {
+                type: "null",
+              },
+            ],
+            default: null,
+            description:
+              "Python class that sends prompts to your own AI service, given as 'package.module:ClassName'. Used with ai_provider: custom instead of ai_custom_endpoint. The class must subclass multiqc.core.ai.Client.",
+            examples: ["my_lab.llm:GatewayClient"],
+            group: "Provider",
+            section: "AI Summary",
+            title: "Ai Custom Client",
           },
           seqera_website: {
             anyOf: [
@@ -10058,7 +10287,8 @@
               },
             ],
             default: null,
-            description: "Base URL used for Seqera Platform links in the report.",
+            description:
+              "Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.",
             group: "Provider",
             section: "AI Summary",
             title: "Seqera Website",
@@ -10105,11 +10335,14 @@
               },
             ],
             default: null,
-            description: "Extra request-body fields merged into the AI request payload (provider-specific).",
+            description:
+              "Extra request-body fields merged into the AI request payload (provider-specific). A null value removes a field MultiQC would otherwise send.",
             examples: [
               {
-                temperature: 0.3,
-                top_p: 0.9,
+                seed: 42,
+              },
+              {
+                model: null,
               },
             ],
             group: "Tuning",
@@ -10128,7 +10361,7 @@
             ],
             default: null,
             description:
-              "Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.",
+              "Override the model's context window in tokens. By default MultiQC asks the provider, then uses what it knows about the model family, then assumes 128,000 tokens.",
             group: "Tuning",
             section: "AI Summary",
             title: "Ai Custom Context Window",
@@ -10144,7 +10377,8 @@
               },
             ],
             default: null,
-            description: "Maximum completion tokens for OpenAI reasoning models.",
+            description:
+              "Maximum output tokens for the AI response, including reasoning or thinking tokens. Defaults to 16,000 for Claude; other providers use the model's own maximum.",
             group: "Tuning",
             section: "AI Summary",
             title: "Ai Max Completion Tokens",
@@ -10152,7 +10386,6 @@
           ai_reasoning_effort: {
             anyOf: [
               {
-                enum: ["low", "medium", "high"],
                 type: "string",
               },
               {
@@ -10160,7 +10393,9 @@
               },
             ],
             default: null,
-            description: "Reasoning effort for OpenAI reasoning models.",
+            description:
+              "Reasoning effort, passed to the provider as given (OpenAI reasoning_effort, Claude output_config.effort). The levels depend on the model, eg. low, medium, high, xhigh, max. If the model rejects it, the request is sent without it.",
+            examples: ["low", "high"],
             group: "Tuning",
             section: "AI Summary",
             title: "Ai Reasoning Effort",
@@ -10175,7 +10410,8 @@
               },
             ],
             default: null,
-            description: "Enable extended thinking on Anthropic Claude models that support it.",
+            description:
+              "Turn on extended thinking for Claude models: adaptive thinking on Claude 4.6 and later, a token budget on older models. When off, each model uses its own default.",
             group: "Tuning",
             section: "AI Summary",
             title: "Ai Extended Thinking",
@@ -10191,7 +10427,7 @@
               },
             ],
             default: null,
-            description: "Token budget for Anthropic extended thinking when enabled.",
+            description: "Token budget for extended thinking on Claude models older than 4.6.",
             group: "Tuning",
             section: "AI Summary",
             title: "Ai Thinking Budget Tokens",
@@ -12157,7 +12393,7 @@
         }
         monacoReadyPromise = new Promise((resolve, reject) => {
           require.config({
-            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs" },
+            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.56.0/min/vs" },
           });
           require(["vs/editor/editor.main"], () => {
             // Custom theme matching the wizard's navy / Seqera palette so

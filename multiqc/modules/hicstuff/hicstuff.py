@@ -2,7 +2,6 @@ import ast
 import logging
 import math
 import re
-from typing import Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, linegraph
@@ -63,6 +62,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/koszullab/hicstuff",
             info="Hi-C pipeline that generates contact maps from sequencing reads.",
             doi="10.5281/zenodo.4066363",
+            license="BSD 3-Clause License",
+            license_url="https://github.com/koszullab/hicstuff/blob/master/LICENSE",
         )
 
         self.hicstuff_data = {}
@@ -126,7 +127,7 @@ class MultiqcModule(BaseMultiqcModule):
             stats["version"] = version_match.group(1)
         return stats
 
-    def parse_distancelaw(self, f) -> Optional[dict[str, dict[int, float]]]:
+    def parse_distancelaw(self, f) -> dict[str, dict[int, float]] | None:
         """Parse a hicstuff distance-law TSV file.
 
         Returns a dict mapping chromosome name -> {start_bp: p_s}, or None if no
@@ -148,7 +149,7 @@ class MultiqcModule(BaseMultiqcModule):
             chrom = parts[2].strip() if len(parts) >= 3 else "genome"
             chroms.setdefault(chrom, {})[start_bp] = p_s
 
-        return chroms if chroms else None
+        return chroms or None
 
     def hicstuff_distance_law_plot(self):
         """Generate P(s) distance-law line graph and slope analysis."""

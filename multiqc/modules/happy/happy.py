@@ -20,11 +20,13 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/Illumina/hap.py",
             info="Benchmarks variant calls against gold standard truth datasets.",
             # No publication / DOI // doi=
+            license="BSD 2-Clause License",
+            license_url="https://github.com/Illumina/hap.py/blob/master/LICENSE.txt",
         )
 
         self.happy_raw_sample_names = set()
-        self.happy_indel_data = dict()
-        self.happy_snp_data = dict()
+        self.happy_indel_data = {}
+        self.happy_snp_data = {}
 
         for f in self.find_log_files("happy", filehandles=True):
             self.parse_file(f)
@@ -286,6 +288,6 @@ class MultiqcModule(BaseMultiqcModule):
         }
 
         # rename column headers with '_indel' or '_snp' suffix
-        headers = [k + suffix for k in h.keys()]
+        headers = [k + suffix for k in h]
         # recreate the ordered dictionary with all headers and information
         return dict(zip(headers, h.values()))

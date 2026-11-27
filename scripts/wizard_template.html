@@ -2128,20 +2128,20 @@
     </main>
 
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"
-      integrity="sha512-CSBhVREyzHAjAFfBlIBakjoRUKp5h7VSweP0InR/pAJyptH7peuhCsqAI/snV+TwZmXZqoUklpXp6R6wMnYf5Q=="
+      src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.1/js-yaml.min.js"
+      integrity="sha512-Ccva9tZjPfyRDMMosATBaEnAKvX+eBbDfHMnr+0LhTa+NMqKRxUAoDGPotb8biwzQ6xnf4IYuDaPiXw10DYaNA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/highlight.min.js"
-      integrity="sha384-GdEWAbCjn+ghjX0gLx7/N1hyTVmPAjdC2OvoAA0RyNcAOhqwtT8qnbCxWle2+uJX"
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.2/highlight.min.js"
+      integrity="sha512-VSPLUv/n1Bmn+4zoxBNwpuFAO3//79I0Aax/qHDx24R47vylPcc9PrHDCqlePwHnh3joiM7/YTQhcXyQAAxvPQ=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.10.0/languages/yaml.min.js"
-      integrity="sha384-bMkvdnz+wPu1ro0fqO3BaDWztc7RzSvw05MQFP6bhJKDcwpkrFYTfTFI9ndkP11l"
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.2/languages/yaml.min.js"
+      integrity="sha512-IKEO35wkGSbPDYkG7sTszqPEfj7VSlRx3qvbmGs30NC0eSldEvfjse4wu+86oFVFQL0IwgKdXaVszPiyEECcnw=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
@@ -2154,8 +2154,8 @@
     <!-- Monaco's AMD loader. The editor + language chunks are fetched on
          init; the wizard's editor pane is always visible. -->
     <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs/loader.min.js"
-      integrity="sha384-UcP5/iVWyRzIhnVjcB2o9W1eoYKL5fAhHTRzvFZg8ctOsoAoDeBQyQuyIk+BJ/nh"
+      src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.56.0/min/vs/loader.min.js"
+      integrity="sha512-2DJ/UX0VmkE/Cq9bjrRet/01ETdenJ5zu2QVeI9PDN/n5s7kTSh9c1Rhr3E7ZQJOnm4N4ONBTXamiX7Ec9FQlA=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     ></script>
@@ -3875,7 +3875,7 @@
         }
         monacoReadyPromise = new Promise((resolve, reject) => {
           require.config({
-            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.0/min/vs" },
+            paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.56.0/min/vs" },
           });
           require(["vs/editor/editor.main"], () => {
             // Custom theme matching the wizard's navy / Seqera palette so

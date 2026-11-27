@@ -1,7 +1,6 @@
 """MultiQC submodule to parse output from seqkit stats"""
 
 import logging
-from typing import Dict, Optional
 
 from multiqc import BaseMultiqcModule, config
 from multiqc.plots import bargraph, table
@@ -12,7 +11,7 @@ log = logging.getLogger(__name__)
 def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     """Find seqkit stats logs and parse their data"""
 
-    seqkit_stats: Dict[str, Dict] = {}
+    seqkit_stats: dict[str, dict] = {}
 
     for f in module.find_log_files("seqkit/stats"):
         parsed_data = parse_stats_report(f["f"], f["s_name"])
@@ -34,7 +33,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
         return 0
 
     # General Stats Table - MultiQC automatically filters missing columns
-    general_stats_headers: Dict = {
+    general_stats_headers: dict = {
         "num_seqs": {
             "title": "# Sequences",
             "description": f"Number of sequences ({config.read_count_desc})",
@@ -94,7 +93,7 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
         module.general_stats_addcols(seqkit_stats, stats_headers, namespace="seqkit")
 
     # Create detailed table with all columns
-    table_headers: Dict = {
+    table_headers: dict = {
         "format": {
             "title": "Format",
             "description": "File format (FASTA or FASTQ)",
@@ -250,14 +249,14 @@ def parse_seqkit_stats(module: BaseMultiqcModule) -> int:
     return len(seqkit_stats)
 
 
-def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = None) -> Dict[str, Dict]:
+def parse_stats_report(file_content: str, fallback_sample_name: str | None = None) -> dict[str, dict]:
     """
     Parse seqkit stats output file.
 
     Returns a dictionary with sample names as keys and parsed data as values.
     Handles both tab-separated (--tabular flag) and space-separated (default) output.
     """
-    parsed_data: Dict[str, Dict] = {}
+    parsed_data: dict[str, dict] = {}
     lines = file_content.strip().split("\n")
 
     if len(lines) < 2:
@@ -292,7 +291,7 @@ def parse_stats_report(file_content: str, fallback_sample_name: Optional[str] = 
             continue
 
         row = dict(zip(headers, [v.strip() for v in values]))
-        data: Dict = {}
+        data: dict = {}
 
         # Get sample name from file column
         file_value = row.get("file")

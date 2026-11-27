@@ -335,6 +335,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - bcftools
 - featurecounts
 - fgbio
+- fgumi
 - dragen
 - dragen_fastqc
 - dedup
@@ -454,6 +455,7 @@ Order in which modules appear in the report. Each entry is either a module ID, o
 - telseq
 - ataqv
 - mgikit
+- mgnifam
 - mosaicatcher
 ```
 
@@ -1688,6 +1690,63 @@ fgbio/errorratebyreadposition:
   contents: "read_number\tposition\tbases_total\terrors\terror_rate\ta_to_c_error_rate\t\
     a_to_g_error_rate\ta_to_t_error_rate\tc_to_a_error_rate\tc_to_g_error_rate\tc_to_t_error_rate"
   num_lines: 3
+fgumi/clip:
+  contents: "read_type\treads\treads_unmapped\treads_clipped_pre"
+  num_lines: 2
+fgumi/consensus_stats:
+  contents: "key\tvalue\tdescription"
+  num_lines: 2
+  shared: true
+fgumi/copy_umi:
+  contents: "total_records\trx_written\trx_overwritten"
+  num_lines: 2
+fgumi/correct:
+  contents: "umi\ttotal_matches\tperfect_matches"
+  num_lines: 2
+fgumi/dedup:
+  contents: "sample\tlibrary\tfiltered_templates"
+  num_lines: 2
+fgumi/dedup_ladder:
+  contents: "library\ttemplates_seen\tduplicate_fraction"
+  num_lines: 2
+fgumi/downsample_histogram:
+  contents_re: "^family_size\tcount$"
+  num_lines: 2
+  shared: true
+fgumi/duplex_family_sizes:
+  contents: "ab_size\tba_size\tcount\tfraction"
+  num_lines: 2
+fgumi/family_sizes:
+  contents: "family_size\tcount\tfraction\tfraction_gt_or_eq_family_size"
+  num_lines: 2
+  shared: true
+fgumi/filter_stats:
+  - contents: "total_reads\tpassed_reads\tfailed_reads\tpass_rate"
+    num_lines: 2
+  - contents_re: "^total_reads\t\\d+$"
+    num_lines: 2
+    shared: true
+fgumi/grouping_metrics:
+  contents: "accepted_sam_records\tdiscarded_non_pf"
+  num_lines: 2
+fgumi/position_group_sizes:
+  contents: "position_group_size\tcount\tfraction"
+  num_lines: 2
+fgumi/retag:
+  contents: "operation\tkind\trecords_applied"
+  num_lines: 2
+fgumi/review:
+  contents: "chrom\tpos\tref\tgenotype\tfilters"
+  num_lines: 2
+fgumi/strand_family_sizes:
+  contents: "family_size\tcs_count\tcs_fraction"
+  num_lines: 2
+fgumi/umi_counts:
+  contents: "umi\traw_observations\traw_observations_with_errors"
+  num_lines: 2
+fgumi/yield:
+  contents: "fraction\tread_pairs\tcs_families\tss_families"
+  num_lines: 2
 filtlong:
   contents: Scoring long reads
   contents_re: .*Filtering long reads.*
@@ -1914,6 +1973,10 @@ mgikit/mgi_sample_reads:
   fn: "*.mgikit.info"
 mgikit/mgi_undetermined_barcode:
   fn: "*.mgikit.undetermined_barcode"
+mgnifam:
+  fn: "*_stats.json"
+  contents: '"tool": "mgnifam"'
+  num_lines: 3
 minionqc:
   fn: summary.yaml
   contents: total.gigabases
@@ -2323,7 +2386,7 @@ samtools/coverage:
   num_lines: 10
 samtools/markdup_txt:
   contents:
-    - "^COMMAND:"
+    - "COMMAND:"
     - samtools markdup
   num_lines: 2
 samtools/markdup_json:
@@ -3236,49 +3299,97 @@ AI provider used for summaries. One of seqera, openai, anthropic, aws_bedrock, c
 
 **Type**: <code>str</code>
 
-Model name. Provider-specific.
+Model name. Defaults to claude-opus-5-5 for Anthropic and gpt-6.1-sol for OpenAI. Required for aws_bedrock and custom.
 
 **Examples**:
 
 ```yaml
-ai_model: gpt-4o
+ai_model: claude-opus-5-5
 ```
 
 ```yaml
-ai_model: claude-sonnet-4-5.
+ai_model: gpt-6.1-sol
 ```
 
 #### `ai_custom_endpoint`
 
 **Type**: <code>str</code>
 
-Base URL for the 'custom' provider, eg. a self-hosted OpenAI-compatible API.
+Full URL of the chat endpoint for the 'custom' provider: an OpenAI-compatible chat completions endpoint, or a Claude-compatible messages endpoint with ai_custom_api_style: anthropic.
 
 **Examples**:
 
 ```yaml
-ai_custom_endpoint: http://localhost:11434/v1
+ai_custom_endpoint: http://localhost:8000/v1/chat/completions
 ```
 
 ```yaml
-ai_custom_endpoint: https://api.example.com/v1
+ai_custom_endpoint: https://llm-gateway.example.com/v1/messages
 ```
+
+#### `ai_custom_api_style`
+
+**Type**: <code>Literal["openai", "anthropic"]</code>
+
+Request format of the custom endpoint: 'openai' (chat completions, the default) or 'anthropic' (Claude messages API).
 
 #### `ai_auth_type`
 
 **Type**: <code>Literal["bearer", "api-key"]</code>
 
-Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header.
+Authentication scheme used by the custom endpoint. 'bearer' sends an Authorization header, 'api-key' sends an api-key header. By default, OpenAI-style endpoints get an Authorization header and Claude-style endpoints an x-api-key header.
+
+#### `ai_custom_headers`
+
+**Type**: <code>Dict[str, str]</code>
+
+Extra HTTP headers for the custom endpoint. Write ${VAR} to insert an environment variable, so secrets stay out of config files. A null value removes a header MultiQC would send. When set, the API key environment variable is optional.
+
+**Example**:
+
+```yaml
+ai_custom_headers:
+  Authorization: null
+  x-api-key: ${MY_GATEWAY_TOKEN}
+```
+
+#### `ai_custom_response_path`
+
+**Type**: <code>str</code>
+
+Dotted path to the answer text in the custom endpoint's JSON response, for endpoints that don't use the standard OpenAI or Claude response format.
+
+**Examples**:
+
+```yaml
+ai_custom_response_path: completion.content
+```
+
+```yaml
+ai_custom_response_path: choices.0.message.content
+```
+
+#### `ai_custom_client`
+
+**Type**: <code>str</code>
+
+Python class that sends prompts to your own AI service, given as 'package.module:ClassName'. Used with ai_provider: custom instead of ai_custom_endpoint. The class must subclass multiqc.core.ai.Client.
+
+**Example**:
+
+```yaml
+ai_custom_client: my_lab.llm:GatewayClient
+```
 
 #### `seqera_website`
 
-**Type**: <code>str</code> (default: `"https://seqera.io"`)
+**Type**: <code>str</code>
 
-Base URL used for Seqera Platform links in the report.
+Seqera Platform URL for 'Chat with Seqera AI' links in the report. When not set, it is worked out from seqera_api_url.
 
 #### `seqera_api_url`
 
-**Type**: <code>str</code> (default: `"https://intern.seqera.io"`)
+**Type**: <code>str</code> (default: `"https://ai-api.seqera.io/v1/web"`)
 
 Base URL for the Seqera Platform API. Defaults to the public instance.
 
@@ -3294,45 +3405,59 @@ Number of times to retry an AI request on transient errors.
 
 **Type**: <code>Dict[str, Any]</code>
 
-Extra request-body fields merged into the AI request payload (provider-specific).
+Extra request-body fields merged into the AI request payload (provider-specific). A null value removes a field MultiQC would otherwise send.
 
-**Example**:
+**Examples**:
 
 ```yaml
 ai_extra_query_options:
-  temperature: 0.3
-  top_p: 0.9
+  seed: 42
+```
+
+```yaml
+ai_extra_query_options:
+  model: null
 ```
 
 #### `ai_custom_context_window`
 
 **Type**: <code>int</code>
 
-Override the model's context window in tokens. Set this if MultiQC's default for your model is wrong.
+Override the model's context window in tokens. By default MultiQC asks the provider, then uses what it knows about the model family, then assumes 128,000 tokens.
 
 #### `ai_max_completion_tokens`
 
 **Type**: <code>int</code>
 
-Maximum completion tokens for OpenAI reasoning models.
+Maximum output tokens for the AI response, including reasoning or thinking tokens. Defaults to 16,000 for Claude; other providers use the model's own maximum.
 
 #### `ai_reasoning_effort`
 
-**Type**: <code>Literal["low", "medium", "high"]</code>
+**Type**: <code>str</code>
 
-Reasoning effort for OpenAI reasoning models.
+Reasoning effort, passed to the provider as given (OpenAI reasoning_effort, Claude output_config.effort). The levels depend on the model, eg. low, medium, high, xhigh, max. If the model rejects it, the request is sent without it.
+
+**Examples**:
+
+```yaml
+ai_reasoning_effort: low
+```
+
+```yaml
+ai_reasoning_effort: high
+```
 
 #### `ai_extended_thinking`
 
 **Type**: <code>bool</code> (default: `false`)
 
-Enable extended thinking on Anthropic Claude models that support it.
+Turn on extended thinking for Claude models: adaptive thinking on Claude 4.6 and later, a token budget on older models. When off, each model uses its own default.
 
 #### `ai_thinking_budget_tokens`
 
 **Type**: <code>int</code>
 
-Token budget for Anthropic extended thinking when enabled.
+Token budget for extended thinking on Claude models older than 4.6.
 
 ## MegaQC
 
@@ -3499,6 +3624,26 @@ Properties:
 - **module** (<code>Union[str, List[str]]</code>): Module(s) to apply this pattern to
 - **pattern** (<code>str</code>): Pattern to match
 - **type** (<code>Literal["truncate", "remove", "regex", "regex_keep"]</code>): Type of pattern matching to use
+
+### GeneralStatsModuleConfig
+
+Per-module wrapper for General Stats column overrides.
+
+The `GeneralStatsModuleConfig` type is the value of each module entry in the `general_stats_columns` configuration option. It has a single `columns` key mapping column IDs to `GeneralStatsColumnConfig` settings.
+
+Example:
+
+```yaml
+general_stats_columns:
+  fastqc:
+    columns:
+      percent_duplicates:
+        title: "% Dups"
+```
+
+Properties:
+
+- **columns** (<code>Dict[str, <a href="#generalstatscolumnconfig">GeneralStatsColumnConfig</a>]</code>): Columns to show in general stats table. Keys are column IDs.
 
 ### GeneralStatsColumnConfig
 

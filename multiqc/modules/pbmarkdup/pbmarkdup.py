@@ -20,9 +20,11 @@ class MultiqcModule(BaseMultiqcModule):
             info="Takes one or multiple sequencing chips of an amplified libray as HiFi reads and marks or "
             "removes duplicates.",
             # Can't find a DOI // doi=
+            license="BSD 3-Clause Clear License",
+            license_url="https://github.com/PacificBiosciences/pbmarkdup/blob/master/LICENSE",
         )
 
-        self.pbmarkdup = dict()
+        self.pbmarkdup = {}
 
         for logfile in self.find_log_files("pbmarkdup", filehandles=True):
             data = self.parse_logfile(logfile)
@@ -77,7 +79,7 @@ class MultiqcModule(BaseMultiqcModule):
             log.error(f"Can't parse file '{fname}', unknown header: '{file_header}'")
             return False
 
-        data = dict()
+        data = {}
 
         # Each parsable line is either for a library, or for 'TOTAL', the sum
         # of all parsed libraries
@@ -88,7 +90,7 @@ class MultiqcModule(BaseMultiqcModule):
                 continue
 
             # Not very nice, we assume that all fields are always present
-            lib_name, reads, unique_mol_count, unique_mol_perc, duplicate_count, duplicate_perc = line.split()
+            lib_name, reads, unique_mol_count, _unique_mol_perc, duplicate_count, _duplicate_perc = line.split()
 
             # We are only interested in the counts, not the percentages
             data[lib_name] = {
@@ -124,7 +126,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
         }
 
-        general = dict()
+        general = {}
 
         for sample, sample_stats in self.pbmarkdup.items():
             # We are only interested in the total counts per sample

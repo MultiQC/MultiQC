@@ -21,15 +21,17 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/maxsonBraunLab/gopeaks",
             info="Calls peaks in CUT&TAG/CUT&RUN datasets.",
             extra="""
-            Gopeaks uses a binomial distribution to model the read counts in sliding windows across 
+            Gopeaks uses a binomial distribution to model the read counts in sliding windows across
             the genome and calculate peak regions that are enriched over the background.""",
             doi="10.1186/s13059-022-02707-w",
+            license="MIT License",
+            license_url="https://github.com/maxsonBraunLab/gopeaks/blob/main/LICENSE",
         )
 
         # data vars ---------------------------------------------------------------------
 
         # Find and load any gopeaks reports
-        self.gopeaks_data = dict()
+        self.gopeaks_data = {}
         for f in self.find_log_files("gopeaks", filehandles=True):
             parsed = self.parse_gopeaks_log(f)
 
@@ -67,8 +69,8 @@ class MultiqcModule(BaseMultiqcModule):
         """
         Read gopeaks json log file and extract number of peaks.
         """
-        with open(Path(f["root"]) / Path(f["fn"])) as f:
-            sample_log = json.load(f)
+        with open(Path(f["root"]) / Path(f["fn"])) as fh:
+            sample_log = json.load(fh)
 
         return sample_log
 

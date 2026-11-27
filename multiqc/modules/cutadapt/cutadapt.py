@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import shlex
-from typing import Dict
 
 from packaging import version
 
@@ -43,13 +42,15 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://cutadapt.readthedocs.io/",
             info="Finds and removes adapter sequences, primers, poly-A tails, and other types of unwanted sequences.",
             doi="10.14806/ej.17.1.200",
+            license="MIT License",
+            license_url="https://github.com/marcelm/cutadapt/blob/master/LICENSE",
         )
 
         # Find and load any Cutadapt reports
-        self.cutadapt_data: Dict[SampleName, Dict] = dict()
-        self.cutadapt_length_counts: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
-        self.cutadapt_length_exp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
-        self.cutadapt_length_obsexp: Dict[str, Dict[SampleName, Dict]] = {"default": dict()}
+        self.cutadapt_data: dict[SampleName, dict] = {}
+        self.cutadapt_length_counts: dict[str, dict[SampleName, dict]] = {"default": {}}
+        self.cutadapt_length_exp: dict[str, dict[SampleName, dict]] = {"default": {}}
+        self.cutadapt_length_obsexp: dict[str, dict[SampleName, dict]] = {"default": {}}
 
         for f in self.find_log_files("cutadapt"):
             self.parse_file(f)
@@ -84,7 +85,7 @@ class MultiqcModule(BaseMultiqcModule):
 
         # Since all reports are most likely the same version, cache the result.
         # version.parse is **very** expensive
-        @functools.lru_cache()
+        @functools.lru_cache
         def version_parse(v):
             return version.parse(v)
 
@@ -182,7 +183,7 @@ class MultiqcModule(BaseMultiqcModule):
         self.add_software_version(data["cutadapt_version"], s_name)
         self.add_data_source(f, s_name)
 
-        d = dict()
+        d = {}
         d["cutadapt_version"] = data["cutadapt_version"]
         d["bp_processed"] = data["basepair_counts"]["input"]
         d["bp_written"] = data["basepair_counts"]["output"]
@@ -199,13 +200,13 @@ class MultiqcModule(BaseMultiqcModule):
 
         for end, end_key in [("5", "five_prime_end"), ("3", "three_prime_end")]:
             if end not in self.cutadapt_length_counts:
-                self.cutadapt_length_counts[end] = dict()
-                self.cutadapt_length_exp[end] = dict()
-                self.cutadapt_length_obsexp[end] = dict()
+                self.cutadapt_length_counts[end] = {}
+                self.cutadapt_length_exp[end] = {}
+                self.cutadapt_length_obsexp[end] = {}
             if s_name not in self.cutadapt_length_counts[end]:
-                self.cutadapt_length_counts[end][s_name] = dict()
-                self.cutadapt_length_exp[end][s_name] = dict()
-                self.cutadapt_length_obsexp[end][s_name] = dict()
+                self.cutadapt_length_counts[end][s_name] = {}
+                self.cutadapt_length_exp[end][s_name] = {}
+                self.cutadapt_length_obsexp[end][s_name] = {}
 
             for read in ["read1", "read2"]:
                 if f"input_{read}" not in data["basepair_counts"]:
@@ -324,7 +325,7 @@ class MultiqcModule(BaseMultiqcModule):
 
                 if s_name in self.cutadapt_data:
                     log.debug(f"Duplicate sample name found! Overwriting: {s_name}")
-                self.cutadapt_data[s_name] = dict()
+                self.cutadapt_data[s_name] = {}
                 if cutadapt_version:
                     self.cutadapt_data[s_name]["cutadapt_version"] = cutadapt_version
 
@@ -358,17 +359,17 @@ class MultiqcModule(BaseMultiqcModule):
 
                     # Initialise dictionaries for length data if not already done
                     if end not in self.cutadapt_length_counts:
-                        self.cutadapt_length_counts[end] = dict()
-                        self.cutadapt_length_exp[end] = dict()
-                        self.cutadapt_length_obsexp[end] = dict()
+                        self.cutadapt_length_counts[end] = {}
+                        self.cutadapt_length_exp[end] = {}
+                        self.cutadapt_length_obsexp[end] = {}
 
                 if "length" in line and "count" in line and "expect" in line:
                     plot_sname = s_name
                     if log_section is not None:
                         plot_sname = SampleName(f"{s_name} - {log_section}")
-                    self.cutadapt_length_counts[end][plot_sname] = dict()
-                    self.cutadapt_length_exp[end][plot_sname] = dict()
-                    self.cutadapt_length_obsexp[end][plot_sname] = dict()
+                    self.cutadapt_length_counts[end][plot_sname] = {}
+                    self.cutadapt_length_exp[end][plot_sname] = {}
+                    self.cutadapt_length_obsexp[end][plot_sname] = {}
 
                     # Nested loop to read this section while the regex matches
                     for line2 in lines:

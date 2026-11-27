@@ -17,6 +17,10 @@ File path for the source of this content: multiqc/modules/verifybamid/verifybami
 Detects sample contamination and/or sample swaps.
 
 [https://genome.sph.umich.edu/wiki/VerifyBamID](https://genome.sph.umich.edu/wiki/VerifyBamID)
+
+DOI: [10.1016/j.ajhg.2012.09.004](https://doi.org/10.1016/j.ajhg.2012.09.004)
+
+[GNU General Public License v3.0](https://github.com/statgen/verifyBamID/blob/master/copyrights/COPYING)
 :::
 
 VerifyBamID checks whether reads match known genotypes or are contaminated as a mixture of two samples.
@@ -60,4 +64,3 @@ This was designed to work with verifyBamID 1.1.3 January 2018
 verifybamid/selfsm:
   fn: '*.selfSM'
 ```
-    

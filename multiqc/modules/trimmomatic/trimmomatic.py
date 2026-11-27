@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc import config
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
@@ -36,10 +35,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="http://www.usadellab.org/cms/?page=trimmomatic",
             info="Read trimming tool for Illumina NGS data.",
             doi="10.1093/bioinformatics/btu170",
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/usadellab/Trimmomatic/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.trimmomatic: Dict = dict()
+        self.trimmomatic: dict = {}
         for f in self.find_log_files("trimmomatic", filehandles=True):
             self.parse_trimmomatic(f)
             self.add_data_source(f)

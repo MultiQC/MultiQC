@@ -18,18 +18,20 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/miRTop/mirtop/",
             info="Annotates miRNAs and isomiRs and compute general statistics in mirGFF3 format.",
             extra="""
-            This tool is dedicated to the creation and management of miRNA alignment output using the standardized 
+            This tool is dedicated to the creation and management of miRNA alignment output using the standardized
             GFF3 format (see [miRTop/mirGFF3](https://github.com/miRTop/mirGFF3)).
             A unified miRNA alignment format allows to easily compare the output of different alignment tools.
-        
-            Currently, mirtop can convert into mirGFF3 the outputs of commonly used pipelines, such as seqbuster, 
+
+            Currently, mirtop can convert into mirGFF3 the outputs of commonly used pipelines, such as seqbuster,
             isomiR-SEA, sRNAbench, Prost! as well as BAM files.
             """,
             doi="10.5281/zenodo.45385",  # Zenodo won't load this page for me as I write this, but it's the listed DOI.
+            license="MIT License",
+            license_url="https://github.com/miRTop/mirtop/blob/master/LICENSE",
         )
 
         # Find and load any mirtop reports
-        self.mirtop_data = dict()
+        self.mirtop_data = {}
         for f in self.find_log_files("mirtop"):
             self.parse_mirtop_report(f)
             self.add_data_source(f)
@@ -95,7 +97,7 @@ class MultiqcModule(BaseMultiqcModule):
         content = json.loads(f["f"])
         version = content.get("meta", {}).get("version")
 
-        for s_name in content.get("metrics", {}).keys():
+        for s_name in content.get("metrics", {}):
             cleaned_s_name = self.clean_s_name(s_name, f)
             ## Check for sample name duplicates
             if cleaned_s_name in self.mirtop_data:
@@ -166,9 +168,7 @@ class MultiqcModule(BaseMultiqcModule):
             },
             "read_count": {
                 "title": f"{config.read_count_prefix} Reads",
-                "description": "Total read counts - both isomiRs and reference miRNA ({})".format(
-                    config.read_count_desc
-                ),
+                "description": f"Total read counts - both isomiRs and reference miRNA ({config.read_count_desc})",
                 "modify": lambda x: x * config.read_count_multiplier,
                 "shared_key": "read_count",
                 "scale": "BuGn",
@@ -189,7 +189,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def get_plot_cats(self, plot_type):
         """Return the plot categories for the given plot"""
-        cats_section = dict()
+        cats_section = {}
         for base_key in self.isomir_cats:
             cat_key = f"{base_key}_{plot_type}"
             cats_section[cat_key] = {"name": base_key}

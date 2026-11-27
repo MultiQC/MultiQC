@@ -1,6 +1,5 @@
 import logging
 from ast import literal_eval
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -17,15 +16,17 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/andersen-lab/Freyja",
             info="Recovers relative lineage abundances from mixed SARS-CoV-2 samples.",
             extra="""
-            Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a 
-            sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global 
+            Freyja is a tool to recover relative lineage abundances from mixed SARS-CoV-2 samples from a
+            sequencing dataset and uses lineage-determining mutational "barcodes" derived from the UShER global
             phylogenetic tree to solve the constrained (unit sum, non-negative) de-mixing problem.
             """,
             doi="10.1038/s41586-022-05049-6",
+            license="BSD 2-Clause License",
+            license_url="https://github.com/andersen-lab/Freyja/blob/main/LICENSE",
         )
 
         # To store the summary data
-        data_by_sample: Dict[str, Dict] = dict()
+        data_by_sample: dict[str, dict] = {}
 
         for f in self.find_log_files("freyja", filehandles=True):
             # Freyja has multiple summary files, but we only need to parse the one from the demix command.
@@ -40,7 +41,7 @@ class MultiqcModule(BaseMultiqcModule):
             summarized_line = next(line for line in f["f"] if line.startswith("summarized\t"))
             dict_str = summarized_line.split("\t")[1].strip()
             try:
-                sample_dict: Dict[str, float] = dict(literal_eval(dict_str))
+                sample_dict: dict[str, float] = dict(literal_eval(dict_str))
             except (ValueError, SyntaxError):
                 log.error(f"Error parsing 'summarized' line for '{s_name}': {dict_str}, skipping sample")
                 continue
@@ -125,14 +126,14 @@ class MultiqcModule(BaseMultiqcModule):
             name="Freyja Summary",
             anchor="freyja-summary",
             description="""
-                Relative lineage abundances from mixed SARS-CoV-2 samples. Hover over the column headers for descriptions and click _Help_ for more in-depth documentation. 
+                Relative lineage abundances from mixed SARS-CoV-2 samples. Hover over the column headers for descriptions and click _Help_ for more in-depth documentation.
                 """,
             helptext="""
                 The graph denotes a sum of all lineage abundances in a particular WHO designation , otherwise they are grouped into "Other".
-                Lineages abundances are calculated as the number of reads that are assigned to a particular lineage. 
-                Lineages and their corresponding abundances are summarized by constellation. 
+                Lineages abundances are calculated as the number of reads that are assigned to a particular lineage.
+                Lineages and their corresponding abundances are summarized by constellation.
 
-                > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time. 
+                > **Note**: Lineage designation is based on the used WHO nomenclature, which could vary over time.
                 """,
             plot=bargraph.plot(data_by_sample, cats, pconfig),
         )

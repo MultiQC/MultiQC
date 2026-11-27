@@ -2,13 +2,17 @@
 Code to initialise the MultiQC logging
 """
 
+# Deferred until first use on Python 3.15+ (PEP 810 lazy imports); ignored on older versions
+__lazy_modules__ = ["coloredlogs", "tqdm"]
+
 import datetime
 import logging
 import os
 import shutil
 import sys
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, List, Optional, TypeVar
+from typing import TypeVar
 
 import coloredlogs  # type: ignore
 import rich
@@ -22,15 +26,39 @@ from multiqc import config
 from multiqc.core import tmp_dir
 from multiqc.utils.util_functions import is_running_in_notebook
 
-log_tmp_fn: Optional[Path] = None
-log_file_handler: Optional[logging.FileHandler] = None
+log_tmp_fn: Path | None = None
+log_file_handler: logging.FileHandler | None = None
 
-rich_console: Optional[rich.console.Console] = None
+rich_console: rich.console.Console | None = None
 
 logger = logging.getLogger()  # root logger
 
 
 DEBUG_TEMPLATE = "[%(asctime)s] %(name)-50s [%(levelname)-7s]  %(message)s"
+
+
+class _MultilineMixin:
+    """Formats each line of a multi-line message as its own log line, with the module left blank"""
+
+    def format(self, record: logging.LogRecord) -> str:
+        message = record.getMessage()
+        if "\n" not in message or record.exc_info:
+            return super().format(record)  # type: ignore[misc]
+        lines = []
+        for i, line in enumerate(message.split("\n")):
+            part = logging.makeLogRecord({**record.__dict__, "msg": line, "args": None})
+            if i:
+                part.module = ""
+            lines.append(super().format(part))  # type: ignore[misc]
+        return "\n".join(lines)
+
+
+class _InfoFormatter(_MultilineMixin, logging.Formatter):
+    pass
+
+
+class _ColoredInfoFormatter(_MultilineMixin, coloredlogs.ColoredFormatter):
+    pass
 
 
 def init_log(log_to_file: bool = False):
@@ -62,9 +90,8 @@ def init_log(log_to_file: bool = False):
         logging.getLogger("httpx").setLevel(logging.INFO)
 
     # Automatically set no_ansi if not a tty terminal
-    if config.no_ansi is False:
-        if not sys.stderr.isatty() and not force_term_colors():
-            config.no_ansi = True
+    if config.no_ansi is False and not sys.stderr.isatty() and not force_term_colors():
+        config.no_ansi = True
 
     # Reset margin-bottom to remove the gian gap between lines.
     # See https://github.com/Textualize/rich/issues/3335 for more context
@@ -139,10 +166,10 @@ def _setup_coloredlogs(log_level, logger):
             )
     else:
         if config.no_ansi is True:
-            console.setFormatter(logging.Formatter(info_template))
+            console.setFormatter(_InfoFormatter(info_template))
         else:
             console.setFormatter(
-                coloredlogs.ColoredFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
+                _ColoredInfoFormatter(fmt=info_template, level_styles=level_styles, field_styles=field_styles)
             )
     logger.addHandler(console)
 
@@ -208,12 +235,11 @@ def remove_file_handler():
 
     global log_tmp_fn
     if log_tmp_fn is not None:
-        if log_tmp_fn.exists():
-            if config.data_dir is not None and Path(config.data_dir).is_dir():
-                try:
-                    shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
-                except IOError:
-                    pass
+        if log_tmp_fn.exists() and config.data_dir is not None and Path(config.data_dir).is_dir():
+            try:
+                shutil.copy(log_tmp_fn, Path(config.data_dir) / "multiqc.log")
+            except OSError:
+                pass
         try:
             os.remove(log_tmp_fn)
         except OSError:
@@ -310,7 +336,7 @@ T = TypeVar("T")
 
 
 def iterate_using_progress_bar(
-    items: List[T],
+    items: list[T],
     desc: str,
     update_fn: Callable[[int, T], None],
     item_to_str_fn: Callable[[T], str] = str,

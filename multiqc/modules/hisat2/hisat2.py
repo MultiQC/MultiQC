@@ -1,6 +1,5 @@
 import logging
 import re
-from typing import Dict
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph
@@ -35,10 +34,12 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://ccb.jhu.edu/software/hisat2/",
             info="Maps DNA or RNA reads against a genome or a population of genomes",
             doi=["10.1038/nmeth.3317", "10.1038/s41587-019-0201-4"],
+            license="GNU General Public License v3.0",
+            license_url="https://github.com/DaehwanKimLab/hisat2/blob/master/LICENSE",
         )
 
         # Find and load any HISAT2 reports
-        self.hisat2_data: Dict = dict()
+        self.hisat2_data: dict = {}
         for f in self.find_log_files("hisat2", filehandles=True):
             self.parse_hisat2_logs(f)
 

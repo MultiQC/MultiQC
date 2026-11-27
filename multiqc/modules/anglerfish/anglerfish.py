@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Dict, Union
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 from multiqc.plots import bargraph, table, violin
@@ -17,10 +16,12 @@ class MultiqcModule(BaseMultiqcModule):
             info="Quality controls Illumina libraries sequenced on Oxford Nanopore flowcells",
             extra="Assessment of pool balancing, contamination, and insert sizes are currently supported",
             # doi="", No DOI available
+            license="MIT License",
+            license_url="https://github.com/remiolsen/anglerfish/blob/master/LICENSE",
         )
 
         # Find and load any anglerfish reports
-        self.anglerfish_data: Dict[str, Dict[str, Union[str, float, str]]] = {}
+        self.anglerfish_data: dict[str, dict[str, str | float]] = {}
 
         for f in self.find_log_files("anglerfish", filehandles=True):
             self.parse_anglerfish_json(f)
@@ -114,7 +115,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Add Anglerfish statistics to the general statistics table"""
         # Prep data for general stat table
         # Multiple sample names per file requires dict where the first key is not file name
-        data: Dict[str, Dict[str, Union[float, int, str]]] = {}
+        data: dict[str, dict[str, float | int | str]] = {}
         for s_name in self.anglerfish_data:
             total_read = self.anglerfish_data[s_name]["total_read"]
             total_count = self.anglerfish_data[s_name]["total_count"]
@@ -180,7 +181,7 @@ class MultiqcModule(BaseMultiqcModule):
         """Generate plot for read length from sample stats.
         For < 10 samples: generate a table
         for >= 10 samples: generate a violin plot"""
-        data: Dict[str, Dict[str, Union[float, int, str]]] = {}
+        data: dict[str, dict[str, float | int | str]] = {}
         total_samples = 0
         for s_name in self.anglerfish_data:
             sample_stats_amount = self.anglerfish_data[s_name]["sample_stats_amount"]
@@ -218,7 +219,7 @@ class MultiqcModule(BaseMultiqcModule):
 
     def anglerfish_undetermined_index_chart(self):
         """Generate Undetermined indexes Bar Plot"""
-        data: Dict[str, Dict[str, Union[float, int]]] = {}
+        data: dict[str, dict[str, float | int]] = {}
         for s_name in self.anglerfish_data:
             undetermined_amount = self.anglerfish_data[s_name]["undetermined_amount"]
             assert isinstance(undetermined_amount, int)

@@ -2,7 +2,7 @@ import logging
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
 
-from . import stats, neighbours, counts, clusters
+from . import clusters, counts, neighbours, stats
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +15,8 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://github.com/jfjlaros/HUMID",
             info="Reference-free tool to quickly remove duplicates from FastQ files, with or without UMIs.",
             # No publication / DOI // doi=
+            license="MIT License",
+            license_url="https://github.com/jfjlaros/HUMID/blob/master/LICENSE.md",
         )
         self.stats = None
         self.neighbours = None

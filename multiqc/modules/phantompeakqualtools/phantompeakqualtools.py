@@ -13,16 +13,18 @@ class MultiqcModule(BaseMultiqcModule):
             href="https://www.encodeproject.org/software/phantompeakqualtools",
             info="Computes informative enrichment and quality measures for ChIP-seq/DNase-seq/FAIRE-seq/MNase-seq data.",
             extra="""
-            Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation) 
-            and RSC (relative strand cross-correlation) metrics use cross-correlation of stranded read density profiles 
-            to measure enrichment independently of peak calling. The PBC (PCR bottleneck coefficient) is an approximate 
+            Used to generate three quality metrics: NSC, RSC, and PBC. The NSC (Normalized strand cross-correlation)
+            and RSC (relative strand cross-correlation) metrics use cross-correlation of stranded read density profiles
+            to measure enrichment independently of peak calling. The PBC (PCR bottleneck coefficient) is an approximate
             measure of library complexity. PBC is the ratio of (non-redundant, uniquely mappable reads)/(uniquely mappable reads).
             """,
             doi=["10.1101/gr.136184.111", "10.1038/nbt.1508"],
+            license="BSD 3-Clause License",
+            license_url="https://github.com/kundajelab/phantompeakqualtools/blob/master/LICENSE",
         )
 
         # Parse logs
-        self.phantompeakqualtools_data = dict()
+        self.phantompeakqualtools_data = {}
         for f in self.find_log_files("phantompeakqualtools/out", filehandles=False):
             self.parse_phantompeakqualtools(f)
 
@@ -51,6 +53,9 @@ class MultiqcModule(BaseMultiqcModule):
         parsed_data = {}
         lines = f["f"].splitlines()
         for line in lines:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
             s = line.split("\t")
             parsed_data["Estimated_Fragment_Length_bp"] = int(s[2].split(",")[0])
             parsed_data["NSC"] = float(s[8])
