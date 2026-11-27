@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import pytest
 
@@ -15,8 +15,8 @@ def reset_multiqc_state():
     reset()
 
 
-def run_fastp_module(tmp_path, histogram: Optional[List[int]], unknown: Optional[int]) -> MultiqcModule:
-    insert_size: Dict[str, Any] = {"peak": 2}
+def run_fastp_module(tmp_path, histogram: list[int] | None, unknown: int | None) -> MultiqcModule:
+    insert_size: dict[str, Any] = {"peak": 2}
     if histogram is not None:
         insert_size["histogram"] = histogram
     if unknown is not None:
@@ -65,9 +65,9 @@ def run_fastp_module(tmp_path, histogram: Optional[List[int]], unknown: Optional
 )
 def test_insert_size_percentages_include_unknown_pairs(
     tmp_path,
-    histogram: List[int],
+    histogram: list[int],
     unknown: int,
-    expected: Dict[int, float],
+    expected: dict[int, float],
 ):
     module = run_fastp_module(tmp_path, histogram, unknown)
 
