@@ -499,6 +499,7 @@ module_order:
   - rsem
   - rseqc
   - busco
+  - orthofinder
   - checkm
   - bustools
   - goleft_indexcov
