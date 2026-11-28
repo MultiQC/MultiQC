@@ -163,6 +163,7 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
                     - bcftools_stats_sample_variants[s_name][sample]["nSNPs"]
                     - bcftools_stats_sample_variants[s_name][sample]["nIndels"]
                 )
+                bcftools_stats_sample_variants[s_name][sample]["nMissing"] = nMissing
 
             # Per-sample ts/tv stats
             if s[0] == "PSC" and len(s_names) > 0:
@@ -371,14 +372,20 @@ def parse_bcftools_stats(module: BaseMultiqcModule) -> int:
             ),
         )
 
-    # Make bargraph plot of missing sites
+    # Make bargraph plot of sites per sample (including missing genotypes)
     if len(bcftools_stats_sample_variants) > 0:
         module.add_section(
             name="Sites per sample",
             anchor="bcftools-stats_sites_per_sample",
+            description="Per-sample site counts from PSC records, including nMissing (sites where the sample genotype is missing, `./.`).",
             plot=bargraph.plot(
                 list(bcftools_stats_sample_variants.values()),
-                ["nSNPs", "nIndels", "nOther"],
+                {
+                    "nSNPs": {},
+                    "nIndels": {},
+                    "nOther": {},
+                    "nMissing": {"color": "#bbbbbb"},
+                },
                 BarPlotConfig(
                     id="bcftools-stats-sites",
                     title="Bcftools Stats: Sites per sample",
