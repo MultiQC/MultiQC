@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Generic, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union, cast
 
 import plotly.graph_objects as go  # type: ignore
 import polars as pl
@@ -1478,10 +1478,13 @@ class Plot(BaseModel, Generic[DatasetT, PConfigT]):
 
 # Python 3.14 defaults to forkserver on Linux, whose temp dir cleanup at exit fails on NFS
 # and prints a traceback. fork keeps the pre-3.14 behaviour; macOS and Windows keep spawn.
-_export_mp_context = multiprocessing.get_context("fork" if platform.system() == "Linux" else None)
+if TYPE_CHECKING:
+    _ExportProcessBase = multiprocessing.Process
+else:
+    _ExportProcessBase = multiprocessing.get_context("fork" if platform.system() == "Linux" else None).Process
 
 
-class ExportProcess(_export_mp_context.Process):
+class ExportProcess(_ExportProcessBase):
     def __init__(self, fig, plot_path, write_kwargs):
         super().__init__()
         self.fig = fig
@@ -1496,7 +1499,7 @@ class ExportProcess(_export_mp_context.Process):
             self.exception = e
 
 
-class BatchExportProcess(_export_mp_context.Process):
+class BatchExportProcess(_ExportProcessBase):
     def __init__(self, export_tasks):
         """
         Initialize a batch export process with multiple tasks
