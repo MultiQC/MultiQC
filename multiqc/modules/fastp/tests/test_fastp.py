@@ -94,3 +94,18 @@ def test_insert_size_omitted_when_required_count_is_missing(tmp_path, caplog, hi
 
     assert module.fastp_insert_size_data == {}
     assert "No insert size plot data: sample" in caplog.text
+
+
+def test_overrepresented_sequences_table_is_a_percent():
+    from multiqc import config
+    from multiqc.utils import testing
+
+    config.data_format = "json"
+    report.analysis_files = [testing.data_dir() / "modules/fastp/repo_example/fastp.json"]
+    report.search_files(["fastp"])
+    MultiqcModule()
+
+    report.plot_by_id["fastp_top_overrepresented_sequences_table"].save_data_files()
+    table = json.loads((report.data_tmp_dir() / "fastp_top_overrepresented_sequences_table.json").read_text())
+    # 6,554 of the 16,763,944 input reads in the fastp repo example
+    assert table["TTTTTTTTTT"]["% of all reads"] == pytest.approx(100 * 6_554 / 16_763_944)
