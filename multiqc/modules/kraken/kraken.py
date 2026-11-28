@@ -458,8 +458,10 @@ def parse_logs(
 
         cnt_by_rank_by_taxon[rank_code][taxon] = counts_rooted
         if minimizer_distinct is not None and minimizer is not None and rank_code == "S":
-            minimizer_duplication = int(minimizer) / int(minimizer_distinct) if minimizer_distinct != 0 else 0.0
-            min_dup_by_taxon[taxon] = minimizer_duplication
+            distinct_count = int(minimizer_distinct)
+            # --report-zero-counts can include species with no observed minimizers.
+            if distinct_count != 0:
+                min_dup_by_taxon[taxon] = int(minimizer) / distinct_count
 
     if "R" not in cnt_by_rank_by_taxon:
         # Can be missing in case if all reads are unassigned
