@@ -610,7 +610,7 @@ class MultiqcModule(BaseMultiqcModule):
             for s_name, by_seq in by_sample.items():
                 for seq, count in by_seq.items():
                     cnt_by_seq[seq] += count
-                    pct_by_seq[seq] += count / self.fastp_data[s_name]["before_filtering_total_reads"]
+                    pct_by_seq[seq] += 100 * count / self.fastp_data[s_name]["before_filtering_total_reads"]
                     cnt_by_sample[read_name][s_name] += count
                     samples_by_seq[seq].add(s_name)
 
