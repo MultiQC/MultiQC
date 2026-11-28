@@ -990,3 +990,93 @@ def test_ai_custom_prompt(tmp_path):
         "short": "Use me short!",
         "full": "Use me full!",
     }
+
+
+def test_linegraph_datasets_merged_across_files(tmp_path):
+    """Multi-dataset data from separate files that share an id should be merged per dataset"""
+    os.chdir(tmp_path)
+
+    plot_id = "my_plot"
+    for s_name in ["sample1", "sample2"]:
+        file = tmp_path / f"{s_name}_mqc.yaml"
+        file.write_text(
+            f"""\
+id: {plot_id}
+plot_type: linegraph
+data:
+  - {s_name}: {{100: 1, 200: 2}}
+  - {s_name}: {{100: 3, 200: 4}}
+"""
+        )
+
+    report.analysis_files = [tmp_path]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    plot = report.plot_by_id[Anchor(f"{plot_id}-section-plot")]
+    assert isinstance(plot, LinePlot)
+    assert len(plot.datasets) == 2
+    for dataset in plot.datasets:
+        assert sorted(line.name for line in dataset.lines) == ["sample1", "sample2"]
+
+
+def test_linegraph_extra_datasets_appended_across_files(tmp_path):
+    """A file with more datasets than the files before it should add the extra datasets"""
+    os.chdir(tmp_path)
+
+    plot_id = "my_plot"
+    (tmp_path / "sample1_mqc.yaml").write_text(
+        f"""\
+id: {plot_id}
+plot_type: linegraph
+data:
+  - sample1: {{100: 1, 200: 2}}
+"""
+    )
+    (tmp_path / "sample2_mqc.yaml").write_text(
+        f"""\
+id: {plot_id}
+plot_type: linegraph
+data:
+  - sample2: {{100: 1, 200: 2}}
+  - sample2: {{100: 3, 200: 4}}
+"""
+    )
+
+    report.analysis_files = [tmp_path / "sample1_mqc.yaml", tmp_path / "sample2_mqc.yaml"]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    plot = report.plot_by_id[Anchor(f"{plot_id}-section-plot")]
+    assert isinstance(plot, LinePlot)
+    assert len(plot.datasets) == 2
+    assert sorted(line.name for line in plot.datasets[0].lines) == ["sample1", "sample2"]
+    assert [line.name for line in plot.datasets[1].lines] == ["sample2"]
+
+
+def test_heatmap_rows_not_merged_across_files(tmp_path):
+    """Heatmap rows are a list of lists, not datasets, so files sharing an id should not be merged"""
+    os.chdir(tmp_path)
+
+    plot_id = "my_plot"
+    rows_by_file = {"first": [[1, 2], [3, 4]], "second": [[5, 6], [7, 8]]}
+    for name, rows in rows_by_file.items():
+        (tmp_path / f"{name}_mqc.json").write_text(
+            json.dumps(
+                {
+                    "id": plot_id,
+                    "plot_type": "heatmap",
+                    "ycats": ["sample 1", "sample 2"],
+                    "xcats": ["a", "b"],
+                    "data": rows,
+                }
+            )
+        )
+
+    report.analysis_files = [tmp_path / "first_mqc.json", tmp_path / "second_mqc.json"]
+    report.search_files(["custom_content"])
+    custom_module_classes()
+
+    plot = report.plot_by_id[Anchor(f"{plot_id}-section-plot")]
+    assert isinstance(plot, HeatmapPlot)
+    assert plot.datasets[0].rows == rows_by_file["second"]
