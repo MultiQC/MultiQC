@@ -1,3 +1,4 @@
+import platform
 import tempfile
 from unittest.mock import patch
 
@@ -7,7 +8,14 @@ from multiqc import config, report
 from multiqc.core.exceptions import RunError
 from multiqc.plots import bargraph, box, heatmap, linegraph, scatter, table, violin
 from multiqc.plots.linegraph import LinePlotConfig, Series
-from multiqc.plots.plot import BaseDataset, Plot, is_running_under_rosetta, process_batch_exports
+from multiqc.plots.plot import (
+    BaseDataset,
+    BatchExportProcess,
+    ExportProcess,
+    Plot,
+    is_running_under_rosetta,
+    process_batch_exports,
+)
 from multiqc.plots.table_object import ColumnDict, render_html
 from multiqc.types import Anchor
 from multiqc.validation import ModuleConfigValidationError
@@ -1601,3 +1609,9 @@ def test_rosetta_check_with_non_ascii_process(ps_lines, expected):
             assert is_running_under_rosetta() is expected
     finally:
         is_running_under_rosetta.cache_clear()
+
+
+@pytest.mark.skipif(platform.system() != "Linux", reason="fork is only pinned on Linux")
+def test_export_processes_use_fork_on_linux():
+    assert ExportProcess._start_method == "fork"
+    assert BatchExportProcess._start_method == "fork"

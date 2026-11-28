@@ -17,7 +17,7 @@ REFINE_CATEGORIES = {
 }
 
 
-def flatten_refine_json(data: Dict) -> Dict:
+def flatten_refine_json(data: dict) -> dict:
     """Newer isoseq versions write a pbreports report with metrics in an `attributes` list of id/value entries."""
     if "attributes" in data:
         return {attr["id"]: attr["value"] for attr in data["attributes"]}
