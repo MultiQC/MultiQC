@@ -221,6 +221,7 @@ def custom_module_classes() -> list[BaseMultiqcModule]:
                     ):
                         # Multi-dataset data is a list of {sample: values} dicts, one per dataset.
                         # Merge it per dataset so that files sharing an id each add their samples.
+                        # Datasets are matched by position, so the files must list them in the same order.
                         # Other lists (e.g. heatmap rows) are still replaced.
                         for i, dataset in enumerate(parsed_item):
                             if i < len(_ccdict.data):
